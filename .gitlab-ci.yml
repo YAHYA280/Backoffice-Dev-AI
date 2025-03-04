@@ -1,0 +1,11 @@
+stages:
+  - build
+
+build_test:
+  stage: build
+  image: node:20
+  script:
+    - npm install
+    - npm run build
+  only:
+    - merge_requests
