@@ -7,21 +7,15 @@ import {
   CardContent,
   Button,
   Typography,
-  Grid,
-  useTheme,
-  useMediaQuery,
-  Paper,
   Tooltip,
   IconButton,
-  Chip,
-  Divider,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
-import FolderIcon from '@mui/icons-material/Folder';
 import InfoIcon from '@mui/icons-material/Info';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import BookIcon from '@mui/icons-material/Book';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FolderIcon from '@mui/icons-material/Folder';
 
 import { Niveau } from '../view/apprentissage-view';
 
@@ -29,222 +23,162 @@ type NiveauListProps = {
   niveaux: Niveau[];
   onSelect: (niveau: Niveau) => void;
   onAdd: () => void;
+  onEdit: (niveau: Niveau, event: React.MouseEvent) => void;
+  onDelete: (niveau: Niveau, event: React.MouseEvent) => void;
+  onViewDetails: (niveau: Niveau, event: React.MouseEvent) => void;
 };
 
-export default function NiveauList({ niveaux, onSelect, onAdd }: NiveauListProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-
-  const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#3F51B5'];
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  };
-
+export default function NiveauList({
+  niveaux,
+  onSelect,
+  onAdd,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}: NiveauListProps) {
   // Empty state
   if (niveaux.length === 0) {
     return (
-      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <CardHeader
-          title={
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography variant="h6">Liste des Niveaux</Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={onAdd}
-                size={isMobile ? 'small' : 'medium'}
-              >
-                Ajouter un Niveau
-              </Button>
-            </Box>
-          }
-        />
-        <CardContent
+      <Box>
+        <Box
           sx={{
-            flexGrow: 1,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            py: 8,
+            justifyContent: 'space-between',
+            mb: 2,
+            p: 2,
+            bgcolor: (theme) => theme.palette.primary.main,
+            color: 'white',
+            borderRadius: 1,
           }}
         >
-          <Paper
-            elevation={0}
+          <Typography variant="h6">Niveaux</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={onAdd}
+            size="small"
             sx={{
-              p: 4,
-              textAlign: 'center',
-              bgcolor: 'background.default',
-              borderRadius: 2,
-              maxWidth: 500,
+              bgcolor: 'white',
+              color: (theme) => theme.palette.primary.main,
+              '&:hover': { bgcolor: '#f7f7f7' },
             }}
           >
-            <BookIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.7 }} />
+            Ajouter Niveau
+          </Button>
+        </Box>
+
+        <Card sx={{ textAlign: 'center', py: 8 }}>
+          <CardContent>
+            <FolderIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.7 }} />
             <Typography variant="h6" sx={{ mb: 1 }}>
               Aucun niveau disponible
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Ajoutez votre premier niveau pour commencer à organiser votre contenu pédagogique.
             </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd} size="large">
+            <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
               Ajouter un Niveau
             </Button>
-          </Paper>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Box>
     );
   }
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <Card sx={{ mb: 2 }}>
-        <CardHeader
-          title={
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography variant="h6">Liste des Niveaux</Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={onAdd}
-                size={isMobile ? 'small' : 'medium'}
-              >
-                Ajouter un Niveau
-              </Button>
-            </Box>
-          }
-        />
-        <Divider />
-        <CardContent>
-          <Grid container spacing={2}>
-            {niveaux.map((niveau, index) => (
-              <Grid item xs={12} sm={6} md={4} key={niveau.id}>
-                <motion.div variants={itemVariants}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      '&:hover': {
-                        boxShadow: 6,
-                        transform: 'translateY(-4px)',
-                      },
-                      '&:before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '4px',
-                        backgroundColor: colors[index % colors.length],
-                      },
-                    }}
-                    onClick={() => onSelect(niveau)}
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 2,
+          p: 2,
+          bgcolor: (theme) => theme.palette.primary.main,
+          color: 'white',
+          borderRadius: 1,
+        }}
+      >
+        <Typography variant="h6">Niveaux</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onAdd}
+          size="small"
+          sx={{
+            bgcolor: 'white',
+            color: (theme) => theme.palette.primary.main,
+            '&:hover': { bgcolor: '#f7f7f7' },
+          }}
+        >
+          Ajouter Niveau
+        </Button>
+      </Box>
+
+      <Card>
+        <CardContent sx={{ p: 0 }}>
+          {niveaux.map((niveau) => (
+            <Box
+              key={niveau.id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                p: 2,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: 'background.default',
+                },
+                cursor: 'pointer',
+              }}
+              onClick={() => onSelect(niveau)}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                <FolderIcon
+                  sx={{
+                    mr: 2,
+                    color: (theme) => theme.palette.primary.main,
+                  }}
+                />
+                <Typography>{niveau.nom}</Typography>
+              </Box>
+
+              <Box>
+                <Tooltip title="Détails">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => onViewDetails(niveau, e)}
+                    sx={{ color: 'info.main' }}
                   >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                        <FolderIcon
-                          sx={{
-                            color: colors[index % colors.length],
-                            fontSize: 40,
-                            mr: 2,
-                          }}
-                        />
-                        <Box>
-                          <Typography variant="h6" noWrap sx={{ mb: 0.5 }}>
-                            {niveau.nom}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <CalendarTodayIcon
-                              sx={{ fontSize: 14, mr: 0.5, color: 'text.secondary' }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              Créé le {niveau.dateCreation}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
 
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          height: 60,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        {niveau.description}
-                      </Typography>
+                <Tooltip title="Modifier">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => onEdit(niveau, e)}
+                    sx={{ color: 'primary.main' }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
 
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          mt: 2,
-                        }}
-                      >
-                        <Tooltip title="Voir les détails">
-                          <IconButton
-                            size="small"
-                            sx={{
-                              color: colors[index % colors.length],
-                              bgcolor: `${colors[index % colors.length]}10`,
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelect(niveau);
-                            }}
-                          >
-                            <InfoIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-
-                        {niveau.observation && (
-                          <Chip
-                            label="Observations"
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              fontSize: '0.7rem',
-                              height: 24,
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+                <Tooltip title="Supprimer">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => onDelete(niveau, e)}
+                    sx={{ color: 'error.main' }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          ))}
         </CardContent>
       </Card>
-    </motion.div>
+    </Box>
   );
 }

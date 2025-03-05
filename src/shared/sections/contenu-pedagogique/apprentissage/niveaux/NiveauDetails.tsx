@@ -1,118 +1,179 @@
 'use client';
 
+import React, { ReactNode } from 'react';
 import {
   Box,
-  Card,
-  CardHeader,
-  CardContent,
   Button,
   Typography,
-  Grid,
-  Divider,
   Paper,
   IconButton,
-  Tooltip,
   Stack,
   useTheme,
   useMediaQuery,
+  Drawer,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import BookIcon from '@mui/icons-material/Book';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import InfoIcon from '@mui/icons-material/Info';
 import CommentIcon from '@mui/icons-material/Comment';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import GroupIcon from '@mui/icons-material/Group';
 
 import { Niveau } from '../view/apprentissage-view';
 
+// -- 1) Define two custom components for "container" and "item" layout. --
+function GridContainer({ children, spacing = 0 }: { children: ReactNode; spacing?: number }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        margin: (theme) => theme.spacing(-(spacing / 2)),
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+function GridItem({
+  children,
+  xs,
+  sm,
+  md,
+}: {
+  children: ReactNode;
+  xs?: number;
+  sm?: number;
+  md?: number;
+}) {
+  // Convert MUI grid columns to a percentage width
+  const getWidth = (value: number | undefined) => (value ? `${(value / 12) * 100}%` : '100%');
+
+  return (
+    <Box
+      sx={{
+        width: getWidth(xs),
+        padding: (theme) => theme.spacing(1),
+        '@media (min-width:600px)': {
+          width: getWidth(sm),
+        },
+        '@media (min-width:900px)': {
+          width: getWidth(md),
+        },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+// -- 2) Define your component props. --
 type NiveauDetailsProps = {
   niveau: Niveau;
   onEdit: () => void;
   onDelete: () => void;
   onManageMatieres: () => void;
   onBack: () => void;
+  open: boolean;
 };
 
+// -- 3) Main component. --
 export default function NiveauDetails({
   niveau,
   onEdit,
   onDelete,
   onManageMatieres,
   onBack,
+  open,
 }: NiveauDetailsProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   return (
-    <Card sx={{ mb: 2, overflow: 'visible' }}>
-      <Box
-        sx={{
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          p: 2,
-          position: 'relative',
-          borderTopLeftRadius: theme.shape.borderRadius,
-          borderTopRightRadius: theme.shape.borderRadius,
-        }}
-      >
-        <Grid container alignItems="center" spacing={2}>
-          <Grid item>
+    <Drawer
+      anchor="right"
+      open={open}
+      variant="persistent"
+      sx={{
+        width: { xs: '100%', sm: 450 },
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: { xs: '100%', sm: 450 },
+          boxSizing: 'border-box',
+          p: 0,
+          height: '100%',
+          border: 'none',
+          boxShadow: '-4px 0px 20px rgba(0, 0, 0, 0.1)',
+        },
+      }}
+    >
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Box
+          sx={{
+            bgcolor: 'primary.main',
+            color: 'white',
+            p: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               onClick={onBack}
               sx={{
                 color: 'white',
                 bgcolor: 'rgba(255,255,255,0.2)',
+                mr: 2,
                 '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
               }}
             >
               <ArrowBackIcon />
             </IconButton>
-          </Grid>
-          <Grid item xs>
-            <Typography variant="h5" component="h2">
-              {niveau.nom}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-              <CalendarTodayIcon fontSize="small" sx={{ mr: 1, fontSize: '0.875rem' }} />
-              <Typography variant="subtitle2">Créé le {niveau.dateCreation}</Typography>
+
+            <Box>
+              <Typography variant="h6" component="h2">
+                {niveau.nom}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                <CalendarTodayIcon style={{ marginRight: '8px', fontSize: '0.875rem' }} />
+                <Typography variant="subtitle2">Créé le {niveau.dateCreation}</Typography>
+              </Box>
             </Box>
-          </Grid>
-        </Grid>
-      </Box>
+          </Box>
+        </Box>
 
-      <CardContent sx={{ p: 0 }}>
-        <Grid container spacing={0}>
-          {/* Left side - Details */}
-          <Grid item xs={12} md={8} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-              <InfoIcon sx={{ mr: 1 }} fontSize="small" />
-              Description
-            </Typography>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                bgcolor: 'background.default',
-                borderRadius: 1,
-                mb: 3,
-              }}
-            >
-              <Typography variant="body1">{niveau.description}</Typography>
-            </Paper>
+        {/* Content */}
+        <Box sx={{ p: 3, flexGrow: 1, overflow: 'auto' }}>
+          <GridContainer spacing={3}>
+            {/* Description section */}
+            <GridItem xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <InfoIcon style={{ marginRight: '8px' }} />
+                Description
+              </Typography>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  bgcolor: 'background.default',
+                  borderRadius: 1,
+                  mb: 3,
+                }}
+              >
+                <Typography variant="body1">{niveau.description}</Typography>
+              </Paper>
+            </GridItem>
 
+            {/* Observation section (if any) */}
             {niveau.observation && (
-              <>
+              <GridItem xs={12}>
                 <Typography
                   variant="h6"
                   gutterBottom
                   sx={{ display: 'flex', alignItems: 'center' }}
                 >
-                  <CommentIcon sx={{ mr: 1 }} fontSize="small" />
+                  <CommentIcon style={{ marginRight: '8px' }} />
                   Observations
                 </Typography>
                 <Paper
@@ -121,41 +182,65 @@ export default function NiveauDetails({
                     p: 2,
                     bgcolor: 'background.default',
                     borderRadius: 1,
+                    mb: 3,
                   }}
                 >
                   <Typography variant="body1">{niveau.observation}</Typography>
                 </Paper>
-              </>
+              </GridItem>
             )}
-          </Grid>
 
-          {/* Right side - Actions */}
-          <Grid
-            item
-            xs={12}
-            md={4}
-            sx={{
-              borderLeft: { xs: 'none', md: '1px solid' },
-              borderColor: 'divider',
-              bgcolor: 'background.default',
-              p: 3,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Actions
-            </Typography>
+            {/* Statistics section */}
+            <GridItem xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Statistiques
+              </Typography>
+              <Paper sx={{ p: 2, mb: 3 }}>
+                <GridContainer spacing={2}>
+                  <GridItem xs={6}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" color="primary.main">
+                        4
+                      </Typography>
+                      <Typography variant="body2">Matières</Typography>
+                    </Box>
+                  </GridItem>
+                  <GridItem xs={6}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" color="primary.main">
+                        25
+                      </Typography>
+                      <Typography variant="body2">Élèves</Typography>
+                    </Box>
+                  </GridItem>
+                </GridContainer>
+              </Paper>
+            </GridItem>
+          </GridContainer>
+        </Box>
 
-            <Stack spacing={2}>
-              <Button
-                variant="contained"
-                fullWidth
-                startIcon={<FormatListBulletedIcon />}
-                onClick={onManageMatieres}
-                size={isMobile ? 'small' : 'medium'}
-              >
-                Gérer les Matières
-              </Button>
+        {/* Action buttons */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Stack spacing={2}>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<FormatListBulletedIcon />}
+              onClick={onManageMatieres}
+              size={isMobile ? 'small' : 'medium'}
+            >
+              Gérer les Matières
+            </Button>
 
+            <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="outlined"
                 fullWidth
@@ -176,48 +261,10 @@ export default function NiveauDetails({
               >
                 Supprimer
               </Button>
-            </Stack>
-
-            {/* Additional info cards */}
-            <Box sx={{ mt: 4 }}>
-              <Paper
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <LibraryBooksIcon sx={{ mr: 2, color: 'primary.main' }} />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Matières disponibles
-                  </Typography>
-                  <Typography variant="h6">4 matières</Typography>
-                </Box>
-              </Paper>
-
-              <Paper
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <GroupIcon sx={{ mr: 2, color: 'secondary.main' }} />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Élèves inscrits
-                  </Typography>
-                  <Typography variant="h6">25 étudiants</Typography>
-                </Box>
-              </Paper>
             </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
+          </Stack>
+        </Box>
+      </Box>
+    </Drawer>
   );
 }

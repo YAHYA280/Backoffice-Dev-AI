@@ -1,49 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
   Typography,
   Breadcrumbs,
   Link,
   Divider,
   Container,
   Grid,
-  useTheme,
-  useMediaQuery,
   Paper,
   IconButton,
   Alert,
   Snackbar,
-  Drawer,
+  Tooltip,
+  Stack,
 } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faChevronRight,
-  faHome,
-  faFilter,
-  faSort,
-  faSearch,
-  faTimes,
-  faPlus,
-} from '@fortawesome/free-solid-svg-icons';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
-import FilterListIcon from '@mui/icons-material/FilterList'; // Add this import
 
-// Importation des composants
-import NiveauList from '../niveaux/NiveauList';
-import NiveauDetails from '../niveaux/NiveauDetails';
-import AddNiveauDialog from '../niveaux/AddNiveauDialog';
-import MatiereList from '../matieres/MatiereList';
-import MatiereDetails from '../matieres/MatiereDetails';
-import AddMatiereDialog from '../matieres/AddMatiereDialog';
-import ChapitreList from '../chapitres/ChapitreList';
-import ChapitreDetails from '../chapitres/ChapitreDetails';
-import AddChapitreDialog from '../chapitres/AddChapitreDialog';
-import ExerciceList from '../exercices/ExerciceList';
-import ExerciceDetails from '../exercices/ExerciceDetails';
-import AddExerciceDialog from '../exercices/AddExerciceDialog';
+// Import icons
+import AddIcon from '@mui/icons-material/Add';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import InfoIcon from '@mui/icons-material/Info';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import FolderIcon from '@mui/icons-material/Folder';
+import BookIcon from '@mui/icons-material/Book';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import LanguageIcon from '@mui/icons-material/Language';
+import ScienceIcon from '@mui/icons-material/Science';
+import BrushIcon from '@mui/icons-material/Brush';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 // Types
 export interface Niveau {
@@ -72,17 +68,6 @@ export interface Chapitre {
   difficulte: string;
   ordre: number;
   conditionsAcces?: string;
-  dateCreation: string;
-}
-
-export interface Exercice {
-  id: number;
-  chapitreId: number;
-  titre: string;
-  description: string;
-  ressources?: string;
-  configuration?: string;
-  planification?: string;
   dateCreation: string;
 }
 
@@ -147,109 +132,62 @@ const initialMatieres: Matiere[] = [
   },
 ];
 
-const initialChapitres: Chapitre[] = [
-  {
-    id: 1,
-    matiereId: 1,
-    nom: 'Les Nombres',
-    description: 'Introduction aux nombres et opérations de base',
-    difficulte: 'Facile',
-    ordre: 1,
-    dateCreation: '2023-01-10',
-  },
-  {
-    id: 2,
-    matiereId: 1,
-    nom: 'Géométrie Simple',
-    description: 'Concepts de base en géométrie',
-    difficulte: 'Moyen',
-    ordre: 2,
-    dateCreation: '2023-01-15',
-  },
-  {
-    id: 3,
-    matiereId: 2,
-    nom: 'Lecture',
-    description: 'Apprentissage de la lecture',
-    difficulte: 'Facile',
-    ordre: 1,
-    dateCreation: '2023-01-12',
-  },
-  {
-    id: 4,
-    matiereId: 2,
-    nom: 'Grammaire',
-    description: 'Les bases de la grammaire française',
-    difficulte: 'Moyen',
-    ordre: 2,
-    dateCreation: '2023-01-18',
-  },
-];
-
-const initialExercices: Exercice[] = [
-  {
-    id: 1,
-    chapitreId: 1,
-    titre: 'Addition et Soustraction',
-    description: 'Exercices sur les additions et soustractions simples',
-    ressources: 'Fiches PDF, Vidéos explicatives',
-    dateCreation: '2023-01-20',
-  },
-  {
-    id: 2,
-    chapitreId: 1,
-    titre: 'Multiplication',
-    description: 'Exercices sur les tables de multiplication',
-    ressources: 'Jeux interactifs, Fiches de travail',
-    dateCreation: '2023-01-22',
-  },
-  {
-    id: 3,
-    chapitreId: 2,
-    titre: 'Reconnaître les formes',
-    description: "Exercices d'identification des formes géométriques",
-    ressources: 'Images, Modèles 3D',
-    dateCreation: '2023-01-25',
-  },
-];
-
 // Enumération des étapes de la navigation
-type Step =
-  | 'liste_niveaux'
-  | 'detail_niveau'
-  | 'liste_matieres'
-  | 'detail_matiere'
-  | 'liste_chapitres'
-  | 'detail_chapitre'
-  | 'liste_exercices'
-  | 'detail_exercice';
+type Step = 'liste_niveaux' | 'detail_niveau' | 'liste_matieres' | 'detail_matiere';
+
+// Mapping des icônes pour les matières
+const getIconForMatiere = (nom: string) => {
+  const nomLower = nom.toLowerCase();
+  if (nomLower.includes('math')) return <CalculateIcon />;
+  if (nomLower.includes('franç') || nomLower.includes('litt')) return <MenuBookIcon />;
+  if (nomLower.includes('angl') || nomLower.includes('espag') || nomLower.includes('allem'))
+    return <LanguageIcon />;
+  if (
+    nomLower.includes('scien') ||
+    nomLower.includes('physi') ||
+    nomLower.includes('chim') ||
+    nomLower.includes('bio')
+  )
+    return <ScienceIcon />;
+  if (nomLower.includes('art') || nomLower.includes('dessin')) return <BrushIcon />;
+  if (nomLower.includes('musi')) return <MusicNoteIcon />;
+  if (nomLower.includes('sport') || nomLower.includes('éduc') || nomLower.includes('eps'))
+    return <FitnessCenterIcon />;
+  return <BookIcon />;
+};
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
 
 export default function ApprentissageView() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-
-  // Gestion de l'étape actuelle de la navigation
-  const [currentStep, setCurrentStep] = useState<Step>('liste_niveaux');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // États pour stocker les données
+  // States pour stocker les données
   const [niveaux, setNiveaux] = useState<Niveau[]>(initialNiveaux);
   const [matieres, setMatieres] = useState<Matiere[]>(initialMatieres);
-  const [chapitres, setChapitres] = useState<Chapitre[]>(initialChapitres);
-  const [exercices, setExercices] = useState<Exercice[]>(initialExercices);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentStep, setCurrentStep] = useState<Step>('liste_niveaux');
 
   // États pour stocker l'élément sélectionné dans chaque module
   const [selectedNiveau, setSelectedNiveau] = useState<Niveau | null>(null);
   const [selectedMatiere, setSelectedMatiere] = useState<Matiere | null>(null);
-  const [selectedChapitre, setSelectedChapitre] = useState<Chapitre | null>(null);
-  const [selectedExercice, setSelectedExercice] = useState<Exercice | null>(null);
-
-  // États pour les dialogues d'ajout
-  const [openNiveauDialog, setOpenNiveauDialog] = useState(false);
-  const [openMatiereDialog, setOpenMatiereDialog] = useState(false);
-  const [openChapitreDialog, setOpenChapitreDialog] = useState(false);
-  const [openExerciceDialog, setOpenExerciceDialog] = useState(false);
 
   // État pour les notifications
   const [snackbar, setSnackbar] = useState({
@@ -257,17 +195,6 @@ export default function ApprentissageView() {
     message: '',
     severity: 'success' as 'success' | 'error' | 'info' | 'warning',
   });
-
-  // Fonction pour revenir en arrière (selon le fil d'Ariane)
-  const goBack = () => {
-    if (currentStep === 'detail_niveau') setCurrentStep('liste_niveaux');
-    else if (currentStep === 'liste_matieres') setCurrentStep('detail_niveau');
-    else if (currentStep === 'detail_matiere') setCurrentStep('liste_matieres');
-    else if (currentStep === 'liste_chapitres') setCurrentStep('detail_matiere');
-    else if (currentStep === 'detail_chapitre') setCurrentStep('liste_chapitres');
-    else if (currentStep === 'liste_exercices') setCurrentStep('detail_chapitre');
-    else if (currentStep === 'detail_exercice') setCurrentStep('liste_exercices');
-  };
 
   // Fonction pour afficher une notification
   const showNotification = (
@@ -289,624 +216,420 @@ export default function ApprentissageView() {
     });
   };
 
-  // Handlers pour les dialogues d'ajout
-  const handleAddNiveau = (newNiveau: Omit<Niveau, 'id' | 'dateCreation'>) => {
-    const now = new Date();
-    const dateString = now.toISOString().slice(0, 10);
-
-    const niveau: Niveau = {
-      id: niveaux.length > 0 ? Math.max(...niveaux.map((n) => n.id)) + 1 : 1,
-      dateCreation: dateString,
-      ...newNiveau,
-    };
-
-    setNiveaux([...niveaux, niveau]);
-    setOpenNiveauDialog(false);
-    showNotification(`Niveau "${niveau.nom}" ajouté avec succès`);
+  // Fonction pour revenir en arrière (selon le fil d'Ariane)
+  const goBack = () => {
+    if (currentStep === 'detail_niveau') setCurrentStep('liste_niveaux');
+    else if (currentStep === 'liste_matieres') setCurrentStep('detail_niveau');
+    else if (currentStep === 'detail_matiere') setCurrentStep('liste_matieres');
   };
 
-  const handleAddMatiere = (newMatiere: Omit<Matiere, 'id' | 'dateCreation' | 'niveauId'>) => {
-    if (!selectedNiveau) return;
-
-    const now = new Date();
-    const dateString = now.toISOString().slice(0, 10);
-
-    const matiere: Matiere = {
-      id: matieres.length > 0 ? Math.max(...matieres.map((m) => m.id)) + 1 : 1,
-      niveauId: selectedNiveau.id,
-      dateCreation: dateString,
-      ...newMatiere,
-    };
-
-    setMatieres([...matieres, matiere]);
-    setOpenMatiereDialog(false);
-    showNotification(`Matière "${matiere.nom}" ajoutée avec succès`);
+  // Handlers d'ajout (placeholder)
+  const handleAddNiveau = () => {
+    showNotification('Fonctionnalité à implémenter: Ajouter un niveau', 'info');
+  };
+  const handleAddMatiere = () => {
+    showNotification('Fonctionnalité à implémenter: Ajouter une matière', 'info');
   };
 
-  const handleAddChapitre = (newChapitre: Omit<Chapitre, 'id' | 'dateCreation' | 'matiereId'>) => {
-    if (!selectedMatiere) return;
-
-    const now = new Date();
-    const dateString = now.toISOString().slice(0, 10);
-
-    const chapitre: Chapitre = {
-      id: chapitres.length > 0 ? Math.max(...chapitres.map((c) => c.id)) + 1 : 1,
-      matiereId: selectedMatiere.id,
-      dateCreation: dateString,
-      ...newChapitre,
-    };
-
-    setChapitres([...chapitres, chapitre]);
-    setOpenChapitreDialog(false);
-    showNotification(`Chapitre "${chapitre.nom}" ajouté avec succès`);
-  };
-
-  const handleAddExercice = (newExercice: Omit<Exercice, 'id' | 'dateCreation' | 'chapitreId'>) => {
-    if (!selectedChapitre) return;
-
-    const now = new Date();
-    const dateString = now.toISOString().slice(0, 10);
-
-    const exercice: Exercice = {
-      id: exercices.length > 0 ? Math.max(...exercices.map((e) => e.id)) + 1 : 1,
-      chapitreId: selectedChapitre.id,
-      dateCreation: dateString,
-      ...newExercice,
-    };
-
-    setExercices([...exercices, exercice]);
-    setOpenExerciceDialog(false);
-    showNotification(`Exercice "${exercice.titre}" ajouté avec succès`);
-  };
-
-  // Handlers pour les actions de suppression
-  const handleDeleteNiveau = () => {
-    if (!selectedNiveau) return;
-
-    // Vérifier si le niveau a des matières associées
-    const hasChildren = matieres.some((m) => m.niveauId === selectedNiveau.id);
-
-    if (hasChildren) {
-      showNotification('Impossible de supprimer ce niveau car il contient des matières', 'error');
-      return;
-    }
-
-    setNiveaux(niveaux.filter((n) => n.id !== selectedNiveau.id));
-    showNotification(`Niveau "${selectedNiveau.nom}" supprimé avec succès`);
-    setCurrentStep('liste_niveaux');
-    setSelectedNiveau(null);
-  };
-
-  const handleDeleteMatiere = () => {
-    if (!selectedMatiere) return;
-
-    // Vérifier si la matière a des chapitres associés
-    const hasChildren = chapitres.some((c) => c.matiereId === selectedMatiere.id);
-
-    if (hasChildren) {
-      showNotification(
-        'Impossible de supprimer cette matière car elle contient des chapitres',
-        'error'
-      );
-      return;
-    }
-
-    setMatieres(matieres.filter((m) => m.id !== selectedMatiere.id));
-    showNotification(`Matière "${selectedMatiere.nom}" supprimée avec succès`);
+  // Handlers pour la sélection
+  const handleSelectNiveau = (niveau: Niveau) => {
+    setSelectedNiveau(niveau);
     setCurrentStep('liste_matieres');
-    setSelectedMatiere(null);
+    setSearchTerm('');
+  };
+  const handleSelectMatiere = (matiere: Matiere) => {
+    setSelectedMatiere(matiere);
+    setCurrentStep('detail_matiere');
+    showNotification(`Matière ${matiere.nom} sélectionnée`);
   };
 
-  const handleDeleteChapitre = () => {
-    if (!selectedChapitre) return;
-
-    // Vérifier si le chapitre a des exercices associés
-    const hasChildren = exercices.some((e) => e.chapitreId === selectedChapitre.id);
-
-    if (hasChildren) {
-      showNotification(
-        'Impossible de supprimer ce chapitre car il contient des exercices',
-        'error'
-      );
-      return;
-    }
-
-    setChapitres(chapitres.filter((c) => c.id !== selectedChapitre.id));
-    showNotification(`Chapitre "${selectedChapitre.nom}" supprimé avec succès`);
-    setCurrentStep('liste_chapitres');
-    setSelectedChapitre(null);
+  // Handlers for niveau actions
+  const handleEditNiveau = (niveau: Niveau, event: React.MouseEvent) => {
+    event.stopPropagation();
+    showNotification(`Édition du niveau ${niveau.nom}`, 'info');
+  };
+  const handleDeleteNiveau = (niveau: Niveau, event: React.MouseEvent) => {
+    event.stopPropagation();
+    showNotification(`Suppression du niveau ${niveau.nom}`, 'info');
+  };
+  const handleViewNiveauDetails = (niveau: Niveau, event: React.MouseEvent) => {
+    event.stopPropagation();
+    showNotification(`Voir les détails du niveau ${niveau.nom}`, 'info');
   };
 
-  const handleDeleteExercice = () => {
-    if (!selectedExercice) return;
-
-    setExercices(exercices.filter((e) => e.id !== selectedExercice.id));
-    showNotification(`Exercice "${selectedExercice.titre}" supprimé avec succès`);
-    setCurrentStep('liste_exercices');
-    setSelectedExercice(null);
-  };
-
-  // Handlers pour les actions d'édition (à implémenter)
-  const handleEditNiveau = () => {
-    // À implémenter
-    showNotification("Fonctionnalité d'édition à implémenter", 'info');
-  };
-
-  const handleEditMatiere = () => {
-    // À implémenter
-    showNotification("Fonctionnalité d'édition à implémenter", 'info');
-  };
-
-  const handleEditChapitre = () => {
-    // À implémenter
-    showNotification("Fonctionnalité d'édition à implémenter", 'info');
-  };
-
-  const handleEditExercice = () => {
-    // À implémenter
-    showNotification("Fonctionnalité d'édition à implémenter", 'info');
-  };
-
-  // Render breadcrumbs
-  const renderBreadcrumbs = () => {
-    let breadcrumbs = [
-      <Link
-        key="home"
-        underline="hover"
-        color="inherit"
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          setCurrentStep('liste_niveaux');
-        }}
-        sx={{ display: 'flex', alignItems: 'center' }}
-      >
-        <FontAwesomeIcon icon={faHome} style={{ marginRight: '8px' }} />
-        Accueil
-      </Link>,
-    ];
-
-    if (currentStep === 'detail_niveau' && selectedNiveau) {
-      breadcrumbs.push(
-        <Typography key="niveau" color="text.primary">
-          {selectedNiveau.nom}
-        </Typography>
-      );
-    } else if (currentStep === 'liste_matieres' && selectedNiveau) {
-      breadcrumbs.push(
-        <Typography key="niveau" color="text.primary">
-          {selectedNiveau.nom}
-        </Typography>
-      );
-    } else if (
-      ['detail_matiere', 'liste_chapitres'].includes(currentStep) &&
-      selectedNiveau &&
-      selectedMatiere
-    ) {
-      breadcrumbs.push(
-        <Link
-          key="niveau"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_niveau');
-          }}
-        >
-          {selectedNiveau.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Typography key="matiere" color="text.primary">
-          {selectedMatiere.nom}
-        </Typography>
-      );
-    } else if (
-      ['detail_chapitre', 'liste_exercices'].includes(currentStep) &&
-      selectedNiveau &&
-      selectedMatiere &&
-      selectedChapitre
-    ) {
-      breadcrumbs.push(
-        <Link
-          key="niveau"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_niveau');
-          }}
-        >
-          {selectedNiveau.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Link
-          key="matiere"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_matiere');
-          }}
-        >
-          {selectedMatiere.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Typography key="chapitre" color="text.primary">
-          {selectedChapitre.nom}
-        </Typography>
-      );
-    } else if (
-      currentStep === 'detail_exercice' &&
-      selectedNiveau &&
-      selectedMatiere &&
-      selectedChapitre &&
-      selectedExercice
-    ) {
-      breadcrumbs.push(
-        <Link
-          key="niveau"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_niveau');
-          }}
-        >
-          {selectedNiveau.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Link
-          key="matiere"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_matiere');
-          }}
-        >
-          {selectedMatiere.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Link
-          key="chapitre"
-          underline="hover"
-          color="inherit"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentStep('detail_chapitre');
-          }}
-        >
-          {selectedChapitre.nom}
-        </Link>
-      );
-
-      breadcrumbs.push(
-        <Typography key="exercice" color="text.primary">
-          {selectedExercice.titre}
-        </Typography>
-      );
-    }
-
-    return (
-      <Breadcrumbs
-        separator={
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            style={{ fontSize: '12px', marginBottom: '2px' }}
-          />
-        }
-        aria-label="breadcrumb"
-        sx={{ mb: 3 }}
-      >
-        {breadcrumbs}
-      </Breadcrumbs>
+  // Render: liste des niveaux
+  const renderNiveauxList = () => {
+    const filteredNiveaux = niveaux.filter(
+      (niveau) =>
+        searchTerm === '' ||
+        niveau.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        niveau.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  };
 
-  // Render action bar with search
-  const renderActionBar = () => {
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          mb: 3,
-          display: 'flex',
-          alignItems: 'center',
-          backgroundColor: 'background.default',
-          borderRadius: 2,
-        }}
-      >
-        <TextField
-          placeholder="Rechercher..."
-          variant="outlined"
-          size="small"
-          fullWidth
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <FontAwesomeIcon icon={faSearch} />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm ? (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm('')} title="Effacer">
-                  <FontAwesomeIcon icon={faTimes} />
-                </IconButton>
-              </InputAdornment>
-            ) : null,
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2,
+            p: 2,
+            bgcolor: (theme) => theme.palette.primary.main,
+            color: 'white',
+            borderRadius: 1,
           }}
-          sx={{ mr: 2 }}
-        />
-
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton size="small" color="primary" title="Filtrer">
-            <FilterListIcon />
-          </IconButton>
+        >
+          <Typography variant="h6">Niveaux</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddNiveau}
+            size="small"
+            sx={{
+              bgcolor: 'white',
+              color: (theme) => theme.palette.primary.main,
+              '&:hover': { bgcolor: '#f7f7f7' },
+            }}
+          >
+            Ajouter Niveau
+          </Button>
         </Box>
-      </Paper>
+
+        {filteredNiveaux.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              bgcolor: 'background.default',
+              borderRadius: 2,
+              maxWidth: 500,
+              mx: 'auto',
+            }}
+          >
+            <FolderIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.7 }} />
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Aucun niveau disponible
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {searchTerm
+                ? `Aucun résultat pour "${searchTerm}"`
+                : 'Ajoutez votre premier niveau pour commencer à organiser votre contenu pédagogique.'}
+            </Typography>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddNiveau}>
+              Ajouter un Niveau
+            </Button>
+          </Paper>
+        ) : (
+          <Box sx={{ mt: 2 }}>
+            {filteredNiveaux.map((niveau) => (
+              <Box
+                key={niveau.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 2,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    bgcolor: 'background.default',
+                  },
+                  cursor: 'pointer',
+                }}
+                onClick={() => handleSelectNiveau(niveau)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <FolderIcon
+                    sx={{
+                      mr: 2,
+                      color: (theme) => theme.palette.primary.main,
+                    }}
+                  />
+                  <Typography>{niveau.nom}</Typography>
+                </Box>
+
+                <Box>
+                  <Tooltip title="Détails">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleViewNiveauDetails(niveau, e)}
+                      sx={{ color: 'info.main' }}
+                    >
+                      <InfoIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Modifier">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleEditNiveau(niveau, e)}
+                      sx={{ color: 'primary.main' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Supprimer">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleDeleteNiveau(niveau, e)}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
     );
   };
 
-  // Rendu du contenu principal en fonction de l'étape
-  const renderMainContent = () => {
-    switch (currentStep) {
-      case 'liste_niveaux':
-        return (
-          <NiveauList
-            niveaux={niveaux.filter(
-              (n) =>
-                searchTerm === '' ||
-                n.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                n.description.toLowerCase().includes(searchTerm.toLowerCase())
-            )}
-            onSelect={(niveau) => {
-              setSelectedNiveau(niveau);
-              setCurrentStep('detail_niveau');
-            }}
-            onAdd={() => setOpenNiveauDialog(true)}
-          />
-        );
-      case 'liste_matieres':
-        return (
-          <MatiereList
-            matieres={matieres.filter(
-              (m) =>
-                m.niveauId === selectedNiveau?.id &&
-                (searchTerm === '' ||
-                  m.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  m.description.toLowerCase().includes(searchTerm.toLowerCase()))
-            )}
-            niveau={selectedNiveau!}
-            onSelect={(matiere) => {
-              setSelectedMatiere(matiere);
-              setCurrentStep('detail_matiere');
-            }}
-            onAdd={() => setOpenMatiereDialog(true)}
-            onBack={goBack}
-          />
-        );
-      case 'liste_chapitres':
-        return (
-          <ChapitreList
-            chapitres={chapitres.filter(
-              (c) =>
-                c.matiereId === selectedMatiere?.id &&
-                (searchTerm === '' ||
-                  c.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  c.description.toLowerCase().includes(searchTerm.toLowerCase()))
-            )}
-            matiere={selectedMatiere!}
-            onSelect={(chapitre) => {
-              setSelectedChapitre(chapitre);
-              setCurrentStep('detail_chapitre');
-            }}
-            onAdd={() => setOpenChapitreDialog(true)}
-            onBack={goBack}
-          />
-        );
-      case 'liste_exercices':
-        return (
-          <ExerciceList
-            exercices={exercices.filter(
-              (e) =>
-                e.chapitreId === selectedChapitre?.id &&
-                (searchTerm === '' ||
-                  e.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  e.description.toLowerCase().includes(searchTerm.toLowerCase()))
-            )}
-            chapitre={selectedChapitre!}
-            onSelect={(exercice) => {
-              setSelectedExercice(exercice);
-              setCurrentStep('detail_exercice');
-            }}
-            onAdd={() => setOpenExerciceDialog(true)}
-            onBack={goBack}
-          />
-        );
-      default:
-        return null;
-    }
+  // Helper function to get color based on matiere name
+  const getColorForMatiere = (matiere: Matiere) => {
+    if (matiere.couleur) return matiere.couleur;
+
+    const nomLower = matiere.nom.toLowerCase();
+    if (nomLower.includes('math')) return '#4CAF50';
+    if (nomLower.includes('franç')) return '#2196F3';
+    if (nomLower.includes('angl')) return '#E91E63';
+    if (nomLower.includes('scien')) return '#FF9800';
+    if (nomLower.includes('art')) return '#9C27B0';
+    if (nomLower.includes('musi')) return '#3F51B5';
+    if (nomLower.includes('sport')) return '#F44336';
+
+    // Default color
+    return '#607D8B';
   };
 
-  // Rendu des contenus détaillés (dans la sidebar)
-  const renderDetailContent = () => {
-    switch (currentStep) {
-      case 'detail_niveau':
-        return (
-          selectedNiveau && (
-            <NiveauDetails
-              niveau={selectedNiveau}
-              onEdit={handleEditNiveau}
-              onDelete={handleDeleteNiveau}
-              onManageMatieres={() => setCurrentStep('liste_matieres')}
-              onBack={() => setCurrentStep('liste_niveaux')}
-            />
-          )
-        );
-      case 'detail_matiere':
-        return (
-          selectedMatiere && (
-            <MatiereDetails
-              matiere={selectedMatiere}
-              onEdit={handleEditMatiere}
-              onDelete={handleDeleteMatiere}
-              onManageChapitres={() => setCurrentStep('liste_chapitres')}
-              onBack={() => setCurrentStep('liste_matieres')}
-            />
-          )
-        );
-      case 'detail_chapitre':
-        return (
-          selectedChapitre && (
-            <ChapitreDetails
-              chapitre={selectedChapitre}
-              onEdit={handleEditChapitre}
-              onDelete={handleDeleteChapitre}
-              onManageExercices={() => setCurrentStep('liste_exercices')}
-              onBack={() => setCurrentStep('liste_chapitres')}
-            />
-          )
-        );
-      case 'detail_exercice':
-        return (
-          selectedExercice && (
-            <ExerciceDetails
-              exercice={selectedExercice}
-              onEdit={handleEditExercice}
-              onDelete={handleDeleteExercice}
-              onBack={() => setCurrentStep('liste_exercices')}
-            />
-          )
-        );
-      default:
-        return null;
-    }
+  // Handlers for matiere actions
+  const handleEditMatiere = (matiere: Matiere, event: React.MouseEvent) => {
+    event.stopPropagation();
+    showNotification(`Édition de la matière ${matiere.nom}`, 'info');
+  };
+  const handleDeleteMatiere = (matiere: Matiere, event: React.MouseEvent) => {
+    event.stopPropagation();
+    showNotification(`Suppression de la matière ${matiere.nom}`, 'info');
+  };
+  const handleViewMatiereDetails = (matiere: Matiere, event: React.MouseEvent) => {
+    event.stopPropagation();
+    handleSelectMatiere(matiere);
   };
 
-  // Vérifier si un détail est affiché
-  const isDetailView = currentStep.includes('detail_');
+  // Render: liste des matières
+  const renderMatieresList = () => {
+    const filteredMatieres = matieres.filter(
+      (matiere) =>
+        matiere.niveauId === selectedNiveau?.id &&
+        (searchTerm === '' ||
+          matiere.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          matiere.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
-  // Largeur du contenu principal lorsqu'un détail est affiché
-  const mainContentWidth = isDetailView ? { xs: '100%', md: 'calc(100% - 450px)' } : '100%';
+    return (
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2,
+            p: 2,
+            bgcolor: (theme) => theme.palette.primary.main,
+            color: 'white',
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="h6">Matières pour {selectedNiveau?.nom}</Typography>
+          <Box>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={goBack}
+              sx={{
+                mr: 1,
+                color: 'white',
+                borderColor: 'white',
+                '&:hover': { borderColor: '#f0f0f0' },
+              }}
+              variant="outlined"
+              size="small"
+            >
+              Retour
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddMatiere}
+              size="small"
+              sx={{
+                bgcolor: 'white',
+                color: (theme) => theme.palette.primary.main,
+                '&:hover': { bgcolor: '#f7f7f7' },
+              }}
+            >
+              Ajouter Matière
+            </Button>
+          </Box>
+        </Box>
 
+        {filteredMatieres.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              bgcolor: 'background.default',
+              borderRadius: 2,
+              maxWidth: 500,
+              mx: 'auto',
+            }}
+          >
+            <BookIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.7 }} />
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Aucune matière disponible
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {searchTerm
+                ? `Aucun résultat pour "${searchTerm}"`
+                : 'Ajoutez votre première matière pour ce niveau.'}
+            </Typography>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddMatiere}>
+              Ajouter une Matière
+            </Button>
+          </Paper>
+        ) : (
+          <Box sx={{ mt: 2 }}>
+            {filteredMatieres.map((matiere) => {
+              const color = getColorForMatiere(matiere);
+              return (
+                <Box
+                  key={matiere.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    p: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': {
+                      bgcolor: 'background.default',
+                    },
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleSelectMatiere(matiere)}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <Box
+                      sx={{
+                        mr: 2,
+                        width: 30,
+                        height: 30,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        color: color,
+                        bgcolor: `${color}20`,
+                      }}
+                    >
+                      {getIconForMatiere(matiere.nom)}
+                    </Box>
+                    <Typography>{matiere.nom}</Typography>
+                  </Box>
+
+                  <Box>
+                    <Tooltip title="Détails">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleViewMatiereDetails(matiere, e)}
+                        sx={{ color: 'info.main' }}
+                      >
+                        <InfoIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Modifier">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleEditMatiere(matiere, e)}
+                        sx={{ color: 'primary.main' }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Supprimer">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleDeleteMatiere(matiere, e)}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  // Example: details of the selected matiere (placeholder)
+  const renderMatiereDetails = () => {
+    if (!selectedMatiere) return null;
+
+    return (
+      <Card>
+        <CardHeader title={`Détails de la matière: ${selectedMatiere.nom}`} />
+        <CardContent>
+          <Grid container spacing={2}>
+            {/* Example usage of selectedMatiere info */}
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                <strong>Description:</strong> {selectedMatiere.description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  fullWidth
+                  startIcon={<InfoIcon />}
+                  onClick={() => showNotification('Fonctionnalité à implémenter', 'info')}
+                  size="medium"
+                >
+                  Supprimer
+                </Button>
+              </Stack>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Placeholder for any "Add" dialogs you might implement
+  const renderAddDialogs = () => {
+    // Return your modal or dialog components here if needed
+    return null;
+  };
+
+  // Main component return
   return (
     <Container
       maxWidth={false}
-      disableGutters={isDetailView}
+      disableGutters
       sx={{
-        py: 4,
-        px: isDetailView ? { xs: 2, md: 3 } : 3,
-        display: 'flex',
-        position: 'relative',
-        overflow: 'hidden',
-        maxWidth: isDetailView ? '100%' : 'lg',
-        mx: 'auto',
+        py: 2,
+        px: 2,
       }}
     >
-      <Box
-        sx={{
-          width: mainContentWidth,
-          transition: 'width 0.3s ease',
-          mr: isDetailView ? { xs: 0, md: '450px' } : 0,
-          display: isDetailView && isMobile ? 'none' : 'block',
-        }}
-      >
-        <Typography
-          variant="h4"
-          gutterBottom
-          sx={{
-            fontWeight: 'bold',
-            color: 'primary.main',
-            mb: 2,
-            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
-          }}
-        >
-          Gestion de Contenu Pédagogique
-        </Typography>
-
-        <Divider sx={{ my: 2 }} />
-
-        {renderBreadcrumbs()}
-        {renderActionBar()}
-
-        <Box sx={{ mt: 2 }}>{renderMainContent()}</Box>
-      </Box>
-
-      {/* Sidebar for details */}
-      {isDetailView && (
-        <Drawer
-          variant={isMobile ? 'temporary' : 'permanent'}
-          open={isDetailView}
-          anchor="right"
-          onClose={() => goBack()}
-          sx={{
-            width: { xs: '100%', md: '450px' },
-            flexShrink: 0,
-            display: isDetailView ? 'block' : 'none',
-            '& .MuiDrawer-paper': {
-              width: { xs: '100%', md: '450px' },
-              boxSizing: 'border-box',
-              position: 'absolute',
-              height: '100%',
-              border: 'none',
-              boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-            },
-          }}
-        >
-          <Box sx={{ p: 3 }}>{renderDetailContent()}</Box>
-        </Drawer>
-      )}
-
-      {/* Dialogues d'ajout */}
-      <AddNiveauDialog
-        open={openNiveauDialog}
-        onClose={() => setOpenNiveauDialog(false)}
-        onSubmit={handleAddNiveau}
-      />
-
-      <AddMatiereDialog
-        open={openMatiereDialog}
-        onClose={() => setOpenMatiereDialog(false)}
-        onSubmit={handleAddMatiere}
-      />
-
-      {selectedMatiere && (
-        <AddChapitreDialog
-          open={openChapitreDialog}
-          onClose={() => setOpenChapitreDialog(false)}
-          matiereId={selectedMatiere.id}
-          onSubmit={handleAddChapitre}
-        />
-      )}
-
-      {selectedChapitre && (
-        <AddExerciceDialog
-          open={openExerciceDialog}
-          onClose={() => setOpenExerciceDialog(false)}
-          chapitreId={selectedChapitre.id}
-          onSubmit={handleAddExercice}
-        />
-      )}
-
       {/* Notification Snackbar */}
       <Snackbar
         open={snackbar.open}
@@ -918,6 +641,50 @@ export default function ApprentissageView() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Only show search bar when in list views */}
+      {(currentStep === 'liste_niveaux' || currentStep === 'liste_matieres') && (
+        <Box sx={{ mb: 3 }}>
+          <Paper
+            sx={{
+              p: 1.5,
+              borderRadius: 1,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            }}
+          >
+            <TextField
+              placeholder="Rechercher..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchTerm('')} title="Effacer">
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
+            />
+          </Paper>
+        </Box>
+      )}
+
+      {/* Render content based on the current step */}
+      {currentStep === 'liste_niveaux' && renderNiveauxList()}
+      {currentStep === 'liste_matieres' && renderMatieresList()}
+      {currentStep === 'detail_matiere' && renderMatiereDetails()}
+
+      {/* Any add dialogs or modals */}
+      {renderAddDialogs()}
     </Container>
   );
 }

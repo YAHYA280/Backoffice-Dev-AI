@@ -15,23 +15,47 @@ type AddNiveauDialogProps = {
   open: boolean;
   onClose: () => void;
   onSubmit: (newNiveau: Omit<Niveau, 'id' | 'dateCreation'>) => void;
+  editMode?: boolean;
+  initialData?: Partial<Niveau>;
 };
 
-export default function AddNiveauDialog({ open, onClose, onSubmit }: AddNiveauDialogProps) {
-  const [nom, setNom] = useState('');
-  const [description, setDescription] = useState('');
-  const [observation, setObservation] = useState('');
+export default function AddNiveauDialog({
+  open,
+  onClose,
+  onSubmit,
+  editMode = false,
+  initialData = {},
+}: AddNiveauDialogProps) {
+  const [nom, setNom] = useState(initialData.nom || '');
+  const [description, setDescription] = useState(initialData.description || '');
+  const [observation, setObservation] = useState(initialData.observation || '');
+
+  // Reset form when dialog opens/closes
+  const resetForm = () => {
+    if (editMode && initialData) {
+      setNom(initialData.nom || '');
+      setDescription(initialData.description || '');
+      setObservation(initialData.observation || '');
+    } else {
+      setNom('');
+      setDescription('');
+      setObservation('');
+    }
+  };
 
   const handleSubmit = () => {
     onSubmit({ nom, description, observation });
-    setNom('');
-    setDescription('');
-    setObservation('');
+    resetForm();
+  };
+
+  const handleCancel = () => {
+    resetForm();
+    onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Ajouter / Modifier un Niveau</DialogTitle>
+    <Dialog open={open} onClose={handleCancel} fullWidth maxWidth="sm">
+      <DialogTitle>{editMode ? 'Modifier un Niveau' : 'Ajouter un Niveau'}</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
@@ -59,9 +83,9 @@ export default function AddNiveauDialog({ open, onClose, onSubmit }: AddNiveauDi
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Annuler</Button>
-        <Button variant="contained" onClick={handleSubmit}>
-          Enregistrer
+        <Button onClick={handleCancel}>Annuler</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!nom || !description}>
+          {editMode ? 'Enregistrer' : 'Ajouter'}
         </Button>
       </DialogActions>
     </Dialog>
