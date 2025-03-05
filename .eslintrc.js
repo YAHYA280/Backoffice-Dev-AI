@@ -10,8 +10,7 @@ module.exports = {
     sourceType: 'module',
     ecmaVersion: 'latest',
     ecmaFeatures: { jsx: true },
-    project: path.resolve(__dirname, './tsconfig.json'),
-    tsconfigRootDir: __dirname,
+    project: './tsconfig.json',
   },
   settings: {
     'import/resolver': {
@@ -108,6 +107,3 @@ module.exports = {
     ],
   },
 };
-
-// project: path.resolve(__dirname, './tsconfig.json'),
-// tsconfigRootDir: __dirname,

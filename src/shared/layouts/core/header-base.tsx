@@ -17,12 +17,14 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
+import { WorkspacesPopover } from '../components/workspaces-popover';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
 import type { ContactsPopoverProps } from '../components/contacts-popover';
 import type { LanguagePopoverProps } from '../components/language-popover';
+import type { WorkspacesPopoverProps } from '../components/workspaces-popover';
 import type { NotificationsDrawerProps } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
@@ -61,7 +63,7 @@ export type HeaderBaseProps = HeaderSectionProps & {
     account?: AccountDrawerProps['data'];
     langs?: LanguagePopoverProps['data'];
     contacts?: ContactsPopoverProps['data'];
-
+    workspaces?: WorkspacesPopoverProps['data'];
     notifications?: NotificationsDrawerProps['data'];
   };
   slots?: {
@@ -78,7 +80,7 @@ export type HeaderBaseProps = HeaderSectionProps & {
     purchase?: boolean;
     contacts?: boolean;
     searchbar?: boolean;
-
+    workspaces?: boolean;
     menuButton?: boolean;
     localization?: boolean;
     notifications?: boolean;
@@ -100,7 +102,7 @@ export function HeaderBase({
     purchase = true,
     contacts = true,
     searchbar = true,
-
+    workspaces = true,
     menuButton = true,
     localization = true,
     notifications = true,
@@ -134,6 +136,9 @@ export function HeaderBase({
 
             {/* -- Divider -- */}
             <StyledDivider data-slot="divider" />
+
+            {/* -- Workspace popover -- */}
+            {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />}
 
             {slots?.leftAreaEnd}
           </>

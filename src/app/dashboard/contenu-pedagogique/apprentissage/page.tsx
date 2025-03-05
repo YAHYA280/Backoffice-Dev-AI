@@ -1,5 +1,6 @@
-import { ApprentissageView } from 'src/shared/sections/contenu-pedagogique/apprentissage/view';
+import { ApprentissageView } from "src/shared/sections/contenu-pedagogique/apprentissage/view";
 // ----------------------------------------------------------------------
+
 
 export const metadata = {
   title: 'Contenu pedagogique: Apprentissage',

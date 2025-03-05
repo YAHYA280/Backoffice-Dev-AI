@@ -40,6 +40,7 @@ export function SimpleLayout({ sx, children, content }: SimpleLayoutProps) {
             purchase: false,
             contacts: false,
             searchbar: false,
+            workspaces: false,
             menuButton: false,
             localization: false,
             notifications: false,

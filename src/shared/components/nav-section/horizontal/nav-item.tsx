@@ -95,9 +95,9 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
 
         {hasChild && (
           <FontAwesome
-            icon={navItem.subItem ? faChevronRight : faChevronDown}
-            className={navSectionClasses.item.arrow}
-          />
+          icon={navItem.subItem ? faChevronRight : faChevronDown}
+          className={navSectionClasses.item.arrow}
+        />
         )}
       </StyledNavItem>
     );
