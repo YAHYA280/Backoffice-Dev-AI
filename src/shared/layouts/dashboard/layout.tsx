@@ -116,9 +116,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
                     [theme.breakpoints.up(layoutQuery)]: {
                       height: 'var(--layout-nav-horizontal-height)',
                     },
-                    [`& [data-slot="workspaces"]`]: {
-                      color: 'var(--layout-nav-text-primary-color)',
-                    },
+
                     [`& [data-slot="logo"]`]: {
                       display: 'none',
                       [theme.breakpoints.up(layoutQuery)]: { display: 'inline-flex' },

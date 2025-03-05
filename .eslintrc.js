@@ -108,3 +108,6 @@ module.exports = {
     ],
   },
 };
+
+// project: path.resolve(__dirname, './tsconfig.json'),
+// tsconfigRootDir: __dirname,
