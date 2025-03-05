@@ -1,46 +1,49 @@
 'use client';
 
+import React from 'react';
 import {
   Box,
-  Card,
-  CardHeader,
-  CardContent,
   Button,
   Typography,
-  Grid,
-  Divider,
   Paper,
   IconButton,
-  Tooltip,
   Stack,
-  Avatar,
+  Badge,
   useTheme,
   useMediaQuery,
-  Chip,
-  Badge,
-  LinearProgress,
   Drawer,
-  alpha, // Import alpha for color manipulation
+  LinearProgress,
+  Tooltip,
+  SxProps,
+  Theme,
 } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowLeft,
-  faPencilAlt,
-  faTrashAlt,
-  faCalendarAlt,
-  faInfoCircle,
-  faList,
-  faBookmark,
-  faFlag,
-  faClock,
-  faClipboard,
-  faGraduationCap,
-  faBook,
-  faLock,
-  faLockOpen,
-} from '@fortawesome/free-solid-svg-icons';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import InfoIcon from '@mui/icons-material/Info';
+import LockIcon from '@mui/icons-material/Lock';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import FlagIcon from '@mui/icons-material/Flag';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
-import { Chapitre } from '../view/apprentissage-view';
+/**
+ * If you have the Chapitre interface in '../view/apprentissage-view',
+ * you can import from there:
+ *    import { Chapitre } from '../view/apprentissage-view';
+ *
+ * Otherwise, define your Chapitre type here, for example:
+ */
+export interface Chapitre {
+  id: number;
+  nom: string;
+  description: string;
+  difficulte: string;
+  ordre: number;
+  conditionsAcces?: string;
+  dateCreation: string;
+}
 
 type ChapitreDetailsProps = {
   chapitre: Chapitre;
@@ -48,25 +51,76 @@ type ChapitreDetailsProps = {
   onDelete: () => void;
   onManageExercices: () => void;
   onBack: () => void;
+  open: boolean;
 };
 
+/* ---------------------------------------------
+   1) Create two small components for "Grid"
+      to mimic <Grid container> and <Grid item>.
+--------------------------------------------- */
+type GridContainerProps = {
+  children: React.ReactNode;
+  spacing?: number;
+  sx?: SxProps<Theme>;
+};
+
+function GridContainer({ children, spacing = 0, sx }: GridContainerProps) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        margin: (theme) => theme.spacing(-(spacing / 2)),
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+type GridItemProps = {
+  children: React.ReactNode;
+  xs?: number; // 1 to 12
+  sm?: number; // 1 to 12
+  md?: number; // 1 to 12
+  sx?: SxProps<Theme>;
+};
+
+function GridItem({ children, xs, sm, md, sx }: GridItemProps) {
+  // Convert MUI grid columns to a percentage
+  const getWidth = (value: number | undefined) => (value ? `${(value / 12) * 100}%` : '100%');
+
+  return (
+    <Box
+      sx={{
+        width: getWidth(xs),
+        padding: (theme) => theme.spacing(1),
+        '@media (min-width:600px)': { width: getWidth(sm) },
+        '@media (min-width:900px)': { width: getWidth(md) },
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/* ---------------------------------------------
+   2) Main ChapitreDetails component
+--------------------------------------------- */
 export default function ChapitreDetails({
   chapitre,
   onEdit,
   onDelete,
   onManageExercices,
   onBack,
+  open,
 }: ChapitreDetailsProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
-  // Helper function to darken a color (replacement for theme.palette.darken)
-  const darkenColor = (color: string, amount: number) => {
-    return alpha(color, 1 - amount);
-  };
-
-  // Helper function to get color based on difficulty
+  // Helper: get color by difficulty
   const getDifficultyColor = (difficulte: string) => {
     const diffLower = difficulte.toLowerCase();
     if (diffLower.includes('facile')) return '#4CAF50';
@@ -74,13 +128,32 @@ export default function ChapitreDetails({
     if (diffLower.includes('difficile')) return '#F44336';
     return '#2196F3';
   };
-
   const chapitreColor = getDifficultyColor(chapitre.difficulte);
+
+  // Helper: darken a color slightly
+  const darkenColor = (color: string, amount: number) => {
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+          }
+        : null;
+    };
+
+    const rgb = hexToRgb(color);
+    if (!rgb) return color;
+
+    const darken = (c: number) => Math.max(0, Math.floor(c * (1 - amount)));
+    return `rgb(${darken(rgb.r)}, ${darken(rgb.g)}, ${darken(rgb.b)})`;
+  };
 
   return (
     <Drawer
       anchor="right"
-      open={true}
+      open={open}
       variant="persistent"
       sx={{
         width: { xs: '100%', sm: 450 },
@@ -114,7 +187,7 @@ export default function ChapitreDetails({
                 '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
               }}
             >
-              <FontAwesomeIcon icon={faArrowLeft} />
+              <ArrowBackIcon />
             </IconButton>
 
             <Box>
@@ -122,10 +195,7 @@ export default function ChapitreDetails({
                 {chapitre.nom}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                <FontAwesomeIcon
-                  icon={faCalendarAlt}
-                  style={{ marginRight: '8px', fontSize: '0.875rem' }}
-                />
+                <CalendarTodayIcon style={{ marginRight: '8px', fontSize: '0.875rem' }} />
                 <Typography variant="subtitle2">Créé le {chapitre.dateCreation}</Typography>
               </Box>
             </Box>
@@ -134,11 +204,11 @@ export default function ChapitreDetails({
 
         {/* Content */}
         <Box sx={{ p: 3, flexGrow: 1, overflow: 'auto' }}>
-          <Grid container spacing={3}>
+          <GridContainer spacing={3}>
             {/* Description section */}
-            <Grid item xs={12}>
+            <GridItem xs={12}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: '8px' }} />
+                <InfoIcon style={{ marginRight: '8px' }} />
                 Description
               </Typography>
               <Paper
@@ -152,22 +222,21 @@ export default function ChapitreDetails({
               >
                 <Typography variant="body1">{chapitre.description}</Typography>
               </Paper>
-            </Grid>
+            </GridItem>
 
             {/* Details section */}
-            <Grid item xs={12}>
+            <GridItem xs={12}>
               <Typography variant="h6" gutterBottom>
                 Détails
               </Typography>
               <Paper sx={{ p: 2, mb: 3 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                <GridContainer spacing={2}>
+                  <GridItem xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Difficulté
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <FontAwesomeIcon
-                        icon={faFlag}
+                      <FlagIcon
                         style={{
                           marginRight: '8px',
                           color: chapitreColor,
@@ -175,14 +244,13 @@ export default function ChapitreDetails({
                       />
                       <Typography variant="body1">{chapitre.difficulte}</Typography>
                     </Box>
-                  </Grid>
-                  <Grid item xs={6}>
+                  </GridItem>
+                  <GridItem xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Ordre
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <FontAwesomeIcon
-                        icon={faBookmark}
+                      <BookmarkIcon
                         style={{
                           marginRight: '8px',
                           color: chapitreColor,
@@ -190,21 +258,20 @@ export default function ChapitreDetails({
                       />
                       <Typography variant="body1">{chapitre.ordre}</Typography>
                     </Box>
-                  </Grid>
-                </Grid>
+                  </GridItem>
+                </GridContainer>
               </Paper>
-            </Grid>
+            </GridItem>
 
             {/* Conditions d'accès */}
             {chapitre.conditionsAcces && (
-              <Grid item xs={12}>
+              <GridItem xs={12}>
                 <Typography
                   variant="h6"
                   gutterBottom
                   sx={{ display: 'flex', alignItems: 'center' }}
                 >
-                  <FontAwesomeIcon
-                    icon={faLock}
+                  <LockIcon
                     style={{
                       marginRight: '8px',
                     }}
@@ -222,17 +289,17 @@ export default function ChapitreDetails({
                 >
                   <Typography variant="body1">{chapitre.conditionsAcces}</Typography>
                 </Paper>
-              </Grid>
+              </GridItem>
             )}
 
             {/* Statistiques section */}
-            <Grid item xs={12}>
+            <GridItem xs={12}>
               <Typography variant="h6" gutterBottom>
                 Statistiques
               </Typography>
               <Paper sx={{ p: 2, mb: 3 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                <GridContainer spacing={2}>
+                  <GridItem xs={12}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                       Progression des exercices
                     </Typography>
@@ -255,27 +322,27 @@ export default function ChapitreDetails({
                         />
                       </Box>
                     </Box>
-                  </Grid>
-                  <Grid item xs={6}>
+                  </GridItem>
+                  <GridItem xs={6}>
                     <Box sx={{ textAlign: 'center', p: 1 }}>
-                      <Typography variant="h4" color={chapitreColor}>
+                      <Typography variant="h4" sx={{ color: chapitreColor }}>
                         8
                       </Typography>
                       <Typography variant="body2">Exercices</Typography>
                     </Box>
-                  </Grid>
-                  <Grid item xs={6}>
+                  </GridItem>
+                  <GridItem xs={6}>
                     <Box sx={{ textAlign: 'center', p: 1 }}>
-                      <Typography variant="h4" color={chapitreColor}>
+                      <Typography variant="h4" sx={{ color: chapitreColor }}>
                         45
                       </Typography>
                       <Typography variant="body2">Minutes estimées</Typography>
                     </Box>
-                  </Grid>
-                </Grid>
+                  </GridItem>
+                </GridContainer>
               </Paper>
-            </Grid>
-          </Grid>
+            </GridItem>
+          </GridContainer>
         </Box>
 
         {/* Action buttons */}
@@ -292,14 +359,12 @@ export default function ChapitreDetails({
             <Button
               variant="contained"
               fullWidth
-              startIcon={<FontAwesomeIcon icon={faList} />}
+              startIcon={<FormatListBulletedIcon />}
               onClick={onManageExercices}
               size={isMobile ? 'small' : 'medium'}
               sx={{
                 bgcolor: chapitreColor,
-                '&:hover': {
-                  bgcolor: darkenColor(chapitreColor, 0.2),
-                },
+                '&:hover': { bgcolor: darkenColor(chapitreColor, 0.2) },
               }}
             >
               Gérer les Exercices
@@ -309,15 +374,13 @@ export default function ChapitreDetails({
               <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<FontAwesomeIcon icon={faPencilAlt} />}
+                startIcon={<EditIcon />}
                 onClick={onEdit}
                 size={isMobile ? 'small' : 'medium'}
                 sx={{
                   borderColor: chapitreColor,
                   color: chapitreColor,
-                  '&:hover': {
-                    borderColor: darkenColor(chapitreColor, 0.2),
-                  },
+                  '&:hover': { borderColor: darkenColor(chapitreColor, 0.2) },
                 }}
               >
                 Modifier
@@ -327,7 +390,7 @@ export default function ChapitreDetails({
                 variant="outlined"
                 color="error"
                 fullWidth
-                startIcon={<FontAwesomeIcon icon={faTrashAlt} />}
+                startIcon={<DeleteIcon />}
                 onClick={onDelete}
                 size={isMobile ? 'small' : 'medium'}
               >

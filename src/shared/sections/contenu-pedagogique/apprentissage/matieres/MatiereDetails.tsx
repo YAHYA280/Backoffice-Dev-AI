@@ -1,74 +1,112 @@
 'use client';
 
-import React from 'react'; // Add React import
+import React, { ReactNode } from 'react';
 import {
   Box,
-  Card,
-  CardHeader,
-  CardContent,
   Button,
   Typography,
-  Grid,
-  Divider,
   Paper,
   IconButton,
-  Tooltip,
   Stack,
-  Avatar,
   useTheme,
   useMediaQuery,
-  Chip,
-  alpha, // Import alpha for color manipulation
+  Drawer,
+  SxProps,
+  Theme,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import BookIcon from '@mui/icons-material/Book';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import InfoIcon from '@mui/icons-material/Info';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import LanguageIcon from '@mui/icons-material/Language';
-import ScienceIcon from '@mui/icons-material/Science';
-import BrushIcon from '@mui/icons-material/Brush';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import PaletteIcon from '@mui/icons-material/Palette';
-import PeopleIcon from '@mui/icons-material/People';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 
-import { Matiere } from '../view/apprentissage-view';
+/* ------------------------------------------------------------------
+   1) If you do NOT have a real matiere-utils.ts, define inline below.
+   Otherwise, remove these and import from '../utils/matiere-utils'
+------------------------------------------------------------------ */
+export interface Matiere {
+  id: number;
+  nom: string;
+  description: string;
+  dateCreation: string;
+  couleur?: string;
+  icone?: string;
+}
+export function getIconForMatiere(nom: string) {
+  return <InfoIcon />; // Minimal placeholder; replace with your logic
+}
+export function getColorForMatiere(matiere: Matiere) {
+  return matiere.couleur ?? '#607D8B'; // minimal placeholder
+}
 
+/* ------------------------------------------------------------------
+   2) Create two custom components for "GridContainer" & "GridItem"
+   that accept spacing, sx, and breakpoints.
+------------------------------------------------------------------ */
+type GridContainerProps = {
+  children: ReactNode;
+  spacing?: number;
+  /** Add optional sx for extra styling */
+  sx?: SxProps<Theme>;
+};
+
+function GridContainer({ children, spacing = 0, sx }: GridContainerProps) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        margin: (theme) => theme.spacing(-(spacing / 2)),
+        ...sx, // Merge in any extra styles from the sx prop
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+type GridItemProps = {
+  children: ReactNode;
+  xs?: number; // 1 to 12
+  sm?: number; // 1 to 12
+  md?: number; // 1 to 12
+  sx?: SxProps<Theme>;
+};
+
+function GridItem({ children, xs, sm, md, sx }: GridItemProps) {
+  // Helper to convert MUI grid columns to a percentage (like 12-col layout)
+  const getWidth = (val: number | undefined) => (val ? `${(val / 12) * 100}%` : '100%');
+
+  return (
+    <Box
+      sx={{
+        width: getWidth(xs),
+        padding: (theme) => theme.spacing(1),
+        '@media (min-width:600px)': {
+          width: getWidth(sm),
+        },
+        '@media (min-width:900px)': {
+          width: getWidth(md),
+        },
+        ...sx, // Merge in any extra styles from the sx prop
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/* ------------------------------------------------------------------
+   3) Define your MatiereDetailsProps & Main Component
+------------------------------------------------------------------ */
 type MatiereDetailsProps = {
   matiere: Matiere;
   onEdit: () => void;
   onDelete: () => void;
   onManageChapitres: () => void;
   onBack: () => void;
-};
-
-// Mapping des icônes pour les matières
-const getIconForMatiere = (nom: string) => {
-  const nomLower = nom.toLowerCase();
-  if (nomLower.includes('math')) return <CalculateIcon fontSize="large" />;
-  if (nomLower.includes('franç') || nomLower.includes('litt'))
-    return <MenuBookIcon fontSize="large" />;
-  if (nomLower.includes('angl') || nomLower.includes('espag') || nomLower.includes('allem'))
-    return <LanguageIcon fontSize="large" />;
-  if (
-    nomLower.includes('scien') ||
-    nomLower.includes('physi') ||
-    nomLower.includes('chim') ||
-    nomLower.includes('bio')
-  )
-    return <ScienceIcon fontSize="large" />;
-  if (nomLower.includes('art') || nomLower.includes('dessin'))
-    return <BrushIcon fontSize="large" />;
-  if (nomLower.includes('musi')) return <MusicNoteIcon fontSize="large" />;
-  if (nomLower.includes('sport') || nomLower.includes('éduc') || nomLower.includes('eps'))
-    return <FitnessCenterIcon fontSize="large" />;
-  return <BookIcon fontSize="large" />;
+  open: boolean;
 };
 
 export default function MatiereDetails({
@@ -77,209 +115,207 @@ export default function MatiereDetails({
   onDelete,
   onManageChapitres,
   onBack,
+  open,
 }: MatiereDetailsProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-
-  // Helper function to get color based on matiere name
-  const getColorForMatiere = (matiereName: string) => {
-    const nomLower = matiereName.toLowerCase();
-    if (nomLower.includes('math')) return '#4CAF50';
-    if (nomLower.includes('franç')) return '#2196F3';
-    if (nomLower.includes('angl')) return '#E91E63';
-    if (nomLower.includes('scien')) return '#FF9800';
-    if (nomLower.includes('art')) return '#9C27B0';
-    if (nomLower.includes('musi')) return '#3F51B5';
-    if (nomLower.includes('sport')) return '#F44336';
-
-    // Default color
-    return '#607D8B';
-  };
-
-  // Helper function to darken a color (replacement for theme.palette.darken)
-  const darkenColor = (color: string, amount: number) => {
-    return alpha(color, 1 - amount);
-  };
-
-  const matiereColor = matiere.couleur || getColorForMatiere(matiere.nom);
-  const matiereIcon = getIconForMatiere(matiere.nom);
+  const color = getColorForMatiere(matiere);
 
   return (
-    <Card sx={{ mb: 2, overflow: 'visible' }}>
-      <Box
-        sx={{
-          bgcolor: matiereColor,
-          color: 'white',
-          p: 3,
-          position: 'relative',
-          borderTopLeftRadius: theme.shape.borderRadius,
-          borderTopRightRadius: theme.shape.borderRadius,
-        }}
-      >
-        <Grid container alignItems="center" spacing={2}>
-          <Grid item>
+    <Drawer
+      anchor="right"
+      open={open}
+      variant="persistent"
+      sx={{
+        width: { xs: '100%', sm: 450 },
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: { xs: '100%', sm: 450 },
+          boxSizing: 'border-box',
+          p: 0,
+          height: '100%',
+          border: 'none',
+          boxShadow: '-4px 0px 20px rgba(0, 0, 0, 0.1)',
+        },
+      }}
+    >
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Box
+          sx={{
+            bgcolor: color,
+            color: 'white',
+            p: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               onClick={onBack}
               sx={{
                 color: 'white',
                 bgcolor: 'rgba(255,255,255,0.2)',
+                mr: 2,
                 '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
               }}
             >
               <ArrowBackIcon />
             </IconButton>
-          </Grid>
-          <Grid item xs>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Avatar
-                sx={{
-                  bgcolor: 'white',
-                  color: matiereColor,
-                  mr: 2,
-                  width: 56,
-                  height: 56,
-                }}
-              >
-                {matiereIcon}
-              </Avatar>
-              <Box>
-                <Typography variant="h5" component="h2">
-                  {matiere.nom}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                  <CalendarTodayIcon fontSize="small" sx={{ mr: 1, fontSize: '0.875rem' }} />
-                  <Typography variant="subtitle2">Créée le {matiere.dateCreation}</Typography>
-                </Box>
+
+            <Box>
+              <Typography variant="h6" component="h2">
+                {matiere.nom}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                <CalendarTodayIcon style={{ marginRight: '8px', fontSize: '0.875rem' }} />
+                <Typography variant="subtitle2">Créée le {matiere.dateCreation}</Typography>
               </Box>
             </Box>
-          </Grid>
-        </Grid>
-      </Box>
+          </Box>
+        </Box>
 
-      <CardContent sx={{ p: 0 }}>
-        <Grid container spacing={0}>
-          {/* Left side - Details */}
-          <Grid item xs={12} md={8} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-              <InfoIcon sx={{ mr: 1 }} fontSize="small" />
-              Description
-            </Typography>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                bgcolor: 'background.default',
-                borderRadius: 1,
-                mb: 3,
-              }}
-            >
-              <Typography variant="body1">{matiere.description}</Typography>
-            </Paper>
-
-            {/* Style information */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Couleur
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box
-                    sx={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      bgcolor: matiereColor,
-                      mr: 1,
-                    }}
-                  />
-                  <Typography>{matiere.couleur || 'Couleur par défaut'}</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Icône
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar sx={{ bgcolor: matiereColor, width: 24, height: 24, mr: 1 }}>
-                    {React.cloneElement(matiereIcon, { fontSize: 'small' })}
-                  </Avatar>
-                  <Typography>{matiere.icone || 'Icône par défaut'}</Typography>
-                </Box>
-              </Grid>
-            </Grid>
-
-            {/* Statistiques */}
-            <Typography variant="h6" gutterBottom>
-              Statistiques de la matière
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" color={matiereColor}>
-                    3
-                  </Typography>
-                  <Typography variant="body2">Chapitres</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" color={matiereColor}>
-                    12
-                  </Typography>
-                  <Typography variant="body2">Exercices</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" color={matiereColor}>
-                    8
-                  </Typography>
-                  <Typography variant="body2">Ressources</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" color={matiereColor}>
-                    85%
-                  </Typography>
-                  <Typography variant="body2">Progression</Typography>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Right side - Actions */}
-          <Grid
-            item
-            xs={12}
-            md={4}
-            sx={{
-              borderLeft: { xs: 'none', md: '1px solid' },
-              borderColor: 'divider',
-              bgcolor: 'background.default',
-              p: 3,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Actions
-            </Typography>
-
-            <Stack spacing={2}>
-              <Button
-                variant="contained"
-                fullWidth
-                startIcon={<FormatListBulletedIcon />}
-                onClick={onManageChapitres}
-                size={isMobile ? 'small' : 'medium'}
+        {/* Content */}
+        <Box sx={{ p: 3, flexGrow: 1, overflow: 'auto' }}>
+          <GridContainer spacing={3}>
+            {/* Description section */}
+            <GridItem xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <InfoIcon style={{ marginRight: '8px' }} />
+                Description
+              </Typography>
+              <Paper
+                elevation={0}
                 sx={{
-                  bgcolor: matiereColor,
-                  '&:hover': { bgcolor: darkenColor(matiereColor, 0.2) },
+                  p: 2,
+                  bgcolor: 'background.default',
+                  borderRadius: 1,
+                  mb: 3,
                 }}
               >
-                Gérer les Chapitres
-              </Button>
+                <Typography variant="body1">{matiere.description}</Typography>
+              </Paper>
+            </GridItem>
 
+            {/* Style information */}
+            <GridItem xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Informations
+              </Typography>
+              <GridContainer spacing={2} sx={{ mb: 3 }}>
+                <GridItem xs={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Couleur
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        bgcolor: color,
+                        mr: 1,
+                      }}
+                    />
+                    <Typography>{matiere.couleur || 'Couleur par défaut'}</Typography>
+                  </Box>
+                </GridItem>
+
+                <GridItem xs={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Icône
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        bgcolor: `${color}20`,
+                        color: color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mr: 1,
+                      }}
+                    >
+                      {getIconForMatiere(matiere.nom)}
+                    </Box>
+                    <Typography>{matiere.icone || 'Icône par défaut'}</Typography>
+                  </Box>
+                </GridItem>
+              </GridContainer>
+            </GridItem>
+
+            {/* Statistics section */}
+            <GridItem xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Statistiques
+              </Typography>
+              <Paper sx={{ p: 2, mb: 3 }}>
+                <GridContainer spacing={2}>
+                  <GridItem xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" sx={{ color }}>
+                        3
+                      </Typography>
+                      <Typography variant="body2">Chapitres</Typography>
+                    </Box>
+                  </GridItem>
+                  <GridItem xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" sx={{ color }}>
+                        12
+                      </Typography>
+                      <Typography variant="body2">Exercices</Typography>
+                    </Box>
+                  </GridItem>
+                  <GridItem xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" sx={{ color }}>
+                        8
+                      </Typography>
+                      <Typography variant="body2">Ressources</Typography>
+                    </Box>
+                  </GridItem>
+                  <GridItem xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', p: 1 }}>
+                      <Typography variant="h4" sx={{ color }}>
+                        85%
+                      </Typography>
+                      <Typography variant="body2">Progression</Typography>
+                    </Box>
+                  </GridItem>
+                </GridContainer>
+              </Paper>
+            </GridItem>
+          </GridContainer>
+        </Box>
+
+        {/* Action buttons */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Stack spacing={2}>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<FormatListBulletedIcon />}
+              onClick={onManageChapitres}
+              size={isMobile ? 'small' : 'medium'}
+              sx={{
+                bgcolor: color,
+                '&:hover': { bgcolor: `${color}dd` },
+              }}
+            >
+              Gérer les Chapitres
+            </Button>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="outlined"
                 fullWidth
@@ -287,9 +323,9 @@ export default function MatiereDetails({
                 onClick={onEdit}
                 size={isMobile ? 'small' : 'medium'}
                 sx={{
-                  borderColor: matiereColor,
-                  color: matiereColor,
-                  '&:hover': { borderColor: darkenColor(matiereColor, 0.2) },
+                  borderColor: color,
+                  color: color,
+                  '&:hover': { borderColor: `${color}dd` },
                 }}
               >
                 Modifier
@@ -305,48 +341,10 @@ export default function MatiereDetails({
               >
                 Supprimer
               </Button>
-            </Stack>
-
-            {/* Additional info cards */}
-            <Box sx={{ mt: 4 }}>
-              <Paper
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <PeopleIcon sx={{ mr: 2, color: matiereColor }} />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Étudiants inscrits
-                  </Typography>
-                  <Typography variant="h6">18 étudiants</Typography>
-                </Box>
-              </Paper>
-
-              <Paper
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <AssignmentIcon sx={{ mr: 2, color: matiereColor }} />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Dernière mise à jour
-                  </Typography>
-                  <Typography variant="h6">Il y a 2 jours</Typography>
-                </Box>
-              </Paper>
             </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
+          </Stack>
+        </Box>
+      </Box>
+    </Drawer>
   );
 }
