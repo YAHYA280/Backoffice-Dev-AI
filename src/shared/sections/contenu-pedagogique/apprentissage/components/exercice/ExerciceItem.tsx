@@ -1,29 +1,33 @@
 'use client';
 
 import React from 'react';
-import {
-  TableRow,
-  TableCell,
-  Checkbox,
-  Stack,
-  Typography,
-  IconButton,
-  MenuItem,
-  Link,
-  Box,
-  Chip,
-} from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPenToSquare,
   faTrash,
   faInfoCircle,
+  faPenToSquare,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
+
+import {
+  Box,
+  Link,
+  Chip,
+  TableRow,
+  Checkbox,
+  MenuItem,
+  TableCell,
+  IconButton,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
-import { Exercice, STATUT_OPTIONS } from '../../types';
+
+import { STATUT_OPTIONS } from '../../types';
+
+import type { Exercice } from '../../types';
 
 interface ExerciceItemProps {
   exercice: Exercice;

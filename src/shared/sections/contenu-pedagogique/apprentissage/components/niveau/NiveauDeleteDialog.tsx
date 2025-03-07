@@ -1,34 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import { m } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+
 import {
+  Box,
+  alpha,
   Dialog,
+  Button,
+  Avatar,
+  useTheme,
+  Typography,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  Button,
   CircularProgress,
-  Box,
+  DialogContentText,
 } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Niveau } from '../../types';
+
+import { varFade } from 'src/shared/components/animate/variants/fade';
+
+import type { Niveau } from '../../types';
 
 interface NiveauDeleteDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: () => void;
   niveau: Niveau;
+  directDelete?: boolean; // Handle direct deletion from row
 }
 
-const NiveauDeleteDialog = ({ open, onClose, onSubmit, niveau }: NiveauDeleteDialogProps) => {
+const NiveauDeleteDialog = ({
+  open,
+  onClose,
+  onSubmit,
+  niveau,
+  directDelete = false,
+}: NiveauDeleteDialogProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const theme = useTheme();
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     try {
-      // Here would be API call to delete
+      // Here would be an API call to delete
       // await deleteNiveau(niveau.id);
 
       // Simulate API call
@@ -40,29 +57,99 @@ const NiveauDeleteDialog = ({ open, onClose, onSubmit, niveau }: NiveauDeleteDia
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [onSubmit]); // Add any other dependencies if needed, e.g. niveau.id
+
+  // If this is a direct delete from the row action, handle it immediately
+  useEffect(() => {
+    if (open && directDelete) {
+      handleDelete();
+    }
+  }, [open, directDelete, handleDelete]);
+
+  // If directDelete is true, render nothing - the operation happens in the background
+  if (directDelete) {
+    return null;
+  }
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
       PaperProps={{
+        component: m.div,
+        initial: 'initial',
+        animate: 'animate',
+        variants: varFade().in,
         sx: {
-          maxWidth: 400,
+          maxWidth: 450,
           borderRadius: 2,
-          boxShadow: (theme) => theme.customShadows?.dialog,
+          boxShadow: theme.customShadows?.dialog,
+          px: 1.5,
         },
       }}
     >
-      <DialogTitle sx={{ pb: 2 }}>Confirmer la suppression</DialogTitle>
+      <DialogTitle sx={{ pb: 2, pt: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.error.main, 0.12),
+              color: 'error.main',
+              width: 40,
+              height: 40,
+            }}
+          >
+            <FontAwesomeIcon icon={faExclamationTriangle} />
+          </Avatar>
+          <Typography variant="h6">Confirmer la suppression</Typography>
+        </Box>
+      </DialogTitle>
+
       <DialogContent sx={{ pb: 3 }}>
-        <DialogContentText>
+        <DialogContentText sx={{ color: 'text.primary' }}>
           Êtes-vous sûr de vouloir supprimer le niveau <strong>&quot;{niveau.nom}&quot;</strong> ?
-          Cette action est irréversible.
         </DialogContentText>
+
+        <Box
+          sx={{
+            mt: 2,
+            p: 2,
+            borderRadius: 1,
+            bgcolor: alpha(theme.palette.warning.main, 0.08),
+            border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+            color: 'warning.dark',
+          }}
+        >
+          <Typography variant="body2">
+            Cette action est irréversible et supprimera également toutes les matières et chapitres
+            associés.
+          </Typography>
+
+          {niveau.matieresCount && niveau.matieresCount > 0 && (
+            <Typography variant="body2" sx={{ mt: 1, fontWeight: 'fontWeightMedium' }}>
+              Ce niveau contient {niveau.matieresCount} matière{niveau.matieresCount > 1 ? 's' : ''}
+              .
+            </Typography>
+          )}
+
+          {niveau.exercicesCount && niveau.exercicesCount > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 'fontWeightMedium' }}>
+              Ce niveau contient {niveau.exercicesCount} exercice
+              {niveau.exercicesCount > 1 ? 's' : ''}.
+            </Typography>
+          )}
+        </Box>
       </DialogContent>
+
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button variant="outlined" onClick={onClose} disabled={isDeleting}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          disabled={isDeleting}
+          sx={{
+            borderColor: alpha(theme.palette.grey[500], 0.24),
+            color: 'text.primary',
+          }}
+        >
           Annuler
         </Button>
         <Button
@@ -77,6 +164,12 @@ const NiveauDeleteDialog = ({ open, onClose, onSubmit, niveau }: NiveauDeleteDia
               <FontAwesomeIcon icon={faTrash} />
             )
           }
+          sx={{
+            boxShadow: theme.customShadows?.error,
+            '&:hover': {
+              boxShadow: 'none',
+            },
+          }}
         >
           Supprimer
         </Button>

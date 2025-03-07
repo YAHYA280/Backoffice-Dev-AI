@@ -1,5 +1,15 @@
 'use client';
 
+import React from 'react';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { Box, Card, Table, TableBody, Typography, TableContainer } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { Scrollbar } from 'src/shared/components/scrollbar';
+import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 // Import table components from Minimals
 import {
   useTable,
@@ -10,28 +20,12 @@ import {
   TableSelectedAction,
   TablePaginationCustom,
 } from 'src/shared/components/table';
-import React from 'react';
-import {
-  Box,
-  Card,
-  Table,
-  TableBody,
-  TableContainer,
-  Checkbox,
-  TableRow,
-  TableCell,
-  Typography,
-} from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Scrollbar } from 'src/shared/components/scrollbar';
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Exercice, FilterParams, Pagination } from '../../types';
+
 import { ExerciceItem } from './ExerciceItem';
 import { SearchBar } from '../common/Searchbar';
-import { EmptyContent } from '../common/EmptyContent';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
+
+import type { Exercice, Pagination, FilterParams } from '../../types';
 
 const TABLE_HEAD = [
   { id: 'titre', label: 'Titre', align: 'left' },

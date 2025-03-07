@@ -1,35 +1,45 @@
 import React from 'react';
-import {
-  TableRow,
-  TableCell,
-  Checkbox,
-  Stack,
-  Typography,
-  IconButton,
-  MenuItem,
-  Link,
-  Box,
-} from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPenToSquare,
-  faTrash,
   faEye,
-  faEllipsisVertical,
+  faTrash,
+  faToggleOn,
+  faPenToSquare,
+  faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+
+import {
+  Box,
+  Link,
+  Stack,
+  alpha,
+  Switch,
+  Tooltip,
+  TableRow,
+  Checkbox,
+  MenuItem,
+  TableCell,
+  Typography,
+  IconButton,
+} from '@mui/material';
+
+import { fDate } from 'src/utils/format-time';
+
+import { varFade } from 'src/shared/components/animate/variants/fade';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
-import { Niveau } from '../../types';
+
+import type { Niveau } from '../../types';
 
 interface NiveauItemProps {
   niveau: Niveau;
   selected: boolean;
   onSelectRow: () => void;
   onEditClick: () => void;
-  onDeleteClick: () => void;
+  onDeleteClick: (niveau?: Niveau) => void;
   onViewClick: () => void;
   onViewMatieres: () => void;
+  onToggleActive?: (niveau: Niveau, active: boolean) => void;
 }
 
 export const NiveauItem: React.FC<NiveauItemProps> = ({
@@ -40,70 +50,197 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
   onDeleteClick,
   onViewClick,
   onViewMatieres,
+  onToggleActive,
 }) => {
-  const confirm = useBoolean();
   const popover = usePopover();
 
-  const handleOpenConfirm = () => {
-    popover.onClose();
-    confirm.onTrue();
+  const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (onToggleActive) {
+      onToggleActive(niveau, event.target.checked);
+    }
   };
 
-  const handleDelete = () => {
-    onDeleteClick();
-    confirm.onFalse();
-  };
+  // Utiliser la fonction fDate du fichier format-time
+  const formattedDate = fDate(niveau.dateCreated) || 'Non définie';
 
   return (
     <>
-      <TableRow hover selected={selected} onClick={onViewMatieres} sx={{ cursor: 'pointer' }}>
+      <TableRow
+        component={m.tr}
+        variants={varFade().inUp}
+        hover
+        selected={selected}
+        onClick={onViewMatieres}
+        sx={{
+          cursor: 'pointer',
+          transition: (theme) => theme.transitions.create(['background-color']),
+          '&:hover': {
+            backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
+          },
+          ...(niveau.active === false && {
+            opacity: 0.7,
+            bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.2),
+          }),
+        }}
+      >
         <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
         <TableCell>
           <Stack direction="row" alignItems="center" spacing={2}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                color: 'primary.main',
+              }}
+            >
+              <FontAwesomeIcon icon={faGraduationCap} size="sm" />
+            </Box>
             <div>
               <Link
                 component="button"
                 variant="subtitle2"
                 color="text.primary"
-                onClick={onViewClick}
-                sx={{ textDecoration: 'none', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick();
+                }}
+                sx={{
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'fontWeightMedium',
+                  transition: (theme) => theme.transitions.create(['color']),
+                  '&:hover': {
+                    color: 'primary.main',
+                  },
+                }}
                 noWrap
               >
                 {niveau.nom}
               </Link>
+              {niveau.active === false && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                  Inactif
+                </Typography>
+              )}
             </div>
           </Stack>
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{niveau.description}</TableCell>
+        <TableCell
+          sx={{
+            whiteSpace: 'nowrap',
+            color: 'text.secondary',
+            maxWidth: 200,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {niveau.description}
+        </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{niveau.code}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              display: 'inline-block',
+              bgcolor: 'primary.lighter',
+              color: 'primary.dark',
+              fontWeight: 'fontWeightMedium',
+            }}
+          >
+            {niveau.code}
+          </Typography>
+        </TableCell>
+
+        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+          {formattedDate}
+        </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-          <IconButton
-            color="default"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick();
-            }}
-          >
-            <FontAwesomeIcon icon={faPenToSquare} />
-          </IconButton>
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            <Tooltip title="Voir détails">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faEye} />
+              </IconButton>
+            </Tooltip>
 
-          <IconButton
-            color="default"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              popover.onOpen(e);
-            }}
-          >
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </IconButton>
+            <Tooltip title="Modifier">
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Supprimer">
+              <IconButton
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick(niveau); // Call directly instead of opening the internal confirm dialog
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title={niveau.active ? 'Désactiver' : 'Activer'}>
+              <Box
+                onClick={(e) => e.stopPropagation()}
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <Switch
+                  size="small"
+                  checked={niveau.active !== false}
+                  onChange={handleToggleActive}
+                  color="success"
+                />
+              </Box>
+            </Tooltip>
+          </Stack>
         </TableCell>
       </TableRow>
 
@@ -113,51 +250,112 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
         onClose={popover.onClose}
         slotProps={{ paper: { sx: { width: 160 } } }}
       >
-        <MenuItem onClick={onViewClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
-          <FontAwesomeIcon icon={faEye} style={{ marginRight: 8, color: 'text.secondary' }} />
+        <MenuItem
+          onClick={onViewClick}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Box
+            component={FontAwesomeIcon}
+            className="icon"
+            icon={faEye}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
+          />
           Voir
         </MenuItem>
 
-        <MenuItem onClick={onEditClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
-          <FontAwesomeIcon
+        <MenuItem
+          onClick={onEditClick}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Box
+            component={FontAwesomeIcon}
+            className="icon"
             icon={faPenToSquare}
-            style={{ marginRight: 8, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Modifier
         </MenuItem>
 
         <MenuItem
-          onClick={handleOpenConfirm}
-          sx={{ color: 'error.main', typography: 'body2', py: 1, px: 2.5 }}
+          onClick={() => {
+            popover.onClose();
+            onDeleteClick(niveau);
+          }}
+          sx={{
+            color: 'error.main',
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover': {
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+            },
+          }}
         >
-          <FontAwesomeIcon icon={faTrash} style={{ marginRight: 8 }} />
+          <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
-      </CustomPopover>
 
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Supprimer"
-        content="Êtes-vous sûr de vouloir supprimer ce niveau ?"
-        action={
+        <MenuItem
+          onClick={() => {
+            if (onToggleActive) {
+              onToggleActive(niveau, !niveau.active);
+            }
+            popover.onClose();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'success.main',
+            },
+          }}
+        >
           <Box
-            component="button"
+            component={FontAwesomeIcon}
+            className="icon"
+            icon={faToggleOn}
             sx={{
-              p: '8px 16px',
-              bgcolor: 'error.main',
-              borderRadius: 1,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'error.dark' },
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
             }}
-            onClick={handleDelete}
-          >
-            Supprimer
-          </Box>
-        }
-      />
+          />
+          {niveau.active ? 'Désactiver' : 'Activer'}
+        </MenuItem>
+      </CustomPopover>
     </>
   );
 };

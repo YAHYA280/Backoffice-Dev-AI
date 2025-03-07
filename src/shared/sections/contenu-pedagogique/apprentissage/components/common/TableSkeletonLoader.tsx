@@ -1,6 +1,8 @@
-import React from 'react';
-import { TableRow, TableCell, Skeleton, Stack } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
+
+import React from 'react';
+
+import { Stack, TableRow, Skeleton, TableCell } from '@mui/material';
 
 interface TableSkeletonLoaderProps {
   rows?: number;

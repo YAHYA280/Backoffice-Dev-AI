@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import {
   Dialog,
+  Button,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  Button,
-  Box,
   CircularProgress,
+  DialogContentText,
 } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Chapitre } from '../../types';
+
+import type { Chapitre } from '../../types';
 
 interface ChapitreDeleteDialogProps {
   open: boolean;

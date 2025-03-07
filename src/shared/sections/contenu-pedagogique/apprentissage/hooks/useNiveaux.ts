@@ -1,8 +1,11 @@
 'use client';
 
-// src/shared/sections/contenu-pedagogique/apprentissage/hooks/useNiveaux.ts
-import { useState, useCallback, useEffect } from 'react';
-import { Niveau, FilterParams, ApiResponse, Pagination, DEFAULT_PAGINATION } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { format, addDays, subDays, subMonths } from 'date-fns';
+
+import { DEFAULT_PAGINATION } from '../types';
+
+import type { Niveau, Pagination, ApiResponse, FilterParams } from '../types';
 
 // Mock API function for demonstration purposes
 const fetchNiveauxAPI = async (params: FilterParams): Promise<ApiResponse<Niveau[]>> => {
@@ -14,39 +17,81 @@ const fetchNiveauxAPI = async (params: FilterParams): Promise<ApiResponse<Niveau
       description: 'Premier niveau du cycle préparatoire',
       code: 'NIV-CP1',
       matieresCount: 5,
+      exercicesCount: 24,
+      dateCreated: subMonths(new Date(), 9).toISOString(),
+      lastUpdated: subDays(new Date(), 15).toISOString(),
+      active: true,
     },
     {
       id: '2',
       nom: 'CP2 - Cours Préparatoire 2',
-      description: 'Second niveau du cycle préparatoire',
+      description: 'Deuxième niveau du cycle préparatoire',
       code: 'NIV-CP2',
-      matieresCount: 5,
+      matieresCount: 6,
+      exercicesCount: 30,
+      dateCreated: subMonths(new Date(), 8).toISOString(),
+      lastUpdated: subDays(new Date(), 10).toISOString(),
+      active: true,
     },
     {
       id: '3',
       nom: 'CE1 - Cours Élémentaire 1',
       description: 'Premier niveau du cycle élémentaire',
       code: 'NIV-CE1',
-      matieresCount: 4,
+      matieresCount: 7,
+      exercicesCount: 18,
+      dateCreated: subMonths(new Date(), 7).toISOString(),
+      lastUpdated: subDays(new Date(), 20).toISOString(),
+      active: true,
     },
     {
       id: '4',
       nom: 'CE2 - Cours Élémentaire 2',
-      description: 'Second niveau du cycle élémentaire',
+      description: 'Deuxième niveau du cycle élémentaire',
       code: 'NIV-CE2',
-      matieresCount: 5,
+      matieresCount: 4,
+      exercicesCount: 22,
+      dateCreated: subMonths(new Date(), 6).toISOString(),
+      lastUpdated: subDays(new Date(), 5).toISOString(),
+      active: false,
     },
     {
       id: '5',
       nom: 'CM1 - Cours Moyen 1',
       description: 'Premier niveau du cycle moyen',
       code: 'NIV-CM1',
-      matieresCount: 6,
+      matieresCount: 8,
+      exercicesCount: 28,
+      dateCreated: subMonths(new Date(), 5).toISOString(),
+      lastUpdated: subDays(new Date(), 30).toISOString(),
+      active: true,
+    },
+    {
+      id: '6',
+      nom: 'CM2 - Cours Moyen 2',
+      description: 'Deuxième niveau du cycle moyen',
+      code: 'NIV-CM2',
+      matieresCount: 5,
+      exercicesCount: 32,
+      dateCreated: subMonths(new Date(), 4).toISOString(),
+      lastUpdated: subDays(new Date(), 12).toISOString(),
+      active: true,
+    },
+    {
+      id: '7',
+      nom: '6ème - Sixième',
+      description: 'Premier niveau du collège',
+      code: 'NIV-6EME',
+      matieresCount: 8,
+      dateCreated: addDays(new Date(), -15).toISOString(),
+      active: false,
     },
   ];
 
-  // Filter by search term if present
+  // Apply filters
   let filteredData = [...mockData];
+
+  // Filter by search term if present
   if (params.searchTerm) {
     const searchLower = params.searchTerm.toLowerCase();
     filteredData = filteredData.filter(
@@ -55,6 +100,51 @@ const fetchNiveauxAPI = async (params: FilterParams): Promise<ApiResponse<Niveau
         niveau.description.toLowerCase().includes(searchLower) ||
         niveau.code.toLowerCase().includes(searchLower)
     );
+  }
+
+  // Apply column-specific filters
+  if (params.nomFilter) {
+    const filter = params.nomFilter.toLowerCase();
+    filteredData = filteredData.filter((niveau) => niveau.nom.toLowerCase().includes(filter));
+  }
+
+  if (params.descriptionFilter) {
+    const filter = params.descriptionFilter.toLowerCase();
+    filteredData = filteredData.filter((niveau) =>
+      niveau.description.toLowerCase().includes(filter)
+    );
+  }
+
+  if (params.codeFilter) {
+    const filter = params.codeFilter.toLowerCase();
+    filteredData = filteredData.filter((niveau) => niveau.code.toLowerCase().includes(filter));
+  }
+
+  if (params.dateCreatedFilter) {
+    const filter = params.dateCreatedFilter.toLowerCase();
+    filteredData = filteredData.filter((niveau) => {
+      if (!niveau.dateCreated) return false;
+      const date = format(new Date(niveau.dateCreated), 'dd MMM yyyy');
+      return date.toLowerCase().includes(filter);
+    });
+  }
+
+  // Filter by active status
+  if (params.activeOnly) {
+    filteredData = filteredData.filter((niveau) => niveau.active !== false);
+  }
+
+  // Sort the data if needed
+  if (params.sortBy) {
+    const direction = params.sortDirection === 'desc' ? -1 : 1;
+    filteredData.sort((a: any, b: any) => {
+      const fieldA = a[params.sortBy as keyof Niveau];
+      const fieldB = b[params.sortBy as keyof Niveau];
+
+      if (fieldA < fieldB) return -1 * direction;
+      if (fieldA > fieldB) return 1 * direction;
+      return 0;
+    });
   }
 
   // Simulate pagination
@@ -77,7 +167,7 @@ const fetchNiveauxAPI = async (params: FilterParams): Promise<ApiResponse<Niveau
   };
 };
 
-// Define the hook as a regular function
+// Define the hook
 function useNiveauxHook() {
   const [niveaux, setNiveaux] = useState<Niveau[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -88,6 +178,9 @@ function useNiveauxHook() {
     searchTerm: '',
     page: 1,
     limit: 10,
+    sortBy: 'nom',
+    sortDirection: 'asc',
+    activeOnly: false,
   });
 
   const fetchNiveaux = useCallback(async () => {
@@ -128,6 +221,45 @@ function useNiveauxHook() {
     setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
   };
 
+  const handleColumnFilterChange = (columnId: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [`${columnId}Filter`]: value,
+      page: 1,
+    }));
+  };
+
+  const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: field,
+      sortDirection: direction,
+    }));
+  };
+
+  const handleToggleActive = (niveau: Niveau, active: boolean) => {
+    // In a real application, this would call an API to update the status
+    setNiveaux((prev) => prev.map((item) => (item.id === niveau.id ? { ...item, active } : item)));
+  };
+
+  const handleToggleActiveOnly = (activeOnly: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      activeOnly,
+      page: 1,
+    }));
+  };
+
+  const handleDeleteNiveau = async (id: string) => {
+    // In a real application, this would call an API to delete the niveau
+    setNiveaux((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleDeleteMultipleNiveaux = async (ids: string[]) => {
+    // In a real application, this would call an API to delete multiple niveaux
+    setNiveaux((prev) => prev.filter((item) => !ids.includes(item.id)));
+  };
+
   return {
     niveaux,
     loading,
@@ -139,14 +271,19 @@ function useNiveauxHook() {
     handlePageChange,
     handleLimitChange,
     handleSearch,
+    handleColumnFilterChange,
+    handleSortChange,
+    handleToggleActive,
+    handleToggleActiveOnly,
+    handleDeleteNiveau,
+    handleDeleteMultipleNiveaux,
     refetch: fetchNiveaux,
   };
 }
 
-// Export an object with the hook as a property
+// Export the hook
 const niveauxHooks = {
   useNiveaux: useNiveauxHook,
 };
 
-// Direct export of the object
 export default niveauxHooks;

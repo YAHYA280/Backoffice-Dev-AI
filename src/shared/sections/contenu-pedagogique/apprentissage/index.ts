@@ -1,7 +1,16 @@
 // src/shared/sections/contenu-pedagogique/apprentissage/index.ts
 
-export { ApprentissageView as default } from './view';
+export * from './hooks/useMatieres';
 
+export * from './hooks/useChapitres';
+
+export * from './hooks/useExercices';
+
+export { ApprentissageView as default } from './view';
+// Export the hooks
+export { default as niveauxHooks } from './hooks/useNiveaux';
+// Re-export constants from types.ts
+export { STATUT_OPTIONS, MATIERE_COLORS, DIFFICULTE_OPTIONS, DEFAULT_PAGINATION } from './types';
 // Re-export types but exclude constants that are now in types.ts
 export type {
   Niveau,
@@ -9,15 +18,6 @@ export type {
   Chapitre,
   Exercice,
   Pagination,
-  FilterParams,
   ApiResponse,
+  FilterParams,
 } from './types';
-
-// Re-export constants from types.ts
-export { DIFFICULTE_OPTIONS, STATUT_OPTIONS, DEFAULT_PAGINATION, MATIERE_COLORS } from './types';
-
-// Export the hooks
-export { default as niveauxHooks } from './hooks/useNiveaux';
-export * from './hooks/useMatieres';
-export * from './hooks/useChapitres';
-export * from './hooks/useExercices';

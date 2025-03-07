@@ -2,11 +2,14 @@
 
 // src/shared/sections/contenu-pedagogique/apprentissage/components/matiere/MatiereDialog.tsx
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, Typography, IconButton } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { Matiere } from '../../types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { Dialog, Typography, IconButton, DialogTitle, DialogContent } from '@mui/material';
+
 import { MatiereForm } from './MatiereForm';
+
+import type { Matiere } from '../../types';
 
 interface MatiereDialogProps {
   open: boolean;

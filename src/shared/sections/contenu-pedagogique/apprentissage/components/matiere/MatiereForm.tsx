@@ -1,22 +1,24 @@
 'use client';
 
+import { z } from 'zod';
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+
 import {
   Box,
   Grid,
-  TextField,
   Stack,
   Button,
-  CircularProgress,
+  Avatar,
+  TextField,
+  Typography,
   FormControl,
   FormHelperText,
-  Typography,
-  Avatar,
+  CircularProgress,
 } from '@mui/material';
-import { Matiere, MATIERE_COLORS } from '../../types';
+
+import { MATIERE_COLORS } from '../../types';
 
 // Form validation schema using Zod
 const schema = z.object({
@@ -62,7 +64,6 @@ export const MatiereForm = ({
 
   // Selected color and icon
   const selectedColor = watch('couleur');
-  const selectedIcon = watch('icon');
 
   const handleColorSelect = (color: string, icon: string) => {
     setValue('couleur', color, { shouldValidate: true });

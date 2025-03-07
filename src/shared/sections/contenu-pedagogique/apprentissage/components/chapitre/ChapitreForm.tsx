@@ -1,24 +1,26 @@
 'use client';
 
+import { z } from 'zod';
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+
 import {
   Box,
   Grid,
-  TextField,
+  Chip,
   Stack,
   Button,
-  CircularProgress,
-  FormControl,
-  FormHelperText,
-  InputLabel,
   Select,
   MenuItem,
-  Chip,
+  TextField,
+  InputLabel,
+  FormControl,
+  FormHelperText,
+  CircularProgress,
 } from '@mui/material';
-import { Chapitre, DIFFICULTE_OPTIONS } from '../../types';
+
+import { DIFFICULTE_OPTIONS } from '../../types';
 
 // Form validation schema using Zod
 const schema = z.object({

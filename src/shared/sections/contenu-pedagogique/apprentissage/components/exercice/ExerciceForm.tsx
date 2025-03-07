@@ -1,25 +1,27 @@
 'use client';
 
+import { z } from 'zod';
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+
 import {
   Box,
   Grid,
-  TextField,
+  Chip,
   Stack,
   Button,
-  CircularProgress,
-  FormControl,
-  FormHelperText,
-  InputLabel,
   Select,
   MenuItem,
-  Chip,
+  TextField,
+  InputLabel,
+  FormControl,
   Autocomplete,
+  FormHelperText,
+  CircularProgress,
 } from '@mui/material';
-import { Exercice, STATUT_OPTIONS } from '../../types';
+
+import { STATUT_OPTIONS } from '../../types';
 
 // Available resources options
 const RESSOURCE_OPTIONS = ['PDF', 'Audio', 'Vidéo', 'Interactive', 'Image'];

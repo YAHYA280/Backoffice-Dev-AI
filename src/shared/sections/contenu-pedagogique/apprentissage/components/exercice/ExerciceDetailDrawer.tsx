@@ -1,35 +1,39 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  Drawer,
-  IconButton,
-  Typography,
-  Stack,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Button,
-  Chip,
-  Grid,
-} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
-  faPenToSquare,
   faTrash,
+  faVideo,
+  faImage,
+  faLaptop,
   faFileAlt,
   faFilePdf,
-  faHeadphones,
-  faVideo,
-  faLaptop,
-  faImage,
   faClipboard,
+  faHeadphones,
+  faPenToSquare,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
-import { Exercice, STATUT_OPTIONS } from '../../types';
+
+import {
+  Box,
+  List,
+  Chip,
+  Grid,
+  Stack,
+  Drawer,
+  Button,
+  Divider,
+  ListItem,
+  IconButton,
+  Typography,
+  ListItemText,
+} from '@mui/material';
+
+import { STATUT_OPTIONS } from '../../types';
+
+import type { Exercice } from '../../types';
 
 interface ExerciceDetailDrawerProps {
   open: boolean;

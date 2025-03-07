@@ -1,6 +1,8 @@
-import React from 'react';
-import { Box, Typography, styled } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
+
+import React from 'react';
+
+import { Box, styled, Typography } from '@mui/material';
 
 const StyledRoot = styled('div')(({ theme }) => ({
   display: 'flex',

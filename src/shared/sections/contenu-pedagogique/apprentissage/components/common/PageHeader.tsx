@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
-import { Stack, Button, Typography, styled, alpha } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import React from 'react';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { Stack, Button, styled, Typography } from '@mui/material';
 
 const StyledRoot = styled('div')(({ theme }) => ({
   paddingBottom: theme.spacing(3),

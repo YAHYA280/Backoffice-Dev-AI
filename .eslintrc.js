@@ -13,6 +13,7 @@ module.exports = {
     project: './tsconfig.json',
   },
   settings: {
+    'import/core-modules': ['date-fns'],
     'import/resolver': {
       typescript: {
         project: './tsconfig.json',

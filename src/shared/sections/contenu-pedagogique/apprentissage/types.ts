@@ -1,9 +1,15 @@
+// In your types.ts file
 export interface Niveau {
   id: string;
   nom: string;
   description: string;
   code: string;
   matieresCount?: number;
+  dateCreated?: string;
+  active?: boolean;
+  // Add these new properties
+  exercicesCount?: number;
+  lastUpdated?: string;
 }
 
 export interface Matiere {
@@ -46,7 +52,13 @@ export interface FilterParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortDirection?: 'asc' | 'desc';
+  // New column specific filters
+  nomFilter?: string;
+  descriptionFilter?: string;
+  codeFilter?: string;
+  dateCreatedFilter?: string;
+  activeOnly?: boolean;
 }
 
 // Response interfaces

@@ -1,12 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import {
-  Chapitre,
-  FilterParams,
-  ApiResponse,
-  Pagination,
-  DEFAULT_PAGINATION,
-  DIFFICULTE_OPTIONS,
-} from '../types';
+import { useState, useEffect, useCallback } from 'react';
+
+import { DEFAULT_PAGINATION } from '../types';
+
+import type { Chapitre, Pagination, ApiResponse, FilterParams } from '../types';
 
 // Mock API function for demonstration purposes
 const fetchChapitresAPI = async (

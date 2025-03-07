@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, Typography, IconButton } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { Niveau } from '../../types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { Dialog, Typography, IconButton, DialogTitle, DialogContent } from '@mui/material';
+
 import { NiveauForm } from './NiveauForm';
+
+import type { Niveau } from '../../types';
 
 interface NiveauDialogProps {
   open: boolean;

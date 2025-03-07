@@ -1,12 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import {
-  Matiere,
-  FilterParams,
-  ApiResponse,
-  Pagination,
-  DEFAULT_PAGINATION,
-  MATIERE_COLORS,
-} from '../types';
+import { useState, useEffect, useCallback } from 'react';
+
+import { DEFAULT_PAGINATION } from '../types';
+
+import type { Matiere, Pagination, ApiResponse, FilterParams } from '../types';
 
 // Mock API function for demonstration purposes
 const fetchMatieresAPI = async (

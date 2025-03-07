@@ -1,12 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import {
-  Exercice,
-  FilterParams,
-  ApiResponse,
-  Pagination,
-  DEFAULT_PAGINATION,
-  STATUT_OPTIONS,
-} from '../types';
+import { useState, useEffect, useCallback } from 'react';
+
+import { DEFAULT_PAGINATION } from '../types';
+
+import type { Exercice, Pagination, ApiResponse, FilterParams } from '../types';
 
 // Mock API function for demonstration purposes
 const fetchExercicesAPI = async (

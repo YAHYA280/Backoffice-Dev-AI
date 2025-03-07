@@ -1,29 +1,32 @@
 'use client';
 
 import React from 'react';
-import {
-  TableRow,
-  TableCell,
-  Checkbox,
-  Stack,
-  Typography,
-  IconButton,
-  MenuItem,
-  Link,
-  Avatar,
-  Box,
-} from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPenToSquare,
-  faTrash,
   faEye,
+  faTrash,
+  faPenToSquare,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
+
+import {
+  Box,
+  Link,
+  Stack,
+  Avatar,
+  TableRow,
+  Checkbox,
+  MenuItem,
+  TableCell,
+  IconButton,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
-import { Matiere } from '../../types';
+
+import type { Matiere } from '../../types';
 
 interface MatiereItemProps {
   matiere: Matiere;

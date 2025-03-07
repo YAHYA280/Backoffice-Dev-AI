@@ -1,10 +1,10 @@
 // src/shared/sections/contenu-pedagogique/apprentissage/components/niveau/NiveauForm.tsx
+import { z } from 'zod';
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Box, Grid, TextField, Stack, Button, CircularProgress } from '@mui/material';
-import { Niveau } from '../../types';
+
+import { Box, Grid, Stack, Button, TextField, CircularProgress } from '@mui/material';
 
 // Form validation schema using Zod
 const schema = z.object({

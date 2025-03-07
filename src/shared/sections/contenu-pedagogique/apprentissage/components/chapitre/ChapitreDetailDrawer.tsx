@@ -1,30 +1,34 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  Drawer,
-  IconButton,
-  Typography,
-  Stack,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Button,
-  Chip,
-  Avatar,
-} from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
-  faPenToSquare,
   faTrash,
-  faFileAlt,
   faClock,
+  faFileAlt,
+  faPenToSquare,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
-import { Chapitre, DIFFICULTE_OPTIONS } from '../../types';
+
+import {
+  Box,
+  List,
+  Chip,
+  Stack,
+  Drawer,
+  Button,
+  Avatar,
+  Divider,
+  ListItem,
+  IconButton,
+  Typography,
+  ListItemText,
+} from '@mui/material';
+
+import { DIFFICULTE_OPTIONS } from '../../types';
+
+import type { Chapitre } from '../../types';
 
 interface ChapitreDetailDrawerProps {
   open: boolean;

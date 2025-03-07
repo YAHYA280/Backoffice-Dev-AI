@@ -1,30 +1,34 @@
 'use client';
 
 import React from 'react';
-import {
-  TableRow,
-  TableCell,
-  Checkbox,
-  Stack,
-  Typography,
-  IconButton,
-  MenuItem,
-  Link,
-  Box,
-  Chip,
-  Avatar,
-} from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPenToSquare,
-  faTrash,
   faEye,
+  faTrash,
+  faPenToSquare,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
+
+import {
+  Box,
+  Link,
+  Chip,
+  Avatar,
+  TableRow,
+  Checkbox,
+  MenuItem,
+  TableCell,
+  IconButton,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
-import { Chapitre, DIFFICULTE_OPTIONS } from '../../types';
+
+import { DIFFICULTE_OPTIONS } from '../../types';
+
+import type { Chapitre } from '../../types';
 
 interface ChapitreItemProps {
   chapitre: Chapitre;

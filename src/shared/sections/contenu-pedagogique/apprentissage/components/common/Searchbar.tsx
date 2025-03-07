@@ -1,17 +1,12 @@
 'use client';
 
-import React from 'react';
-import {
-  Stack,
-  TextField,
-  InputAdornment,
-  IconButton,
-  styled,
-  alpha, // Import alpha function from MUI
-} from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
+
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faTimes, faSliders } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faSearch, faSliders } from '@fortawesome/free-solid-svg-icons';
+
+import { Stack, alpha, styled, TextField, IconButton, InputAdornment } from '@mui/material';
 
 const StyledRoot = styled('div')(({ theme }) => ({
   paddingBottom: theme.spacing(2),
@@ -39,7 +34,7 @@ interface SearchBarProps {
   onFilterName: (value: string) => void;
   placeholder?: string;
   hasFilters?: boolean;
-  onOpenFilter?: () => void;
+  onOpenFilter?: (event: React.MouseEvent<HTMLElement>) => void;
   sx?: SxProps<Theme>;
 }
 

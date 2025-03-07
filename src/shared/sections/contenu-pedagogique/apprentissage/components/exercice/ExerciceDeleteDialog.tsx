@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import {
   Dialog,
+  Button,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  Button,
-  Box,
   CircularProgress,
+  DialogContentText,
 } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Exercice } from '../../types';
+
+import type { Exercice } from '../../types';
 
 interface ExerciceDeleteDialogProps {
   open: boolean;
