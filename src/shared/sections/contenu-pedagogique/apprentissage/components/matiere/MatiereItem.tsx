@@ -1,29 +1,27 @@
-'use client';
-
 import React from 'react';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faEye,
-  faTrash,
-  faPenToSquare,
-  faEllipsisVertical,
-} from '@fortawesome/free-solid-svg-icons';
+import { faEye, faTrash, faToggleOn, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Link,
   Stack,
+  alpha,
   Avatar,
+  Switch,
+  Tooltip,
   TableRow,
   Checkbox,
   MenuItem,
   TableCell,
+  Typography,
   IconButton,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
+import { fDate } from 'src/utils/format-time';
 
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
 import type { Matiere } from '../../types';
@@ -32,13 +30,14 @@ interface MatiereItemProps {
   matiere: Matiere;
   selected: boolean;
   onSelectRow: () => void;
-  onEditClick: () => void;
-  onDeleteClick: () => void;
-  onViewClick: () => void;
-  onViewChapitres: () => void;
+  onEditClick: (matiere: Matiere) => void;
+  onDeleteClick: (matiere?: Matiere) => void;
+  onViewClick: (matiere: Matiere) => void;
+  onViewChapitres: (matiere: Matiere) => void;
+  onToggleActive?: (matiere: Matiere, active: boolean) => void;
 }
 
-export const MatiereItem = ({
+export const MatiereItem: React.FC<MatiereItemProps> = ({
   matiere,
   selected,
   onSelectRow,
@@ -46,23 +45,40 @@ export const MatiereItem = ({
   onDeleteClick,
   onViewClick,
   onViewChapitres,
-}: MatiereItemProps) => {
-  const confirm = useBoolean();
+  onToggleActive,
+}) => {
   const popover = usePopover();
 
-  const handleOpenConfirm = () => {
-    popover.onClose();
-    confirm.onTrue();
+  const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (onToggleActive) {
+      onToggleActive(matiere, event.target.checked);
+    }
   };
 
-  const handleDelete = () => {
-    onDeleteClick();
-    confirm.onFalse();
-  };
+  // Format dates if available
+  const formattedDate = matiere.dateCreated ? fDate(matiere.dateCreated) : 'Non définie';
 
   return (
     <>
-      <TableRow hover selected={selected} onClick={onViewChapitres} sx={{ cursor: 'pointer' }}>
+      <TableRow
+        component={m.tr}
+        variants={varFade().inUp}
+        hover
+        selected={selected}
+        onClick={() => onViewChapitres(matiere)}
+        sx={{
+          cursor: 'pointer',
+          transition: (theme) => theme.transitions.create(['background-color']),
+          '&:hover': {
+            backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
+          },
+          ...(matiere.active === false && {
+            opacity: 0.7,
+            bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.2),
+          }),
+        }}
+      >
         <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
@@ -79,49 +95,145 @@ export const MatiereItem = ({
             >
               {matiere.icon}
             </Avatar>
-            <div>
+            <Box sx={{ ml: 2, flexGrow: 1 }}>
               <Link
                 component="button"
                 variant="subtitle2"
                 color="text.primary"
-                onClick={onViewClick}
-                sx={{ textDecoration: 'none', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick(matiere);
+                }}
+                sx={{
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'fontWeightMedium',
+                  transition: (theme) => theme.transitions.create(['color']),
+                  '&:hover': {
+                    color: 'primary.main',
+                  },
+                }}
                 noWrap
               >
                 {matiere.nom}
               </Link>
-            </div>
+              {matiere.active === false && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                  Inactive
+                </Typography>
+              )}
+            </Box>
           </Stack>
         </TableCell>
 
-        <TableCell sx={{ color: 'text.secondary' }}>{matiere.description}</TableCell>
+        <TableCell
+          sx={{
+            maxWidth: 280,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            color: 'text.secondary',
+          }}
+        >
+          {matiere.description}
+        </TableCell>
 
         <TableCell align="center" sx={{ color: 'text.secondary' }}>
-          {matiere.chapitresCount}
+          <Typography
+            variant="body2"
+            sx={{
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              display: 'inline-block',
+              bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
+              color: 'primary.dark',
+              fontWeight: 'fontWeightMedium',
+            }}
+          >
+            {matiere.chapitresCount || 0}
+          </Typography>
+        </TableCell>
+
+        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+          {formattedDate}
         </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-          <IconButton
-            color="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick();
-            }}
-            size="small"
-          >
-            <FontAwesomeIcon icon={faPenToSquare} />
-          </IconButton>
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            <Tooltip title="Voir détails">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick(matiere);
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faEye} />
+              </IconButton>
+            </Tooltip>
 
-          <IconButton
-            color="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              popover.onOpen(e);
-            }}
-            size="small"
-          >
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </IconButton>
+            <Tooltip title="Modifier">
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick(matiere);
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Supprimer">
+              <IconButton
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick(matiere);
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </IconButton>
+            </Tooltip>
+
+            {onToggleActive && (
+              <Tooltip title={matiere.active ? 'Désactiver' : 'Activer'}>
+                <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ display: 'flex', alignItems: 'center' }}
+                >
+                  <Switch
+                    size="small"
+                    checked={matiere.active !== false}
+                    onChange={handleToggleActive}
+                    color="success"
+                  />
+                </Box>
+              </Tooltip>
+            )}
+          </Stack>
         </TableCell>
       </TableRow>
 
@@ -131,56 +243,150 @@ export const MatiereItem = ({
         onClose={popover.onClose}
         slotProps={{ paper: { sx: { width: 160 } } }}
       >
-        <MenuItem onClick={onViewClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onViewClick(matiere);
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
+            className="icon"
             icon={faEye}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
+          />
+          Voir détails
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onViewChapitres(matiere);
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Box
+            component={FontAwesomeIcon}
+            className="icon"
+            icon={faEye}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Voir chapitres
         </MenuItem>
 
-        <MenuItem onClick={onEditClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onEditClick(matiere);
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
+            className="icon"
             icon={faPenToSquare}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Modifier
         </MenuItem>
 
         <MenuItem
-          onClick={handleOpenConfirm}
-          sx={{ color: 'error.main', typography: 'body2', py: 1, px: 2.5 }}
+          onClick={() => {
+            popover.onClose();
+            onDeleteClick(matiere);
+          }}
+          sx={{
+            color: 'error.main',
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover': {
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+            },
+          }}
         >
           <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
-      </CustomPopover>
 
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Supprimer"
-        content={`Êtes-vous sûr de vouloir supprimer la matière "${matiere.nom}" ? Cette action supprimera également tous les chapitres et exercices associés.`}
-        action={
-          <Box
-            component="button"
-            sx={{
-              p: '8px 16px',
-              bgcolor: 'error.main',
-              borderRadius: 1,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'error.dark' },
+        {onToggleActive && (
+          <MenuItem
+            onClick={() => {
+              if (onToggleActive) {
+                onToggleActive(matiere, !matiere.active);
+              }
+              popover.onClose();
             }}
-            onClick={handleDelete}
+            sx={{
+              typography: 'body2',
+              py: 1.5,
+              px: 2.5,
+              transition: (theme) => theme.transitions.create(['background-color']),
+              '&:hover .icon': {
+                color: 'success.main',
+              },
+            }}
           >
-            Supprimer
-          </Box>
-        }
-      />
+            <Box
+              component={FontAwesomeIcon}
+              className="icon"
+              icon={faToggleOn}
+              sx={{
+                mr: 1,
+                width: 16,
+                height: 16,
+                color: 'text.secondary',
+                transition: (theme) => theme.transitions.create(['color']),
+              }}
+            />
+            {matiere.active ? 'Désactiver' : 'Activer'}
+          </MenuItem>
+        )}
+      </CustomPopover>
     </>
   );
 };

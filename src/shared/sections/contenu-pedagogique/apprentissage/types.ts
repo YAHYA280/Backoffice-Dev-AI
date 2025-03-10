@@ -20,6 +20,10 @@ export interface Matiere {
   couleur: string; // For the colored circle in the UI
   icon: string; // Letter for the circle icon
   chapitresCount: number;
+  dateCreated?: string;
+  lastUpdated?: string;
+  active?: boolean;
+  exercicesCount?: number;
 }
 
 export interface Chapitre {
@@ -88,13 +92,24 @@ export const DEFAULT_PAGINATION = {
   total: 0,
 };
 
+// export const MATIERE_COLORS = [
+//   { couleur: '#FF5722', icon: 'M' }, // Mathématiques
+//   { couleur: '#2196F3', icon: 'F' }, // Français
+//   { couleur: '#4CAF50', icon: 'S' }, // Sciences
+//   { couleur: '#9C27B0', icon: 'H' }, // Histoire-Géographie
+//   { couleur: '#FF9800', icon: 'A' }, // Arts plastiques
+//   { couleur: '#795548', icon: 'E' }, // Éducation physique
+//   { couleur: '#607D8B', icon: 'L' }, // Langues étrangères
+//   { couleur: '#F44336', icon: 'I' }, // Informatique
+// ];
+
 export const MATIERE_COLORS = [
-  { couleur: '#FF5722', icon: 'M' }, // Mathématiques
-  { couleur: '#2196F3', icon: 'F' }, // Français
-  { couleur: '#4CAF50', icon: 'S' }, // Sciences
-  { couleur: '#9C27B0', icon: 'H' }, // Histoire-Géographie
-  { couleur: '#FF9800', icon: 'A' }, // Arts plastiques
-  { couleur: '#795548', icon: 'E' }, // Éducation physique
-  { couleur: '#607D8B', icon: 'L' }, // Langues étrangères
-  { couleur: '#F44336', icon: 'I' }, // Informatique
+  { couleur: '#FF5722' }, // Mathématiques
+  { couleur: '#2196F3' }, // Français
+  { couleur: '#4CAF50' }, // Sciences
+  { couleur: '#9C27B0' }, // Histoire-Géographie
+  { couleur: '#FF9800' }, // Arts plastiques
+  { couleur: '#795548' }, // Éducation physique
+  { couleur: '#607D8B' }, // Langues étrangères
+  { couleur: '#F44336' }, // Informatique
 ];

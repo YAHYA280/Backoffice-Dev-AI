@@ -1,4 +1,7 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
+import { format, addDays, subDays, subMonths } from 'date-fns';
 
 import { DEFAULT_PAGINATION } from '../types';
 
@@ -19,6 +22,9 @@ const fetchMatieresAPI = async (
       icon: 'M',
       chapitresCount: 4,
       niveauId,
+      dateCreated: subMonths(new Date(), 9).toISOString(),
+      lastUpdated: subDays(new Date(), 15).toISOString(),
+      active: true,
     },
     {
       id: '2',
@@ -28,6 +34,9 @@ const fetchMatieresAPI = async (
       icon: 'F',
       chapitresCount: 5,
       niveauId,
+      dateCreated: subMonths(new Date(), 8).toISOString(),
+      lastUpdated: subDays(new Date(), 10).toISOString(),
+      active: true,
     },
     {
       id: '3',
@@ -37,6 +46,9 @@ const fetchMatieresAPI = async (
       icon: 'S',
       chapitresCount: 3,
       niveauId,
+      dateCreated: subMonths(new Date(), 7).toISOString(),
+      lastUpdated: subDays(new Date(), 20).toISOString(),
+      active: true,
     },
     {
       id: '4',
@@ -46,6 +58,9 @@ const fetchMatieresAPI = async (
       icon: 'H',
       chapitresCount: 2,
       niveauId,
+      dateCreated: subMonths(new Date(), 6).toISOString(),
+      lastUpdated: subDays(new Date(), 5).toISOString(),
+      active: false,
     },
     {
       id: '5',
@@ -55,11 +70,39 @@ const fetchMatieresAPI = async (
       icon: 'A',
       chapitresCount: 2,
       niveauId,
+      dateCreated: subMonths(new Date(), 5).toISOString(),
+      lastUpdated: subDays(new Date(), 30).toISOString(),
+      active: true,
+    },
+    {
+      id: '6',
+      nom: 'Musique',
+      description: 'Développement des compétences musicales',
+      couleur: '#795548',
+      icon: 'Mu',
+      chapitresCount: 3,
+      niveauId,
+      dateCreated: subMonths(new Date(), 4).toISOString(),
+      lastUpdated: subDays(new Date(), 12).toISOString(),
+      active: true,
+    },
+    {
+      id: '7',
+      nom: 'Éducation physique',
+      description: 'Activités sportives et jeux collectifs',
+      couleur: '#F44336',
+      icon: 'EP',
+      chapitresCount: 4,
+      niveauId,
+      dateCreated: addDays(new Date(), -15).toISOString(),
+      active: false,
     },
   ];
 
-  // Filter by search term if present
+  // Apply filters
   let filteredData = [...mockData];
+
+  // Filter by search term if present
   if (params.searchTerm) {
     const searchLower = params.searchTerm.toLowerCase();
     filteredData = filteredData.filter(
@@ -67,6 +110,49 @@ const fetchMatieresAPI = async (
         matiere.nom.toLowerCase().includes(searchLower) ||
         matiere.description.toLowerCase().includes(searchLower)
     );
+  }
+
+  // Apply column-specific filters
+  if (params.nomFilter) {
+    const filter = params.nomFilter.toLowerCase();
+    filteredData = filteredData.filter((matiere) => matiere.nom.toLowerCase().includes(filter));
+  }
+
+  if (params.descriptionFilter) {
+    const filter = params.descriptionFilter.toLowerCase();
+    filteredData = filteredData.filter((matiere) =>
+      matiere.description.toLowerCase().includes(filter)
+    );
+  }
+
+  if (params.dateCreatedFilter) {
+    const filter = params.dateCreatedFilter.toLowerCase();
+    filteredData = filteredData.filter((matiere) => {
+      if (!matiere.dateCreated) return false;
+      const date = format(new Date(matiere.dateCreated), 'dd MMM yyyy');
+      return date.toLowerCase().includes(filter);
+    });
+  }
+
+  // Filter by active status
+  if (params.activeOnly) {
+    filteredData = filteredData.filter((matiere) => matiere.active !== false);
+  }
+
+  // Sort the data if needed
+  if (params.sortBy) {
+    const direction = params.sortDirection === 'desc' ? -1 : 1;
+    filteredData.sort((a: any, b: any) => {
+      const fieldA = a[params.sortBy as keyof Matiere];
+      const fieldB = b[params.sortBy as keyof Matiere];
+
+      if (fieldA < fieldB) return -1 * direction;
+      if (fieldA > fieldB) return 1 * direction;
+      return 0;
+    });
+  } else {
+    // Default sort by nom
+    filteredData.sort((a, b) => a.nom.localeCompare(b.nom));
   }
 
   // Simulate pagination
@@ -89,7 +175,8 @@ const fetchMatieresAPI = async (
   };
 };
 
-export const useMatieres = (niveauId: string) => {
+// Define the hook
+function useMatieresHook(niveauId: string) {
   const [matieres, setMatieres] = useState<Matiere[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +186,9 @@ export const useMatieres = (niveauId: string) => {
     searchTerm: '',
     page: 1,
     limit: 10,
+    sortBy: 'nom',
+    sortDirection: 'asc',
+    activeOnly: false,
   });
 
   const fetchMatieres = useCallback(async () => {
@@ -141,6 +231,65 @@ export const useMatieres = (niveauId: string) => {
     setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
   };
 
+  const handleColumnFilterChange = (columnId: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [`${columnId}Filter`]: value,
+      page: 1,
+    }));
+  };
+
+  const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: field,
+      sortDirection: direction,
+    }));
+  };
+
+  const handleToggleActive = (matiere: Matiere, active: boolean) => {
+    // In a real application, this would call an API to update the status
+    setMatieres((prev) =>
+      prev.map((item) => (item.id === matiere.id ? { ...item, active } : item))
+    );
+
+    // If the selected matiere is the one being toggled, update its state too
+    if (selectedMatiere && selectedMatiere.id === matiere.id) {
+      setSelectedMatiere({
+        ...selectedMatiere,
+        active,
+      });
+    }
+  };
+
+  const handleToggleActiveOnly = (activeOnly: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      activeOnly,
+      page: 1,
+    }));
+  };
+
+  const handleDeleteMatiere = async (id: string) => {
+    // In a real application, this would call an API to delete the matiere
+    setMatieres((prev) => prev.filter((item) => item.id !== id));
+
+    // If the deleted matiere is currently selected, clear the selection
+    if (selectedMatiere && selectedMatiere.id === id) {
+      setSelectedMatiere(null);
+    }
+  };
+
+  const handleDeleteMultipleMatieres = async (ids: string[]) => {
+    // In a real application, this would call an API to delete multiple matieres
+    setMatieres((prev) => prev.filter((item) => !ids.includes(item.id)));
+
+    // If the deleted matiere is currently selected, clear the selection
+    if (selectedMatiere && ids.includes(selectedMatiere.id)) {
+      setSelectedMatiere(null);
+    }
+  };
+
   return {
     matieres,
     loading,
@@ -152,6 +301,15 @@ export const useMatieres = (niveauId: string) => {
     handlePageChange,
     handleLimitChange,
     handleSearch,
+    handleColumnFilterChange,
+    handleSortChange,
+    handleToggleActive,
+    handleToggleActiveOnly,
+    handleDeleteMatiere,
+    handleDeleteMultipleMatieres,
     refetch: fetchMatieres,
   };
-};
+}
+
+// Export the hook
+export const useMatieres = useMatieresHook;
