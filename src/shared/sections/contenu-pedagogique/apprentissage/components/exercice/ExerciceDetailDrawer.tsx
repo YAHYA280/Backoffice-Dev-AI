@@ -24,14 +24,12 @@ import {
   alpha,
   Paper,
   Drawer,
-  Button,
-  Divider,
+  Avatar,
   ListItem,
   useTheme,
   IconButton,
   Typography,
   ListItemText,
-  Avatar,
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate/variants/fade';

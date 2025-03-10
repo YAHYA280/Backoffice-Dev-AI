@@ -4,10 +4,10 @@ import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+  faBook,
   faTimes,
   faClock,
   faFileAlt,
-  faBook,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,7 +19,6 @@ import {
   alpha,
   Paper,
   Drawer,
-  Button,
   Avatar,
   ListItem,
   useTheme,
@@ -29,6 +28,7 @@ import {
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate/variants/fade';
+
 import { DIFFICULTE_OPTIONS } from '../../types';
 
 import type { Chapitre } from '../../types';
@@ -352,44 +352,6 @@ const ChapitreDetailDrawer = ({
             </ListItem>
           </List>
         </Box>
-      </Box>
-
-      {/* Action button fixed at bottom */}
-      <Box
-        component={m.div}
-        initial="initial"
-        animate="animate"
-        variants={varFade().inUp}
-        sx={{
-          p: 3,
-          pt: 2,
-          position: 'sticky',
-          bottom: 0,
-          bgcolor: 'background.paper',
-          borderTop: `1px solid ${theme.palette.divider}`,
-          zIndex: 1, // Ensure it stays on top
-        }}
-      >
-        {onViewExercices && (
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{
-              py: 1.5,
-              boxShadow: theme.customShadows?.primary,
-              '&:hover': {
-                boxShadow: theme.customShadows?.z16,
-                transform: 'translateY(-1px)',
-              },
-              transition: theme.transitions.create(['transform', 'box-shadow']),
-            }}
-            color="primary"
-            onClick={onViewExercices}
-            startIcon={<FontAwesomeIcon icon={faFileAlt} />}
-          >
-            Voir les exercices
-          </Button>
-        )}
       </Box>
     </Drawer>
   );

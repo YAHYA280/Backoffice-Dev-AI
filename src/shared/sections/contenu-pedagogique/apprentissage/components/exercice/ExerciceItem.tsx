@@ -6,10 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
   faTrash,
+  faFileAlt,
   faToggleOn,
   faPenToSquare,
-  faEllipsisVertical,
-  faFileAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -24,10 +23,10 @@ import {
   TableRow,
   Checkbox,
   MenuItem,
+  useTheme,
   TableCell,
   IconButton,
   Typography,
-  useTheme,
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate';

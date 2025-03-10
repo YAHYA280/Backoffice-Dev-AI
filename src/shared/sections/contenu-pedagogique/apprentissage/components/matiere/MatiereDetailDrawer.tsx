@@ -20,7 +20,6 @@ import {
   alpha,
   Paper,
   Drawer,
-  Button,
   Avatar,
   Switch,
   Tooltip,
@@ -396,44 +395,6 @@ const MatiereDetailDrawer = ({
             </ListItem>
           </List>
         </Box>
-      </Box>
-
-      {/* Action button fixed at bottom */}
-      <Box
-        component={m.div}
-        initial="initial"
-        animate="animate"
-        variants={varFade().inUp}
-        sx={{
-          p: 3,
-          pt: 2,
-          position: 'sticky',
-          bottom: 0,
-          bgcolor: 'background.paper',
-          borderTop: `1px solid ${theme.palette.divider}`,
-          zIndex: 1,
-        }}
-      >
-        {onViewChapitres && (
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{
-              py: 1.5,
-              boxShadow: theme.customShadows?.primary,
-              '&:hover': {
-                boxShadow: theme.customShadows?.z16,
-                transform: 'translateY(-1px)',
-              },
-              transition: theme.transitions.create(['transform', 'box-shadow']),
-            }}
-            color="primary"
-            onClick={onViewChapitres}
-            startIcon={<FontAwesomeIcon icon={faBook} />}
-          >
-            Voir les chapitres
-          </Button>
-        )}
       </Box>
     </Drawer>
   );

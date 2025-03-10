@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
-import { Box, Link, Container, Typography, Breadcrumbs } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 
 // Import hooks
 import useNiveauxHooks from './hooks/useNiveaux';
 import { useMatieres } from './hooks/useMatieres';
 import { useChapitres } from './hooks/useChapitres';
 import { useExercices } from './hooks/useExercices';
-// Import common components
-import { PageHeader } from './components/common/PageHeader';
 // Import Niveau components
 import { NiveauList } from './components/niveau/NiveauList';
 // Import Matiere components
@@ -417,99 +413,8 @@ export const ApprentissageView: React.FC = () => {
     refetchExercices();
   };
 
-  // ---- Render functions ----
-  const renderBreadcrumbs = () => {
-    switch (currentView) {
-      case 'niveaux':
-        return (
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-            <Typography color="text.primary">Niveaux d&apos;enseignement</Typography>
-          </Breadcrumbs>
-        );
-
-      case 'matieres':
-        return (
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={navigateToNiveaux}
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <FontAwesomeIcon icon={faChevronLeft} style={{ marginRight: '4px' }} />
-              Niveaux d&apos;enseignement
-            </Link>
-            <Typography color="text.primary">{currentNiveauName}</Typography>
-          </Breadcrumbs>
-        );
-
-      case 'chapitres':
-        return (
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={navigateToNiveaux}
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              Niveaux d&apos;enseignement
-            </Link>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={() =>
-                currentNiveauId &&
-                navigateToMatieres({ id: currentNiveauId, nom: currentNiveauName })
-              }
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              {currentNiveauName}
-            </Link>
-            <Typography color="text.primary">{currentMatiereName}</Typography>
-          </Breadcrumbs>
-        );
-
-      case 'exercices':
-        return (
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={navigateToNiveaux}
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              Niveaux d&apos;enseignement
-            </Link>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={() =>
-                currentNiveauId &&
-                navigateToMatieres({ id: currentNiveauId, nom: currentNiveauName })
-              }
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              {currentNiveauName}
-            </Link>
-            <Link
-              component="button"
-              color="inherit"
-              onClick={() =>
-                currentMatiereId &&
-                navigateToChapitres({ id: currentMatiereId, nom: currentMatiereName })
-              }
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              {currentMatiereName}
-            </Link>
-            <Typography color="text.primary">{currentChapitreName}</Typography>
-          </Breadcrumbs>
-        );
-
-      default:
-        return null;
-    }
-  };
+  // ---- Render content function ----
+  // renderBreadcrumbs function removed as it's now handled by each list component
 
   const renderContent = () => {
     switch (currentView) {
@@ -537,6 +442,7 @@ export const ApprentissageView: React.FC = () => {
               onViewMatieres={navigateToMatieres}
               onAddClick={handleAddClick}
               onToggleActive={handleToggleActive}
+              // No breadcrumb props needed for NiveauList as it builds its own simple breadcrumb
             />
 
             {/* Niveau dialogs and drawers */}
@@ -608,6 +514,12 @@ export const ApprentissageView: React.FC = () => {
               onDeleteRows={handleDeleteMatiereRows}
               onViewChapitres={navigateToChapitres}
               onAddClick={handleMatiereAddClick}
+              // Pass breadcrumb props
+              breadcrumbs={{
+                currentNiveauId,
+                currentNiveauName,
+                navigateToNiveaux,
+              }}
             />
 
             {/* Matiere dialogs and drawers */}
@@ -681,6 +593,15 @@ export const ApprentissageView: React.FC = () => {
               onDeleteRows={handleDeleteChapitreRows}
               onViewExercices={navigateToExercices}
               onAddClick={handleChapitreAddClick}
+              // Pass breadcrumb props
+              breadcrumbs={{
+                currentNiveauId,
+                currentNiveauName,
+                currentMatiereId,
+                currentMatiereName,
+                navigateToNiveaux,
+                navigateToMatieres,
+              }}
             />
 
             {/* Chapitre dialogs and drawers */}
@@ -753,6 +674,18 @@ export const ApprentissageView: React.FC = () => {
               onViewClick={handleExerciceViewClick}
               onDeleteRows={handleDeleteExerciceRows}
               onAddClick={handleExerciceAddClick}
+              // Pass breadcrumb props
+              breadcrumbs={{
+                currentNiveauId,
+                currentNiveauName,
+                currentMatiereId,
+                currentMatiereName,
+                currentChapitreId,
+                currentChapitreName,
+                navigateToNiveaux,
+                navigateToMatieres,
+                navigateToChapitres,
+              }}
             />
 
             {/* Exercice dialogs and drawers */}
@@ -806,7 +739,7 @@ export const ApprentissageView: React.FC = () => {
 
   return (
     <Container maxWidth={false}>
-      {renderBreadcrumbs()}
+      {/* Breadcrumbs are now rendered inside each list component, so removed from here */}
       {renderContent()}
     </Container>
   );

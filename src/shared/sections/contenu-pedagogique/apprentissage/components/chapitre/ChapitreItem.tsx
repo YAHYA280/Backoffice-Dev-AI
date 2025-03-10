@@ -3,13 +3,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faEye,
-  faTrash,
-  faPenToSquare,
-  faToggleOn,
-  faEllipsisVertical,
-} from '@fortawesome/free-solid-svg-icons';
+import { faEye, faTrash, faToggleOn, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,

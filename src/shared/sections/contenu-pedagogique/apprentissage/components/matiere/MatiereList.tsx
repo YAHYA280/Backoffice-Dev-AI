@@ -1,28 +1,35 @@
-'use client';
-
 import { m } from 'framer-motion';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faFilter,
+  faSearch,
+  faChevronLeft,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Card,
+  Link,
   Table,
   alpha,
   Stack,
   Button,
-  Divider,
-  Tooltip,
+  Switch,
   Popover,
   useTheme,
+  TableRow,
   TableBody,
   TextField,
+  TableCell,
   Typography,
   IconButton,
+  Breadcrumbs,
   TableContainer,
   InputAdornment,
-  Switch,
   FormControlLabel,
 } from '@mui/material';
 
@@ -55,59 +62,59 @@ const TABLE_HEAD = [
   { id: '', label: 'Actions', align: 'right' },
 ];
 
-// Column Filter Component
 interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
   placeholder?: string;
 }
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  navigateToNiveaux: () => void;
+}
 
-const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => {
-  const theme = useTheme();
-
-  return (
-    <TextField
-      size="small"
-      fullWidth
-      value={value}
-      onChange={(e) => onChange(columnId, e.target.value)}
-      placeholder={placeholder || `Rechercher par ${columnId}`}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <FontAwesomeIcon
-              icon={faSearch}
-              style={{
-                color: theme.palette.text.disabled,
-                fontSize: '0.875rem',
-              }}
-            />
-          </InputAdornment>
-        ),
-        endAdornment: value ? (
-          <InputAdornment position="end">
-            <IconButton size="small" onClick={() => onChange(columnId, '')}>
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
-            </IconButton>
-          </InputAdornment>
-        ) : null,
-      }}
-      sx={{
-        '& .MuiOutlinedInput-root': {
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          '& fieldset': {
-            borderWidth: '1px !important',
-          },
-          '&:hover fieldset': {
-            borderColor: 'primary.main',
-          },
+const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => (
+  <TextField
+    size="small"
+    fullWidth
+    value={value}
+    onChange={(e) => onChange(columnId, e.target.value)}
+    placeholder={placeholder || `Filtrer par ${columnId}`}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <FontAwesomeIcon
+            icon={faSearch}
+            style={{
+              color: 'text.disabled',
+              fontSize: '0.875rem',
+            }}
+          />
+        </InputAdornment>
+      ),
+      endAdornment: value ? (
+        <InputAdornment position="end">
+          <IconButton size="small" onClick={() => onChange(columnId, '')}>
+            <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
+          </IconButton>
+        </InputAdornment>
+      ) : null,
+    }}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        borderRadius: 1,
+        bgcolor: 'background.paper',
+        '& fieldset': {
+          borderWidth: '1px !important',
         },
-      }}
-    />
-  );
-};
+        '&:hover fieldset': {
+          borderColor: 'primary.main',
+        },
+      },
+    }}
+  />
+);
 
 interface MatiereListProps {
   matieres: Matiere[];
@@ -125,6 +132,7 @@ interface MatiereListProps {
   onViewChapitres: (matiere: Matiere) => void;
   onAddClick?: () => void;
   onToggleActive?: (matiere: Matiere, active: boolean) => void;
+  breadcrumbs?: BreadcrumbProps;
 }
 
 export const MatiereList: React.FC<MatiereListProps> = ({
@@ -143,6 +151,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   onViewChapitres,
   onAddClick,
   onToggleActive,
+  breadcrumbs,
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
@@ -208,6 +217,46 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   const notFound = !matieres.length && !loading;
   const filterOpen = Boolean(filterAnchorEl);
 
+  // Render filter row under table header
+  const renderFilterRow = () => (
+    <TableRow>
+      <TableCell padding="checkbox" />
+      {TABLE_HEAD.filter((col) => col.id).map(
+        (column) =>
+          column.id && (
+            <TableCell key={column.id}>
+              <ColumnFilter
+                columnId={column.id}
+                value={columnFilters[column.id] || ''}
+                onChange={handleColumnFilterChange}
+                placeholder={`Rechercher par ${column.label}`}
+              />
+            </TableCell>
+          )
+      )}
+    </TableRow>
+  );
+
+  // Render breadcrumbs
+  const renderBreadcrumbs = () => {
+    if (!breadcrumbs) return null;
+
+    return (
+      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={breadcrumbs.navigateToNiveaux}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          <FontAwesomeIcon icon={faChevronLeft} style={{ marginRight: '4px' }} />
+          Niveaux
+        </Link>
+        <Typography color="text.primary">{breadcrumbs.currentNiveauName}</Typography>
+      </Breadcrumbs>
+    );
+  };
+
   return (
     <MotionContainer>
       <m.div variants={varFade().inUp}>
@@ -237,6 +286,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
             </Button>
           )}
         </Stack>
+        {breadcrumbs && renderBreadcrumbs()}
       </m.div>
 
       <m.div variants={varFade().inUp}>
@@ -346,34 +396,6 @@ export const MatiereList: React.FC<MatiereListProps> = ({
             </Popover>
           </Box>
 
-          {/* Column Filters - Always visible */}
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Recherche par colonne
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: 2,
-              }}
-            >
-              {TABLE_HEAD.filter((col) => col.id).map(
-                (column) =>
-                  column.id && (
-                    <ColumnFilter
-                      key={column.id}
-                      columnId={column.id}
-                      value={columnFilters[column.id] || ''}
-                      onChange={handleColumnFilterChange}
-                      placeholder={`Rechercher par ${column.label}`}
-                    />
-                  )
-              )}
-            </Box>
-          </Box>
-
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -451,6 +473,9 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                   />
 
                   <TableBody>
+                    {/* Add filter row below header */}
+                    {renderFilterRow()}
+
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={4} />
                     ) : (

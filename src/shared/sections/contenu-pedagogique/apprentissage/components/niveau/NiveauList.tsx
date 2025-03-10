@@ -18,14 +18,15 @@ import {
   Stack,
   Button,
   Switch,
-  Divider,
-  Tooltip,
   Popover,
   useTheme,
+  TableRow,
   TableBody,
   TextField,
+  TableCell,
   Typography,
   IconButton,
+  Breadcrumbs,
   TableContainer,
   InputAdornment,
   FormControlLabel,
@@ -105,73 +106,6 @@ const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterPr
     }}
   />
 );
-
-// Grid component for layout
-const Grid = ({
-  container,
-  item,
-  children,
-  spacing = 0,
-  xs,
-  sm,
-  md,
-  lg,
-  ...rest
-}: {
-  container?: boolean;
-  item?: boolean;
-  children?: React.ReactNode;
-  spacing?: number;
-  xs?: number;
-  sm?: number;
-  md?: number;
-  lg?: number;
-  [key: string]: any;
-}) => {
-  if (container) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          margin: -spacing / 2,
-          ...rest.sx,
-        }}
-        {...rest}
-      >
-        {children}
-      </Box>
-    );
-  }
-
-  // Convert the size to percentage
-  const getWidth = (size?: number) => (size ? `${(size / 12) * 100}%` : undefined);
-
-  return (
-    <Box
-      sx={{
-        padding: spacing / 2,
-        flexGrow: 0,
-        maxWidth: {
-          xs: getWidth(xs),
-          sm: getWidth(sm),
-          md: getWidth(md),
-          lg: getWidth(lg),
-        },
-        flexBasis: {
-          xs: getWidth(xs),
-          sm: getWidth(sm),
-          md: getWidth(md),
-          lg: getWidth(lg),
-        },
-        ...rest.sx,
-      }}
-      {...rest}
-    >
-      {children}
-    </Box>
-  );
-};
 
 interface NiveauListProps {
   niveaux: Niveau[];
@@ -271,6 +205,33 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   const notFound = !niveaux.length && !loading;
   const filterOpen = Boolean(filterAnchorEl);
 
+  // Render filter row under table header
+  const renderFilterRow = () => (
+    <TableRow>
+      <TableCell padding="checkbox" />
+      {TABLE_HEAD.filter((col) => col.id).map(
+        (column) =>
+          column.id && (
+            <TableCell key={column.id}>
+              <ColumnFilter
+                columnId={column.id}
+                value={columnFilters[column.id] || ''}
+                onChange={handleColumnFilterChange}
+                placeholder={`Rechercher par ${column.label}`}
+              />
+            </TableCell>
+          )
+      )}
+    </TableRow>
+  );
+
+  // Render basic breadcrumb for Niveau (top level)
+  const renderBreadcrumbs = () => (
+    <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
+      <Typography color="text.primary">Niveaux d&apos;enseignement</Typography>
+    </Breadcrumbs>
+  );
+
   return (
     <MotionContainer>
       <m.div variants={varFade().inUp}>
@@ -300,8 +261,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             </Button>
           )}
         </Stack>
+        {renderBreadcrumbs()}
       </m.div>
-
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
@@ -412,29 +373,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             </Popover>
           </Box>
 
-          {/* Column Filters - Always visible */}
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Recherche par colonne
-            </Typography>
-            <Grid container spacing={2}>
-              {TABLE_HEAD.filter((col) => col.id).map(
-                (column) =>
-                  column.id && (
-                    <Grid item xs={12} sm={6} md={3} key={column.id}>
-                      <ColumnFilter
-                        columnId={column.id}
-                        value={columnFilters[column.id] || ''}
-                        onChange={handleColumnFilterChange}
-                        placeholder={`Rechercher par ${column.label}`}
-                      />
-                    </Grid>
-                  )
-              )}
-            </Grid>
-          </Box>
-
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -506,6 +444,9 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                   />
 
                   <TableBody>
+                    {/* Add filter row below header */}
+                    {renderFilterRow()}
+
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={5} />
                     ) : (
@@ -559,7 +500,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           />
         </Card>
       </m.div>
-
       {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}

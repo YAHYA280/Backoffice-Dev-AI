@@ -1,33 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
 import { m } from 'framer-motion';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faTimes, faFilter, faSearch, faPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faFilter,
+  faSearch,
+  faChevronLeft,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Card,
+  Link,
   Table,
   alpha,
   Stack,
   Button,
-  Divider,
-  Tooltip,
+  Select,
   Popover,
   useTheme,
+  MenuItem,
+  TableRow,
   TableBody,
   TextField,
+  TableCell,
   Typography,
   IconButton,
+  InputLabel,
+  FormControl,
+  Breadcrumbs,
   TableContainer,
   InputAdornment,
-  FormControlLabel,
-  Switch,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -46,8 +53,8 @@ import {
 } from 'src/shared/components/table';
 
 import ChapitreItem from './ChapitreItem';
-import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 import { DIFFICULTE_OPTIONS } from '../../types';
+import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { Chapitre, Pagination, FilterParams } from '../../types';
 
@@ -66,6 +73,15 @@ interface ColumnFilterProps {
   value: string;
   onChange: (columnId: string, value: string) => void;
   placeholder?: string;
+}
+
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  currentMatiereId?: string | null;
+  currentMatiereName?: string | null;
+  navigateToNiveaux: () => void;
+  navigateToMatieres: (niveau: any) => void;
 }
 
 const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterProps) => {
@@ -129,6 +145,8 @@ interface ChapitreListProps {
   onDeleteRows?: (selectedRows: string[]) => void;
   onViewExercices: (chapitre: Chapitre) => void;
   onAddClick?: () => void;
+
+  breadcrumbs?: BreadcrumbProps;
 }
 
 export const ChapitreList = ({
@@ -146,6 +164,7 @@ export const ChapitreList = ({
   onDeleteRows,
   onViewExercices,
   onAddClick,
+  breadcrumbs,
 }: ChapitreListProps) => {
   const confirm = useBoolean();
   const theme = useTheme();
@@ -213,6 +232,60 @@ export const ChapitreList = ({
   const notFound = !chapitres.length && !loading;
   const filterOpen = Boolean(filterAnchorEl);
 
+  // Render filter row under table header
+  const renderFilterRow = () => (
+    <TableRow>
+      <TableCell padding="checkbox" />
+      {TABLE_HEAD.filter((col) => col.id).map(
+        (column) =>
+          column.id && (
+            <TableCell key={column.id}>
+              <ColumnFilter
+                columnId={column.id}
+                value={columnFilters[column.id] || ''}
+                onChange={handleColumnFilterChange}
+                placeholder={`Rechercher par ${column.label}`}
+              />
+            </TableCell>
+          )
+      )}
+    </TableRow>
+  );
+
+  // Render breadcrumbs
+  const renderBreadcrumbs = () => {
+    if (!breadcrumbs) return null;
+
+    return (
+      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={breadcrumbs.navigateToNiveaux}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          <FontAwesomeIcon icon={faChevronLeft} style={{ marginRight: '4px' }} />
+          Niveaux
+        </Link>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={() =>
+            breadcrumbs.currentNiveauId &&
+            breadcrumbs.navigateToMatieres({
+              id: breadcrumbs.currentNiveauId,
+              nom: breadcrumbs.currentNiveauName,
+            })
+          }
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          {breadcrumbs.currentNiveauName}
+        </Link>
+        <Typography color="text.primary">{breadcrumbs.currentMatiereName}</Typography>
+      </Breadcrumbs>
+    );
+  };
+
   return (
     <MotionContainer>
       <m.div variants={varFade().inUp}>
@@ -242,6 +315,7 @@ export const ChapitreList = ({
             </Button>
           )}
         </Stack>
+        {breadcrumbs && renderBreadcrumbs()}
       </m.div>
 
       <m.div variants={varFade().inUp}>
@@ -363,34 +437,6 @@ export const ChapitreList = ({
             </Popover>
           </Box>
 
-          {/* Column Filters - Always visible */}
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Recherche par colonne
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: 2,
-              }}
-            >
-              {TABLE_HEAD.filter((col) => col.id).map(
-                (column) =>
-                  column.id && (
-                    <ColumnFilter
-                      key={column.id}
-                      columnId={column.id}
-                      value={columnFilters[column.id] || ''}
-                      onChange={handleColumnFilterChange}
-                      placeholder={`Rechercher par ${column.label}`}
-                    />
-                  )
-              )}
-            </Box>
-          </Box>
-
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -467,6 +513,9 @@ export const ChapitreList = ({
                   />
 
                   <TableBody>
+                    {/* Add filter row below header */}
+                    {renderFilterRow()}
+
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={6} />
                     ) : (

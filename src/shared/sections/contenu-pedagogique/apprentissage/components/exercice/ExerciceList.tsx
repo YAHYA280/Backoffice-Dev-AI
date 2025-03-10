@@ -3,7 +3,14 @@
 import { m } from 'framer-motion';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faFilter,
+  faSearch,
+  faChevronLeft,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -27,6 +34,10 @@ import {
   TableContainer,
   InputAdornment,
   FormControlLabel,
+  TableRow,
+  TableCell,
+  Link,
+  Breadcrumbs,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -64,6 +75,17 @@ interface ColumnFilterProps {
   value: string;
   onChange: (columnId: string, value: string) => void;
   placeholder?: string;
+}
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  currentMatiereId?: string | null;
+  currentMatiereName?: string | null;
+  currentChapitreId?: string | null;
+  currentChapitreName?: string | null;
+  navigateToNiveaux: () => void;
+  navigateToMatieres: (niveau: any) => void;
+  navigateToChapitres: (matiere: any) => void;
 }
 
 const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterProps) => {
@@ -126,6 +148,7 @@ interface ExerciceListProps {
   onViewClick: (exercice: Exercice) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
   onAddClick?: () => void;
+  breadcrumbs?: BreadcrumbProps;
 }
 
 export const ExerciceList = ({
@@ -142,6 +165,7 @@ export const ExerciceList = ({
   onViewClick,
   onDeleteRows,
   onAddClick,
+  breadcrumbs,
 }: ExerciceListProps) => {
   const confirm = useBoolean();
   const theme = useTheme();
@@ -207,6 +231,75 @@ export const ExerciceList = ({
   const notFound = !exercices.length && !loading;
   const filterOpen = Boolean(filterAnchorEl);
 
+  // Render filter row under table header
+  const renderFilterRow = () => (
+    <TableRow>
+      <TableCell padding="checkbox" />
+      {TABLE_HEAD.filter((col) => col.id).map(
+        (column) =>
+          column.id && (
+            <TableCell key={column.id}>
+              <ColumnFilter
+                columnId={column.id}
+                value={columnFilters[column.id] || ''}
+                onChange={handleColumnFilterChange}
+                placeholder={`Rechercher par ${column.label}`}
+              />
+            </TableCell>
+          )
+      )}
+      <TableCell />
+    </TableRow>
+  );
+
+  // Render breadcrumbs
+  const renderBreadcrumbs = () => {
+    if (!breadcrumbs) return null;
+
+    return (
+      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={breadcrumbs.navigateToNiveaux}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          <FontAwesomeIcon icon={faChevronLeft} style={{ marginRight: '4px' }} />
+          Niveaux
+        </Link>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={() =>
+            breadcrumbs.currentNiveauId &&
+            breadcrumbs.navigateToMatieres({
+              id: breadcrumbs.currentNiveauId,
+              nom: breadcrumbs.currentNiveauName,
+            })
+          }
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          {breadcrumbs.currentNiveauName}
+        </Link>
+        <Link
+          component="button"
+          color="inherit"
+          onClick={() =>
+            breadcrumbs.currentMatiereId &&
+            breadcrumbs.navigateToChapitres({
+              id: breadcrumbs.currentMatiereId,
+              nom: breadcrumbs.currentMatiereName,
+            })
+          }
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          {breadcrumbs.currentMatiereName}
+        </Link>
+        <Typography color="text.primary">{breadcrumbs.currentChapitreName}</Typography>
+      </Breadcrumbs>
+    );
+  };
+
   return (
     <MotionContainer>
       <m.div variants={varFade().inUp}>
@@ -214,7 +307,6 @@ export const ExerciceList = ({
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Exercices
           </Typography>
-
           {onAddClick && (
             <Button
               variant="contained"
@@ -236,6 +328,8 @@ export const ExerciceList = ({
             </Button>
           )}
         </Stack>
+
+        {breadcrumbs && renderBreadcrumbs()}
       </m.div>
 
       <m.div variants={varFade().inUp}>
@@ -344,34 +438,6 @@ export const ExerciceList = ({
             </Popover>
           </Box>
 
-          {/* Column Filters - Always visible */}
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Recherche par colonne
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 2,
-              }}
-            >
-              {TABLE_HEAD.filter((col) => col.id).map(
-                (column) =>
-                  column.id && (
-                    <ColumnFilter
-                      key={column.id}
-                      columnId={column.id}
-                      value={columnFilters[column.id] || ''}
-                      onChange={handleColumnFilterChange}
-                      placeholder={`Rechercher par ${column.label}`}
-                    />
-                  )
-              )}
-            </Box>
-          </Box>
-
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -446,8 +512,8 @@ export const ExerciceList = ({
                       },
                     }}
                   />
-
                   <TableBody>
+                    {renderFilterRow()}
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={5} />
                     ) : (
@@ -463,12 +529,10 @@ export const ExerciceList = ({
                         />
                       ))
                     )}
-
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
                       emptyRows={emptyRows(table.page, table.rowsPerPage, exercices.length)}
                     />
-
                     {notFound && (
                       <TableNoData
                         notFound={notFound}
@@ -500,7 +564,6 @@ export const ExerciceList = ({
         </Card>
       </m.div>
 
-      {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
