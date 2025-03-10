@@ -516,12 +516,6 @@ export const ApprentissageView: React.FC = () => {
       case 'niveaux':
         return (
           <>
-            <PageHeader
-              title="Niveaux d'enseignement"
-              actionLabel="Ajouter un niveau"
-              onActionClick={handleNiveauAddClick}
-            />
-
             {niveauxError && (
               <Box sx={{ mt: 2, mb: 2 }}>
                 <Typography color="error">{niveauxError}</Typography>
@@ -581,14 +575,6 @@ export const ApprentissageView: React.FC = () => {
                   open={openNiveauDetailDrawer}
                   onClose={handleCloseNiveauDetailDrawer}
                   niveau={selectedNiveau}
-                  onEdit={() => {
-                    handleCloseNiveauDetailDrawer();
-                    handleNiveauEditClick(selectedNiveau);
-                  }}
-                  onDelete={() => {
-                    handleCloseNiveauDetailDrawer();
-                    handleNiveauDeleteClick(selectedNiveau);
-                  }}
                   onViewMatieres={() => {
                     handleCloseNiveauDetailDrawer();
                     navigateToMatieres(selectedNiveau);
@@ -602,12 +588,6 @@ export const ApprentissageView: React.FC = () => {
       case 'matieres':
         return (
           <>
-            <PageHeader
-              title={`Matières pour ${currentNiveauName}`}
-              actionLabel="Ajouter une matière"
-              onActionClick={handleMatiereAddClick}
-            />
-
             {matieresError && (
               <Box sx={{ mt: 2, mb: 2 }}>
                 <Typography color="error">{matieresError}</Typography>
@@ -627,6 +607,7 @@ export const ApprentissageView: React.FC = () => {
               onViewClick={handleMatiereViewClick}
               onDeleteRows={handleDeleteMatiereRows}
               onViewChapitres={navigateToChapitres}
+              onAddClick={handleMatiereAddClick}
             />
 
             {/* Matiere dialogs and drawers */}
@@ -667,14 +648,6 @@ export const ApprentissageView: React.FC = () => {
                   open={openMatiereDetailDrawer}
                   onClose={handleCloseMatiereDetailDrawer}
                   matiere={selectedMatiere}
-                  onEdit={() => {
-                    handleCloseMatiereDetailDrawer();
-                    handleMatiereEditClick(selectedMatiere);
-                  }}
-                  onDelete={() => {
-                    handleCloseMatiereDetailDrawer();
-                    handleMatiereDeleteClick(selectedMatiere);
-                  }}
                   onViewChapitres={() => {
                     handleCloseMatiereDetailDrawer();
                     navigateToChapitres(selectedMatiere);
@@ -688,12 +661,6 @@ export const ApprentissageView: React.FC = () => {
       case 'chapitres':
         return (
           <>
-            <PageHeader
-              title={`Chapitres de ${currentMatiereName}`}
-              actionLabel="Ajouter un chapitre"
-              onActionClick={handleChapitreAddClick}
-            />
-
             {chapitresError && (
               <Box sx={{ mt: 2, mb: 2 }}>
                 <Typography color="error">{chapitresError}</Typography>
@@ -713,6 +680,7 @@ export const ApprentissageView: React.FC = () => {
               onViewClick={handleChapitreViewClick}
               onDeleteRows={handleDeleteChapitreRows}
               onViewExercices={navigateToExercices}
+              onAddClick={handleChapitreAddClick}
             />
 
             {/* Chapitre dialogs and drawers */}
@@ -753,14 +721,6 @@ export const ApprentissageView: React.FC = () => {
                   open={openChapitreDetailDrawer}
                   onClose={handleCloseChapitreDetailDrawer}
                   chapitre={selectedChapitre}
-                  onEdit={() => {
-                    handleCloseChapitreDetailDrawer();
-                    handleChapitreEditClick(selectedChapitre);
-                  }}
-                  onDelete={() => {
-                    handleCloseChapitreDetailDrawer();
-                    handleChapitreDeleteClick(selectedChapitre);
-                  }}
                   onViewExercices={() => {
                     handleCloseChapitreDetailDrawer();
                     navigateToExercices(selectedChapitre);
@@ -774,12 +734,6 @@ export const ApprentissageView: React.FC = () => {
       case 'exercices':
         return (
           <>
-            <PageHeader
-              title={`Exercices de ${currentChapitreName}`}
-              actionLabel="Ajouter un exercice"
-              onActionClick={handleExerciceAddClick}
-            />
-
             {exercicesError && (
               <Box sx={{ mt: 2, mb: 2 }}>
                 <Typography color="error">{exercicesError}</Typography>
@@ -798,6 +752,7 @@ export const ApprentissageView: React.FC = () => {
               onDeleteClick={handleExerciceDeleteClick}
               onViewClick={handleExerciceViewClick}
               onDeleteRows={handleDeleteExerciceRows}
+              onAddClick={handleExerciceAddClick}
             />
 
             {/* Exercice dialogs and drawers */}
@@ -838,14 +793,6 @@ export const ApprentissageView: React.FC = () => {
                   open={openExerciceDetailDrawer}
                   onClose={handleCloseExerciceDetailDrawer}
                   exercice={selectedExercice}
-                  onEdit={() => {
-                    handleCloseExerciceDetailDrawer();
-                    handleExerciceEditClick(selectedExercice);
-                  }}
-                  onDelete={() => {
-                    handleCloseExerciceDetailDrawer();
-                    handleExerciceDeleteClick(selectedExercice);
-                  }}
                 />
               </>
             )}

@@ -7,6 +7,7 @@ import {
   faEye,
   faTrash,
   faPenToSquare,
+  faToggleOn,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -17,6 +18,7 @@ import {
   alpha,
   Stack,
   Avatar,
+  Switch,
   Tooltip,
   TableRow,
   Checkbox,
@@ -41,6 +43,7 @@ interface ChapitreItemProps {
   onDeleteClick: () => void;
   onViewClick: () => void;
   onViewExercices: () => void;
+  onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
 }
 
 const ChapitreItem = ({
@@ -51,6 +54,7 @@ const ChapitreItem = ({
   onDeleteClick,
   onViewClick,
   onViewExercices,
+  onToggleActive,
 }: ChapitreItemProps) => {
   const popover = usePopover();
 
@@ -58,6 +62,13 @@ const ChapitreItem = ({
   const difficulteOption =
     DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulte) ||
     DIFFICULTE_OPTIONS[0];
+
+  const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (onToggleActive) {
+      onToggleActive(chapitre, event.target.checked);
+    }
+  };
 
   return (
     <>
@@ -225,6 +236,22 @@ const ChapitreItem = ({
                 <FontAwesomeIcon icon={faTrash} />
               </IconButton>
             </Tooltip>
+
+            {onToggleActive && (
+              <Tooltip title={chapitre.active !== false ? 'Désactiver' : 'Activer'}>
+                <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ display: 'flex', alignItems: 'center' }}
+                >
+                  <Switch
+                    size="small"
+                    checked={chapitre.active !== false}
+                    onChange={handleToggleActive}
+                    color="success"
+                  />
+                </Box>
+              </Tooltip>
+            )}
           </Stack>
         </TableCell>
       </TableRow>
@@ -344,6 +371,40 @@ const ChapitreItem = ({
           <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
+
+        {onToggleActive && (
+          <MenuItem
+            onClick={() => {
+              if (onToggleActive) {
+                onToggleActive(chapitre, !(chapitre.active !== false));
+              }
+              popover.onClose();
+            }}
+            sx={{
+              typography: 'body2',
+              py: 1.5,
+              px: 2.5,
+              transition: (theme) => theme.transitions.create(['background-color']),
+              '&:hover .icon': {
+                color: 'success.main',
+              },
+            }}
+          >
+            <Box
+              component={FontAwesomeIcon}
+              className="icon"
+              icon={faToggleOn}
+              sx={{
+                mr: 1,
+                width: 16,
+                height: 16,
+                color: 'text.secondary',
+                transition: (theme) => theme.transitions.create(['color']),
+              }}
+            />
+            {chapitre.active !== false ? 'Désactiver' : 'Activer'}
+          </MenuItem>
+        )}
       </CustomPopover>
     </>
   );

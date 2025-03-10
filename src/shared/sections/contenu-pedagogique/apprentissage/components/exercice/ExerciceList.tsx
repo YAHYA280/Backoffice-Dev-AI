@@ -1,8 +1,9 @@
 'use client';
 
+import { m } from 'framer-motion';
 import React, { useState } from 'react';
-import { faTrash, faFilter, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -11,25 +12,23 @@ import {
   alpha,
   Stack,
   Button,
+  Switch,
+  Select,
   Divider,
-  Tooltip,
   Popover,
   useTheme,
+  MenuItem,
   TableBody,
   TextField,
   Typography,
   IconButton,
+  InputLabel,
+  FormControl,
   TableContainer,
   InputAdornment,
   FormControlLabel,
-  Switch,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
 } from '@mui/material';
 
-import { m } from 'framer-motion';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Scrollbar } from 'src/shared/components/scrollbar';
@@ -45,9 +44,9 @@ import {
   TablePaginationCustom,
 } from 'src/shared/components/table';
 
+import { STATUT_OPTIONS } from '../../types';
 import { ExerciceItem } from './ExerciceItem';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
-import { STATUT_OPTIONS } from '../../types';
 
 import type { Exercice, Pagination, FilterParams } from '../../types';
 
@@ -220,7 +219,7 @@ export const ExerciceList = ({
             <Button
               variant="contained"
               color="primary"
-              startIcon={<FontAwesomeIcon icon={faTrash} />}
+              startIcon={<FontAwesomeIcon icon={faPlus} />}
               onClick={onAddClick}
               sx={{
                 px: 2.5,

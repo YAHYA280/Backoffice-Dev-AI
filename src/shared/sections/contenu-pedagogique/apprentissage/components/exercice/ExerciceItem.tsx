@@ -6,8 +6,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
   faTrash,
+  faToggleOn,
   faPenToSquare,
   faEllipsisVertical,
+  faFileAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -16,6 +18,8 @@ import {
   Chip,
   alpha,
   Stack,
+  Avatar,
+  Switch,
   Tooltip,
   TableRow,
   Checkbox,
@@ -23,6 +27,7 @@ import {
   TableCell,
   IconButton,
   Typography,
+  useTheme,
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate';
@@ -39,6 +44,7 @@ interface ExerciceItemProps {
   onEditClick: () => void;
   onDeleteClick: () => void;
   onViewClick: () => void;
+  onToggleActive?: (exercice: Exercice, active: boolean) => void;
 }
 
 export const ExerciceItem = ({
@@ -48,12 +54,24 @@ export const ExerciceItem = ({
   onEditClick,
   onDeleteClick,
   onViewClick,
+  onToggleActive,
 }: ExerciceItemProps) => {
   const popover = usePopover();
+  const theme = useTheme();
 
   // Find status option based on exercice.statut
   const statutOption =
     STATUT_OPTIONS.find((option) => option.value === exercice.statut) || STATUT_OPTIONS[0];
+
+  const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (onToggleActive) {
+      onToggleActive(exercice, event.target.checked);
+    }
+  };
+
+  // Check if exercice is active based on its status
+  const isActive = exercice.statut !== 'Inactif';
 
   return (
     <>
@@ -65,13 +83,13 @@ export const ExerciceItem = ({
         onClick={onViewClick}
         sx={{
           cursor: 'pointer',
-          transition: (theme) => theme.transitions.create(['background-color']),
+          transition: theme.transitions.create(['background-color']),
           '&:hover': {
-            backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
+            backgroundColor: alpha(theme.palette.primary.lighter, 0.08),
           },
-          ...(exercice.statut === 'Inactif' && {
+          ...(!isActive && {
             opacity: 0.7,
-            bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.2),
+            bgcolor: alpha(theme.palette.action.disabledBackground, 0.2),
           }),
         }}
       >
@@ -80,32 +98,47 @@ export const ExerciceItem = ({
         </TableCell>
 
         <TableCell>
-          <Link
-            component="button"
-            variant="subtitle2"
-            color="text.primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewClick();
-            }}
-            sx={{
-              textDecoration: 'none',
-              cursor: 'pointer',
-              fontWeight: 'fontWeightMedium',
-              transition: (theme) => theme.transitions.create(['color']),
-              '&:hover': {
-                color: 'primary.main',
-              },
-            }}
-            noWrap
-          >
-            {exercice.titre}
-          </Link>
-          {exercice.statut === 'Inactif' && (
-            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-              Inactif
-            </Typography>
-          )}
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: alpha(statutOption.bgColor, 0.2),
+                color: statutOption.color,
+                fontSize: '0.875rem',
+              }}
+            >
+              <FontAwesomeIcon icon={faFileAlt} size="sm" />
+            </Avatar>
+            <Box sx={{ flexGrow: 1 }}>
+              <Link
+                component="button"
+                variant="subtitle2"
+                color="text.primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick();
+                }}
+                sx={{
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'fontWeightMedium',
+                  transition: (t) => t.transitions.create(['color']),
+                  '&:hover': {
+                    color: 'primary.main',
+                  },
+                }}
+                noWrap
+              >
+                {exercice.titre}
+              </Link>
+              {!isActive && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                  Inactif
+                </Typography>
+              )}
+            </Box>
+          </Stack>
         </TableCell>
 
         <TableCell
@@ -132,12 +165,26 @@ export const ExerciceItem = ({
         </TableCell>
 
         <TableCell>
-          {exercice.ressources?.map((ressource, index) => (
-            <React.Fragment key={index}>
-              {index > 0 && ', '}
-              {ressource}
-            </React.Fragment>
-          ))}
+          {exercice.ressources && exercice.ressources.length > 0 ? (
+            <Stack direction="row" spacing={0.5} flexWrap="wrap">
+              {exercice.ressources.map((ressource, index) => (
+                <Chip
+                  key={index}
+                  label={ressource}
+                  size="small"
+                  sx={{
+                    my: 0.25,
+                    bgcolor: alpha(theme.palette.info.lighter, 0.5),
+                    color: 'text.primary',
+                  }}
+                />
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Aucune
+            </Typography>
+          )}
         </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
@@ -151,9 +198,9 @@ export const ExerciceItem = ({
                   onViewClick();
                 }}
                 sx={{
-                  transition: (theme) => theme.transitions.create(['background-color']),
+                  transition: (t) => t.transitions.create(['background-color']),
                   '&:hover': {
-                    backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                    backgroundColor: alpha(theme.palette.info.main, 0.08),
                   },
                 }}
               >
@@ -170,9 +217,9 @@ export const ExerciceItem = ({
                   onEditClick();
                 }}
                 sx={{
-                  transition: (theme) => theme.transitions.create(['background-color']),
+                  transition: (t) => t.transitions.create(['background-color']),
                   '&:hover': {
-                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
                   },
                 }}
               >
@@ -189,15 +236,31 @@ export const ExerciceItem = ({
                   onDeleteClick();
                 }}
                 sx={{
-                  transition: (theme) => theme.transitions.create(['background-color']),
+                  transition: theme.transitions.create(['background-color']),
                   '&:hover': {
-                    backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                    backgroundColor: alpha(theme.palette.error.main, 0.08),
                   },
                 }}
               >
                 <FontAwesomeIcon icon={faTrash} />
               </IconButton>
             </Tooltip>
+
+            {onToggleActive && (
+              <Tooltip title={isActive ? 'Désactiver' : 'Activer'}>
+                <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ display: 'flex', alignItems: 'center' }}
+                >
+                  <Switch
+                    size="small"
+                    checked={isActive}
+                    onChange={handleToggleActive}
+                    color="success"
+                  />
+                </Box>
+              </Tooltip>
+            )}
           </Stack>
         </TableCell>
       </TableRow>
@@ -217,7 +280,7 @@ export const ExerciceItem = ({
             typography: 'body2',
             py: 1.5,
             px: 2.5,
-            transition: (theme) => theme.transitions.create(['background-color']),
+            transition: theme.transitions.create(['background-color']),
             '&:hover .icon': {
               color: 'primary.main',
             },
@@ -232,7 +295,7 @@ export const ExerciceItem = ({
               width: 16,
               height: 16,
               color: 'text.secondary',
-              transition: (theme) => theme.transitions.create(['color']),
+              transition: theme.transitions.create(['color']),
             }}
           />
           Voir détails
@@ -247,7 +310,7 @@ export const ExerciceItem = ({
             typography: 'body2',
             py: 1.5,
             px: 2.5,
-            transition: (theme) => theme.transitions.create(['background-color']),
+            transition: (t) => t.transitions.create(['background-color']),
             '&:hover .icon': {
               color: 'primary.main',
             },
@@ -262,7 +325,7 @@ export const ExerciceItem = ({
               width: 16,
               height: 16,
               color: 'text.secondary',
-              transition: (theme) => theme.transitions.create(['color']),
+              transition: (t) => t.transitions.create(['color']),
             }}
           />
           Modifier
@@ -278,15 +341,49 @@ export const ExerciceItem = ({
             typography: 'body2',
             py: 1.5,
             px: 2.5,
-            transition: (theme) => theme.transitions.create(['background-color']),
+            transition: (t) => t.transitions.create(['background-color']),
             '&:hover': {
-              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+              backgroundColor: (t) => alpha(t.palette.error.main, 0.08),
             },
           }}
         >
           <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
+
+        {onToggleActive && (
+          <MenuItem
+            onClick={() => {
+              if (onToggleActive) {
+                onToggleActive(exercice, !isActive);
+              }
+              popover.onClose();
+            }}
+            sx={{
+              typography: 'body2',
+              py: 1.5,
+              px: 2.5,
+              transition: theme.transitions.create(['background-color']),
+              '&:hover .icon': {
+                color: 'success.main',
+              },
+            }}
+          >
+            <Box
+              component={FontAwesomeIcon}
+              className="icon"
+              icon={faToggleOn}
+              sx={{
+                mr: 1,
+                width: 16,
+                height: 16,
+                color: 'text.secondary',
+                transition: (t) => t.transitions.create(['color']),
+              }}
+            />
+            {isActive ? 'Désactiver' : 'Activer'}
+          </MenuItem>
+        )}
       </CustomPopover>
     </>
   );
