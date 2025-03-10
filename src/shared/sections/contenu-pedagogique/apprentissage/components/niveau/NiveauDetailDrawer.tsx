@@ -5,11 +5,9 @@ import {
   faBook,
   faCode,
   faTimes,
-  faTrash,
   faClock,
   faFileAlt,
   faToggleOn,
-  faPenToSquare,
   faCalendarAlt,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
@@ -43,8 +41,6 @@ interface NiveauDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   niveau: Niveau;
-  onEdit?: () => void;
-  onDelete?: () => void;
   onViewMatieres?: () => void;
   onToggleActive?: (niveau: Niveau, active: boolean) => void;
 }
@@ -53,8 +49,6 @@ const NiveauDetailDrawer = ({
   open,
   onClose,
   niveau,
-  onEdit,
-  onDelete,
   onViewMatieres,
   onToggleActive,
 }: NiveauDetailDrawerProps) => {
@@ -439,7 +433,7 @@ const NiveauDetailDrawer = ({
         </Box>
       </Box>
 
-      {/* Action buttons fixed at bottom */}
+      {/* Action button fixed at bottom */}
       <Box
         component={m.div}
         initial="initial"
@@ -455,53 +449,26 @@ const NiveauDetailDrawer = ({
           zIndex: 1, // Ensure it stays on top
         }}
       >
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{
-            mb: 2,
-            py: 1.5,
-            boxShadow: theme.customShadows?.primary,
-            '&:hover': {
-              boxShadow: theme.customShadows?.z16,
-              transform: 'translateY(-1px)',
-            },
-            transition: theme.transitions.create(['transform', 'box-shadow']),
-          }}
-          color="primary"
-          onClick={onViewMatieres}
-          startIcon={<FontAwesomeIcon icon={faBook} />}
-        >
-          Voir les matières
-        </Button>
-
-        <Stack direction="row" spacing={2}>
-          {onEdit && (
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPenToSquare} />}
-              onClick={onEdit}
-              fullWidth
-              sx={{ py: 1.25 }}
-            >
-              Modifier
-            </Button>
-          )}
-
-          {onDelete && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<FontAwesomeIcon icon={faTrash} />}
-              onClick={onDelete}
-              fullWidth
-              sx={{ py: 1.25 }}
-            >
-              Supprimer
-            </Button>
-          )}
-        </Stack>
+        {onViewMatieres && (
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              py: 1.5,
+              boxShadow: theme.customShadows?.primary,
+              '&:hover': {
+                boxShadow: theme.customShadows?.z16,
+                transform: 'translateY(-1px)',
+              },
+              transition: theme.transitions.create(['transform', 'box-shadow']),
+            }}
+            color="primary"
+            onClick={onViewMatieres}
+            startIcon={<FontAwesomeIcon icon={faBook} />}
+          >
+            Voir les matières
+          </Button>
+        )}
       </Box>
     </Drawer>
   );

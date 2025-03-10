@@ -34,6 +34,11 @@ export interface Chapitre {
   difficulte: 'Facile' | 'Moyen' | 'Difficile';
   matiereId: string;
   exercicesCount: number;
+  competencesCount: number;
+  dureeEstimee: string; // Adjust the type as needed
+  active: boolean;
+  dateCreated: string; // Adjust the type as needed
+  lastUpdated: string;
 }
 
 export interface Exercice {
@@ -43,6 +48,11 @@ export interface Exercice {
   statut: 'Publié' | 'Brouillon' | 'Inactif';
   ressources: string[];
   chapitreId: string;
+  dateCreated?: string; // Date de création au format ISO string
+  lastUpdated?: string; // Date de dernière modification au format ISO string
+  notation?: number; // Nombre de points pour l'exercice (ex: 20)
+  competencesCount?: number; // Nombre de compétences visées par l'exercice
+  active?: boolean; // Indicateur si l'exercice est actif (semblable aux autres entités)
 }
 
 export interface Pagination {
@@ -57,12 +67,28 @@ export interface FilterParams {
   limit?: number;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
-  // New column specific filters
+
+  // Filtres communs pour Niveau
   nomFilter?: string;
   descriptionFilter?: string;
   codeFilter?: string;
   dateCreatedFilter?: string;
   activeOnly?: boolean;
+
+  // Filtres spécifiques pour Exercice
+  titreFilter?: string;
+  statutFilter?: string;
+  ressourcesFilter?: string;
+  resourceType?: string; // Pour filtrer par type de ressource spécifique
+
+  // Filtres spécifiques pour Matière
+  couleurFilter?: string;
+  niveauIdFilter?: string;
+  chapitresCountFilter?: string;
+  exercicesCountFilter?: string;
+
+  // Autres filtres potentiels
+  [key: string]: any; // Pour permettre des filtres dynamiques supplémentaires
 }
 
 // Response interfaces

@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+  faEye,
   faTrash,
-  faInfoCircle,
   faPenToSquare,
   faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
@@ -13,16 +14,18 @@ import {
   Box,
   Link,
   Chip,
+  alpha,
+  Stack,
+  Tooltip,
   TableRow,
   Checkbox,
   MenuItem,
   TableCell,
   IconButton,
+  Typography,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
 import { STATUT_OPTIONS } from '../../types';
@@ -46,18 +49,7 @@ export const ExerciceItem = ({
   onDeleteClick,
   onViewClick,
 }: ExerciceItemProps) => {
-  const confirm = useBoolean();
   const popover = usePopover();
-
-  const handleOpenConfirm = () => {
-    popover.onClose();
-    confirm.onTrue();
-  };
-
-  const handleDelete = () => {
-    onDeleteClick();
-    confirm.onFalse();
-  };
 
   // Find status option based on exercice.statut
   const statutOption =
@@ -65,8 +57,25 @@ export const ExerciceItem = ({
 
   return (
     <>
-      <TableRow hover selected={selected}>
-        <TableCell padding="checkbox">
+      <TableRow
+        component={m.tr}
+        variants={varFade().inUp}
+        hover
+        selected={selected}
+        onClick={onViewClick}
+        sx={{
+          cursor: 'pointer',
+          transition: (theme) => theme.transitions.create(['background-color']),
+          '&:hover': {
+            backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
+          },
+          ...(exercice.statut === 'Inactif' && {
+            opacity: 0.7,
+            bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.2),
+          }),
+        }}
+      >
+        <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
@@ -75,15 +84,41 @@ export const ExerciceItem = ({
             component="button"
             variant="subtitle2"
             color="text.primary"
-            onClick={onViewClick}
-            sx={{ textDecoration: 'none', cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewClick();
+            }}
+            sx={{
+              textDecoration: 'none',
+              cursor: 'pointer',
+              fontWeight: 'fontWeightMedium',
+              transition: (theme) => theme.transitions.create(['color']),
+              '&:hover': {
+                color: 'primary.main',
+              },
+            }}
             noWrap
           >
             {exercice.titre}
           </Link>
+          {exercice.statut === 'Inactif' && (
+            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+              Inactif
+            </Typography>
+          )}
         </TableCell>
 
-        <TableCell sx={{ color: 'text.secondary' }}>{exercice.description}</TableCell>
+        <TableCell
+          sx={{
+            maxWidth: 280,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            color: 'text.secondary',
+          }}
+        >
+          {exercice.description}
+        </TableCell>
 
         <TableCell>
           <Chip
@@ -97,7 +132,7 @@ export const ExerciceItem = ({
         </TableCell>
 
         <TableCell>
-          {exercice.ressources.map((ressource, index) => (
+          {exercice.ressources?.map((ressource, index) => (
             <React.Fragment key={index}>
               {index > 0 && ', '}
               {ressource}
@@ -106,13 +141,64 @@ export const ExerciceItem = ({
         </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-          <IconButton color="default" onClick={onEditClick} size="small">
-            <FontAwesomeIcon icon={faPenToSquare} />
-          </IconButton>
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            <Tooltip title="Voir détails">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faEye} />
+              </IconButton>
+            </Tooltip>
 
-          <IconButton color="default" onClick={popover.onOpen} size="small">
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </IconButton>
+            <Tooltip title="Modifier">
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Supprimer">
+              <IconButton
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </TableCell>
       </TableRow>
 
@@ -122,56 +208,88 @@ export const ExerciceItem = ({
         onClose={popover.onClose}
         slotProps={{ paper: { sx: { width: 160 } } }}
       >
-        <MenuItem onClick={onViewClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onViewClick();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
-            icon={faInfoCircle}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            className="icon"
+            icon={faEye}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
-          Détails
+          Voir détails
         </MenuItem>
 
-        <MenuItem onClick={onEditClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onEditClick();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
+            className="icon"
             icon={faPenToSquare}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Modifier
         </MenuItem>
 
         <MenuItem
-          onClick={handleOpenConfirm}
-          sx={{ color: 'error.main', typography: 'body2', py: 1, px: 2.5 }}
+          onClick={() => {
+            popover.onClose();
+            onDeleteClick();
+          }}
+          sx={{
+            color: 'error.main',
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover': {
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+            },
+          }}
         >
           <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
       </CustomPopover>
-
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Supprimer"
-        content={`Êtes-vous sûr de vouloir supprimer l'exercice "${exercice.titre}" ?`}
-        action={
-          <Box
-            component="button"
-            sx={{
-              p: '8px 16px',
-              bgcolor: 'error.main',
-              borderRadius: 1,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'error.dark' },
-            }}
-            onClick={handleDelete}
-          >
-            Supprimer
-          </Box>
-        }
-      />
     </>
   );
 };
+
+export default ExerciceItem;

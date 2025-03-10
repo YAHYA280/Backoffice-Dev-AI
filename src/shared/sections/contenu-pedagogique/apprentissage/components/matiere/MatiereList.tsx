@@ -22,6 +22,8 @@ import {
   IconButton,
   TableContainer,
   InputAdornment,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -40,7 +42,6 @@ import {
 } from 'src/shared/components/table';
 
 import { MatiereItem } from './MatiereItem';
-import { SearchBar } from '../common/Searchbar';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { Matiere, Pagination, FilterParams } from '../../types';
@@ -71,7 +72,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
       fullWidth
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
-      placeholder={placeholder || `Filtrer par ${columnId}`}
+      placeholder={placeholder || `Rechercher par ${columnId}`}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
@@ -123,6 +124,7 @@ interface MatiereListProps {
   onDeleteRows?: (selectedRows: string[]) => void;
   onViewChapitres: (matiere: Matiere) => void;
   onAddClick?: () => void;
+  onToggleActive?: (matiere: Matiere, active: boolean) => void;
 }
 
 export const MatiereList: React.FC<MatiereListProps> = ({
@@ -140,15 +142,17 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   onDeleteRows,
   onViewChapitres,
   onAddClick,
+  onToggleActive,
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
 
-  const [showColumnFilters, setShowColumnFilters] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
     description: '',
+    chapitresCount: '',
+    dateCreated: '',
   });
 
   const table = useTable({
@@ -169,10 +173,6 @@ export const MatiereList: React.FC<MatiereListProps> = ({
     confirm.onFalse();
   };
 
-  const handleToggleColumnFilters = () => {
-    setShowColumnFilters(!showColumnFilters);
-  };
-
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     setFilterAnchorEl(event.currentTarget);
   };
@@ -182,10 +182,16 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   };
 
   const handleFilterReset = () => {
-    setColumnFilters({ nom: '', description: '' });
+    setColumnFilters({
+      nom: '',
+      description: '',
+      chapitresCount: '',
+      dateCreated: '',
+    });
     if (onColumnFilterChange) {
-      onColumnFilterChange('nom', '');
-      onColumnFilterChange('description', '');
+      Object.keys(columnFilters).forEach((key) => {
+        onColumnFilterChange(key, '');
+      });
     }
   };
 
@@ -254,33 +260,22 @@ export const MatiereList: React.FC<MatiereListProps> = ({
               gap: 2,
             }}
           >
-            <SearchBar
-              filterName={filters.searchTerm || ''}
-              onFilterName={onSearchChange}
-              placeholder="Rechercher une matière..."
-              hasFilters={Boolean(true)}
-              onOpenFilter={handleFilterClick}
-              sx={{ flexGrow: 1 }}
-            />
-
-            <Tooltip title="Afficher/Masquer les filtres par colonne">
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleToggleColumnFilters}
-                startIcon={<FontAwesomeIcon icon={faFilter} />}
-                sx={{
-                  minWidth: 120,
-                  borderRadius: 1,
-                  transition: theme.transitions.create(['background-color']),
-                  ...(showColumnFilters && {
-                    bgcolor: 'primary.lighter',
-                  }),
-                }}
-              >
-                Filtres
-              </Button>
-            </Tooltip>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleFilterClick}
+              startIcon={<FontAwesomeIcon icon={faFilter} />}
+              sx={{
+                minWidth: 120,
+                borderRadius: 1,
+                transition: theme.transitions.create(['background-color']),
+                ...(filterOpen && {
+                  bgcolor: 'primary.lighter',
+                }),
+              }}
+            >
+              Filtres avancés
+            </Button>
 
             <Popover
               open={filterOpen}
@@ -308,6 +303,38 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                 Filtres avancés
               </Typography>
 
+              <Stack spacing={2} sx={{ mb: 2 }}>
+                <FormControlLabel
+                  control={<Switch size="small" color="primary" />}
+                  label="Matières actives uniquement"
+                />
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Chapitres minimum"
+                  type="number"
+                  InputProps={{
+                    inputProps: { min: 0 },
+                  }}
+                />
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Exercices minimum"
+                  type="number"
+                  InputProps={{
+                    inputProps: { min: 0 },
+                  }}
+                />
+
+                <FormControlLabel
+                  control={<Switch size="small" color="primary" />}
+                  label="Matières avec chapitres uniquement"
+                />
+              </Stack>
+
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                 <Button variant="outlined" size="small" onClick={handleFilterReset}>
                   Réinitialiser
@@ -319,34 +346,33 @@ export const MatiereList: React.FC<MatiereListProps> = ({
             </Popover>
           </Box>
 
-          {showColumnFilters && (
-            <Box sx={{ px: 2, pb: 2 }}>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Filtres par colonne
-              </Typography>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: 2,
-                }}
-              >
-                {TABLE_HEAD.filter((col) => col.id).map(
-                  (column) =>
-                    column.id && (
-                      <ColumnFilter
-                        key={column.id}
-                        columnId={column.id}
-                        value={columnFilters[column.id] || ''}
-                        onChange={handleColumnFilterChange}
-                        placeholder={`Filtrer par ${column.label}`}
-                      />
-                    )
-                )}
-              </Box>
+          {/* Column Filters - Always visible */}
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Recherche par colonne
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: 2,
+              }}
+            >
+              {TABLE_HEAD.filter((col) => col.id).map(
+                (column) =>
+                  column.id && (
+                    <ColumnFilter
+                      key={column.id}
+                      columnId={column.id}
+                      value={columnFilters[column.id] || ''}
+                      onChange={handleColumnFilterChange}
+                      placeholder={`Rechercher par ${column.label}`}
+                    />
+                  )
+              )}
             </Box>
-          )}
+          </Box>
 
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
@@ -438,6 +464,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                           onViewClick={() => onViewClick(matiere)}
                           onSelectRow={() => table.onSelectRow(matiere.id)}
                           onViewChapitres={() => onViewChapitres(matiere)}
+                          onToggleActive={onToggleActive}
                         />
                       ))
                     )}

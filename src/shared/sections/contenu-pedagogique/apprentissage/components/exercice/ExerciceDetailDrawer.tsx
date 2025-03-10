@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
-  faTrash,
   faVideo,
   faImage,
   faLaptop,
@@ -12,7 +12,6 @@ import {
   faFilePdf,
   faClipboard,
   faHeadphones,
-  faPenToSquare,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -22,14 +21,20 @@ import {
   Chip,
   Grid,
   Stack,
+  alpha,
+  Paper,
   Drawer,
   Button,
   Divider,
   ListItem,
+  useTheme,
   IconButton,
   Typography,
   ListItemText,
+  Avatar,
 } from '@mui/material';
+
+import { varFade } from 'src/shared/components/animate/variants/fade';
 
 import { STATUT_OPTIONS } from '../../types';
 
@@ -39,17 +44,11 @@ interface ExerciceDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   exercice: Exercice;
-  onEdit?: () => void;
-  onDelete?: () => void;
 }
 
-const ExerciceDetailDrawer = ({
-  open,
-  onClose,
-  exercice,
-  onEdit,
-  onDelete,
-}: ExerciceDetailDrawerProps) => {
+const ExerciceDetailDrawer = ({ open, onClose, exercice }: ExerciceDetailDrawerProps) => {
+  const theme = useTheme();
+
   // Find status option based on exercice.statut
   const statutOption =
     STATUT_OPTIONS.find((option) => option.value === exercice.statut) || STATUT_OPTIONS[0];
@@ -79,131 +78,227 @@ const ExerciceDetailDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 400 }, p: 0 },
+        sx: {
+          width: { xs: '100%', sm: 450 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
+        },
       }}
     >
+      {/* Header with background and icon */}
       <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          p: 3,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          color: 'white',
         }}
       >
-        <Typography variant="h6">Détails de l&quote;exercice</Typography>
-        <IconButton onClick={onClose} edge="end">
+        <IconButton
+          onClick={onClose}
+          edge="end"
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: alpha('#fff', 0.1),
+            },
+          }}
+        >
           <FontAwesomeIcon icon={faTimes} />
         </IconButton>
+
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar
+            sx={{
+              width: 64,
+              height: 64,
+              bgcolor: alpha('#fff', 0.9),
+              color: 'primary.main',
+              boxShadow: theme.customShadows?.z8,
+            }}
+          >
+            <FontAwesomeIcon icon={faFileAlt} size="lg" />
+          </Avatar>
+
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              {exercice.titre}
+            </Typography>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                label={statutOption.label}
+                size="small"
+                sx={{
+                  bgcolor: alpha(statutOption.bgColor, 0.8),
+                  color: statutOption.color,
+                  fontWeight: 'fontWeightMedium',
+                  backdropFilter: 'blur(6px)',
+                }}
+              />
+            </Stack>
+          </Box>
+        </Stack>
       </Box>
 
+      {/* Main content */}
       <Box sx={{ p: 3 }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          {exercice.titre}
-        </Typography>
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Description de l&apos;exercice
+          </Typography>
+          <Typography variant="body2">
+            {exercice.description || 'Aucune description disponible.'}
+          </Typography>
+        </Paper>
 
-        <Box sx={{ mb: 3 }}>
-          <Chip
-            label={statutOption.label}
-            size="small"
+        {/* Ressources */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Ressources
+          </Typography>
+
+          <Paper
+            elevation={0}
             sx={{
-              backgroundColor: statutOption.bgColor,
-              color: statutOption.color,
+              p: 2,
+              mb: 3,
+              borderRadius: 2,
+              boxShadow: theme.customShadows?.z1,
             }}
-          />
+          >
+            <Grid container spacing={1}>
+              {exercice.ressources && exercice.ressources.length > 0 ? (
+                exercice.ressources.map((resource, index) => (
+                  <Grid item key={index}>
+                    <Chip
+                      icon={<FontAwesomeIcon icon={getResourceIcon(resource)} />}
+                      label={resource}
+                      sx={{
+                        borderRadius: 1,
+                        bgcolor: alpha(theme.palette.info.lighter, 0.5),
+                        color: 'text.primary',
+                      }}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="text.secondary">
+                    Aucune ressource disponible
+                  </Typography>
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-          Description :
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {exercice.description}
-        </Typography>
+        {/* Évaluation et objectifs */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Évaluation et objectifs
+          </Typography>
 
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-          Ressources :
-        </Typography>
-        <Grid container spacing={1} sx={{ mb: 3 }}>
-          {exercice.ressources.map((resource, index) => (
-            <Grid item key={index}>
-              <Chip
-                icon={<FontAwesomeIcon icon={getResourceIcon(resource)} />}
-                label={resource}
-                variant="outlined"
-                sx={{ borderRadius: 1 }}
+          <List
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faClipboard} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Notation
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    20 points
+                  </Typography>
+                }
               />
-            </Grid>
-          ))}
-        </Grid>
+            </ListItem>
 
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-          Évaluation et objectifs :
-        </Typography>
-
-        <List disablePadding>
-          <ListItem disablePadding sx={{ py: 1 }}>
-            <ListItemText
-              primary={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FontAwesomeIcon icon={faClipboard} style={{ color: '#2065D1' }} />
-                  <Typography variant="body2">Notation:</Typography>
-                  <Chip
-                    label="20 points" // Hardcoded for now
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              }
-            />
-          </ListItem>
-
-          <ListItem disablePadding sx={{ py: 1 }}>
-            <ListItemText
-              primary={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FontAwesomeIcon icon={faGraduationCap} style={{ color: '#2065D1' }} />
-                  <Typography variant="body2">Compétences visées:</Typography>
-                  <Chip
-                    label="3" // Hardcoded for now
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              }
-            />
-          </ListItem>
-        </List>
-
-        <Box sx={{ mt: 4 }}>
-          <Stack direction="row" spacing={2}>
-            {onEdit && (
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<FontAwesomeIcon icon={faPenToSquare} />}
-                onClick={onEdit}
-                fullWidth
-              >
-                Modifier
-              </Button>
-            )}
-
-            {onDelete && (
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<FontAwesomeIcon icon={faTrash} />}
-                onClick={onDelete}
-                fullWidth
-              >
-                Supprimer
-              </Button>
-            )}
-          </Stack>
+            <ListItem
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.info.main, 0.1),
+                        color: 'info.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faGraduationCap} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Compétences visées
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    3 compétences
+                  </Typography>
+                }
+              />
+            </ListItem>
+          </List>
         </Box>
       </Box>
     </Drawer>

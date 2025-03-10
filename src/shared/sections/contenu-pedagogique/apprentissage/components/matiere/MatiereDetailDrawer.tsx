@@ -6,11 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook,
   faTimes,
-  faTrash,
   faClock,
   faFileAlt,
   faToggleOn,
-  faPenToSquare,
   faCalendarAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -43,8 +41,6 @@ interface MatiereDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   matiere: Matiere;
-  onEdit?: () => void;
-  onDelete?: () => void;
   onViewChapitres?: () => void;
   onToggleActive?: (matiere: Matiere, active: boolean) => void;
 }
@@ -53,8 +49,6 @@ const MatiereDetailDrawer = ({
   open,
   onClose,
   matiere,
-  onEdit,
-  onDelete,
   onViewChapitres,
   onToggleActive,
 }: MatiereDetailDrawerProps) => {
@@ -404,7 +398,7 @@ const MatiereDetailDrawer = ({
         </Box>
       </Box>
 
-      {/* Action buttons fixed at bottom */}
+      {/* Action button fixed at bottom */}
       <Box
         component={m.div}
         initial="initial"
@@ -420,53 +414,26 @@ const MatiereDetailDrawer = ({
           zIndex: 1,
         }}
       >
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{
-            mb: 2,
-            py: 1.5,
-            boxShadow: theme.customShadows?.primary,
-            '&:hover': {
-              boxShadow: theme.customShadows?.z16,
-              transform: 'translateY(-1px)',
-            },
-            transition: theme.transitions.create(['transform', 'box-shadow']),
-          }}
-          color="primary"
-          onClick={onViewChapitres}
-          startIcon={<FontAwesomeIcon icon={faBook} />}
-        >
-          Voir les chapitres
-        </Button>
-
-        <Stack direction="row" spacing={2}>
-          {onEdit && (
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPenToSquare} />}
-              onClick={onEdit}
-              fullWidth
-              sx={{ py: 1.25 }}
-            >
-              Modifier
-            </Button>
-          )}
-
-          {onDelete && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<FontAwesomeIcon icon={faTrash} />}
-              onClick={onDelete}
-              fullWidth
-              sx={{ py: 1.25 }}
-            >
-              Supprimer
-            </Button>
-          )}
-        </Stack>
+        {onViewChapitres && (
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              py: 1.5,
+              boxShadow: theme.customShadows?.primary,
+              '&:hover': {
+                boxShadow: theme.customShadows?.z16,
+                transform: 'translateY(-1px)',
+              },
+              transition: theme.transitions.create(['transform', 'box-shadow']),
+            }}
+            color="primary"
+            onClick={onViewChapitres}
+            startIcon={<FontAwesomeIcon icon={faBook} />}
+          >
+            Voir les chapitres
+          </Button>
+        )}
       </Box>
     </Drawer>
   );

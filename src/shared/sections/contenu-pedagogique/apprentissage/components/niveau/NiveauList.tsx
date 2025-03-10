@@ -47,7 +47,6 @@ import {
 } from 'src/shared/components/table';
 
 import { NiveauItem } from './NiveauItem';
-import { SearchBar } from '../common/Searchbar';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { Niveau, Pagination, FilterParams } from '../../types';
@@ -211,7 +210,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
-  const [showColumnFilters, setShowColumnFilters] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
@@ -236,10 +234,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
       table.onSelectAllRows(false, []);
     }
     confirm.onFalse();
-  };
-
-  const handleToggleColumnFilters = () => {
-    setShowColumnFilters(!showColumnFilters);
   };
 
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -321,33 +315,22 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           }}
         >
           <Box sx={{ p: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <SearchBar
-              filterName={filters.searchTerm || ''}
-              onFilterName={onSearchChange}
-              placeholder="Rechercher un niveau..."
-              hasFilters={Boolean(true)}
-              onOpenFilter={handleFilterClick}
-              sx={{ flexGrow: 1 }}
-            />
-
-            <Tooltip title="Afficher/Masquer les filtres par colonne">
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleToggleColumnFilters}
-                startIcon={<FontAwesomeIcon icon={faFilter} />}
-                sx={{
-                  minWidth: 120,
-                  borderRadius: 1,
-                  transition: theme.transitions.create(['background-color']),
-                  ...(showColumnFilters && {
-                    bgcolor: 'primary.lighter',
-                  }),
-                }}
-              >
-                Filtres
-              </Button>
-            </Tooltip>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleFilterClick}
+              startIcon={<FontAwesomeIcon icon={faFilter} />}
+              sx={{
+                minWidth: 120,
+                borderRadius: 1,
+                transition: theme.transitions.create(['background-color']),
+                ...(filterOpen && {
+                  bgcolor: 'primary.lighter',
+                }),
+              }}
+            >
+              Filtres avancés
+            </Button>
 
             <Popover
               open={filterOpen}
@@ -393,6 +376,29 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                     ),
                   }}
                 />
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Date de création avant"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FontAwesomeIcon icon={faCalendarAlt} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <FormControlLabel
+                  control={<Switch size="small" color="primary" />}
+                  label="Avec matières uniquement"
+                />
+
+                <FormControlLabel
+                  control={<Switch size="small" color="primary" />}
+                  label="Avec exercices uniquement"
+                />
               </Stack>
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
@@ -406,29 +412,28 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             </Popover>
           </Box>
 
-          {showColumnFilters && (
-            <Box sx={{ px: 2, pb: 2 }}>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Filtres par colonne
-              </Typography>
-              <Grid container spacing={2}>
-                {TABLE_HEAD.filter((col) => col.id).map(
-                  (column) =>
-                    column.id && (
-                      <Grid item xs={12} sm={6} md={3} key={column.id}>
-                        <ColumnFilter
-                          columnId={column.id}
-                          value={columnFilters[column.id] || ''}
-                          onChange={handleColumnFilterChange}
-                          placeholder={`Filtrer par ${column.label}`}
-                        />
-                      </Grid>
-                    )
-                )}
-              </Grid>
-            </Box>
-          )}
+          {/* Column Filters - Always visible */}
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Recherche par colonne
+            </Typography>
+            <Grid container spacing={2}>
+              {TABLE_HEAD.filter((col) => col.id).map(
+                (column) =>
+                  column.id && (
+                    <Grid item xs={12} sm={6} md={3} key={column.id}>
+                      <ColumnFilter
+                        columnId={column.id}
+                        value={columnFilters[column.id] || ''}
+                        onChange={handleColumnFilterChange}
+                        placeholder={`Rechercher par ${column.label}`}
+                      />
+                    </Grid>
+                  )
+              )}
+            </Grid>
+          </Box>
 
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction

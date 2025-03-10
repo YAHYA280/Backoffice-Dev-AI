@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
-  faTrash,
   faClock,
   faFileAlt,
-  faPenToSquare,
+  faBook,
   faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -16,16 +16,19 @@ import {
   List,
   Chip,
   Stack,
+  alpha,
+  Paper,
   Drawer,
   Button,
   Avatar,
-  Divider,
   ListItem,
+  useTheme,
   IconButton,
   Typography,
   ListItemText,
 } from '@mui/material';
 
+import { varFade } from 'src/shared/components/animate/variants/fade';
 import { DIFFICULTE_OPTIONS } from '../../types';
 
 import type { Chapitre } from '../../types';
@@ -34,8 +37,6 @@ interface ChapitreDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   chapitre: Chapitre;
-  onEdit?: () => void;
-  onDelete?: () => void;
   onViewExercices?: () => void;
 }
 
@@ -43,10 +44,10 @@ const ChapitreDetailDrawer = ({
   open,
   onClose,
   chapitre,
-  onEdit,
-  onDelete,
   onViewExercices,
 }: ChapitreDetailDrawerProps) => {
+  const theme = useTheme();
+
   // Find difficulty option based on chapitre.difficulte
   const difficulteOption =
     DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulte) ||
@@ -58,149 +59,337 @@ const ChapitreDetailDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 400 }, p: 0 },
+        sx: {
+          width: { xs: '100%', sm: 450 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
+        },
       }}
     >
+      {/* Header with background and icon */}
       <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
         sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          p: 3,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          color: 'white',
         }}
       >
-        <Typography variant="h6">Détails du chapitre</Typography>
-        <IconButton onClick={onClose} edge="end">
+        <IconButton
+          onClick={onClose}
+          edge="end"
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: alpha('#fff', 0.1),
+            },
+          }}
+        >
           <FontAwesomeIcon icon={faTimes} />
         </IconButton>
-      </Box>
 
-      <Box sx={{ p: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+        <Stack direction="row" spacing={2} alignItems="center">
           <Avatar
             sx={{
-              bgcolor: '#E9F2FF',
-              color: '#2065D1',
-              width: 40,
-              height: 40,
+              width: 64,
+              height: 64,
+              bgcolor: alpha('#fff', 0.9),
+              color: 'primary.main',
+              boxShadow: theme.customShadows?.z8,
+              fontWeight: 'bold',
+              fontSize: '1.5rem',
             }}
           >
             {chapitre.ordre}
           </Avatar>
-          <Typography variant="h5" fontWeight="bold">
-            {chapitre.nom}
+
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              {chapitre.nom}
+            </Typography>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                label={difficulteOption.label}
+                size="small"
+                sx={{
+                  bgcolor: alpha(difficulteOption.bgColor, 0.8),
+                  color: difficulteOption.color,
+                  fontWeight: 'fontWeightMedium',
+                  backdropFilter: 'blur(6px)',
+                }}
+              />
+            </Stack>
+          </Box>
+        </Stack>
+      </Box>
+
+      {/* Main content */}
+      <Box sx={{ p: 3 }}>
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Description du chapitre
           </Typography>
+          <Typography variant="body2">
+            {chapitre.description || 'Aucune description disponible.'}
+          </Typography>
+        </Paper>
+
+        {/* Information Cards */}
+        <Stack
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          direction="row"
+          spacing={2}
+          sx={{ mb: 3 }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              flex: 1,
+              textAlign: 'center',
+              borderRadius: 2,
+              boxShadow: theme.customShadows?.z8,
+              bgcolor: alpha(theme.palette.info.lighter, 0.5),
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faFileAlt}
+              style={{
+                color: theme.palette.info.main,
+                fontSize: 24,
+                marginBottom: 8,
+              }}
+            />
+            <Typography variant="h5" color="text.primary">
+              {chapitre.exercicesCount || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Exercices
+            </Typography>
+          </Paper>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              flex: 1,
+              textAlign: 'center',
+              borderRadius: 2,
+              boxShadow: theme.customShadows?.z8,
+              bgcolor: alpha(theme.palette.success.lighter, 0.5),
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faGraduationCap}
+              style={{
+                color: theme.palette.success.main,
+                fontSize: 24,
+                marginBottom: 8,
+              }}
+            />
+            <Typography variant="h5" color="text.primary">
+              {chapitre.competencesCount || 4}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Compétences
+            </Typography>
+          </Paper>
         </Stack>
 
-        <Box sx={{ mb: 3 }}>
-          <Chip
-            label={`Difficulté: ${difficulteOption.label}`}
-            size="small"
+        {/* Detailed Information List */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Informations détaillées
+          </Typography>
+
+          <List
             sx={{
-              backgroundColor: difficulteOption.bgColor,
-              color: difficulteOption.color,
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
             }}
-          />
+          >
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight="bold">
+                        {chapitre.ordre}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Ordre
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    Chapitre {chapitre.ordre}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.warning.main, 0.1),
+                        color: 'warning.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faClock} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Durée estimée
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {chapitre.dureeEstimee || '3h30'}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.info.main, 0.1),
+                        color: 'info.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faBook} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Difficulté
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Box sx={{ mt: 0.5, ml: 6 }}>
+                    <Chip
+                      label={difficulteOption.label}
+                      size="small"
+                      sx={{
+                        bgcolor: difficulteOption.bgColor,
+                        color: difficulteOption.color,
+                      }}
+                    />
+                  </Box>
+                }
+              />
+            </ListItem>
+          </List>
         </Box>
+      </Box>
 
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-          Description :
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {chapitre.description}
-        </Typography>
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-          Statistiques :
-        </Typography>
-
-        <List disablePadding>
-          <ListItem disablePadding sx={{ py: 1 }}>
-            <ListItemText
-              primary={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FontAwesomeIcon icon={faFileAlt} style={{ color: '#2065D1' }} />
-                  <Typography variant="body2">Exercices:</Typography>
-                  <Chip
-                    label={chapitre.exercicesCount}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              }
-            />
-          </ListItem>
-
-          <ListItem disablePadding sx={{ py: 1 }}>
-            <ListItemText
-              primary={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FontAwesomeIcon icon={faClock} style={{ color: '#2065D1' }} />
-                  <Typography variant="body2">Durée estimée:</Typography>
-                  <Chip
-                    label="3h30" // Hardcoded for now
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              }
-            />
-          </ListItem>
-
-          <ListItem disablePadding sx={{ py: 1 }}>
-            <ListItemText
-              primary={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FontAwesomeIcon icon={faGraduationCap} style={{ color: '#2065D1' }} />
-                  <Typography variant="body2">Compétences:</Typography>
-                  <Chip
-                    label="4" // Hardcoded for now
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-              }
-            />
-          </ListItem>
-        </List>
-
-        <Box sx={{ mt: 4 }}>
-          <Button variant="contained" fullWidth sx={{ mb: 2 }} onClick={onViewExercices}>
+      {/* Action button fixed at bottom */}
+      <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().inUp}
+        sx={{
+          p: 3,
+          pt: 2,
+          position: 'sticky',
+          bottom: 0,
+          bgcolor: 'background.paper',
+          borderTop: `1px solid ${theme.palette.divider}`,
+          zIndex: 1, // Ensure it stays on top
+        }}
+      >
+        {onViewExercices && (
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              py: 1.5,
+              boxShadow: theme.customShadows?.primary,
+              '&:hover': {
+                boxShadow: theme.customShadows?.z16,
+                transform: 'translateY(-1px)',
+              },
+              transition: theme.transitions.create(['transform', 'box-shadow']),
+            }}
+            color="primary"
+            onClick={onViewExercices}
+            startIcon={<FontAwesomeIcon icon={faFileAlt} />}
+          >
             Voir les exercices
           </Button>
-
-          <Stack direction="row" spacing={2}>
-            {onEdit && (
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<FontAwesomeIcon icon={faPenToSquare} />}
-                onClick={onEdit}
-                fullWidth
-              >
-                Modifier
-              </Button>
-            )}
-
-            {onDelete && (
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<FontAwesomeIcon icon={faTrash} />}
-                onClick={onDelete}
-                fullWidth
-              >
-                Supprimer
-              </Button>
-            )}
-          </Stack>
-        </Box>
+        )}
       </Box>
     </Drawer>
   );

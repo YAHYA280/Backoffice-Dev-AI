@@ -1,4 +1,7 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
+import { format, addDays, subDays, subMonths } from 'date-fns';
 
 import { DEFAULT_PAGINATION } from '../types';
 
@@ -19,6 +22,11 @@ const fetchChapitresAPI = async (
       difficulte: 'Facile',
       matiereId,
       exercicesCount: 8,
+      dateCreated: subMonths(new Date(), 3).toISOString(),
+      lastUpdated: subDays(new Date(), 15).toISOString(),
+      competencesCount: 3,
+      dureeEstimee: '2h30',
+      active: true,
     },
     {
       id: '2',
@@ -28,6 +36,11 @@ const fetchChapitresAPI = async (
       difficulte: 'Moyen',
       matiereId,
       exercicesCount: 6,
+      dateCreated: subMonths(new Date(), 2).toISOString(),
+      lastUpdated: subDays(new Date(), 10).toISOString(),
+      competencesCount: 4,
+      dureeEstimee: '3h00',
+      active: true,
     },
     {
       id: '3',
@@ -37,6 +50,11 @@ const fetchChapitresAPI = async (
       difficulte: 'Moyen',
       matiereId,
       exercicesCount: 7,
+      dateCreated: subMonths(new Date(), 1).toISOString(),
+      lastUpdated: subDays(new Date(), 5).toISOString(),
+      competencesCount: 5,
+      dureeEstimee: '3h30',
+      active: true,
     },
     {
       id: '4',
@@ -46,6 +64,11 @@ const fetchChapitresAPI = async (
       difficulte: 'Difficile',
       matiereId,
       exercicesCount: 5,
+      dateCreated: subDays(new Date(), 20).toISOString(),
+      lastUpdated: subDays(new Date(), 2).toISOString(),
+      competencesCount: 3,
+      dureeEstimee: '2h45',
+      active: true,
     },
     {
       id: '5',
@@ -55,6 +78,11 @@ const fetchChapitresAPI = async (
       difficulte: 'Moyen',
       matiereId,
       exercicesCount: 4,
+      dateCreated: subDays(new Date(), 10).toISOString(),
+      lastUpdated: subDays(new Date(), 1).toISOString(),
+      competencesCount: 4,
+      dureeEstimee: '2h15',
+      active: false,
     },
   ];
 
@@ -67,6 +95,83 @@ const fetchChapitresAPI = async (
         chapitre.nom.toLowerCase().includes(searchLower) ||
         chapitre.description.toLowerCase().includes(searchLower)
     );
+  }
+
+  // Apply column-specific filters
+  if (params.nomFilter) {
+    const filter = params.nomFilter.toLowerCase();
+    filteredData = filteredData.filter((chapitre) => chapitre.nom.toLowerCase().includes(filter));
+  }
+
+  if (params.descriptionFilter) {
+    const filter = params.descriptionFilter.toLowerCase();
+    filteredData = filteredData.filter((chapitre) =>
+      chapitre.description.toLowerCase().includes(filter)
+    );
+  }
+
+  if (params.ordreFilter) {
+    const filter = params.ordreFilter;
+    filteredData = filteredData.filter((chapitre) => chapitre.ordre.toString().includes(filter));
+  }
+
+  if (params.difficulteFilter) {
+    const filter = params.difficulteFilter.toLowerCase();
+    filteredData = filteredData.filter((chapitre) =>
+      chapitre.difficulte.toLowerCase().includes(filter)
+    );
+  }
+
+  if (params.exercicesCountFilter) {
+    const filter = params.exercicesCountFilter;
+    filteredData = filteredData.filter((chapitre) =>
+      chapitre.exercicesCount?.toString().includes(filter)
+    );
+  }
+
+  // Filter by min/max exercices
+  if (params.minExercices) {
+    const minCount = parseInt(params.minExercices as string, 10);
+    filteredData = filteredData.filter((chapitre) => (chapitre.exercicesCount || 0) >= minCount);
+  }
+
+  if (params.maxExercices) {
+    const maxCount = parseInt(params.maxExercices as string, 10);
+    filteredData = filteredData.filter((chapitre) => (chapitre.exercicesCount || 0) <= maxCount);
+  }
+
+  // Filter by min/max ordre
+  if (params.minOrdre) {
+    const minOrdre = parseInt(params.minOrdre as string, 10);
+    filteredData = filteredData.filter((chapitre) => chapitre.ordre >= minOrdre);
+  }
+
+  if (params.maxOrdre) {
+    const maxOrdre = parseInt(params.maxOrdre as string, 10);
+    filteredData = filteredData.filter((chapitre) => chapitre.ordre <= maxOrdre);
+  }
+
+  // Filter by difficulté spécifique
+  if (params.difficulte) {
+    filteredData = filteredData.filter((chapitre) => chapitre.difficulte === params.difficulte);
+  }
+
+  // Filter by active status
+  if (params.activeOnly) {
+    filteredData = filteredData.filter((chapitre) => chapitre.active !== false);
+  }
+
+  // Sort the data if needed
+  if (params.sortBy) {
+    const direction = params.sortDirection === 'desc' ? -1 : 1;
+    filteredData.sort((a: any, b: any) => {
+      const fieldA = a[params.sortBy as keyof Chapitre];
+      const fieldB = b[params.sortBy as keyof Chapitre];
+
+      if (fieldA < fieldB) return -1 * direction;
+      if (fieldA > fieldB) return 1 * direction;
+      return 0;
+    });
   }
 
   // Simulate pagination
@@ -89,7 +194,7 @@ const fetchChapitresAPI = async (
   };
 };
 
-export const useChapitres = (matiereId: string) => {
+function useChapitresHook(matiereId: string) {
   const [chapitres, setChapitres] = useState<Chapitre[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +204,9 @@ export const useChapitres = (matiereId: string) => {
     searchTerm: '',
     page: 1,
     limit: 10,
+    sortBy: 'ordre',
+    sortDirection: 'asc',
+    activeOnly: false,
   });
 
   const fetchChapitres = useCallback(async () => {
@@ -141,6 +249,66 @@ export const useChapitres = (matiereId: string) => {
     setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
   };
 
+  const handleColumnFilterChange = (columnId: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [`${columnId}Filter`]: value,
+      page: 1,
+    }));
+  };
+
+  const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: field,
+      sortDirection: direction,
+    }));
+  };
+
+  const handleToggleActiveOnly = (activeOnly: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      activeOnly,
+      page: 1,
+    }));
+  };
+
+  const handleSetDifficulteFilter = (difficulte: string | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      difficulte,
+      page: 1,
+    }));
+  };
+
+  const handleSetMinMaxExercices = (min: number | null, max: number | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      minExercices: min,
+      maxExercices: max,
+      page: 1,
+    }));
+  };
+
+  const handleSetMinMaxOrdre = (min: number | null, max: number | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      minOrdre: min,
+      maxOrdre: max,
+      page: 1,
+    }));
+  };
+
+  const handleDeleteChapitre = async (id: string) => {
+    // In a real application, this would call an API to delete the chapitre
+    setChapitres((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleDeleteMultipleChapitres = async (ids: string[]) => {
+    // In a real application, this would call an API to delete multiple chapitres
+    setChapitres((prev) => prev.filter((item) => !ids.includes(item.id)));
+  };
+
   return {
     chapitres,
     loading,
@@ -152,6 +320,22 @@ export const useChapitres = (matiereId: string) => {
     handlePageChange,
     handleLimitChange,
     handleSearch,
+    handleColumnFilterChange,
+    handleSortChange,
+    handleToggleActiveOnly,
+    handleSetDifficulteFilter,
+    handleSetMinMaxExercices,
+    handleSetMinMaxOrdre,
+    handleDeleteChapitre,
+    handleDeleteMultipleChapitres,
     refetch: fetchChapitres,
   };
+}
+
+// Export the hook
+const chapitreHooks = {
+  useChapitres: useChapitresHook,
 };
+
+export default chapitreHooks;
+export { useChapitresHook as useChapitres };

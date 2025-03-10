@@ -1,4 +1,7 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
+import { format, addDays, subDays, subMonths } from 'date-fns';
 
 import { DEFAULT_PAGINATION } from '../types';
 
@@ -18,6 +21,11 @@ const fetchExercicesAPI = async (
       statut: 'Publié',
       ressources: ['PDF', 'Audio'],
       chapitreId,
+      dateCreated: subMonths(new Date(), 3).toISOString(),
+      lastUpdated: subDays(new Date(), 15).toISOString(),
+      notation: 20,
+      competencesCount: 3,
+      active: true,
     },
     {
       id: '2',
@@ -26,6 +34,11 @@ const fetchExercicesAPI = async (
       statut: 'Publié',
       ressources: ['PDF', 'Interactive'],
       chapitreId,
+      dateCreated: subMonths(new Date(), 2).toISOString(),
+      lastUpdated: subDays(new Date(), 10).toISOString(),
+      notation: 15,
+      competencesCount: 2,
+      active: true,
     },
     {
       id: '3',
@@ -34,6 +47,11 @@ const fetchExercicesAPI = async (
       statut: 'Publié',
       ressources: ['PDF'],
       chapitreId,
+      dateCreated: subMonths(new Date(), 1).toISOString(),
+      lastUpdated: subDays(new Date(), 5).toISOString(),
+      notation: 20,
+      competencesCount: 3,
+      active: true,
     },
     {
       id: '4',
@@ -42,6 +60,11 @@ const fetchExercicesAPI = async (
       statut: 'Brouillon',
       ressources: ['PDF', 'Video'],
       chapitreId,
+      dateCreated: subDays(new Date(), 20).toISOString(),
+      lastUpdated: subDays(new Date(), 2).toISOString(),
+      notation: 18,
+      competencesCount: 2,
+      active: true,
     },
     {
       id: '5',
@@ -50,6 +73,11 @@ const fetchExercicesAPI = async (
       statut: 'Inactif',
       ressources: ['PDF'],
       chapitreId,
+      dateCreated: subDays(new Date(), 10).toISOString(),
+      lastUpdated: subDays(new Date(), 1).toISOString(),
+      notation: 25,
+      competencesCount: 4,
+      active: false,
     },
   ];
 
@@ -62,6 +90,65 @@ const fetchExercicesAPI = async (
         exercice.titre.toLowerCase().includes(searchLower) ||
         exercice.description.toLowerCase().includes(searchLower)
     );
+  }
+
+  // Apply column-specific filters
+  if (params.titreFilter) {
+    const filter = params.titreFilter.toLowerCase();
+    filteredData = filteredData.filter((exercice) => exercice.titre.toLowerCase().includes(filter));
+  }
+
+  if (params.descriptionFilter) {
+    const filter = params.descriptionFilter.toLowerCase();
+    filteredData = filteredData.filter((exercice) =>
+      exercice.description.toLowerCase().includes(filter)
+    );
+  }
+
+  if (params.statutFilter) {
+    const filter = params.statutFilter.toLowerCase();
+    filteredData = filteredData.filter((exercice) => exercice.statut.toLowerCase() === filter);
+  }
+
+  if (params.ressourcesFilter) {
+    const filter = params.ressourcesFilter.toLowerCase();
+    filteredData = filteredData.filter((exercice) =>
+      exercice.ressources.some((resource) => resource.toLowerCase().includes(filter))
+    );
+  }
+
+  if (params.dateCreatedFilter) {
+    const filter = params.dateCreatedFilter.toLowerCase();
+    filteredData = filteredData.filter((exercice) => {
+      if (!exercice.dateCreated) return false;
+      const date = format(new Date(exercice.dateCreated), 'dd MMM yyyy');
+      return date.toLowerCase().includes(filter);
+    });
+  }
+
+  // Filter by active status
+  if (params.activeOnly) {
+    filteredData = filteredData.filter((exercice) => exercice.active !== false);
+  }
+
+  // Filter by resource type
+  if (params.resourceType) {
+    filteredData = filteredData.filter((exercice) =>
+      exercice.ressources.includes(params.resourceType as string)
+    );
+  }
+
+  // Sort the data if needed
+  if (params.sortBy) {
+    const direction = params.sortDirection === 'desc' ? -1 : 1;
+    filteredData.sort((a: any, b: any) => {
+      const fieldA = a[params.sortBy as keyof Exercice];
+      const fieldB = b[params.sortBy as keyof Exercice];
+
+      if (fieldA < fieldB) return -1 * direction;
+      if (fieldA > fieldB) return 1 * direction;
+      return 0;
+    });
   }
 
   // Simulate pagination
@@ -84,7 +171,7 @@ const fetchExercicesAPI = async (
   };
 };
 
-export const useExercices = (chapitreId: string) => {
+function useExercicesHook(chapitreId: string) {
   const [exercices, setExercices] = useState<Exercice[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +181,9 @@ export const useExercices = (chapitreId: string) => {
     searchTerm: '',
     page: 1,
     limit: 10,
+    sortBy: 'titre',
+    sortDirection: 'asc',
+    activeOnly: false,
   });
 
   const fetchExercices = useCallback(async () => {
@@ -136,6 +226,48 @@ export const useExercices = (chapitreId: string) => {
     setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
   };
 
+  const handleColumnFilterChange = (columnId: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [`${columnId}Filter`]: value,
+      page: 1,
+    }));
+  };
+
+  const handleSortChange = (field: string, direction: 'asc' | 'desc') => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: field,
+      sortDirection: direction,
+    }));
+  };
+
+  const handleToggleActiveOnly = (activeOnly: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      activeOnly,
+      page: 1,
+    }));
+  };
+
+  const handleSetResourceTypeFilter = (resourceType: string | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      resourceType,
+      page: 1,
+    }));
+  };
+
+  const handleDeleteExercice = async (id: string) => {
+    // In a real application, this would call an API to delete the exercice
+    setExercices((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleDeleteMultipleExercices = async (ids: string[]) => {
+    // In a real application, this would call an API to delete multiple exercices
+    setExercices((prev) => prev.filter((item) => !ids.includes(item.id)));
+  };
+
   return {
     exercices,
     loading,
@@ -147,6 +279,20 @@ export const useExercices = (chapitreId: string) => {
     handlePageChange,
     handleLimitChange,
     handleSearch,
+    handleColumnFilterChange,
+    handleSortChange,
+    handleToggleActiveOnly,
+    handleSetResourceTypeFilter,
+    handleDeleteExercice,
+    handleDeleteMultipleExercices,
     refetch: fetchExercices,
   };
+}
+
+// Export the hook
+const exerciceHooks = {
+  useExercices: useExercicesHook,
 };
+
+export default exerciceHooks;
+export { useExercicesHook as useExercices };

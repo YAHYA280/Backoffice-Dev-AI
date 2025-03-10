@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
@@ -13,17 +14,19 @@ import {
   Box,
   Link,
   Chip,
+  alpha,
+  Stack,
   Avatar,
+  Tooltip,
   TableRow,
   Checkbox,
   MenuItem,
   TableCell,
   IconButton,
+  Typography,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
 import { DIFFICULTE_OPTIONS } from '../../types';
@@ -40,7 +43,7 @@ interface ChapitreItemProps {
   onViewExercices: () => void;
 }
 
-export const ChapitreItem = ({
+const ChapitreItem = ({
   chapitre,
   selected,
   onSelectRow,
@@ -49,18 +52,7 @@ export const ChapitreItem = ({
   onViewClick,
   onViewExercices,
 }: ChapitreItemProps) => {
-  const confirm = useBoolean();
   const popover = usePopover();
-
-  const handleOpenConfirm = () => {
-    popover.onClose();
-    confirm.onTrue();
-  };
-
-  const handleDelete = () => {
-    onDeleteClick();
-    confirm.onFalse();
-  };
 
   // Find difficulty option based on chapitre.difficulte
   const difficulteOption =
@@ -69,7 +61,24 @@ export const ChapitreItem = ({
 
   return (
     <>
-      <TableRow hover selected={selected} onClick={onViewExercices} sx={{ cursor: 'pointer' }}>
+      <TableRow
+        component={m.tr}
+        variants={varFade().inUp}
+        hover
+        selected={selected}
+        onClick={onViewExercices}
+        sx={{
+          cursor: 'pointer',
+          transition: (theme) => theme.transitions.create(['background-color']),
+          '&:hover': {
+            backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
+          },
+          ...(chapitre.active === false && {
+            opacity: 0.7,
+            bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.2),
+          }),
+        }}
+      >
         <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
@@ -94,15 +103,41 @@ export const ChapitreItem = ({
             component="button"
             variant="subtitle2"
             color="text.primary"
-            onClick={onViewClick}
-            sx={{ textDecoration: 'none', cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewClick();
+            }}
+            sx={{
+              textDecoration: 'none',
+              cursor: 'pointer',
+              fontWeight: 'fontWeightMedium',
+              transition: (theme) => theme.transitions.create(['color']),
+              '&:hover': {
+                color: 'primary.main',
+              },
+            }}
             noWrap
           >
             {chapitre.nom}
           </Link>
+          {chapitre.active === false && (
+            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+              Inactif
+            </Typography>
+          )}
         </TableCell>
 
-        <TableCell sx={{ color: 'text.secondary' }}>{chapitre.description}</TableCell>
+        <TableCell
+          sx={{
+            maxWidth: 280,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            color: 'text.secondary',
+          }}
+        >
+          {chapitre.description}
+        </TableCell>
 
         <TableCell>
           <Chip
@@ -115,30 +150,82 @@ export const ChapitreItem = ({
           />
         </TableCell>
 
-        <TableCell align="center">{chapitre.exercicesCount}</TableCell>
+        <TableCell align="center">
+          <Typography
+            variant="body2"
+            sx={{
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              display: 'inline-block',
+              bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
+              color: 'primary.dark',
+              fontWeight: 'fontWeightMedium',
+            }}
+          >
+            {chapitre.exercicesCount || 0}
+          </Typography>
+        </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-          <IconButton
-            color="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick();
-            }}
-            size="small"
-          >
-            <FontAwesomeIcon icon={faPenToSquare} />
-          </IconButton>
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            <Tooltip title="Voir détails">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faEye} />
+              </IconButton>
+            </Tooltip>
 
-          <IconButton
-            color="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              popover.onOpen(e);
-            }}
-            size="small"
-          >
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </IconButton>
+            <Tooltip title="Modifier">
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Supprimer">
+              <IconButton
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick();
+                }}
+                sx={{
+                  transition: (theme) => theme.transitions.create(['background-color']),
+                  '&:hover': {
+                    backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                  },
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </TableCell>
       </TableRow>
 
@@ -148,56 +235,118 @@ export const ChapitreItem = ({
         onClose={popover.onClose}
         slotProps={{ paper: { sx: { width: 160 } } }}
       >
-        <MenuItem onClick={onViewClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onViewClick();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
+            className="icon"
             icon={faEye}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
+          />
+          Voir détails
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onViewExercices();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Box
+            component={FontAwesomeIcon}
+            className="icon"
+            icon={faEye}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Voir exercices
         </MenuItem>
 
-        <MenuItem onClick={onEditClick} sx={{ typography: 'body2', py: 1, px: 2.5 }}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onEditClick();
+          }}
+          sx={{
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover .icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
           <Box
             component={FontAwesomeIcon}
+            className="icon"
             icon={faPenToSquare}
-            sx={{ mr: 1, width: 16, height: 16, color: 'text.secondary' }}
+            sx={{
+              mr: 1,
+              width: 16,
+              height: 16,
+              color: 'text.secondary',
+              transition: (theme) => theme.transitions.create(['color']),
+            }}
           />
           Modifier
         </MenuItem>
 
         <MenuItem
-          onClick={handleOpenConfirm}
-          sx={{ color: 'error.main', typography: 'body2', py: 1, px: 2.5 }}
+          onClick={() => {
+            popover.onClose();
+            onDeleteClick();
+          }}
+          sx={{
+            color: 'error.main',
+            typography: 'body2',
+            py: 1.5,
+            px: 2.5,
+            transition: (theme) => theme.transitions.create(['background-color']),
+            '&:hover': {
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+            },
+          }}
         >
           <Box component={FontAwesomeIcon} icon={faTrash} sx={{ mr: 1, width: 16, height: 16 }} />
           Supprimer
         </MenuItem>
       </CustomPopover>
-
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Supprimer"
-        content={`Êtes-vous sûr de vouloir supprimer le chapitre "${chapitre.nom}" ? Cette action supprimera également tous les exercices associés.`}
-        action={
-          <Box
-            component="button"
-            sx={{
-              p: '8px 16px',
-              bgcolor: 'error.main',
-              borderRadius: 1,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'error.dark' },
-            }}
-            onClick={handleDelete}
-          >
-            Supprimer
-          </Box>
-        }
-      />
     </>
   );
 };
+
+export default ChapitreItem;
