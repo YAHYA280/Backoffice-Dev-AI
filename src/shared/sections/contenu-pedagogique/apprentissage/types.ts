@@ -36,7 +36,7 @@ export interface Chapitre {
   exercicesCount: number;
   competencesCount: number;
   dureeEstimee: string; // Adjust the type as needed
-  active: boolean;
+  active?: boolean;
   dateCreated: string; // Adjust the type as needed
   lastUpdated: string;
 }

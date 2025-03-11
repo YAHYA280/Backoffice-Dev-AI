@@ -313,6 +313,32 @@ export const ApprentissageView: React.FC = () => {
     refetchMatieres();
   };
 
+  // handle Active and desactive for matier
+  const handleToggleActiveMatiere = async (matiere: any, active: boolean) => {
+    try {
+      // If you have a specific API function to toggle the active status, call it here
+      // For example: await api.updateMatiereStatus(matiere.id, active);
+
+      console.log(`Toggling active status for matiere ${matiere.nom} to ${active}`);
+
+      // Optimistic UI update - update the selected matiere if it's the one being toggled
+      if (selectedMatiere && selectedMatiere.id === matiere.id) {
+        setSelectedMatiere({
+          ...selectedMatiere,
+          active,
+        });
+      }
+
+      // Refresh the list to show updated data
+      refetchMatieres();
+    } catch (error) {
+      console.error('Error toggling matiere active status:', error);
+
+      // Refresh data to ensure UI consistency
+      refetchMatieres();
+    }
+  };
+
   // ---- Chapitre handler functions ----
   const handleChapitreAddClick = () => {
     setOpenChapitreAddDialog(true);
@@ -363,6 +389,33 @@ export const ApprentissageView: React.FC = () => {
     refetchChapitres();
   };
 
+  // Handle active desactive here
+
+  const handleToggleActiveChapitre = async (chapitre: any, active: boolean) => {
+    try {
+      // If you have a specific API function to toggle the active status, call it here
+      // For example: await api.updateChapitreStatus(chapitre.id, active);
+
+      console.log(`Toggling active status for chapitre ${chapitre.nom} to ${active}`);
+
+      // Optimistic UI update - update the selected chapitre if it's the one being toggled
+      if (selectedChapitre && selectedChapitre.id === chapitre.id) {
+        setSelectedChapitre({
+          ...selectedChapitre,
+          active,
+        });
+      }
+
+      // Refresh the list to show updated data
+      refetchChapitres();
+    } catch (error) {
+      console.error('Error toggling chapitre active status:', error);
+
+      // Refresh data to ensure UI consistency
+      refetchChapitres();
+    }
+  };
+
   // ---- Exercice handler functions ----
   const handleExerciceAddClick = () => {
     setOpenExerciceAddDialog(true);
@@ -411,6 +464,35 @@ export const ApprentissageView: React.FC = () => {
 
     // Refresh data
     refetchExercices();
+  };
+
+  // Hnadle active change
+
+  const handleToggleActiveExercice = async (exercice: any, active: boolean) => {
+    try {
+      // If you have a specific API function to toggle the active status, call it here
+      // For example: await api.updateExerciceStatus(exercice.id, active);
+
+      console.log(`Toggling active status for exercice ${exercice.titre} to ${active}`);
+
+      // Optimistic UI update - update the selected exercice if it's the one being toggled
+      if (selectedExercice && selectedExercice.id === exercice.id) {
+        setSelectedExercice({
+          ...selectedExercice,
+          // For exercices, the status should be either "Publié" (when active) or "Inactif" (when inactive)
+          // assuming "Publié" is the active state based on your component logic
+          statut: active ? 'Publié' : 'Inactif',
+        });
+      }
+
+      // Refresh the list to show updated data
+      refetchExercices();
+    } catch (error) {
+      console.error('Error toggling exercice active status:', error);
+
+      // Refresh data to ensure UI consistency
+      refetchExercices();
+    }
   };
 
   // ---- Render content function ----
@@ -514,6 +596,7 @@ export const ApprentissageView: React.FC = () => {
               onDeleteRows={handleDeleteMatiereRows}
               onViewChapitres={navigateToChapitres}
               onAddClick={handleMatiereAddClick}
+              onToggleActive={handleToggleActiveMatiere}
               // Pass breadcrumb props
               breadcrumbs={{
                 currentNiveauId,
@@ -593,6 +676,7 @@ export const ApprentissageView: React.FC = () => {
               onDeleteRows={handleDeleteChapitreRows}
               onViewExercices={navigateToExercices}
               onAddClick={handleChapitreAddClick}
+              onToggleActive={handleToggleActiveChapitre}
               // Pass breadcrumb props
               breadcrumbs={{
                 currentNiveauId,
@@ -674,6 +758,7 @@ export const ApprentissageView: React.FC = () => {
               onViewClick={handleExerciceViewClick}
               onDeleteRows={handleDeleteExerciceRows}
               onAddClick={handleExerciceAddClick}
+              onToggleActive={handleToggleActiveExercice}
               // Pass breadcrumb props
               breadcrumbs={{
                 currentNiveauId,

@@ -145,6 +145,7 @@ interface ChapitreListProps {
   onDeleteRows?: (selectedRows: string[]) => void;
   onViewExercices: (chapitre: Chapitre) => void;
   onAddClick?: () => void;
+  onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
 
   breadcrumbs?: BreadcrumbProps;
 }
@@ -164,6 +165,7 @@ export const ChapitreList = ({
   onDeleteRows,
   onViewExercices,
   onAddClick,
+  onToggleActive,
   breadcrumbs,
 }: ChapitreListProps) => {
   const confirm = useBoolean();
@@ -529,6 +531,7 @@ export const ChapitreList = ({
                           onViewClick={() => onViewClick(chapitre)}
                           onSelectRow={() => table.onSelectRow(chapitre.id)}
                           onViewExercices={() => onViewExercices(chapitre)}
+                          onToggleActive={onToggleActive}
                         />
                       ))
                     )}

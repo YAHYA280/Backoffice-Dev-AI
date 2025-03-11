@@ -15,29 +15,28 @@ import {
 import {
   Box,
   Card,
+  Link,
   Table,
   alpha,
   Stack,
   Button,
   Switch,
   Select,
-  Divider,
   Popover,
   useTheme,
   MenuItem,
+  TableRow,
   TableBody,
   TextField,
+  TableCell,
   Typography,
   IconButton,
   InputLabel,
   FormControl,
+  Breadcrumbs,
   TableContainer,
   InputAdornment,
   FormControlLabel,
-  TableRow,
-  TableCell,
-  Link,
-  Breadcrumbs,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -148,6 +147,7 @@ interface ExerciceListProps {
   onViewClick: (exercice: Exercice) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
   onAddClick?: () => void;
+  onToggleActive?: (exercice: Exercice, active: boolean) => void;
   breadcrumbs?: BreadcrumbProps;
 }
 
@@ -165,6 +165,7 @@ export const ExerciceList = ({
   onViewClick,
   onDeleteRows,
   onAddClick,
+  onToggleActive,
   breadcrumbs,
 }: ExerciceListProps) => {
   const confirm = useBoolean();
@@ -526,6 +527,7 @@ export const ExerciceList = ({
                           onDeleteClick={() => onDeleteClick(exercice)}
                           onViewClick={() => onViewClick(exercice)}
                           onSelectRow={() => table.onSelectRow(exercice.id)}
+                          onToggleActive={onToggleActive}
                         />
                       ))
                     )}
