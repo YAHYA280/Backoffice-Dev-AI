@@ -23,7 +23,7 @@ import { varAlpha } from 'src/shared/theme/styles';
 
 import { Label } from 'src/shared/components/label';
 import { Scrollbar } from 'src/shared/components/scrollbar';
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { AnimateAvatar } from 'src/shared/components/animate';
 
 import { useMockedUser } from 'src/auth/hooks';
@@ -197,3 +197,4 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
     </>
   );
 }
+

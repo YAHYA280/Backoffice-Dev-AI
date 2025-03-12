@@ -9,7 +9,7 @@ import ButtonBase from '@mui/material/ButtonBase';
 import { stylesMode } from 'src/shared/theme/styles';
 
 import { useNavItem } from '../hooks';
-import FontAwesome from '../../fontawesome';
+import {FontAwesome} from '../../fontawesome';
 import { navSectionClasses } from '../classes';
 import { stateClasses, sharedStyles } from '../styles';
 
@@ -211,3 +211,4 @@ const StyledNavItem = styled(ButtonBase, {
     ...(disabled && sharedStyles.disabled),
   };
 });
+

@@ -2,16 +2,15 @@ import type { BoxProps } from '@mui/material/Box';
 import type { CollapseProps } from '@mui/material/Collapse';
 import type { ListSubheaderProps } from '@mui/material/ListSubheader';
 
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import ListSubheader from '@mui/material/ListSubheader';
 
 import { stylesMode } from 'src/shared/theme/styles';
 
-import FontAwesome from '../fontawesome';
 import { navSectionClasses } from './classes';
+import { svgColorClasses } from '../svg-color';
+import { FontAwesome, fontAwesomeClasses } from '../fontawesome';
 
 // ----------------------------------------------------------------------
 
@@ -43,12 +42,11 @@ export const sharedStyles = {
   icon: {
     flexShrink: 0,
     display: 'inline-flex',
-    [`& svg, & img, & .fa-icon`]: {
+    [`& svg, & img, & .${fontAwesomeClasses.root}, & .${svgColorClasses.root}`]: {
       width: '100%',
       height: '100%',
     },
   },
-  
   arrow: {
     width: 16,
     height: 16,
@@ -108,22 +106,25 @@ export function Subheader({
         '&:hover': {
           pl: 2,
           color: 'var(--nav-subheader-hover-color)',
+          [`& .${fontAwesomeClasses.root}`]: { opacity: 1 },
         },
         ...sx,
       }}
       {...other}
     >
       <FontAwesome
-  icon={open ? faChevronDown : faChevronRight}
-  style={{
-    width: 16,
-    left: -4,
-    opacity: 0,
-    position: 'absolute',
-    transition: 'opacity 0.3s ease-in-out',
-  }}
-/>
-
+        width={16}
+        icon={open ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
+        sx={{
+          left: -4,
+          opacity: 0,
+          position: 'absolute',
+          transition: (theme) =>
+            theme.transitions.create(['opacity'], {
+              duration: theme.transitions.duration.standard,
+            }),
+        }}
+      />
 
       {children}
     </ListSubheader>
@@ -216,3 +217,4 @@ export function NavUl({ children, sx, ...other }: BoxProps) {
     </Box>
   );
 }
+

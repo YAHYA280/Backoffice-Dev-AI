@@ -11,7 +11,7 @@ type Props = {
 export default function Layout({ children }: Props) {
   return (
     <GuestGuard>
-      <AuthSplitLayout section={{ title: 'Hi, Welcome back' }}>{children}</AuthSplitLayout>
+      <AuthSplitLayout section={{ title: 'Bienvenue ! Heureux de vous revoir' }}>{children}</AuthSplitLayout>
     </GuestGuard>
   );
 }

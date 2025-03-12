@@ -7,7 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { varAlpha, stylesMode } from 'src/shared/theme/styles';
 
-import FontAwesome from '../../fontawesome';
+import {FontAwesome} from '../../fontawesome';
 
 
 // ----------------------------------------------------------------------
@@ -67,3 +67,4 @@ export function Block({ title, tooltip, children, sx }: Props) {
     </Box>
   );
 }
+

@@ -252,7 +252,6 @@ export const _phoneNumbers = [
   '+48 22 123 45 67',
 ];
 
-// ----------------------------------------------------------------------
 
 export const _countryNames = [
   'United States',
@@ -670,4 +669,47 @@ export const _descriptions = [
   `Sunt totam facilis. Quam commodi voluptatem veniam. Tempora deleniti itaque fugit nihil voluptas.`,
   `Ipsam aliquam velit nobis repellendus officiis aut deserunt id et. Nihil sunt aut dolores aut. Dolores est ipsa quia et laborum quidem laborum accusamus id. Facilis odit quod hic laudantium saepe omnis nisi in sint. Sed cupiditate possimus id.`,
   `Magnam non eveniet optio optio ut aliquid atque. Velit libero aspernatur quis laborum consequatur laudantium. Tempora facere optio fugit accusantium ut. Omnis aspernatur reprehenderit autem esse ut ut enim voluptatibus.`,
+];
+
+export const _userRoles = [
+  `Admin`,
+  `Parent`,
+  "Enfant",
+];
+
+
+export const _userStatus = [
+  `Suspendu`,
+  `Bloqué`,
+  `Supprimé`,
+];
+
+export const _parents = [
+  { id: '1', name: 'Martin Dupont', email: 'martin.dupont@exemple.com', verified: true },
+  { id: '2', name: 'Sophie Martin', email: 'sophie.martin@exemple.com', verified: true },
+  { id: '3', name: 'Jean Durand', email: 'jean.durand@exemple.com', verified: false },
+];
+
+export const _ADMINISTRATION_ROLES = [
+  { value: 'super_admin', label: 'Super Administrateur' },
+  { value: 'super_visiteur', label: 'Super Visiteur' },
+  { value: 'moderateur', label: 'Modérateur' },
+  { value: 'gestionnaire', label: 'Gestionnaire de Contenu' },
+  { value: 'support', label: 'Support Technique' },
+];
+
+
+export const _STATUS_OPTIONS = [
+  { value: 'Actif', label: 'Actif'},
+  { value: 'Bloqué', label: 'Bloqué'},
+  { value: 'Suspendu', label: 'Suspendu'},
+  { value: 'Supprimé', label: 'Supprimé'},
+]
+// ----------------------------------------------------------------------
+
+export const _ameliorationsTitles = [
+  `Amélioration de l'algorithme du chatbot francais`,
+  `Eviter les reponses indirectes `,
+  `Ajout de notifications intelligents pour les rappels de devoirs`,
+  `Développement d'un mode "étude" personnalisé pour les révisions avant les examens`,
 ];

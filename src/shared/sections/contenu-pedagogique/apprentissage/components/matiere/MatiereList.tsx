@@ -18,8 +18,6 @@ import {
   alpha,
   Stack,
   Button,
-  Switch,
-  Popover,
   useTheme,
   TableRow,
   TableBody,
@@ -30,7 +28,6 @@ import {
   Breadcrumbs,
   TableContainer,
   InputAdornment,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -49,11 +46,16 @@ import {
 } from 'src/shared/components/table';
 
 import { MatiereItem } from './MatiereItem';
+import { FilterDropdown } from '../filters/FilterDropdown';
+import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
+import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Matiere, Pagination, FilterParams } from '../../types';
+// ----- FILTER & COLUMN SELECTOR IMPORTS -----
+import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
-// Define table head with explicit column configurations
+// 1. Define the table head
 const TABLE_HEAD = [
   { id: 'nom', label: 'Matière', align: 'left' },
   { id: 'description', label: 'Description', align: 'left' },
@@ -62,18 +64,75 @@ const TABLE_HEAD = [
   { id: '', label: 'Actions', align: 'right' },
 ];
 
+// 2. Define column options for the ColumnSelector
+const COLUMN_OPTIONS: ColumnOption[] = [
+  { id: 'nom', label: 'Matière', required: true },
+  { id: 'description', label: 'Description' },
+  { id: 'chapitresCount', label: 'Chapitres' },
+  { id: 'dateCreated', label: 'Date de création' },
+];
+
+// 3. Define filter options for the FilterDropdown
+const FILTER_OPTIONS: FilterOption[] = [
+  {
+    id: 'nom',
+    label: 'Matière',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'startsWith', label: 'Commence par' },
+      { value: 'endsWith', label: 'Termine par' },
+    ],
+  },
+  {
+    id: 'description',
+    label: 'Description',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+    ],
+  },
+  {
+    id: 'chapitresCount',
+    label: 'Chapitres',
+    type: 'number',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'greaterThan', label: 'Plus grand que' },
+      { value: 'lessThan', label: 'Plus petit que' },
+    ],
+  },
+  {
+    id: 'dateCreated',
+    label: 'Date de création',
+    type: 'date',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'before', label: 'Avant le' },
+      { value: 'after', label: 'Après le' },
+    ],
+  },
+  {
+    id: 'isActive',
+    label: 'Statut',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: [
+      { value: 'true', label: 'Actif' },
+      { value: 'false', label: 'Inactif' },
+    ],
+  },
+];
+
+// Simple column-based search filter
 interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
   placeholder?: string;
 }
-interface BreadcrumbProps {
-  currentNiveauId?: string | null;
-  currentNiveauName?: string | null;
-  navigateToNiveaux: () => void;
-}
-
 const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => (
   <TextField
     size="small"
@@ -86,10 +145,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
         <InputAdornment position="start">
           <FontAwesomeIcon
             icon={faSearch}
-            style={{
-              color: 'text.disabled',
-              fontSize: '0.875rem',
-            }}
+            style={{ color: 'text.disabled', fontSize: '0.875rem' }}
           />
         </InputAdornment>
       ),
@@ -115,6 +171,12 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
     }}
   />
 );
+
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  navigateToNiveaux: () => void;
+}
 
 interface MatiereListProps {
   matieres: Matiere[];
@@ -156,7 +218,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   const confirm = useBoolean();
   const theme = useTheme();
 
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  // Per-column text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
     description: '',
@@ -164,6 +226,15 @@ export const MatiereList: React.FC<MatiereListProps> = ({
     dateCreated: '',
   });
 
+  // ---------------------------
+  // 1) Add states for FilterDropdown & ColumnSelector
+  // ---------------------------
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMN_OPTIONS.map((col) => col.id)
+  );
+
+  // Generate the table
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1,
@@ -182,29 +253,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
     confirm.onFalse();
   };
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-
-  const handleFilterReset = () => {
-    setColumnFilters({
-      nom: '',
-      description: '',
-      chapitresCount: '',
-      dateCreated: '',
-    });
-    if (onColumnFilterChange) {
-      Object.keys(columnFilters).forEach((key) => {
-        onColumnFilterChange(key, '');
-      });
-    }
-  };
-
-  const handleColumnFilterChange = (columnId: string, value: string) => {
+  const handleColumnFilterChangeLocal = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
       [columnId]: value,
@@ -214,26 +263,42 @@ export const MatiereList: React.FC<MatiereListProps> = ({
     }
   };
 
-  const notFound = !matieres.length && !loading;
-  const filterOpen = Boolean(filterAnchorEl);
+  // ---------------------------
+  // 2) Implement FilterDropdown & ColumnSelector callbacks
+  // ---------------------------
+  const onFilterDropdownChange = (newFilters: ActiveFilter[]) => {
+    setActiveFilters(newFilters);
+    // If needed, push them to a parent or do an API call.
+  };
 
-  // Render filter row under table header
+  const onColumnSelectorChange = (newColumns: string[]) => {
+    setVisibleColumns(newColumns);
+    // If needed, push them to a parent with onColumnChange or something similar
+  };
+
+  // Which columns to show
+  const visibleTableHead = TABLE_HEAD.filter(
+    (col) => col.id === '' || visibleColumns.includes(col.id)
+  );
+
+  const notFound = !matieres.length && !loading;
+
+  // Render filter row under table header (only for visible columns)
   const renderFilterRow = () => (
     <TableRow>
       <TableCell padding="checkbox" />
-      {TABLE_HEAD.filter((col) => col.id).map(
-        (column) =>
-          column.id && (
-            <TableCell key={column.id}>
-              <ColumnFilter
-                columnId={column.id}
-                value={columnFilters[column.id] || ''}
-                onChange={handleColumnFilterChange}
-                placeholder={`Rechercher par ${column.label}`}
-              />
-            </TableCell>
-          )
-      )}
+      {visibleTableHead
+        .filter((col) => col.id) // skip any empty ID (the 'Actions' column)
+        .map((column) => (
+          <TableCell key={column.id}>
+            <ColumnFilter
+              columnId={column.id}
+              value={columnFilters[column.id] || ''}
+              onChange={handleColumnFilterChangeLocal}
+              placeholder={`Rechercher par ${column.label}`}
+            />
+          </TableCell>
+        ))}
     </TableRow>
   );
 
@@ -259,34 +324,37 @@ export const MatiereList: React.FC<MatiereListProps> = ({
 
   return (
     <MotionContainer>
+      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Matières
           </Typography>
 
-          {onAddClick && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPlus} />}
-              onClick={onAddClick}
-              sx={{
-                px: 2.5,
-                py: 1,
-                boxShadow: theme.customShadows?.z8,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: theme.customShadows?.z16,
-                },
-              }}
-            >
-              Ajouter une matière
-            </Button>
-          )}
+          <Stack direction="row" spacing={2}>
+            {onAddClick && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<FontAwesomeIcon icon={faPlus} />}
+                onClick={onAddClick}
+                sx={{
+                  px: 2.5,
+                  py: 1,
+                  boxShadow: theme.customShadows?.z8,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: theme.customShadows?.z16,
+                  },
+                }}
+              >
+                Ajouter une matière
+              </Button>
+            )}
+          </Stack>
         </Stack>
-        {breadcrumbs && renderBreadcrumbs()}
+        {renderBreadcrumbs()}
       </m.div>
 
       <m.div variants={varFade().inUp}>
@@ -301,102 +369,29 @@ export const MatiereList: React.FC<MatiereListProps> = ({
             overflow: 'hidden',
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={handleFilterClick}
-              startIcon={<FontAwesomeIcon icon={faFilter} />}
-              sx={{
-                minWidth: 120,
-                borderRadius: 1,
-                transition: theme.transitions.create(['background-color']),
-                ...(filterOpen && {
-                  bgcolor: 'primary.lighter',
-                }),
-              }}
-            >
-              Filtres avancés
-            </Button>
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
+            <Stack direction="row" alignContent="end" spacing={2}>
+              {/* 3) Add FilterDropdown */}
+              <FilterDropdown
+                filterOptions={FILTER_OPTIONS}
+                activeFilters={activeFilters}
+                onFilterChange={onFilterDropdownChange}
+                buttonText="Filtres"
+                icon={<FontAwesomeIcon icon={faFilter} />}
+              />
 
-            <Popover
-              open={filterOpen}
-              anchorEl={filterAnchorEl}
-              onClose={handleFilterClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              slotProps={{
-                paper: {
-                  sx: {
-                    width: 300,
-                    p: 2,
-                    boxShadow: theme.customShadows?.z20,
-                  },
-                },
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Filtres avancés
-              </Typography>
-
-              <Stack spacing={2} sx={{ mb: 2 }}>
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Matières actives uniquement"
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Chapitres minimum"
-                  type="number"
-                  InputProps={{
-                    inputProps: { min: 0 },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Exercices minimum"
-                  type="number"
-                  InputProps={{
-                    inputProps: { min: 0 },
-                  }}
-                />
-
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Matières avec chapitres uniquement"
-                />
-              </Stack>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                <Button variant="outlined" size="small" onClick={handleFilterReset}>
-                  Réinitialiser
-                </Button>
-                <Button variant="contained" size="small" onClick={handleFilterClose}>
-                  Appliquer
-                </Button>
-              </Box>
-            </Popover>
+              {/* 4) Add ColumnSelector */}
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={onColumnSelectorChange}
+                buttonText="Colonnes"
+              />
+            </Stack>
           </Box>
 
           <Box sx={{ position: 'relative' }}>
+            {/* Bulk selection bar */}
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
@@ -454,7 +449,7 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
-                    headLabel={TABLE_HEAD}
+                    headLabel={visibleTableHead}
                     rowCount={matieres.length}
                     numSelected={table.selected.length}
                     onSort={table.onSort}
@@ -473,11 +468,11 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                   />
 
                   <TableBody>
-                    {/* Add filter row below header */}
+                    {/* Column-based search row (only visible columns) */}
                     {renderFilterRow()}
 
                     {loading ? (
-                      <TableSkeletonLoader rows={5} columns={4} />
+                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
                       matieres.map((matiere) => (
                         <MatiereItem
@@ -490,6 +485,8 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                           onSelectRow={() => table.onSelectRow(matiere.id)}
                           onViewChapitres={() => onViewChapitres(matiere)}
                           onToggleActive={onToggleActive}
+                          // If you want conditional rendering in MatiereItem, pass visibleColumns:
+                          visibleColumns={visibleColumns}
                         />
                       ))
                     )}

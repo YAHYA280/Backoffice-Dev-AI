@@ -103,7 +103,6 @@ export const ApprentissageView: React.FC = () => {
     setSelectedExercice,
     handlePageChange: handleExercicePageChange,
     handleLimitChange: handleExerciceLimitChange,
-    handleSearch: handleExerciceSearch,
     refetch: refetchExercices,
   } = useExercices(currentChapitreId || '');
 
@@ -752,7 +751,6 @@ export const ApprentissageView: React.FC = () => {
               filters={exercicesFilters}
               onPageChange={handleExercicePageChange}
               onLimitChange={handleExerciceLimitChange}
-              onSearchChange={handleExerciceSearch}
               onEditClick={handleExerciceEditClick}
               onDeleteClick={handleExerciceDeleteClick}
               onViewClick={handleExerciceViewClick}

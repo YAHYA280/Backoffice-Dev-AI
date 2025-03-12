@@ -1,4 +1,4 @@
-import { AccountsView } from "src/shared/sections/users-management/accounts-administration/accounts-view";
+import { AccountsView } from "src/shared/sections/users-management/accounts-administration/view/accounts-view";
 // ----------------------------------------------------------------------
 
 

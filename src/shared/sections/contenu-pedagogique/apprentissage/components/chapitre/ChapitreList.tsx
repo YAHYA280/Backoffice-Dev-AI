@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -20,18 +20,13 @@ import {
   alpha,
   Stack,
   Button,
-  Select,
-  Popover,
   useTheme,
-  MenuItem,
   TableRow,
   TableBody,
   TextField,
   TableCell,
   Typography,
   IconButton,
-  InputLabel,
-  FormControl,
   Breadcrumbs,
   TableContainer,
   InputAdornment,
@@ -54,10 +49,16 @@ import {
 
 import ChapitreItem from './ChapitreItem';
 import { DIFFICULTE_OPTIONS } from '../../types';
+import { FilterDropdown } from '../filters/FilterDropdown';
+import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
+import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Chapitre, Pagination, FilterParams } from '../../types';
+/** 1) Import and define FilterDropdown / ColumnSelector + their props */
+import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
+/** 2) Define your base table head */
 const TABLE_HEAD = [
   { id: 'ordre', label: 'Ordre', align: 'center', width: 80 },
   { id: 'nom', label: 'Chapitre', align: 'left' },
@@ -67,7 +68,80 @@ const TABLE_HEAD = [
   { id: '', label: 'Actions', align: 'right', width: 100 },
 ];
 
-// Column Filter Component
+/** 3) Column Options for ColumnSelector */
+const COLUMN_OPTIONS: ColumnOption[] = [
+  { id: 'ordre', label: 'Ordre' },
+  { id: 'nom', label: 'Chapitre', required: true },
+  { id: 'description', label: 'Description' },
+  { id: 'difficulte', label: 'Difficulté' },
+  { id: 'exercicesCount', label: 'Exercices' },
+];
+
+/** 4) Filter Options for FilterDropdown */
+const FILTER_OPTIONS: FilterOption[] = [
+  {
+    id: 'ordre',
+    label: 'Ordre',
+    type: 'number',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'greaterThan', label: 'Plus grand que' },
+      { value: 'lessThan', label: 'Plus petit que' },
+    ],
+  },
+  {
+    id: 'nom',
+    label: 'Chapitre',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'startsWith', label: 'Commence par' },
+      { value: 'endsWith', label: 'Termine par' },
+    ],
+  },
+  {
+    id: 'description',
+    label: 'Description',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+    ],
+  },
+  {
+    id: 'difficulte',
+    label: 'Difficulté',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: DIFFICULTE_OPTIONS.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  },
+  {
+    id: 'exercicesCount',
+    label: "Nombre d'exercices",
+    type: 'number',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'greaterThan', label: 'Plus grand que' },
+      { value: 'lessThan', label: 'Plus petit que' },
+    ],
+  },
+  {
+    id: 'isActive',
+    label: 'Statut',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: [
+      { value: 'true', label: 'Actif' },
+      { value: 'false', label: 'Inactif' },
+    ],
+  },
+];
+
+/** 5) ColumnFilter for row-based searching under each column */
 interface ColumnFilterProps {
   columnId: string;
   value: string;
@@ -75,16 +149,7 @@ interface ColumnFilterProps {
   placeholder?: string;
 }
 
-interface BreadcrumbProps {
-  currentNiveauId?: string | null;
-  currentNiveauName?: string | null;
-  currentMatiereId?: string | null;
-  currentMatiereName?: string | null;
-  navigateToNiveaux: () => void;
-  navigateToMatieres: (niveau: any) => void;
-}
-
-const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterProps) => {
+const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => {
   const theme = useTheme();
 
   return (
@@ -130,6 +195,16 @@ const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterPr
   );
 };
 
+/** 6) Breadcrumb props & main props */
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  currentMatiereId?: string | null;
+  currentMatiereName?: string | null;
+  navigateToNiveaux: () => void;
+  navigateToMatieres: (niveau: any) => void;
+}
+
 interface ChapitreListProps {
   chapitres: Chapitre[];
   loading: boolean;
@@ -146,10 +221,10 @@ interface ChapitreListProps {
   onViewExercices: (chapitre: Chapitre) => void;
   onAddClick?: () => void;
   onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
-
   breadcrumbs?: BreadcrumbProps;
 }
 
+/** 7) Final integrated ChapitreList */
 export const ChapitreList = ({
   chapitres,
   loading,
@@ -171,7 +246,7 @@ export const ChapitreList = ({
   const confirm = useBoolean();
   const theme = useTheme();
 
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  /** State for the row-based text filters (per column). */
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     ordre: '',
     nom: '',
@@ -180,6 +255,26 @@ export const ChapitreList = ({
     exercicesCount: '',
   });
 
+  /** 7a) State for FilterDropdown & ColumnSelector. */
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMN_OPTIONS.map((col) => col.id)
+  );
+
+  /** 7b) We'll filter out columns that are not in visibleColumns. */
+  const visibleTableHead = TABLE_HEAD.filter(
+    (col) => col.id === '' || visibleColumns.includes(col.id)
+  );
+
+  /** 7c) If you want to notify parent of the filter changes: */
+  useEffect(() => {
+    // This is only for the FilterDropdown's active filters.
+    // If you also want to pass the column-based search filters up, you'd do that too.
+    // But usually you'll handle that in your own API call or effect.
+    // For now, we just pass them to onSearchChange or onColumnFilterChange as you already do.
+  }, [activeFilters]);
+
+  /** 7d) Table logic */
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1, // Convert to 0-based for MUI
@@ -198,63 +293,49 @@ export const ChapitreList = ({
     confirm.onFalse();
   };
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-
-  const handleFilterReset = () => {
-    setColumnFilters({
-      ordre: '',
-      nom: '',
-      description: '',
-      difficulte: '',
-      exercicesCount: '',
-    });
-    if (onColumnFilterChange) {
-      Object.keys(columnFilters).forEach((key) => {
-        onColumnFilterChange(key, '');
-      });
-    }
-  };
-
+  /** 7f) Row-based column filter updates */
   const handleColumnFilterChange = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
       [columnId]: value,
     }));
-    if (onColumnFilterChange) {
-      onColumnFilterChange(columnId, value);
-    }
+    onColumnFilterChange?.(columnId, value);
   };
 
-  const notFound = !chapitres.length && !loading;
-  const filterOpen = Boolean(filterAnchorEl);
+  /** 7g) FilterDropdown & ColumnSelector callbacks */
+  const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
+    setActiveFilters(newFilters);
+    // If you need to pass these to a parent, do so (onFilterChange).
+    // Or you can do that here if you want to combine them with row-based filters.
+  };
 
-  // Render filter row under table header
+  const handleColumnSelectorChange = (columns: string[]) => {
+    setVisibleColumns(columns);
+  };
+
+  /** 7h) "No data" condition */
+  const notFound = !chapitres.length && !loading;
+
+  /** 8) Render the row of column filters below the table header. */
   const renderFilterRow = () => (
     <TableRow>
       <TableCell padding="checkbox" />
-      {TABLE_HEAD.filter((col) => col.id).map(
-        (column) =>
-          column.id && (
-            <TableCell key={column.id}>
-              <ColumnFilter
-                columnId={column.id}
-                value={columnFilters[column.id] || ''}
-                onChange={handleColumnFilterChange}
-                placeholder={`Rechercher par ${column.label}`}
-              />
-            </TableCell>
-          )
-      )}
+      {visibleTableHead
+        .filter((col) => col.id) // Skip the empty Actions column
+        .map((column) => (
+          <TableCell key={column.id}>
+            <ColumnFilter
+              columnId={column.id}
+              value={columnFilters[column.id] || ''}
+              onChange={handleColumnFilterChange}
+              placeholder={`Rechercher par ${column.label}`}
+            />
+          </TableCell>
+        ))}
     </TableRow>
   );
 
-  // Render breadcrumbs
+  /** 9) Render breadcrumbs if needed */
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
 
@@ -290,36 +371,40 @@ export const ChapitreList = ({
 
   return (
     <MotionContainer>
+      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Chapitres
           </Typography>
 
-          {onAddClick && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPlus} />}
-              onClick={onAddClick}
-              sx={{
-                px: 2.5,
-                py: 1,
-                boxShadow: theme.customShadows?.z8,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: theme.customShadows?.z16,
-                },
-              }}
-            >
-              Ajouter un chapitre
-            </Button>
-          )}
+          <Stack direction="row" spacing={2}>
+            {onAddClick && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<FontAwesomeIcon icon={faPlus} />}
+                onClick={onAddClick}
+                sx={{
+                  px: 2.5,
+                  py: 1,
+                  boxShadow: theme.customShadows?.z8,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: theme.customShadows?.z16,
+                  },
+                }}
+              >
+                Ajouter un chapitre
+              </Button>
+            )}
+          </Stack>
         </Stack>
-        {breadcrumbs && renderBreadcrumbs()}
+        {renderBreadcrumbs()}
       </m.div>
 
+      {/* Main Card */}
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
@@ -332,113 +417,27 @@ export const ChapitreList = ({
             overflow: 'hidden',
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={handleFilterClick}
-              startIcon={<FontAwesomeIcon icon={faFilter} />}
-              sx={{
-                minWidth: 120,
-                borderRadius: 1,
-                transition: theme.transitions.create(['background-color']),
-                ...(filterOpen && {
-                  bgcolor: 'primary.lighter',
-                }),
-              }}
-            >
-              Filtres avancés
-            </Button>
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
+            <Stack direction="row" alignContent="end" spacing={2}>
+              {/* FilterDropdown (for multi-field filtering) */}
+              <FilterDropdown
+                filterOptions={FILTER_OPTIONS}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterDropdownChange}
+                buttonText="Filtres"
+                icon={<FontAwesomeIcon icon={faFilter} />}
+              />
 
-            <Popover
-              open={filterOpen}
-              anchorEl={filterAnchorEl}
-              onClose={handleFilterClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              slotProps={{
-                paper: {
-                  sx: {
-                    width: 300,
-                    p: 2,
-                    boxShadow: theme.customShadows?.z20,
-                  },
-                },
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Filtres avancés
-              </Typography>
-
-              <Stack spacing={2} sx={{ mb: 2 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Difficulté</InputLabel>
-                  <Select label="Difficulté" value="" onChange={() => {}}>
-                    <MenuItem value="">Toutes les difficultés</MenuItem>
-                    {DIFFICULTE_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Exercices minimum"
-                  type="number"
-                  InputProps={{
-                    inputProps: { min: 0 },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Ordre minimum"
-                  type="number"
-                  InputProps={{
-                    inputProps: { min: 1 },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Ordre maximum"
-                  type="number"
-                  InputProps={{
-                    inputProps: { min: 1 },
-                  }}
-                />
-              </Stack>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                <Button variant="outlined" size="small" onClick={handleFilterReset}>
-                  Réinitialiser
-                </Button>
-                <Button variant="contained" size="small" onClick={handleFilterClose}>
-                  Appliquer
-                </Button>
-              </Box>
-            </Popover>
+              {/* ColumnSelector (for dynamic columns) */}
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={handleColumnSelectorChange}
+                buttonText="Colonnes"
+              />
+            </Stack>
           </Box>
-
+          {/* Bulk Actions (Selected Rows) */}
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -459,7 +458,8 @@ export const ChapitreList = ({
                   }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
-                    {table.selected.length} sélectionné{table.selected.length > 1 ? 's' : ''}
+                    {table.selected.length} sélectionné
+                    {table.selected.length > 1 ? 's' : ''}
                   </Typography>
 
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -493,10 +493,11 @@ export const ChapitreList = ({
                 }}
               >
                 <Table size={table.dense ? 'small' : 'medium'}>
+                  {/* Dynamic Table Head based on visibleColumns */}
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
-                    headLabel={TABLE_HEAD}
+                    headLabel={visibleTableHead}
                     rowCount={chapitres.length}
                     numSelected={table.selected.length}
                     onSort={table.onSort}
@@ -515,11 +516,11 @@ export const ChapitreList = ({
                   />
 
                   <TableBody>
-                    {/* Add filter row below header */}
+                    {/* The row-based search bar under each column */}
                     {renderFilterRow()}
 
                     {loading ? (
-                      <TableSkeletonLoader rows={5} columns={6} />
+                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
                       chapitres.map((chapitre) => (
                         <ChapitreItem
@@ -532,6 +533,8 @@ export const ChapitreList = ({
                           onSelectRow={() => table.onSelectRow(chapitre.id)}
                           onViewExercices={() => onViewExercices(chapitre)}
                           onToggleActive={onToggleActive}
+                          // If you need the visible columns in your row item, pass them along:
+                          visibleColumns={visibleColumns}
                         />
                       ))
                     )}
@@ -555,13 +558,14 @@ export const ChapitreList = ({
             </Scrollbar>
           </Box>
 
+          {/* Table Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
             onPageChange={(e, page) => {
               table.onChangePage(e, page);
-              onPageChange(page + 1); // Convert 0-based back to 1-based
+              onPageChange(page + 1); // Convert 0-based to 1-based
             }}
             onRowsPerPageChange={(e) => {
               onLimitChange(parseInt(e.target.value, 10));
@@ -572,7 +576,7 @@ export const ChapitreList = ({
         </Card>
       </m.div>
 
-      {/* Confirmation dialog for bulk delete */}
+      {/* Confirmation Dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

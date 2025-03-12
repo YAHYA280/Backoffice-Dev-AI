@@ -26,7 +26,7 @@ import { varAlpha } from 'src/shared/theme/styles';
 
 import { Label } from 'src/shared/components/label';
 import { Scrollbar } from 'src/shared/components/scrollbar';
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { SearchNotFound } from 'src/shared/components/search-not-found';
 
 import { ResultItem } from './result-item';
@@ -191,3 +191,4 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
     </>
   );
 }
+

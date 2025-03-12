@@ -20,8 +20,4 @@ export const FontAwesome = forwardRef<SVGElement, Props>(({ icon, width = 20, sx
       sx={{ width, height: width, ...sx }}
       {...other}
     />
-  ));
-
-FontAwesome.displayName = 'FontAwesome';
-
-export default FontAwesome;
+));

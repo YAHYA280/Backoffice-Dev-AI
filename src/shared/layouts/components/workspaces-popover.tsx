@@ -11,7 +11,7 @@ import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ButtonBase from '@mui/material/ButtonBase';
 
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 // ----------------------------------------------------------------------
 

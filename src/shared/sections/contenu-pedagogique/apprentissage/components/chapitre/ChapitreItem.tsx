@@ -38,6 +38,7 @@ interface ChapitreItemProps {
   onViewClick: () => void;
   onViewExercices: () => void;
   onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
+  visibleColumns?: string[];
 }
 
 const ChapitreItem = ({
@@ -49,6 +50,7 @@ const ChapitreItem = ({
   onViewClick,
   onViewExercices,
   onToggleActive,
+  visibleColumns = ['ordre', 'nom', 'description', 'difficulte', 'exercicesCount'],
 }: ChapitreItemProps) => {
   const popover = usePopover();
 
@@ -87,91 +89,96 @@ const ChapitreItem = ({
         <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
-
-        <TableCell align="center">
-          <Avatar
+        {visibleColumns.includes('ordre') && (
+          <TableCell align="center">
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: '#E9F2FF',
+                color: '#2065D1',
+                fontSize: '0.875rem',
+                margin: '0 auto',
+              }}
+            >
+              {chapitre.ordre}
+            </Avatar>
+          </TableCell>
+        )}
+        {visibleColumns.includes('nom') && (
+          <TableCell>
+            <Link
+              component="button"
+              variant="subtitle2"
+              color="text.primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewClick();
+              }}
+              sx={{
+                textDecoration: 'none',
+                cursor: 'pointer',
+                fontWeight: 'fontWeightMedium',
+                transition: (theme) => theme.transitions.create(['color']),
+                '&:hover': {
+                  color: 'primary.main',
+                },
+              }}
+              noWrap
+            >
+              {chapitre.nom}
+            </Link>
+            {chapitre.active === false && (
+              <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                Inactif
+              </Typography>
+            )}
+          </TableCell>
+        )}
+        {visibleColumns.includes('description') && (
+          <TableCell
             sx={{
-              width: 32,
-              height: 32,
-              bgcolor: '#E9F2FF',
-              color: '#2065D1',
-              fontSize: '0.875rem',
-              margin: '0 auto',
+              maxWidth: 280,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
             }}
           >
-            {chapitre.ordre}
-          </Avatar>
-        </TableCell>
+            {chapitre.description}
+          </TableCell>
+        )}
+        {visibleColumns.includes('difficulte') && (
+          <TableCell>
+            <Chip
+              label={difficulteOption.label}
+              size="small"
+              sx={{
+                backgroundColor: difficulteOption.bgColor,
+                color: difficulteOption.color,
+              }}
+            />
+          </TableCell>
+        )}
 
-        <TableCell>
-          <Link
-            component="button"
-            variant="subtitle2"
-            color="text.primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewClick();
-            }}
-            sx={{
-              textDecoration: 'none',
-              cursor: 'pointer',
-              fontWeight: 'fontWeightMedium',
-              transition: (theme) => theme.transitions.create(['color']),
-              '&:hover': {
-                color: 'primary.main',
-              },
-            }}
-            noWrap
-          >
-            {chapitre.nom}
-          </Link>
-          {chapitre.active === false && (
-            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-              Inactif
+        {visibleColumns.includes('exercicesCount') && (
+          <TableCell align="center">
+            <Typography
+              variant="body2"
+              sx={{
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                display: 'inline-block',
+                bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
+                color: 'primary.dark',
+                fontWeight: 'fontWeightMedium',
+              }}
+            >
+              {chapitre.exercicesCount || 0}
             </Typography>
-          )}
-        </TableCell>
-
-        <TableCell
-          sx={{
-            maxWidth: 280,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            color: 'text.secondary',
-          }}
-        >
-          {chapitre.description}
-        </TableCell>
-
-        <TableCell>
-          <Chip
-            label={difficulteOption.label}
-            size="small"
-            sx={{
-              backgroundColor: difficulteOption.bgColor,
-              color: difficulteOption.color,
-            }}
-          />
-        </TableCell>
-
-        <TableCell align="center">
-          <Typography
-            variant="body2"
-            sx={{
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              display: 'inline-block',
-              bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
-              color: 'primary.dark',
-              fontWeight: 'fontWeightMedium',
-            }}
-          >
-            {chapitre.exercicesCount || 0}
-          </Typography>
-        </TableCell>
-
+          </TableCell>
+        )}
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
             <Tooltip title="Voir détails">

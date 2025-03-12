@@ -35,11 +35,11 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
 export const endpoints = {
   chat: '/api/chat',
   kanban: '/api/kanban',
+  amelioration: '/api/kanban',
   calendar: '/api/calendar',
   auth: {
     me: '/api/auth/me',
     signIn: '/api/auth/sign-in',
-    signUp: '/api/auth/sign-up',
   },
   mail: {
     list: '/api/mail/list',

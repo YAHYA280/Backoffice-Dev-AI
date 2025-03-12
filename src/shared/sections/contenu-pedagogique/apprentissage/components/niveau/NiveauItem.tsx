@@ -40,6 +40,7 @@ interface NiveauItemProps {
   onViewClick: () => void;
   onViewMatieres: () => void;
   onToggleActive?: (niveau: Niveau, active: boolean) => void;
+  visibleColumns?: string[]; // Add this prop for column visibility
 }
 
 export const NiveauItem: React.FC<NiveauItemProps> = ({
@@ -51,6 +52,7 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
   onViewClick,
   onViewMatieres,
   onToggleActive,
+  visibleColumns = ['nom', 'description', 'code', 'dateCreated'], // Default to all columns
 }) => {
   const popover = usePopover();
 
@@ -61,8 +63,8 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
     }
   };
 
-  // Utiliser la fonction fDate du fichier format-time
-  const formattedDate = fDate(niveau.dateCreated) || 'Non définie';
+  // Format date using the fDate function
+  const formattedDate = niveau.dateCreated ? fDate(niveau.dateCreated) : 'Non définie';
 
   return (
     <>
@@ -88,86 +90,99 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        <TableCell>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                color: 'primary.main',
-              }}
-            >
-              <FontAwesomeIcon icon={faGraduationCap} size="sm" />
-            </Box>
-            <div>
-              <Link
-                component="button"
-                variant="subtitle2"
-                color="text.primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewClick();
-                }}
+        {/* Nom */}
+        {visibleColumns.includes('nom') && (
+          <TableCell>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Box
                 sx={{
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 'fontWeightMedium',
-                  transition: (theme) => theme.transitions.create(['color']),
-                  '&:hover': {
-                    color: 'primary.main',
-                  },
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  color: 'primary.main',
                 }}
-                noWrap
               >
-                {niveau.nom}
-              </Link>
-              {niveau.active === false && (
-                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                  Inactif
-                </Typography>
-              )}
-            </div>
-          </Stack>
-        </TableCell>
+                <FontAwesomeIcon icon={faGraduationCap} size="sm" />
+              </Box>
+              <div>
+                <Link
+                  component="button"
+                  variant="subtitle2"
+                  color="text.primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewClick();
+                  }}
+                  sx={{
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'fontWeightMedium',
+                    transition: (theme) => theme.transitions.create(['color']),
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                  noWrap
+                >
+                  {niveau.nom}
+                </Link>
+                {niveau.active === false && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    Inactif
+                  </Typography>
+                )}
+              </div>
+            </Stack>
+          </TableCell>
+        )}
 
-        <TableCell
-          sx={{
-            whiteSpace: 'nowrap',
-            color: 'text.secondary',
-            maxWidth: 200,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {niveau.description}
-        </TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>
-          <Typography
-            variant="body2"
+        {/* Description */}
+        {visibleColumns.includes('description') && (
+          <TableCell
             sx={{
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              display: 'inline-block',
-              bgcolor: 'primary.lighter',
-              color: 'primary.dark',
-              fontWeight: 'fontWeightMedium',
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
+              maxWidth: 200,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
-            {niveau.code}
-          </Typography>
-        </TableCell>
+            {niveau.description}
+          </TableCell>
+        )}
 
-        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
-          {formattedDate}
-        </TableCell>
+        {/* Code */}
+        {visibleColumns.includes('code') && (
+          <TableCell sx={{ whiteSpace: 'nowrap' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                display: 'inline-block',
+                bgcolor: 'primary.lighter',
+                color: 'primary.dark',
+                fontWeight: 'fontWeightMedium',
+              }}
+            >
+              {niveau.code}
+            </Typography>
+          </TableCell>
+        )}
 
+        {/* Date Created */}
+        {visibleColumns.includes('dateCreated') && (
+          <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+            {formattedDate}
+          </TableCell>
+        )}
+
+        {/* Actions */}
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
             <Tooltip title="Voir détails">

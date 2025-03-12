@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -20,23 +20,16 @@ import {
   alpha,
   Stack,
   Button,
-  Switch,
-  Select,
-  Popover,
   useTheme,
-  MenuItem,
   TableRow,
   TableBody,
   TextField,
   TableCell,
   Typography,
   IconButton,
-  InputLabel,
-  FormControl,
   Breadcrumbs,
   TableContainer,
   InputAdornment,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -56,10 +49,16 @@ import {
 
 import { STATUT_OPTIONS } from '../../types';
 import { ExerciceItem } from './ExerciceItem';
+import { ColumnSelector } from '../filters/ColumnSelector';
+import { FilterDropdown } from '../filters/FilterDropdown';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
+import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Exercice, Pagination, FilterParams } from '../../types';
+/** 1) Import FilterDropdown & ColumnSelector plus their types */
+import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
+/** 2) Base table head */
 const TABLE_HEAD = [
   { id: 'titre', label: 'Titre', align: 'left' },
   { id: 'description', label: 'Description', align: 'left' },
@@ -68,26 +67,83 @@ const TABLE_HEAD = [
   { id: '', label: 'Actions', align: 'right' },
 ];
 
-// Column Filter Component
+/** 3) Column Options for ColumnSelector */
+const COLUMN_OPTIONS: ColumnOption[] = [
+  { id: 'titre', label: 'Titre', required: true },
+  { id: 'description', label: 'Description' },
+  { id: 'statut', label: 'Statut' },
+  { id: 'ressources', label: 'Ressources' },
+];
+
+/** 4) Filter Options for FilterDropdown */
+const FILTER_OPTIONS: FilterOption[] = [
+  {
+    id: 'titre',
+    label: 'Titre',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'startsWith', label: 'Commence par' },
+      { value: 'endsWith', label: 'Termine par' },
+    ],
+  },
+  {
+    id: 'description',
+    label: 'Description',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+    ],
+  },
+  {
+    id: 'statut',
+    label: 'Statut',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: STATUT_OPTIONS.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  },
+  {
+    id: 'ressourceType',
+    label: 'Type de ressource',
+    type: 'select',
+    operators: [
+      { value: 'equals', label: 'Est' },
+      { value: 'contains', label: 'Contient' },
+    ],
+    selectOptions: [
+      { value: 'PDF', label: 'PDF' },
+      { value: 'Audio', label: 'Audio' },
+      { value: 'Vidéo', label: 'Vidéo' },
+      { value: 'Interactive', label: 'Interactive' },
+      { value: 'Image', label: 'Image' },
+    ],
+  },
+  {
+    id: 'isPublished',
+    label: 'Publié',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: [
+      { value: 'true', label: 'Oui' },
+      { value: 'false', label: 'Non' },
+    ],
+  },
+];
+
+/** 5) Per-column filter: row-based searching below each column header */
 interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
   placeholder?: string;
 }
-interface BreadcrumbProps {
-  currentNiveauId?: string | null;
-  currentNiveauName?: string | null;
-  currentMatiereId?: string | null;
-  currentMatiereName?: string | null;
-  currentChapitreId?: string | null;
-  currentChapitreName?: string | null;
-  navigateToNiveaux: () => void;
-  navigateToMatieres: (niveau: any) => void;
-  navigateToChapitres: (matiere: any) => void;
-}
 
-const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterProps) => {
+const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => {
   const theme = useTheme();
 
   return (
@@ -133,6 +189,19 @@ const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterPr
   );
 };
 
+/** 6) Breadcrumb props & main props */
+interface BreadcrumbProps {
+  currentNiveauId?: string | null;
+  currentNiveauName?: string | null;
+  currentMatiereId?: string | null;
+  currentMatiereName?: string | null;
+  currentChapitreId?: string | null;
+  currentChapitreName?: string | null;
+  navigateToNiveaux: () => void;
+  navigateToMatieres: (niveau: any) => void;
+  navigateToChapitres: (matiere: any) => void;
+}
+
 interface ExerciceListProps {
   exercices: Exercice[];
   loading: boolean;
@@ -140,26 +209,30 @@ interface ExerciceListProps {
   filters: FilterParams;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
-  onSearchChange: (searchTerm: string) => void;
-  onColumnFilterChange?: (columnId: string, value: string) => void;
+  /** If you want the parent to have the combined filter results, use onFilterChange: */
+  onFilterChange?: (filters: ActiveFilter[]) => void;
+  onColumnChange?: (columns: string[]) => void;
+
   onEditClick: (exercice: Exercice) => void;
   onDeleteClick: (exercice: Exercice) => void;
   onViewClick: (exercice: Exercice) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
   onAddClick?: () => void;
   onToggleActive?: (exercice: Exercice, active: boolean) => void;
+
   breadcrumbs?: BreadcrumbProps;
 }
 
-export const ExerciceList = ({
+/** 7) Final integrated component */
+export const ExerciceList: React.FC<ExerciceListProps> = ({
   exercices,
   loading,
   pagination,
   filters,
   onPageChange,
   onLimitChange,
-  onSearchChange,
-  onColumnFilterChange,
+  onFilterChange,
+  onColumnChange,
   onEditClick,
   onDeleteClick,
   onViewClick,
@@ -167,11 +240,11 @@ export const ExerciceList = ({
   onAddClick,
   onToggleActive,
   breadcrumbs,
-}: ExerciceListProps) => {
+}) => {
   const confirm = useBoolean();
   const theme = useTheme();
 
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  /** 7b) State for row-based text filters (per column). */
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     titre: '',
     description: '',
@@ -179,9 +252,26 @@ export const ExerciceList = ({
     ressources: '',
   });
 
+  /** 7c) State for FilterDropdown & ColumnSelector */
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMN_OPTIONS.map((col) => col.id)
+  );
+
+  /** 7d) Filter out columns not in visibleColumns */
+  const visibleTableHead = TABLE_HEAD.filter(
+    (col) => col.id === '' || visibleColumns.includes(col.id)
+  );
+
+  /** If you want the parent to have the FilterDropdown changes: */
+  useEffect(() => {
+    onFilterChange?.(activeFilters);
+  }, [activeFilters, onFilterChange]);
+
+  /** 7e) Table logic */
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1,
+    defaultCurrentPage: pagination.page - 1, // Convert 1-based to 0-based for MUI
     defaultOrderBy: 'titre',
   });
 
@@ -197,63 +287,50 @@ export const ExerciceList = ({
     confirm.onFalse();
   };
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-
-  const handleFilterReset = () => {
-    setColumnFilters({
-      titre: '',
-      description: '',
-      statut: '',
-      ressources: '',
-    });
-    if (onColumnFilterChange) {
-      Object.keys(columnFilters).forEach((key) => {
-        onColumnFilterChange(key, '');
-      });
-    }
-  };
-
+  /** 7g) Row-based column filters */
   const handleColumnFilterChange = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
       [columnId]: value,
     }));
-    if (onColumnFilterChange) {
-      onColumnFilterChange(columnId, value);
-    }
+    // If the parent wants each column filter's changes, call onSearchChange or something similar
+    // For now, we show how to store it locally
   };
 
-  const notFound = !exercices.length && !loading;
-  const filterOpen = Boolean(filterAnchorEl);
+  /** 7h) FilterDropdown & ColumnSelector callbacks */
+  const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
+    setActiveFilters(newFilters);
+  };
 
-  // Render filter row under table header
+  const handleColumnSelectorChange = (columns: string[]) => {
+    setVisibleColumns(columns);
+    onColumnChange?.(columns);
+  };
+
+  /** 7i) "No data" condition */
+  const notFound = !exercices.length && !loading;
+
+  /** 8) The row of column filters below the table header. */
   const renderFilterRow = () => (
     <TableRow>
       <TableCell padding="checkbox" />
-      {TABLE_HEAD.filter((col) => col.id).map(
-        (column) =>
-          column.id && (
-            <TableCell key={column.id}>
-              <ColumnFilter
-                columnId={column.id}
-                value={columnFilters[column.id] || ''}
-                onChange={handleColumnFilterChange}
-                placeholder={`Rechercher par ${column.label}`}
-              />
-            </TableCell>
-          )
-      )}
-      <TableCell />
+      {/** Only render filters for visible columns (except the last 'Actions' column) */}
+      {visibleTableHead
+        .filter((col) => col.id) // skip empty ID for "Actions"
+        .map((column) => (
+          <TableCell key={column.id}>
+            <ColumnFilter
+              columnId={column.id}
+              value={columnFilters[column.id] || ''}
+              onChange={handleColumnFilterChange}
+              placeholder={`Rechercher par ${column.label}`}
+            />
+          </TableCell>
+        ))}
     </TableRow>
   );
 
-  // Render breadcrumbs
+  /** 9) Render breadcrumbs if needed */
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
 
@@ -303,36 +380,41 @@ export const ExerciceList = ({
 
   return (
     <MotionContainer>
+      {/* Title + Add Button + FilterDropdown + ColumnSelector */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Exercices
           </Typography>
-          {onAddClick && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPlus} />}
-              onClick={onAddClick}
-              sx={{
-                px: 2.5,
-                py: 1,
-                boxShadow: theme.customShadows?.z8,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: theme.customShadows?.z16,
-                },
-              }}
-            >
-              Ajouter un exercice
-            </Button>
-          )}
-        </Stack>
 
-        {breadcrumbs && renderBreadcrumbs()}
+          <Stack direction="row" spacing={2}>
+            {/* Add Button */}
+            {onAddClick && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<FontAwesomeIcon icon={faPlus} />}
+                onClick={onAddClick}
+                sx={{
+                  px: 2.5,
+                  py: 1,
+                  boxShadow: theme.customShadows?.z8,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: theme.customShadows?.z16,
+                  },
+                }}
+              >
+                Ajouter un exercice
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+        {renderBreadcrumbs()}
       </m.div>
 
+      {/* Main Card */}
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
@@ -345,100 +427,28 @@ export const ExerciceList = ({
             overflow: 'hidden',
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={handleFilterClick}
-              startIcon={<FontAwesomeIcon icon={faFilter} />}
-              sx={{
-                minWidth: 120,
-                borderRadius: 1,
-                transition: theme.transitions.create(['background-color']),
-                ...(filterOpen && {
-                  bgcolor: 'primary.lighter',
-                }),
-              }}
-            >
-              Filtres avancés
-            </Button>
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
+            <Stack direction="row" alignContent="end" spacing={2}>
+              {/* FilterDropdown: multi-field filters */}
+              <FilterDropdown
+                filterOptions={FILTER_OPTIONS}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterDropdownChange}
+                buttonText="Filtres"
+                icon={<FontAwesomeIcon icon={faFilter} />}
+              />
 
-            <Popover
-              open={filterOpen}
-              anchorEl={filterAnchorEl}
-              onClose={handleFilterClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              slotProps={{
-                paper: {
-                  sx: {
-                    width: 300,
-                    p: 2,
-                    boxShadow: theme.customShadows?.z20,
-                  },
-                },
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Filtres avancés
-              </Typography>
-
-              <Stack spacing={2} sx={{ mb: 2 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Statut</InputLabel>
-                  <Select label="Statut" value="" onChange={() => {}}>
-                    <MenuItem value="">Tous les statuts</MenuItem>
-                    {STATUT_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth size="small">
-                  <InputLabel>Type de ressource</InputLabel>
-                  <Select label="Type de ressource" value="" onChange={() => {}}>
-                    <MenuItem value="">Tous les types</MenuItem>
-                    <MenuItem value="PDF">PDF</MenuItem>
-                    <MenuItem value="Audio">Audio</MenuItem>
-                    <MenuItem value="Vidéo">Vidéo</MenuItem>
-                    <MenuItem value="Interactive">Interactive</MenuItem>
-                    <MenuItem value="Image">Image</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Exercices publiés uniquement"
-                />
-              </Stack>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                <Button variant="outlined" size="small" onClick={handleFilterReset}>
-                  Réinitialiser
-                </Button>
-                <Button variant="contained" size="small" onClick={handleFilterClose}>
-                  Appliquer
-                </Button>
-              </Box>
-            </Popover>
+              {/* ColumnSelector: dynamic columns */}
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={handleColumnSelectorChange}
+                buttonText="Colonnes"
+              />
+            </Stack>
           </Box>
 
+          {/* Bulk Actions (selected rows) */}
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -459,7 +469,8 @@ export const ExerciceList = ({
                   }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
-                    {table.selected.length} sélectionné{table.selected.length > 1 ? 's' : ''}
+                    {table.selected.length} sélectionné
+                    {table.selected.length > 1 ? 's' : ''}
                   </Typography>
 
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -493,10 +504,11 @@ export const ExerciceList = ({
                 }}
               >
                 <Table size={table.dense ? 'small' : 'medium'}>
+                  {/* Dynamic table head based on visibleColumns */}
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
-                    headLabel={TABLE_HEAD}
+                    headLabel={visibleTableHead}
                     rowCount={exercices.length}
                     numSelected={table.selected.length}
                     onSort={table.onSort}
@@ -513,10 +525,13 @@ export const ExerciceList = ({
                       },
                     }}
                   />
+
                   <TableBody>
+                    {/* The row of per-column search bars below the header */}
                     {renderFilterRow()}
+
                     {loading ? (
-                      <TableSkeletonLoader rows={5} columns={5} />
+                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
                       exercices.map((exercice) => (
                         <ExerciceItem
@@ -528,13 +543,17 @@ export const ExerciceList = ({
                           onViewClick={() => onViewClick(exercice)}
                           onSelectRow={() => table.onSelectRow(exercice.id)}
                           onToggleActive={onToggleActive}
+                          // If you want to conditionally render columns inside the row:
+                          visibleColumns={visibleColumns}
                         />
                       ))
                     )}
+
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
                       emptyRows={emptyRows(table.page, table.rowsPerPage, exercices.length)}
                     />
+
                     {notFound && (
                       <TableNoData
                         notFound={notFound}
@@ -549,13 +568,14 @@ export const ExerciceList = ({
             </Scrollbar>
           </Box>
 
+          {/* Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
             onPageChange={(e, page) => {
               table.onChangePage(e, page);
-              onPageChange(page + 1);
+              onPageChange(page + 1); // Convert 0-based back to 1-based
             }}
             onRowsPerPageChange={(e) => {
               onLimitChange(parseInt(e.target.value, 10));
@@ -566,6 +586,7 @@ export const ExerciceList = ({
         </Card>
       </m.div>
 
+      {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

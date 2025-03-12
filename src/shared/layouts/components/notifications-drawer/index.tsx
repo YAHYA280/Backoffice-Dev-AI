@@ -22,7 +22,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Label } from 'src/shared/components/label';
 import { varHover } from 'src/shared/components/animate';
 import { Scrollbar } from 'src/shared/components/scrollbar';
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { CustomTabs } from 'src/shared/components/custom-tabs';
 
 import { NotificationItem } from './notification-item';
@@ -170,3 +170,4 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
     </>
   );
 }
+

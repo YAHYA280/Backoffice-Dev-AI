@@ -1,3 +1,8 @@
 export * from './types';
 
-export { default } from './fontawesome';
+export * from './classes';
+
+export * from './flag-icon';
+
+export * from './fontawesome';
+

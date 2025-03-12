@@ -1,4 +1,4 @@
-import { AmeliorationsView } from "src/shared/sections/contenu-pedagogique/ameliorations-management/view";
+import { AmeliorationsView } from "src/shared/sections/contenu-pedagogique/ameliorations-management/view/ameliorations-view";
 // ----------------------------------------------------------------------
 
 

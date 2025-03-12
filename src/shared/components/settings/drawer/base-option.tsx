@@ -11,7 +11,7 @@ import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/shared/theme/styles';
 
 import { SvgColor } from '../../svg-color';
-import FontAwesome from '../../fontawesome';
+import {FontAwesome} from '../../fontawesome';
 // ----------------------------------------------------------------------
 
 type Props = ButtonBaseProps & {
@@ -80,3 +80,4 @@ export function BaseOption({ icon, label, tooltip, selected, ...other }: Props) 
     </ButtonBase>
   );
 }
+

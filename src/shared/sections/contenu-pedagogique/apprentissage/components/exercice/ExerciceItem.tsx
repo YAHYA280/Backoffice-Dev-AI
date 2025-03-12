@@ -44,6 +44,7 @@ interface ExerciceItemProps {
   onDeleteClick: () => void;
   onViewClick: () => void;
   onToggleActive?: (exercice: Exercice, active: boolean) => void;
+  visibleColumns?: string[];
 }
 
 export const ExerciceItem = ({
@@ -54,6 +55,7 @@ export const ExerciceItem = ({
   onDeleteClick,
   onViewClick,
   onToggleActive,
+  visibleColumns = ['titre', 'description', 'statut', 'ressources'],
 }: ExerciceItemProps) => {
   const popover = usePopover();
   const theme = useTheme();
@@ -96,95 +98,101 @@ export const ExerciceItem = ({
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        <TableCell>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor: alpha(statutOption.bgColor, 0.2),
-                color: statutOption.color,
-                fontSize: '0.875rem',
-              }}
-            >
-              <FontAwesomeIcon icon={faFileAlt} size="sm" />
-            </Avatar>
-            <Box sx={{ flexGrow: 1 }}>
-              <Link
-                component="button"
-                variant="subtitle2"
-                color="text.primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewClick();
-                }}
+        {visibleColumns.includes('titre') && (
+          <TableCell>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Avatar
                 sx={{
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 'fontWeightMedium',
-                  transition: (t) => t.transitions.create(['color']),
-                  '&:hover': {
-                    color: 'primary.main',
-                  },
+                  width: 32,
+                  height: 32,
+                  bgcolor: alpha(statutOption.bgColor, 0.2),
+                  color: statutOption.color,
+                  fontSize: '0.875rem',
                 }}
-                noWrap
               >
-                {exercice.titre}
-              </Link>
-              {!isActive && (
-                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                  Inactif
-                </Typography>
-              )}
-            </Box>
-          </Stack>
-        </TableCell>
-
-        <TableCell
-          sx={{
-            maxWidth: 280,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            color: 'text.secondary',
-          }}
-        >
-          {exercice.description}
-        </TableCell>
-
-        <TableCell>
-          <Chip
-            label={statutOption.label}
-            size="small"
-            sx={{
-              backgroundColor: statutOption.bgColor,
-              color: statutOption.color,
-            }}
-          />
-        </TableCell>
-
-        <TableCell>
-          {exercice.ressources && exercice.ressources.length > 0 ? (
-            <Stack direction="row" spacing={0.5} flexWrap="wrap">
-              {exercice.ressources.map((ressource, index) => (
-                <Chip
-                  key={index}
-                  label={ressource}
-                  size="small"
-                  sx={{
-                    my: 0.25,
-                    bgcolor: alpha(theme.palette.info.lighter, 0.5),
-                    color: 'text.primary',
+                <FontAwesomeIcon icon={faFileAlt} size="sm" />
+              </Avatar>
+              <Box sx={{ flexGrow: 1 }}>
+                <Link
+                  component="button"
+                  variant="subtitle2"
+                  color="text.primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewClick();
                   }}
-                />
-              ))}
+                  sx={{
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'fontWeightMedium',
+                    transition: (t) => t.transitions.create(['color']),
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                  noWrap
+                >
+                  {exercice.titre}
+                </Link>
+                {!isActive && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    Inactif
+                  </Typography>
+                )}
+              </Box>
             </Stack>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Aucune
-            </Typography>
-          )}
-        </TableCell>
+          </TableCell>
+        )}
+
+        {visibleColumns.includes('description') && (
+          <TableCell
+            sx={{
+              maxWidth: 280,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
+            }}
+          >
+            {exercice.description}
+          </TableCell>
+        )}
+        {visibleColumns.includes('statut') && (
+          <TableCell>
+            <Chip
+              label={statutOption.label}
+              size="small"
+              sx={{
+                backgroundColor: statutOption.bgColor,
+                color: statutOption.color,
+              }}
+            />
+          </TableCell>
+        )}
+        {visibleColumns.includes('ressources') && (
+          <TableCell>
+            {exercice.ressources && exercice.ressources.length > 0 ? (
+              <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                {exercice.ressources.map((ressource, index) => (
+                  <Chip
+                    key={index}
+                    label={ressource}
+                    size="small"
+                    sx={{
+                      my: 0.25,
+                      bgcolor: alpha(theme.palette.info.lighter, 0.5),
+                      color: 'text.primary',
+                    }}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Aucune
+              </Typography>
+            )}
+          </TableCell>
+        )}
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>

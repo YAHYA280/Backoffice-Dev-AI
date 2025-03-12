@@ -1,15 +1,13 @@
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { faTimes, faCircleArrowDown } from '@fortawesome/free-solid-svg-icons';
-
 import { useTheme } from '@mui/material/styles';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 
 import { bgBlur, varAlpha } from 'src/shared/theme/styles';
 
-import FontAwesome from '../fontawesome';
+import { FontAwesome } from '../fontawesome';
 
 // ----------------------------------------------------------------------
 
@@ -38,7 +36,7 @@ export function DownloadButton({ sx, ...other }: ButtonBaseProps) {
       }}
       {...other}
     >
-      <FontAwesome icon={faCircleArrowDown} style={{ width: 24, height: 24 }} />
+      <FontAwesome icon="eva:arrow-circle-down-fill" width={24} />
     </ButtonBase>
   );
 }
@@ -61,7 +59,7 @@ export function RemoveButton({ sx, ...other }: IconButtonProps) {
       }}
       {...other}
     >
-      <FontAwesome icon={faTimes} style={{ width: 12, height: 12 }} />
+      <FontAwesome icon="mingcute:close-line" width={12} />
     </IconButton>
   );
 }

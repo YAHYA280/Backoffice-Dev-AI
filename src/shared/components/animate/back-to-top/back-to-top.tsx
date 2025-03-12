@@ -1,12 +1,11 @@
 import type { FabProps } from '@mui/material/Fab';
 
 import { useState } from 'react';
-import { faAnglesUp } from '@fortawesome/free-solid-svg-icons';
 import { useScroll, useMotionValueEvent } from 'framer-motion';
 
 import Fab from '@mui/material/Fab';
 
-import FontAwesome from '../../fontawesome';
+import { FontAwesome } from 'src/shared/components/fontawesome';
 
 // ----------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ export function BackToTop({ value = 90, sx, ...other }: BackToTopProps) {
       }}
       {...other}
     >
-      <FontAwesome icon={faAnglesUp} />
+      <FontAwesome width={24} icon="solar:double-alt-arrow-up-bold-duotone" />
     </Fab>
   );
 }

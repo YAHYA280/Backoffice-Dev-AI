@@ -5,7 +5,7 @@ import { faCircleInfo, faCheckCircle, faCircleExclamation, faTriangleExclamation
 import Portal from '@mui/material/Portal';
 
 import { StyledToaster } from './styles';
-import FontAwesome from '../fontawesome';
+import {FontAwesome} from '../fontawesome';
 import { toasterClasses } from './classes';
 
 // ----------------------------------------------------------------------
@@ -53,3 +53,4 @@ export function Snackbar() {
     </Portal>
   );
 }
+

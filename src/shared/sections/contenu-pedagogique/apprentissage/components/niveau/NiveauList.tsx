@@ -1,14 +1,7 @@
 import { m } from 'framer-motion';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faPlus,
-  faTrash,
-  faTimes,
-  faFilter,
-  faSearch,
-  faCalendarAlt,
-} from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -17,8 +10,6 @@ import {
   alpha,
   Stack,
   Button,
-  Switch,
-  Popover,
   useTheme,
   TableRow,
   TableBody,
@@ -29,7 +20,6 @@ import {
   Breadcrumbs,
   TableContainer,
   InputAdornment,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -50,17 +40,37 @@ import {
 import { NiveauItem } from './NiveauItem';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
+// -------------------------------------------
+// 1) Import the FilterDropdown & ColumnSelector
+//    plus the needed types (ColumnOption, FilterOption, ActiveFilter)
+// -------------------------------------------
+
+import { FilterDropdown } from '../filters/FilterDropdown';
+import { ColumnSelector } from '../filters/ColumnSelector';
+
+import type { ColumnOption } from '../filters/ColumnSelector';
+import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
+
+// -------------------------------------------
+// 5) Component Props
+// -------------------------------------------
 import type { Niveau, Pagination, FilterParams } from '../../types';
 
-// Modified to include date created column
+// -------------------------------------------
+// 2) Define the same TABLE_HEAD but do NOT export it directly.
+//    We'll derive the visible columns in the component.
+// -------------------------------------------
 const TABLE_HEAD = [
   { id: 'nom', label: 'Nom', align: 'left' },
   { id: 'description', label: 'Description', align: 'left' },
   { id: 'code', label: 'Code', align: 'left' },
   { id: 'dateCreated', label: 'Date de création', align: 'left' },
-  { id: '', label: 'Actions', align: 'right' },
+  { id: '', label: 'Actions', align: 'center' },
 ];
 
+// -------------------------------------------
+// 3) ColumnFilter (the per-column search bar)
+// -------------------------------------------
 interface ColumnFilterProps {
   columnId: string;
   value: string;
@@ -107,6 +117,71 @@ const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterPr
   />
 );
 
+// -------------------------------------------
+// 4) Define your filter options & column options
+//    for the FilterDropdown & ColumnSelector
+// -------------------------------------------
+
+const FILTER_OPTIONS: FilterOption[] = [
+  {
+    id: 'nom',
+    label: 'Nom',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'startsWith', label: 'Commence par' },
+      { value: 'endsWith', label: 'Termine par' },
+    ],
+  },
+  {
+    id: 'description',
+    label: 'Description',
+    type: 'text',
+    operators: [
+      { value: 'contains', label: 'Contient' },
+      { value: 'equals', label: 'Est égal à' },
+    ],
+  },
+  {
+    id: 'code',
+    label: 'Code',
+    type: 'text',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'contains', label: 'Contient' },
+    ],
+  },
+  {
+    id: 'dateCreated',
+    label: 'Date de création',
+    type: 'date',
+    operators: [
+      { value: 'equals', label: 'Est égal à' },
+      { value: 'before', label: 'Avant le' },
+      { value: 'after', label: 'Après le' },
+    ],
+  },
+  {
+    id: 'isActive',
+    label: 'Statut',
+    type: 'select',
+    operators: [{ value: 'equals', label: 'Est' }],
+    selectOptions: [
+      { value: 'true', label: 'Actif' },
+      { value: 'false', label: 'Inactif' },
+    ],
+  },
+];
+
+const COLUMN_OPTIONS: ColumnOption[] = [
+  { id: 'nom', label: 'Nom', required: true },
+  { id: 'description', label: 'Description' },
+  { id: 'code', label: 'Code' },
+  { id: 'dateCreated', label: 'Date de création' },
+  // You can exclude the actions column since it's not data-based
+];
+
 interface NiveauListProps {
   niveaux: Niveau[];
   loading: boolean;
@@ -116,6 +191,11 @@ interface NiveauListProps {
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
+
+  // OPTIONAL: If you want to capture advanced filtering from FilterDropdown
+  // you can add onFilterChange?: (filters: ActiveFilter[]) => void;
+  // and handle it.
+
   onEditClick: (niveau: Niveau) => void;
   onDeleteClick: (niveau: Niveau) => void;
   onViewClick: (niveau: Niveau) => void;
@@ -125,6 +205,9 @@ interface NiveauListProps {
   onToggleActive?: (niveau: Niveau, active: boolean) => void;
 }
 
+// -------------------------------------------
+// 6) NiveauList Implementation
+// -------------------------------------------
 export const NiveauList: React.FC<NiveauListProps> = ({
   niveaux,
   loading,
@@ -144,7 +227,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+
+  // State for column-based text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
     description: '',
@@ -152,6 +236,33 @@ export const NiveauList: React.FC<NiveauListProps> = ({
     dateCreated: '',
   });
 
+  // -------------------------------------------
+  // 7) State for FilterDropdown & ColumnSelector
+  // -------------------------------------------
+  // Active filters from the FilterDropdown
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  // Visible columns from the ColumnSelector
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    COLUMN_OPTIONS.map((col) => col.id)
+  );
+
+  // If you want to send these activeFilters up to a parent, you'd do so here.
+  // e.g. useEffect(() => { onFilterChange?.(activeFilters); }, [activeFilters]);
+
+  // FilterDropdown callback
+  const handleFilterChange = (newFilters: ActiveFilter[]) => {
+    setActiveFilters(newFilters);
+    // If you need to push these to a parent or do an API call, do it here.
+  };
+
+  // ColumnSelector callback
+  const handleColumnChange = (columns: string[]) => {
+    setVisibleColumns(columns);
+  };
+
+  // -------------------------------------------
+  // 9) Table logic
+  // -------------------------------------------
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1, // Convert to 0-based for MUI
@@ -170,62 +281,54 @@ export const NiveauList: React.FC<NiveauListProps> = ({
     confirm.onFalse();
   };
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-
-  const handleFilterReset = () => {
-    setColumnFilters({
-      nom: '',
-      description: '',
-      code: '',
-      dateCreated: '',
-    });
-    if (onColumnFilterChange) {
-      Object.keys(columnFilters).forEach((key) => {
-        onColumnFilterChange(key, '');
-      });
-    }
-  };
-
-  const handleColumnFilterChange = (columnId: string, value: string) => {
+  // -------------------------------------------
+  // 10) Per-column filter
+  // -------------------------------------------
+  const handleColumnFilterChangeLocal = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
       [columnId]: value,
     }));
-    if (onColumnFilterChange) {
-      onColumnFilterChange(columnId, value);
-    }
+    onColumnFilterChange?.(columnId, value);
   };
 
-  const notFound = !niveaux.length && !loading;
-  const filterOpen = Boolean(filterAnchorEl);
+  // -------------------------------------------
+  // 11) Which columns to show in the table
+  // -------------------------------------------
+  const visibleTableHead = TABLE_HEAD.filter(
+    (col) => col.id === '' || visibleColumns.includes(col.id)
+  );
 
-  // Render filter row under table header
+  // -------------------------------------------
+  // 12) "No data" condition
+  // -------------------------------------------
+  const notFound = !niveaux.length && !loading;
+
+  // -------------------------------------------
+  // 13) Render row for filter inputs (below header)
+  //     We only render these columns that are visible.
+  // -------------------------------------------
   const renderFilterRow = () => (
     <TableRow>
       <TableCell padding="checkbox" />
-      {TABLE_HEAD.filter((col) => col.id).map(
-        (column) =>
-          column.id && (
-            <TableCell key={column.id}>
-              <ColumnFilter
-                columnId={column.id}
-                value={columnFilters[column.id] || ''}
-                onChange={handleColumnFilterChange}
-                placeholder={`Rechercher par ${column.label}`}
-              />
-            </TableCell>
-          )
-      )}
+      {visibleTableHead
+        .filter((col) => col.id) // skip the empty 'Actions' column
+        .map((column) => (
+          <TableCell key={column.id}>
+            <ColumnFilter
+              columnId={column.id}
+              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
+              onChange={handleColumnFilterChangeLocal}
+              placeholder={`Rechercher par ${column.label}`}
+            />
+          </TableCell>
+        ))}
     </TableRow>
   );
 
-  // Render basic breadcrumb for Niveau (top level)
+  // -------------------------------------------
+  // 14) Simple breadcrumb
+  // -------------------------------------------
   const renderBreadcrumbs = () => (
     <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
       <Typography color="text.primary">Niveaux d&apos;enseignement</Typography>
@@ -234,10 +337,11 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 
   return (
     <MotionContainer>
+      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
-            Niveaux d&apos;apprentissage
+            Niveaux
           </Typography>
 
           {onAddClick && (
@@ -263,6 +367,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
         </Stack>
         {renderBreadcrumbs()}
       </m.div>
+
+      {/* Filter Controls (FilterDropdown + ColumnSelector + Advanced Filter) */}
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
@@ -275,104 +381,31 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             overflow: 'hidden',
           }}
         >
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={handleFilterClick}
-              startIcon={<FontAwesomeIcon icon={faFilter} />}
-              sx={{
-                minWidth: 120,
-                borderRadius: 1,
-                transition: theme.transitions.create(['background-color']),
-                ...(filterOpen && {
-                  bgcolor: 'primary.lighter',
-                }),
-              }}
-            >
-              Filtres avancés
-            </Button>
+          {/* 
+            Advanced Filter Button + FilterDropdown + ColumnSelector 
+            You can arrange them in a row or however you like 
+          */}
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
+            <Stack direction="row" alignContent="end" spacing={2}>
+              <FilterDropdown
+                filterOptions={FILTER_OPTIONS}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                buttonText="Filtres"
+                icon={<FontAwesomeIcon icon={faFilter} />}
+              />
 
-            <Popover
-              open={filterOpen}
-              anchorEl={filterAnchorEl}
-              onClose={handleFilterClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              slotProps={{
-                paper: {
-                  sx: {
-                    width: 300,
-                    p: 2,
-                    boxShadow: theme.customShadows?.z20,
-                  },
-                },
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Filtres avancés
-              </Typography>
-
-              <Stack spacing={2} sx={{ mb: 2 }}>
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Niveaux actifs uniquement"
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Date de création après"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <FontAwesomeIcon icon={faCalendarAlt} />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Date de création avant"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <FontAwesomeIcon icon={faCalendarAlt} />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Avec matières uniquement"
-                />
-
-                <FormControlLabel
-                  control={<Switch size="small" color="primary" />}
-                  label="Avec exercices uniquement"
-                />
-              </Stack>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                <Button variant="outlined" size="small" onClick={handleFilterReset}>
-                  Réinitialiser
-                </Button>
-                <Button variant="contained" size="small" onClick={handleFilterClose}>
-                  Appliquer
-                </Button>
-              </Box>
-            </Popover>
+              {/* ColumnSelector from your first snippet */}
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={handleColumnChange}
+                buttonText="Colonnes"
+              />
+            </Stack>
           </Box>
 
+          {/* Bulk Actions (Selected Rows) */}
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -393,7 +426,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                   }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
-                    {table.selected.length} sélectionné{table.selected.length > 1 ? 's' : ''}
+                    {table.selected.length} sélectionné
+                    {table.selected.length > 1 ? 's' : ''}
                   </Typography>
 
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -419,13 +453,15 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               }
             />
 
+            {/* TABLE + SCROLLBAR */}
             <Scrollbar>
               <TableContainer sx={{ position: 'relative', overflow: 'unset', minHeight: 240 }}>
                 <Table size={table.dense ? 'small' : 'medium'}>
+                  {/* Dynamic Table Head based on visibleColumns */}
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
-                    headLabel={TABLE_HEAD}
+                    headLabel={visibleTableHead}
                     rowCount={niveaux.length}
                     numSelected={table.selected.length}
                     onSort={table.onSort}
@@ -444,11 +480,11 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                   />
 
                   <TableBody>
-                    {/* Add filter row below header */}
+                    {/* Add the filter row below the header */}
                     {renderFilterRow()}
 
                     {loading ? (
-                      <TableSkeletonLoader rows={5} columns={5} />
+                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
                       niveaux.map((niveau) => (
                         <NiveauItem
@@ -461,6 +497,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                           onSelectRow={() => table.onSelectRow(niveau.id)}
                           onViewMatieres={() => onViewMatieres(niveau)}
                           onToggleActive={onToggleActive}
+                          // Pass visibleColumns if you want conditional cell rendering in NiveauItem
+                          visibleColumns={visibleColumns}
                         />
                       ))
                     )}
@@ -484,6 +522,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             </Scrollbar>
           </Box>
 
+          {/* Table Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
@@ -500,6 +539,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           />
         </Card>
       </m.div>
+
       {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}

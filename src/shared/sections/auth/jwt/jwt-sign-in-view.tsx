@@ -10,7 +10,6 @@ import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
@@ -20,7 +19,7 @@ import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { Form, Field } from 'src/shared/components/hook-form';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -75,44 +74,29 @@ export function JwtSignInView() {
       router.refresh();
     } catch (error) {
       console.error(error);
-      setErrorMsg(error instanceof Error ? error.message : error);
+
+      setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   });
 
-  const renderHead = (
-    <Stack spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Sign in to your account</Typography>
-
-      <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`Don't have an account?`}
-        </Typography>
-
-        <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2">
-          Get started
-        </Link>
-      </Stack>
-    </Stack>
-  );
-
   const renderForm = (
     <Stack spacing={3}>
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Adresse e-mail" InputLabelProps={{ shrink: true }} />
 
       <Stack spacing={1.5}>
         <Link
           component={RouterLink}
-          href="#"
+          href={paths.auth.forgotPassword}
           variant="body2"
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
         >
-          Forgot password?
+          Mot de passe oublié ?
         </Link>
 
         <Field.Text
           name="password"
-          label="Password"
+          label="Mot de passe"
           placeholder="6+ characters"
           type={password.value ? 'text' : 'password'}
           InputLabelProps={{ shrink: true }}
@@ -120,7 +104,7 @@ export function JwtSignInView() {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={password.onToggle} edge="end">
-    <FontAwesome icon={password.value ? faEye : faEyeSlash} />
+                  <FontAwesome icon={password.value ? faEye : faEyeSlash} />
                 </IconButton>
               </InputAdornment>
             ),
@@ -137,15 +121,13 @@ export function JwtSignInView() {
         loading={isSubmitting}
         loadingIndicator="Sign in..."
       >
-        Sign in
+        Login
       </LoadingButton>
     </Stack>
   );
 
   return (
     <>
-      {renderHead}
-
       <Alert severity="info" sx={{ mb: 3 }}>
         Use <strong>{defaultValues.email}</strong>
         {' with password '}
@@ -164,3 +146,4 @@ export function JwtSignInView() {
     </>
   );
 }
+

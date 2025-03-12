@@ -35,6 +35,7 @@ interface MatiereItemProps {
   onViewClick: (matiere: Matiere) => void;
   onViewChapitres: (matiere: Matiere) => void;
   onToggleActive?: (matiere: Matiere, active: boolean) => void;
+  visibleColumns?: string[];
 }
 
 export const MatiereItem: React.FC<MatiereItemProps> = ({
@@ -46,6 +47,7 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
   onViewClick,
   onViewChapitres,
   onToggleActive,
+  visibleColumns = ['nom', 'description', 'chapitresCount', 'dateCreated'],
 }) => {
   const popover = usePopover();
 
@@ -83,82 +85,88 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        <TableCell>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar
-              sx={{
-                bgcolor: matiere.couleur,
-                width: 36,
-                height: 36,
-                fontSize: '0.875rem',
-              }}
-            >
-              {matiere.icon}
-            </Avatar>
-            <Box sx={{ ml: 2, flexGrow: 1 }}>
-              <Link
-                component="button"
-                variant="subtitle2"
-                color="text.primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewClick(matiere);
-                }}
+        {visibleColumns.includes('nom') && (
+          <TableCell>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Avatar
                 sx={{
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 'fontWeightMedium',
-                  transition: (theme) => theme.transitions.create(['color']),
-                  '&:hover': {
-                    color: 'primary.main',
-                  },
+                  bgcolor: matiere.couleur,
+                  width: 36,
+                  height: 36,
+                  fontSize: '0.875rem',
                 }}
-                noWrap
               >
-                {matiere.nom}
-              </Link>
-              {matiere.active === false && (
-                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                  Inactive
-                </Typography>
-              )}
-            </Box>
-          </Stack>
-        </TableCell>
+                {matiere.icon}
+              </Avatar>
+              <Box sx={{ ml: 2, flexGrow: 1 }}>
+                <Link
+                  component="button"
+                  variant="subtitle2"
+                  color="text.primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewClick(matiere);
+                  }}
+                  sx={{
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'fontWeightMedium',
+                    transition: (theme) => theme.transitions.create(['color']),
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                  noWrap
+                >
+                  {matiere.nom}
+                </Link>
+                {matiere.active === false && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    Inactive
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </TableCell>
+        )}
 
-        <TableCell
-          sx={{
-            maxWidth: 280,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            color: 'text.secondary',
-          }}
-        >
-          {matiere.description}
-        </TableCell>
-
-        <TableCell align="center" sx={{ color: 'text.secondary' }}>
-          <Typography
-            variant="body2"
+        {visibleColumns.includes('description') && (
+          <TableCell
             sx={{
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              display: 'inline-block',
-              bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
-              color: 'primary.dark',
-              fontWeight: 'fontWeightMedium',
+              maxWidth: 280,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
             }}
           >
-            {matiere.chapitresCount || 0}
-          </Typography>
-        </TableCell>
+            {matiere.description}
+          </TableCell>
+        )}
 
-        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
-          {formattedDate}
-        </TableCell>
-
+        {visibleColumns.includes('chapitresCount') && (
+          <TableCell align="center" sx={{ color: 'text.secondary' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                display: 'inline-block',
+                bgcolor: (theme) => alpha(theme.palette.primary.lighter, 0.4),
+                color: 'primary.dark',
+                fontWeight: 'fontWeightMedium',
+              }}
+            >
+              {matiere.chapitresCount || 0}
+            </Typography>
+          </TableCell>
+        )}
+        {visibleColumns.includes('dateCreated') && (
+          <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+            {formattedDate}
+          </TableCell>
+        )}
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
             <Tooltip title="Voir détails">

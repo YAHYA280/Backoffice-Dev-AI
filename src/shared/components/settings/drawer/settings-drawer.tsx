@@ -11,7 +11,6 @@ import Typography from '@mui/material/Typography';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 import { useTheme, useColorScheme } from '@mui/material/styles';
 
-import COLORS from 'src/shared/theme/core/colors.json';
 import { paper, varAlpha } from 'src/shared/theme/styles';
 import { defaultFont } from 'src/shared/theme/core/typography';
 import PRIMARY_COLOR from 'src/shared/theme/with-settings/primary-color.json';
@@ -19,8 +18,8 @@ import PRIMARY_COLOR from 'src/shared/theme/with-settings/primary-color.json';
 import { BaseOption } from './base-option';
 import { NavOptions } from './nav-options';
 import { Scrollbar } from '../../scrollbar';
-import FontAwesome from '../../fontawesome';
 import { FontOptions } from './font-options';
+import {FontAwesome} from '../../fontawesome';
 import { useSettingsContext } from '../context';
 import { PresetsOptions } from './presets-options';
 import { defaultSettings } from '../config-settings';
@@ -124,7 +123,7 @@ export function SettingsDrawer({
       value={settings.primaryColor}
       onClickOption={(newValue) => settings.onUpdateField('primaryColor', newValue)}
       options={[
-        { name: 'default', value: COLORS.primary.main },
+        { name: 'default', value: PRIMARY_COLOR.red.main },
         { name: 'cyan', value: PRIMARY_COLOR.cyan.main },
         { name: 'purple', value: PRIMARY_COLOR.purple.main },
         { name: 'blue', value: PRIMARY_COLOR.blue.main },
@@ -196,3 +195,4 @@ export function SettingsDrawer({
     </Drawer>
   );
 }
+

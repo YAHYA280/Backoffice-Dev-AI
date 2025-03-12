@@ -11,7 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 
 import { varHover } from 'src/shared/components/animate';
-import FontAwesome from 'src/shared/components/fontawesome';
+import {FontAwesome} from 'src/shared/components/fontawesome';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 // ----------------------------------------------------------------------
 
@@ -75,3 +75,4 @@ export function LanguagePopover({ data = [], sx, ...other }: LanguagePopoverProp
     </>
   );
 }
+

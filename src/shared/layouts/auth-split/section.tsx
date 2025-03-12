@@ -32,9 +32,9 @@ export function Section({
   method,
   layoutQuery,
   methods,
-  title = 'Manage the job',
+  title = 'Gérez le travail',
   imgUrl = `${CONFIG.site.basePath}/assets/illustrations/illustration-dashboard.webp`,
-  subtitle = 'More effectively with optimized workflows.',
+  subtitle = 'Plus d’efficacité grâce à des flux de travail optimisés.',
   ...other
 }: SectionProps) {
   const theme = useTheme();
@@ -65,7 +65,7 @@ export function Section({
       {...other}
     >
       <div>
-        <Typography variant="h3" sx={{ textAlign: 'center' }}>
+        <Typography variant="h4" sx={{ textAlign: 'center' }}>
           {title}
         </Typography>
 

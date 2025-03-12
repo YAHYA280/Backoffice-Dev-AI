@@ -1,10 +1,6 @@
-'use client';
-
 import { useState, useCallback } from 'react';
 
 import type { TableProps } from './types';
-
-// ----------------------------------------------------------------------
 
 type UseTableReturn = TableProps;
 
@@ -122,11 +118,9 @@ export function useTable(props?: UseTableProps): UseTableReturn {
     page,
     orderBy,
     rowsPerPage,
-    //
     selected,
     onSelectRow,
     onSelectAllRows,
-    //
     onSort,
     onChangePage,
     onChangeDense,
@@ -134,7 +128,6 @@ export function useTable(props?: UseTableProps): UseTableReturn {
     onChangeRowsPerPage,
     onUpdatePageDeleteRow,
     onUpdatePageDeleteRows,
-    //
     setPage,
     setDense,
     setOrder,

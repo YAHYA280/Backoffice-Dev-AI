@@ -1,4 +1,4 @@
-import { TicketsView } from "src/shared/sections/support/tickets-management/view";
+import { TicketsView } from "src/shared/sections/support/tickets-management/tickets-view";
 // ----------------------------------------------------------------------
 
 
