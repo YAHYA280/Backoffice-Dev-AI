@@ -7,7 +7,6 @@ export interface Niveau {
   matieresCount?: number;
   dateCreated?: string;
   active?: boolean;
-  // Add these new properties
   exercicesCount?: number;
   lastUpdated?: string;
 }
@@ -17,8 +16,8 @@ export interface Matiere {
   nom: string;
   description: string;
   niveauId: string;
-  couleur: string; // For the colored circle in the UI
-  icon: string; // Letter for the circle icon
+  couleur: string;
+  icon: string;
   chapitresCount: number;
   dateCreated?: string;
   lastUpdated?: string;
@@ -35,9 +34,9 @@ export interface Chapitre {
   matiereId: string;
   exercicesCount: number;
   competencesCount: number;
-  dureeEstimee: string; // Adjust the type as needed
+  dureeEstimee: string;
   active?: boolean;
-  dateCreated: string; // Adjust the type as needed
+  dateCreated: string;
   lastUpdated: string;
 }
 
@@ -48,11 +47,11 @@ export interface Exercice {
   statut: 'Publié' | 'Brouillon' | 'Inactif';
   ressources: string[];
   chapitreId: string;
-  dateCreated?: string; // Date de création au format ISO string
-  lastUpdated?: string; // Date de dernière modification au format ISO string
-  notation?: number; // Nombre de points pour l'exercice (ex: 20)
-  competencesCount?: number; // Nombre de compétences visées par l'exercice
-  active?: boolean; // Indicateur si l'exercice est actif (semblable aux autres entités)
+  dateCreated?: string;
+  lastUpdated?: string;
+  notation?: number;
+  competencesCount?: number;
+  active?: boolean;
 }
 
 export interface Pagination {
@@ -79,7 +78,7 @@ export interface FilterParams {
   titreFilter?: string;
   statutFilter?: string;
   ressourcesFilter?: string;
-  resourceType?: string; // Pour filtrer par type de ressource spécifique
+  resourceType?: string;
 
   // Filtres spécifiques pour Matière
   couleurFilter?: string;
@@ -88,7 +87,7 @@ export interface FilterParams {
   exercicesCountFilter?: string;
 
   // Autres filtres potentiels
-  [key: string]: any; // Pour permettre des filtres dynamiques supplémentaires
+  [key: string]: any;
 }
 
 // Response interfaces
@@ -117,17 +116,6 @@ export const DEFAULT_PAGINATION = {
   limit: 10,
   total: 0,
 };
-
-// export const MATIERE_COLORS = [
-//   { couleur: '#FF5722', icon: 'M' }, // Mathématiques
-//   { couleur: '#2196F3', icon: 'F' }, // Français
-//   { couleur: '#4CAF50', icon: 'S' }, // Sciences
-//   { couleur: '#9C27B0', icon: 'H' }, // Histoire-Géographie
-//   { couleur: '#FF9800', icon: 'A' }, // Arts plastiques
-//   { couleur: '#795548', icon: 'E' }, // Éducation physique
-//   { couleur: '#607D8B', icon: 'L' }, // Langues étrangères
-//   { couleur: '#F44336', icon: 'I' }, // Informatique
-// ];
 
 export const MATIERE_COLORS = [
   { couleur: '#FF5722' }, // Mathématiques

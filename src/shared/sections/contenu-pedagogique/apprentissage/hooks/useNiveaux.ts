@@ -7,9 +7,7 @@ import { DEFAULT_PAGINATION } from '../types';
 
 import type { Niveau, Pagination, ApiResponse, FilterParams } from '../types';
 
-// Mock API function for demonstration purposes
 const fetchNiveauxAPI = async (params: FilterParams): Promise<ApiResponse<Niveau[]>> => {
-  // This would be an actual API call in a real application
   const mockData: Niveau[] = [
     {
       id: '1',
@@ -283,7 +281,7 @@ function useNiveauxHook() {
   };
 
   const handleToggleActive = (niveau: Niveau, active: boolean) => {
-    // In a real application, this would call an API to update the status
+    // API to update the status
     setNiveaux((prev) => prev.map((item) => (item.id === niveau.id ? { ...item, active } : item)));
   };
 
@@ -296,12 +294,12 @@ function useNiveauxHook() {
   };
 
   const handleDeleteNiveau = async (id: string) => {
-    // In a real application, this would call an API to delete the niveau
+    //  API to delete the niveau
     setNiveaux((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleDeleteMultipleNiveaux = async (ids: string[]) => {
-    // In a real application, this would call an API to delete multiple niveaux
+    // API to delete multiple niveaux
     setNiveaux((prev) => prev.filter((item) => !ids.includes(item.id)));
   };
 

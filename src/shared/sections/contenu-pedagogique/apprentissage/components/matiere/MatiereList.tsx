@@ -268,41 +268,56 @@ export const MatiereList: React.FC<MatiereListProps> = ({
   // ---------------------------
   const onFilterDropdownChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
-    // If needed, push them to a parent or do an API call.
   };
 
   const onColumnSelectorChange = (newColumns: string[]) => {
     setVisibleColumns(newColumns);
-    // If needed, push them to a parent with onColumnChange or something similar
   };
 
-  // Which columns to show
   const visibleTableHead = TABLE_HEAD.filter(
     (col) => col.id === '' || visibleColumns.includes(col.id)
   );
 
   const notFound = !matieres.length && !loading;
 
-  // Render filter row under table header (only for visible columns)
   const renderFilterRow = () => (
-    <TableRow>
+    <TableRow
+      sx={{
+        position: 'sticky',
+        top: table.dense ? '37px' : '57px',
+        bgcolor: 'background.paper',
+        zIndex: 2,
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      }}
+    >
       <TableCell padding="checkbox" />
-      {visibleTableHead
-        .filter((col) => col.id) // skip any empty ID (the 'Actions' column)
-        .map((column) => (
+      {visibleTableHead.map((column) => {
+        if (column.id === '') {
+          return (
+            <TableCell
+              key="actions-filter-cell"
+              align="center"
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {/* Empty cell for actions column */}
+            </TableCell>
+          );
+        }
+
+        return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
-              value={columnFilters[column.id] || ''}
+              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChangeLocal}
               placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
-        ))}
+        );
+      })}
     </TableRow>
   );
 
-  // Render breadcrumbs
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
 
@@ -437,15 +452,15 @@ export const MatiereList: React.FC<MatiereListProps> = ({
               }
             />
 
-            <Scrollbar>
+            <Scrollbar sx={{ height: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
-                  overflow: 'unset',
                   minHeight: 240,
+                  maxHeight: 500,
                 }}
               >
-                <Table size={table.dense ? 'small' : 'medium'}>
+                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
@@ -485,7 +500,6 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                           onSelectRow={() => table.onSelectRow(matiere.id)}
                           onViewChapitres={() => onViewChapitres(matiere)}
                           onToggleActive={onToggleActive}
-                          // If you want conditional rendering in MatiereItem, pass visibleColumns:
                           visibleColumns={visibleColumns}
                         />
                       ))

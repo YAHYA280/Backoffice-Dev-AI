@@ -12,7 +12,7 @@ const fetchChapitresAPI = async (
   matiereId: string,
   params: FilterParams
 ): Promise<ApiResponse<Chapitre[]>> => {
-  // This would be an actual API call in a real application
+  // API call in a real application
   const mockData: Chapitre[] = [
     {
       id: '1',
@@ -300,12 +300,12 @@ function useChapitresHook(matiereId: string) {
   };
 
   const handleDeleteChapitre = async (id: string) => {
-    // In a real application, this would call an API to delete the chapitre
+    // call an API to delete the chapitre
     setChapitres((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleDeleteMultipleChapitres = async (ids: string[]) => {
-    // In a real application, this would call an API to delete multiple chapitres
+    //  API to delete multiple chapitres
     setChapitres((prev) => prev.filter((item) => !ids.includes(item.id)));
   };
 

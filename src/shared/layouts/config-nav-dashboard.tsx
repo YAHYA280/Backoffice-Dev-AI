@@ -79,8 +79,18 @@ export const navData = [
             path: paths.dashboard.users.accounts,
           },
           {
-            title: "Roles et permissions",
-            path: paths.dashboard.users.roles,
+            title: "Gestion rôles et permissions",
+            path: paths.dashboard.users.access_management,
+            children: [
+              {
+                title: "Rôles",
+                path: paths.dashboard.users.roles
+              },
+              {
+                title: "Permissions",
+                path: paths.dashboard.users.permissions
+              },
+            ],
           },
         ],
       },

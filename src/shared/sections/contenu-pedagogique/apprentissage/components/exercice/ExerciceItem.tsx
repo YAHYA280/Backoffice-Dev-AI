@@ -60,7 +60,6 @@ export const ExerciceItem = ({
   const popover = usePopover();
   const theme = useTheme();
 
-  // Find status option based on exercice.statut
   const statutOption =
     STATUT_OPTIONS.find((option) => option.value === exercice.statut) || STATUT_OPTIONS[0];
 
@@ -71,7 +70,6 @@ export const ExerciceItem = ({
     }
   };
 
-  // Check if exercice is active based on its status
   const isActive = exercice.statut !== 'Inactif';
 
   return (

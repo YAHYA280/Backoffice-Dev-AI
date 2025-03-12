@@ -29,8 +29,7 @@ const ChapitreDeleteDialog = ({ open, onClose, onSubmit, chapitre }: ChapitreDel
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // Here would be API call to delete
-      // await deleteChapitre(chapitre.id);
+      // API call to delete
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));

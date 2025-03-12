@@ -29,7 +29,7 @@ interface NiveauDeleteDialogProps {
   onClose: () => void;
   onSubmit: () => void;
   niveau: Niveau;
-  directDelete?: boolean; // Handle direct deletion from row
+  directDelete?: boolean;
 }
 
 const NiveauDeleteDialog = ({
@@ -45,7 +45,7 @@ const NiveauDeleteDialog = ({
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     try {
-      // Here would be an API call to delete
+      // API call to delete
       // await deleteNiveau(niveau.id);
 
       // Simulate API call
@@ -57,16 +57,14 @@ const NiveauDeleteDialog = ({
     } finally {
       setIsDeleting(false);
     }
-  }, [onSubmit]); // Add any other dependencies if needed, e.g. niveau.id
+  }, [onSubmit]);
 
-  // If this is a direct delete from the row action, handle it immediately
   useEffect(() => {
     if (open && directDelete) {
       handleDelete();
     }
   }, [open, directDelete, handleDelete]);
 
-  // If directDelete is true, render nothing - the operation happens in the background
   if (directDelete) {
     return null;
   }

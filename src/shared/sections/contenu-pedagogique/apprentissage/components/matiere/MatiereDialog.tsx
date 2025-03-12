@@ -34,8 +34,7 @@ export const MatiereDialog = ({
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Here would be API call to save/update data
-      // const response = await saveMatiere({ ...data, niveauId });
+      //  API call to save/update data
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));

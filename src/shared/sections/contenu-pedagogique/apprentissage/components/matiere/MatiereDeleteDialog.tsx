@@ -29,10 +29,8 @@ const MatiereDeleteDialog = ({ open, onClose, onSubmit, matiere }: MatiereDelete
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // Here would be API call to delete
-      // await deleteMatiere(matiere.id);
+      //  API call to delete
 
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       onSubmit();

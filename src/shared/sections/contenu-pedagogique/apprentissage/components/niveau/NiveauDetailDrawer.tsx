@@ -53,10 +53,8 @@ const NiveauDetailDrawer = ({
 }: NiveauDetailDrawerProps) => {
   const theme = useTheme();
 
-  // Format dates
   const formattedDate = niveau.dateCreated ? fDate(niveau.dateCreated) : 'Non définie';
 
-  // Handle toggle active
   const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (onToggleActive) {
       onToggleActive(niveau, event.target.checked);

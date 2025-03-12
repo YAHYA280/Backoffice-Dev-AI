@@ -1,6 +1,8 @@
 import { CONFIG } from 'src/config-global';
 import { DashboardLayout } from 'src/shared/layouts/dashboard';
 
+import { Snackbar } from 'src/shared/components/snackbar';
+
 import { AuthGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
@@ -11,12 +13,20 @@ type Props = {
 
 export default function Layout({ children }: Props) {
   if (CONFIG.auth.skip) {
-    return <DashboardLayout>{children}</DashboardLayout>;
+    return (
+      <>
+        <Snackbar />
+        <DashboardLayout>{children}</DashboardLayout>
+      </>
+    );
   }
 
   return (
-    <AuthGuard>
-      <DashboardLayout>{children}</DashboardLayout>
-    </AuthGuard>
+    <>
+      <Snackbar />
+      <AuthGuard>
+        <DashboardLayout>{children}</DashboardLayout>
+      </AuthGuard>
+    </>
   );
 }

@@ -22,7 +22,6 @@ import {
 
 import { DIFFICULTE_OPTIONS } from '../../types';
 
-// Form validation schema using Zod
 const schema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
@@ -39,7 +38,6 @@ const schema = z.object({
   difficulte: z.string().min(1, 'La difficulté est requise'),
 });
 
-// Infer the type from the schema
 type ChapitreFormData = z.infer<typeof schema>;
 
 interface ChapitreFormProps {

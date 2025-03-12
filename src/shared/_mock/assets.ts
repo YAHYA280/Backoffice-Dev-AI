@@ -299,30 +299,12 @@ export const _countryNames = [
 // ----------------------------------------------------------------------
 
 export const _roles = [
-  `CEO`,
-  `CTO`,
-  `Project Coordinator`,
-  `Team Leader`,
-  `Software Developer`,
-  `Marketing Strategist`,
-  `Data Analyst`,
-  `Product Owner`,
-  `Graphic Designer`,
-  `Operations Manager`,
-  `Customer Support Specialist`,
-  `Sales Manager`,
-  `HR Recruiter`,
-  `Business Consultant`,
-  `Financial Planner`,
-  `Network Engineer`,
-  `Content Creator`,
-  `Quality Assurance Tester`,
-  `Public Relations Officer`,
-  `IT Administrator`,
-  `Compliance Officer`,
-  `Event Planner`,
-  `Legal Counsel`,
-  `Training Coordinator`,
+  `Admin`,
+  `Super-admin`,
+  `Modérateur`,
+  `Agent de support`,
+  `Parent`,
+  `Enfant`
 ];
 
 // ----------------------------------------------------------------------

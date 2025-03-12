@@ -7,12 +7,10 @@ import { DEFAULT_PAGINATION } from '../types';
 
 import type { Exercice, Pagination, ApiResponse, FilterParams } from '../types';
 
-// Mock API function for demonstration purposes
 const fetchExercicesAPI = async (
   chapitreId: string,
   params: FilterParams
 ): Promise<ApiResponse<Exercice[]>> => {
-  // This would be an actual API call in a real application
   const mockData: Exercice[] = [
     {
       id: '1',
@@ -259,12 +257,12 @@ function useExercicesHook(chapitreId: string) {
   };
 
   const handleDeleteExercice = async (id: string) => {
-    // In a real application, this would call an API to delete the exercice
+    // API to delete the exercice
     setExercices((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleDeleteMultipleExercices = async (ids: string[]) => {
-    // In a real application, this would call an API to delete multiple exercices
+    //  API to delete multiple exercices
     setExercices((prev) => prev.filter((item) => !ids.includes(item.id)));
   };
 

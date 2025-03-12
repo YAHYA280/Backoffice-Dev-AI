@@ -27,7 +27,6 @@ export const NiveauDialog = ({ open, onClose, onSubmit, niveau }: NiveauDialogPr
     setIsSubmitting(true);
     try {
       // Here would be API call to save/update data
-      // const response = await saveNiveau(data);
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));

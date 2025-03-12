@@ -63,7 +63,6 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
     }
   };
 
-  // Format date using the fDate function
   const formattedDate = niveau.dateCreated ? fDate(niveau.dateCreated) : 'Non définie';
 
   return (
@@ -229,7 +228,7 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDeleteClick(niveau); // Call directly instead of opening the internal confirm dialog
+                  onDeleteClick(niveau);
                 }}
                 sx={{
                   transition: (theme) => theme.transitions.create(['background-color']),

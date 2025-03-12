@@ -62,7 +62,9 @@ export const paths = {
     users: {
       root: `${ROOTS.DASHBOARD}/users`,
       accounts: `${ROOTS.DASHBOARD}/users/accounts`,
-      roles: `${ROOTS.DASHBOARD}/users/roles`,
+      access_management: `${ROOTS.DASHBOARD}/users/access-management`,
+      roles: `${ROOTS.DASHBOARD}/users/access-management/roles`,
+      permissions: `${ROOTS.DASHBOARD}/users/access-management/permissions`,
     },
     user: {
       root: `${ROOTS.DASHBOARD}/user`,

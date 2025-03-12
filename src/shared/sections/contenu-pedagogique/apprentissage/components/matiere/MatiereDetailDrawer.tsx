@@ -53,11 +53,9 @@ const MatiereDetailDrawer = ({
 }: MatiereDetailDrawerProps) => {
   const theme = useTheme();
 
-  // Format dates
   const formattedDate = matiere.dateCreated ? fDate(matiere.dateCreated) : 'Non définie';
   const formattedUpdateDate = matiere.lastUpdated ? fDate(matiere.lastUpdated) : 'Non modifiée';
 
-  // Handle toggle active
   const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (onToggleActive) {
       onToggleActive(matiere, event.target.checked);

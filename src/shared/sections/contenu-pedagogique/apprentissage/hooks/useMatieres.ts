@@ -7,12 +7,10 @@ import { DEFAULT_PAGINATION } from '../types';
 
 import type { Matiere, Pagination, ApiResponse, FilterParams } from '../types';
 
-// Mock API function for demonstration purposes
 const fetchMatieresAPI = async (
   niveauId: string,
   params: FilterParams
 ): Promise<ApiResponse<Matiere[]>> => {
-  // This would be an actual API call in a real application
   const mockData: Matiere[] = [
     {
       id: '1',
@@ -248,12 +246,11 @@ function useMatieresHook(niveauId: string) {
   };
 
   const handleToggleActive = (matiere: Matiere, active: boolean) => {
-    // In a real application, this would call an API to update the status
+    //  API to update the status
     setMatieres((prev) =>
       prev.map((item) => (item.id === matiere.id ? { ...item, active } : item))
     );
 
-    // If the selected matiere is the one being toggled, update its state too
     if (selectedMatiere && selectedMatiere.id === matiere.id) {
       setSelectedMatiere({
         ...selectedMatiere,
@@ -271,20 +268,18 @@ function useMatieresHook(niveauId: string) {
   };
 
   const handleDeleteMatiere = async (id: string) => {
-    // In a real application, this would call an API to delete the matiere
+    // API to delete the matiere
     setMatieres((prev) => prev.filter((item) => item.id !== id));
 
-    // If the deleted matiere is currently selected, clear the selection
     if (selectedMatiere && selectedMatiere.id === id) {
       setSelectedMatiere(null);
     }
   };
 
   const handleDeleteMultipleMatieres = async (ids: string[]) => {
-    // In a real application, this would call an API to delete multiple matieres
+    //  API to delete multiple matieres
     setMatieres((prev) => prev.filter((item) => !ids.includes(item.id)));
 
-    // If the deleted matiere is currently selected, clear the selection
     if (selectedMatiere && ids.includes(selectedMatiere.id)) {
       setSelectedMatiere(null);
     }

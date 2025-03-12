@@ -127,7 +127,11 @@ export function RHFCustomUpload({ name, multiple, helperText, ...other }: Props)
 
         return (
           <div>
-            {field.value ? <CustomUpload {...uploadProps} value={field.value} {...other} /> : <></>}
+            {field.value ? (
+              <CustomUpload {...uploadProps} value={field.value} {...other} />
+            ) : (
+              <div className="placeholder">Please upload a file</div>
+            )}
             {!!error && (
               <FormHelperText error sx={{ px: 2, textAlign: 'center' }}>
                 {error.message}

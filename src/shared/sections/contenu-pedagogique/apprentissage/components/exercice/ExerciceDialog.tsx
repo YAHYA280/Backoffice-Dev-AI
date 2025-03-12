@@ -27,8 +27,7 @@ const ExerciceDialog = ({ open, onClose, onSubmit, exercice, chapitreId }: Exerc
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Here would be API call to save/update data
-      // const response = await saveExercice({ ...data, chapitreId });
+      // API call to save/update data
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));

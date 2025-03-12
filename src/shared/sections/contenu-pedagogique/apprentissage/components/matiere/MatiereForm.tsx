@@ -25,7 +25,6 @@ import {
 
 import { MATIERE_COLORS } from '../../types';
 
-// Extended form validation schema using Zod
 const schema = z.object({
   nom: z
     .string()
@@ -81,23 +80,17 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
     defaultValues: initialValues,
   });
 
-  // Watch form values
   const selectedColor = watch('couleur');
   const active = watch('active');
   const description = watch('description', '');
 
-  // Color and icon selection
   const handleColorSelect = (color: string) => {
     setValue('couleur', color, { shouldValidate: true });
-    // setValue('icon', icon, { shouldValidate: true });
   };
 
-  // Handle form submission
   const handleFormSubmit = (data: MatiereFormData) => {
-    // Add niveauId to the submission if needed
     onSubmit({
       ...data,
-      // You might want to handle niveauId differently based on your backend requirements
     });
   };
 

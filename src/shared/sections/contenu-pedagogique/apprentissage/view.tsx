@@ -229,12 +229,10 @@ export const ApprentissageView: React.FC = () => {
 
   const handleToggleActive = async (niveau: any, active: boolean) => {
     try {
-      // If you have a specific API function to toggle the active status, call it here
-      // For example: await api.updateNiveauStatus(niveau.id, active);
+      //  API function to toggle the active status, call it here
 
       console.log(`Toggling active status for niveau ${niveau.nom} to ${active}`);
 
-      // Optimistic UI update - update the selected niveau if it's the one being toggled
       if (selectedNiveau && selectedNiveau.id === niveau.id) {
         setSelectedNiveau({
           ...selectedNiveau,
@@ -252,7 +250,7 @@ export const ApprentissageView: React.FC = () => {
     }
   };
   const handleDeleteNiveauRows = async (selectedRows: string[]) => {
-    // Here you would implement the logic to delete multiple rows
+    //  implement the logic to delete multiple rows
     console.log('Deleting niveaux rows:', selectedRows);
 
     // Simulate API call
@@ -302,7 +300,7 @@ export const ApprentissageView: React.FC = () => {
   };
 
   const handleDeleteMatiereRows = async (selectedRows: string[]) => {
-    // Here you would implement the logic to delete multiple matieres
+    //  implement the logic to delete multiple matieres
     console.log('Deleting matieres rows:', selectedRows);
 
     // Simulate API call
@@ -315,12 +313,10 @@ export const ApprentissageView: React.FC = () => {
   // handle Active and desactive for matier
   const handleToggleActiveMatiere = async (matiere: any, active: boolean) => {
     try {
-      // If you have a specific API function to toggle the active status, call it here
-      // For example: await api.updateMatiereStatus(matiere.id, active);
+      //  API function to toggle the active status, here
 
       console.log(`Toggling active status for matiere ${matiere.nom} to ${active}`);
 
-      // Optimistic UI update - update the selected matiere if it's the one being toggled
       if (selectedMatiere && selectedMatiere.id === matiere.id) {
         setSelectedMatiere({
           ...selectedMatiere,
@@ -378,7 +374,7 @@ export const ApprentissageView: React.FC = () => {
   };
 
   const handleDeleteChapitreRows = async (selectedRows: string[]) => {
-    // Here you would implement the logic to delete multiple chapitres
+    // implement the logic to delete multiple chapitres
     console.log('Deleting chapitres rows:', selectedRows);
 
     // Simulate API call
@@ -392,12 +388,10 @@ export const ApprentissageView: React.FC = () => {
 
   const handleToggleActiveChapitre = async (chapitre: any, active: boolean) => {
     try {
-      // If you have a specific API function to toggle the active status, call it here
-      // For example: await api.updateChapitreStatus(chapitre.id, active);
+      //  API function to toggle the active status,  here
 
       console.log(`Toggling active status for chapitre ${chapitre.nom} to ${active}`);
 
-      // Optimistic UI update - update the selected chapitre if it's the one being toggled
       if (selectedChapitre && selectedChapitre.id === chapitre.id) {
         setSelectedChapitre({
           ...selectedChapitre,
@@ -455,7 +449,7 @@ export const ApprentissageView: React.FC = () => {
   };
 
   const handleDeleteExerciceRows = async (selectedRows: string[]) => {
-    // Here you would implement the logic to delete multiple exercices
+    // implement the logic to delete multiple exercices
     console.log('Deleting exercices rows:', selectedRows);
 
     // Simulate API call
@@ -469,17 +463,14 @@ export const ApprentissageView: React.FC = () => {
 
   const handleToggleActiveExercice = async (exercice: any, active: boolean) => {
     try {
-      // If you have a specific API function to toggle the active status, call it here
-      // For example: await api.updateExerciceStatus(exercice.id, active);
+      // API function to toggle the active status, here
 
       console.log(`Toggling active status for exercice ${exercice.titre} to ${active}`);
 
-      // Optimistic UI update - update the selected exercice if it's the one being toggled
       if (selectedExercice && selectedExercice.id === exercice.id) {
         setSelectedExercice({
           ...selectedExercice,
           // For exercices, the status should be either "Publié" (when active) or "Inactif" (when inactive)
-          // assuming "Publié" is the active state based on your component logic
           statut: active ? 'Publié' : 'Inactif',
         });
       }
@@ -495,7 +486,6 @@ export const ApprentissageView: React.FC = () => {
   };
 
   // ---- Render content function ----
-  // renderBreadcrumbs function removed as it's now handled by each list component
 
   const renderContent = () => {
     switch (currentView) {
@@ -523,7 +513,6 @@ export const ApprentissageView: React.FC = () => {
               onViewMatieres={navigateToMatieres}
               onAddClick={handleAddClick}
               onToggleActive={handleToggleActive}
-              // No breadcrumb props needed for NiveauList as it builds its own simple breadcrumb
             />
 
             {/* Niveau dialogs and drawers */}
@@ -820,10 +809,5 @@ export const ApprentissageView: React.FC = () => {
     }
   };
 
-  return (
-    <Container maxWidth={false}>
-      {/* Breadcrumbs are now rendered inside each list component, so removed from here */}
-      {renderContent()}
-    </Container>
-  );
+  return <Container maxWidth={false}>{renderContent()}</Container>;
 };

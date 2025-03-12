@@ -6,7 +6,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import FormHelperText from '@mui/material/FormHelperText';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -69,13 +68,13 @@ export function CustomDateRangePicker({
               {startDate ? (
                 <DateCalendar value={startDate} onChange={onChangeStartDate} />
               ) : (
-                <></>
+                <div className="placeholder">Please select a start date</div>
               )}
 
               {endDate ? (
                 <DateCalendar value={endDate} onChange={onChangeEndDate} />
               ) : (
-                <></>
+                <div className="placeholder">Please select an end date</div>
               )}
             </>
           )}

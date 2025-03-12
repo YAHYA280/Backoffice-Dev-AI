@@ -55,7 +55,6 @@ import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Exercice, Pagination, FilterParams } from '../../types';
-/** 1) Import FilterDropdown & ColumnSelector plus their types */
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
 /** 2) Base table head */
@@ -189,7 +188,6 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
   );
 };
 
-/** 6) Breadcrumb props & main props */
 interface BreadcrumbProps {
   currentNiveauId?: string | null;
   currentNiveauName?: string | null;
@@ -209,7 +207,6 @@ interface ExerciceListProps {
   filters: FilterParams;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
-  /** If you want the parent to have the combined filter results, use onFilterChange: */
   onFilterChange?: (filters: ActiveFilter[]) => void;
   onColumnChange?: (columns: string[]) => void;
 
@@ -223,7 +220,6 @@ interface ExerciceListProps {
   breadcrumbs?: BreadcrumbProps;
 }
 
-/** 7) Final integrated component */
 export const ExerciceList: React.FC<ExerciceListProps> = ({
   exercices,
   loading,
@@ -244,7 +240,6 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
   const confirm = useBoolean();
   const theme = useTheme();
 
-  /** 7b) State for row-based text filters (per column). */
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     titre: '',
     description: '',
@@ -252,18 +247,15 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
     ressources: '',
   });
 
-  /** 7c) State for FilterDropdown & ColumnSelector */
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     COLUMN_OPTIONS.map((col) => col.id)
   );
 
-  /** 7d) Filter out columns not in visibleColumns */
   const visibleTableHead = TABLE_HEAD.filter(
     (col) => col.id === '' || visibleColumns.includes(col.id)
   );
 
-  /** If you want the parent to have the FilterDropdown changes: */
   useEffect(() => {
     onFilterChange?.(activeFilters);
   }, [activeFilters, onFilterChange]);
@@ -271,7 +263,7 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
   /** 7e) Table logic */
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1, // Convert 1-based to 0-based for MUI
+    defaultCurrentPage: pagination.page - 1,
     defaultOrderBy: 'titre',
   });
 
@@ -287,17 +279,13 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
     confirm.onFalse();
   };
 
-  /** 7g) Row-based column filters */
   const handleColumnFilterChange = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
       [columnId]: value,
     }));
-    // If the parent wants each column filter's changes, call onSearchChange or something similar
-    // For now, we show how to store it locally
   };
 
-  /** 7h) FilterDropdown & ColumnSelector callbacks */
   const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
   };
@@ -307,30 +295,46 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
     onColumnChange?.(columns);
   };
 
-  /** 7i) "No data" condition */
   const notFound = !exercices.length && !loading;
 
-  /** 8) The row of column filters below the table header. */
   const renderFilterRow = () => (
-    <TableRow>
+    <TableRow
+      sx={{
+        position: 'sticky',
+        top: table.dense ? '37px' : '57px',
+        bgcolor: 'background.paper',
+        zIndex: 2,
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      }}
+    >
       <TableCell padding="checkbox" />
-      {/** Only render filters for visible columns (except the last 'Actions' column) */}
-      {visibleTableHead
-        .filter((col) => col.id) // skip empty ID for "Actions"
-        .map((column) => (
+      {visibleTableHead.map((column) => {
+        if (column.id === '') {
+          return (
+            <TableCell
+              key="actions-filter-cell"
+              align="center"
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {/* Empty cell for actions column */}
+            </TableCell>
+          );
+        }
+
+        return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
-              value={columnFilters[column.id] || ''}
+              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChange}
               placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
-        ))}
+        );
+      })}
     </TableRow>
   );
 
-  /** 9) Render breadcrumbs if needed */
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
 
@@ -495,15 +499,15 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
               }
             />
 
-            <Scrollbar>
+            <Scrollbar sx={{ height: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
-                  overflow: 'unset',
                   minHeight: 240,
+                  maxHeight: 500,
                 }}
               >
-                <Table size={table.dense ? 'small' : 'medium'}>
+                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
                   {/* Dynamic table head based on visibleColumns */}
                   <TableHeadCustom
                     order={table.order}

@@ -55,10 +55,8 @@ import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Chapitre, Pagination, FilterParams } from '../../types';
-/** 1) Import and define FilterDropdown / ColumnSelector + their props */
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
-/** 2) Define your base table head */
 const TABLE_HEAD = [
   { id: 'ordre', label: 'Ordre', align: 'center', width: 80 },
   { id: 'nom', label: 'Chapitre', align: 'left' },
@@ -68,7 +66,6 @@ const TABLE_HEAD = [
   { id: '', label: 'Actions', align: 'right', width: 100 },
 ];
 
-/** 3) Column Options for ColumnSelector */
 const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'ordre', label: 'Ordre' },
   { id: 'nom', label: 'Chapitre', required: true },
@@ -77,7 +74,6 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'exercicesCount', label: 'Exercices' },
 ];
 
-/** 4) Filter Options for FilterDropdown */
 const FILTER_OPTIONS: FilterOption[] = [
   {
     id: 'ordre',
@@ -141,7 +137,6 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
-/** 5) ColumnFilter for row-based searching under each column */
 interface ColumnFilterProps {
   columnId: string;
   value: string;
@@ -195,7 +190,6 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
   );
 };
 
-/** 6) Breadcrumb props & main props */
 interface BreadcrumbProps {
   currentNiveauId?: string | null;
   currentNiveauName?: string | null;
@@ -224,7 +218,6 @@ interface ChapitreListProps {
   breadcrumbs?: BreadcrumbProps;
 }
 
-/** 7) Final integrated ChapitreList */
 export const ChapitreList = ({
   chapitres,
   loading,
@@ -246,7 +239,6 @@ export const ChapitreList = ({
   const confirm = useBoolean();
   const theme = useTheme();
 
-  /** State for the row-based text filters (per column). */
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     ordre: '',
     nom: '',
@@ -255,30 +247,21 @@ export const ChapitreList = ({
     exercicesCount: '',
   });
 
-  /** 7a) State for FilterDropdown & ColumnSelector. */
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     COLUMN_OPTIONS.map((col) => col.id)
   );
 
-  /** 7b) We'll filter out columns that are not in visibleColumns. */
   const visibleTableHead = TABLE_HEAD.filter(
     (col) => col.id === '' || visibleColumns.includes(col.id)
   );
 
-  /** 7c) If you want to notify parent of the filter changes: */
-  useEffect(() => {
-    // This is only for the FilterDropdown's active filters.
-    // If you also want to pass the column-based search filters up, you'd do that too.
-    // But usually you'll handle that in your own API call or effect.
-    // For now, we just pass them to onSearchChange or onColumnFilterChange as you already do.
-  }, [activeFilters]);
+  useEffect(() => {}, [activeFilters]);
 
-  /** 7d) Table logic */
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1, // Convert to 0-based for MUI
-    defaultOrderBy: 'ordre', // Default sorting field
+    defaultCurrentPage: pagination.page - 1,
+    defaultOrderBy: 'ordre',
   });
 
   const handleOpenConfirm = () => {
@@ -293,7 +276,6 @@ export const ChapitreList = ({
     confirm.onFalse();
   };
 
-  /** 7f) Row-based column filter updates */
   const handleColumnFilterChange = (columnId: string, value: string) => {
     setColumnFilters((prev) => ({
       ...prev,
@@ -302,40 +284,54 @@ export const ChapitreList = ({
     onColumnFilterChange?.(columnId, value);
   };
 
-  /** 7g) FilterDropdown & ColumnSelector callbacks */
   const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
-    // If you need to pass these to a parent, do so (onFilterChange).
-    // Or you can do that here if you want to combine them with row-based filters.
   };
 
   const handleColumnSelectorChange = (columns: string[]) => {
     setVisibleColumns(columns);
   };
 
-  /** 7h) "No data" condition */
   const notFound = !chapitres.length && !loading;
 
-  /** 8) Render the row of column filters below the table header. */
   const renderFilterRow = () => (
-    <TableRow>
+    <TableRow
+      sx={{
+        position: 'sticky',
+        top: table.dense ? '37px' : '57px',
+        bgcolor: 'background.paper',
+        zIndex: 2,
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      }}
+    >
       <TableCell padding="checkbox" />
-      {visibleTableHead
-        .filter((col) => col.id) // Skip the empty Actions column
-        .map((column) => (
+      {visibleTableHead.map((column) => {
+        if (column.id === '') {
+          return (
+            <TableCell
+              key="actions-filter-cell"
+              align="center"
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {/* Empty cell for actions column */}
+            </TableCell>
+          );
+        }
+
+        return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
-              value={columnFilters[column.id] || ''}
+              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChange}
               placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
-        ))}
+        );
+      })}
     </TableRow>
   );
 
-  /** 9) Render breadcrumbs if needed */
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
 
@@ -484,16 +480,15 @@ export const ChapitreList = ({
               }
             />
 
-            <Scrollbar>
+            <Scrollbar sx={{ height: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
-                  overflow: 'unset',
                   minHeight: 240,
+                  maxHeight: 500,
                 }}
               >
-                <Table size={table.dense ? 'small' : 'medium'}>
-                  {/* Dynamic Table Head based on visibleColumns */}
+                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
@@ -516,7 +511,6 @@ export const ChapitreList = ({
                   />
 
                   <TableBody>
-                    {/* The row-based search bar under each column */}
                     {renderFilterRow()}
 
                     {loading ? (

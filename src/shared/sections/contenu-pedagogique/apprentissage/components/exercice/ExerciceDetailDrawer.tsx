@@ -47,11 +47,9 @@ interface ExerciceDetailDrawerProps {
 const ExerciceDetailDrawer = ({ open, onClose, exercice }: ExerciceDetailDrawerProps) => {
   const theme = useTheme();
 
-  // Find status option based on exercice.statut
   const statutOption =
     STATUT_OPTIONS.find((option) => option.value === exercice.statut) || STATUT_OPTIONS[0];
 
-  // Function to get icon for resource type
   const getResourceIcon = (resource: string) => {
     switch (resource.toLowerCase()) {
       case 'pdf':

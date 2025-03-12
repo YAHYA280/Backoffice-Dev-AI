@@ -180,4 +180,7 @@ export const _listUsers = [...Array(20)].map((_, index) => ({
   lastLogin: fDate(fSub({ days: index * 5 }), formatStr.split.date),
   birthDate: fDate(fSub({ days: index * 50, years: 24 }), formatStr.split.date),
   dureRestante: Math.floor(Math.random() * 7) + 1,
+  motif : "Violation des conditions d'utilisation",
+  duree : 14,
+  reason : "Activité suspecte détectée sur le compte",
 }));

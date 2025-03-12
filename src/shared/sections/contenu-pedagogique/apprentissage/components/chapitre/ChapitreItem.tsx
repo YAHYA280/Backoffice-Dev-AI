@@ -54,7 +54,6 @@ const ChapitreItem = ({
 }: ChapitreItemProps) => {
   const popover = usePopover();
 
-  // Find difficulty option based on chapitre.difficulte
   const difficulteOption =
     DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulte) ||
     DIFFICULTE_OPTIONS[0];

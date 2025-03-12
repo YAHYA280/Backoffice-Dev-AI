@@ -38,28 +38,14 @@ import {
 } from 'src/shared/components/table';
 
 import { NiveauItem } from './NiveauItem';
-import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
-
-// -------------------------------------------
-// 1) Import the FilterDropdown & ColumnSelector
-//    plus the needed types (ColumnOption, FilterOption, ActiveFilter)
-// -------------------------------------------
-
 import { FilterDropdown } from '../filters/FilterDropdown';
 import { ColumnSelector } from '../filters/ColumnSelector';
+import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
+import type { Niveau, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
-// -------------------------------------------
-// 5) Component Props
-// -------------------------------------------
-import type { Niveau, Pagination, FilterParams } from '../../types';
-
-// -------------------------------------------
-// 2) Define the same TABLE_HEAD but do NOT export it directly.
-//    We'll derive the visible columns in the component.
-// -------------------------------------------
 const TABLE_HEAD = [
   { id: 'nom', label: 'Nom', align: 'left' },
   { id: 'description', label: 'Description', align: 'left' },
@@ -116,11 +102,6 @@ const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterPr
     }}
   />
 );
-
-// -------------------------------------------
-// 4) Define your filter options & column options
-//    for the FilterDropdown & ColumnSelector
-// -------------------------------------------
 
 const FILTER_OPTIONS: FilterOption[] = [
   {
@@ -179,7 +160,6 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'description', label: 'Description' },
   { id: 'code', label: 'Code' },
   { id: 'dateCreated', label: 'Date de création' },
-  // You can exclude the actions column since it's not data-based
 ];
 
 interface NiveauListProps {
@@ -191,10 +171,6 @@ interface NiveauListProps {
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
-
-  // OPTIONAL: If you want to capture advanced filtering from FilterDropdown
-  // you can add onFilterChange?: (filters: ActiveFilter[]) => void;
-  // and handle it.
 
   onEditClick: (niveau: Niveau) => void;
   onDeleteClick: (niveau: Niveau) => void;
@@ -239,20 +215,14 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   // -------------------------------------------
   // 7) State for FilterDropdown & ColumnSelector
   // -------------------------------------------
-  // Active filters from the FilterDropdown
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  // Visible columns from the ColumnSelector
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     COLUMN_OPTIONS.map((col) => col.id)
   );
 
-  // If you want to send these activeFilters up to a parent, you'd do so here.
-  // e.g. useEffect(() => { onFilterChange?.(activeFilters); }, [activeFilters]);
-
-  // FilterDropdown callback
   const handleFilterChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
-    // If you need to push these to a parent or do an API call, do it here.
+    // API call, do it here.
   };
 
   // ColumnSelector callback
@@ -265,8 +235,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   // -------------------------------------------
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1, // Convert to 0-based for MUI
-    defaultOrderBy: 'nom', // Default sorting field
+    defaultCurrentPage: pagination.page - 1,
+    defaultOrderBy: 'nom',
   });
 
   const handleOpenConfirm = () => {
@@ -306,14 +276,33 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 
   // -------------------------------------------
   // 13) Render row for filter inputs (below header)
-  //     We only render these columns that are visible.
   // -------------------------------------------
   const renderFilterRow = () => (
-    <TableRow>
+    <TableRow
+      sx={{
+        position: 'sticky',
+        top: table.dense ? '37px' : '57px',
+        bgcolor: 'background.paper',
+        zIndex: 2,
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      }}
+    >
       <TableCell padding="checkbox" />
-      {visibleTableHead
-        .filter((col) => col.id) // skip the empty 'Actions' column
-        .map((column) => (
+      {visibleTableHead.map((column) => {
+        if (column.id === '') {
+          return (
+            <TableCell
+              key="actions-filter-cell"
+              align="center"
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {/* Empty cell for actions column */}
+            </TableCell>
+          );
+        }
+
+        // Regular filter cells for data columns
+        return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
@@ -322,7 +311,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
-        ))}
+        );
+      })}
     </TableRow>
   );
 
@@ -382,8 +372,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           }}
         >
           {/* 
-            Advanced Filter Button + FilterDropdown + ColumnSelector 
-            You can arrange them in a row or however you like 
+           FilterDropdown + ColumnSelector 
           */}
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
             <Stack direction="row" alignContent="end" spacing={2}>
@@ -395,7 +384,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                 icon={<FontAwesomeIcon icon={faFilter} />}
               />
 
-              {/* ColumnSelector from your first snippet */}
               <ColumnSelector
                 columns={COLUMN_OPTIONS}
                 visibleColumns={visibleColumns}
@@ -454,10 +442,15 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             />
 
             {/* TABLE + SCROLLBAR */}
-            <Scrollbar>
-              <TableContainer sx={{ position: 'relative', overflow: 'unset', minHeight: 240 }}>
-                <Table size={table.dense ? 'small' : 'medium'}>
-                  {/* Dynamic Table Head based on visibleColumns */}
+            <Scrollbar sx={{ height: 550 }}>
+              <TableContainer
+                sx={{
+                  position: 'relative',
+                  minHeight: 240,
+                  maxHeight: 500,
+                }}
+              >
+                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
                   <TableHeadCustom
                     order={table.order}
                     orderBy={table.orderBy}
@@ -475,12 +468,12 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                       '& .MuiTableCell-head': {
                         bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                         fontWeight: 'fontWeightBold',
+                        zIndex: 3,
                       },
                     }}
                   />
 
                   <TableBody>
-                    {/* Add the filter row below the header */}
                     {renderFilterRow()}
 
                     {loading ? (
@@ -497,7 +490,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                           onSelectRow={() => table.onSelectRow(niveau.id)}
                           onViewMatieres={() => onViewMatieres(niveau)}
                           onToggleActive={onToggleActive}
-                          // Pass visibleColumns if you want conditional cell rendering in NiveauItem
                           visibleColumns={visibleColumns}
                         />
                       ))
@@ -529,7 +521,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             rowsPerPage={table.rowsPerPage}
             onPageChange={(e, page) => {
               table.onChangePage(e, page);
-              onPageChange(page + 1); // Convert 0-based back to 1-based
+              onPageChange(page + 1);
             }}
             onRowsPerPageChange={(e) => {
               onLimitChange(parseInt(e.target.value, 10));

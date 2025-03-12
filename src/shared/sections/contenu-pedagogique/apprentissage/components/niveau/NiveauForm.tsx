@@ -6,14 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Box, Grid, Stack, Button, TextField, CircularProgress } from '@mui/material';
 
-// Form validation schema using Zod
 const schema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
   code: z.string().min(1, 'Le code est requis'),
 });
 
-// Infer the type from the schema
 type NiveauFormData = z.infer<typeof schema>;
 
 interface NiveauFormProps {

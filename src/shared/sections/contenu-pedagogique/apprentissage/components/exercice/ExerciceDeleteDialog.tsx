@@ -29,8 +29,7 @@ const ExerciceDeleteDialog = ({ open, onClose, onSubmit, exercice }: ExerciceDel
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // Here would be API call to delete
-      // await deleteExercice(exercice.id);
+      //  API call to delete
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 800));

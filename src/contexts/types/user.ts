@@ -20,6 +20,9 @@ export type IUserItem = {
     createdAt: string | null;
     lastLogin: string | null;
     birthDate: string | null;
+    motif : string;
+    duree : number;
+    reason : string;
 };
 
 
