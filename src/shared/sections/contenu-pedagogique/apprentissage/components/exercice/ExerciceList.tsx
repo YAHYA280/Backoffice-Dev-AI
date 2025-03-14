@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -52,6 +52,7 @@ import { ExerciceItem } from './ExerciceItem';
 import { ColumnSelector } from '../filters/ColumnSelector';
 import { FilterDropdown } from '../filters/FilterDropdown';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
+import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Exercice, Pagination, FilterParams } from '../../types';
@@ -63,7 +64,7 @@ const TABLE_HEAD = [
   { id: 'description', label: 'Description', align: 'left' },
   { id: 'statut', label: 'Statut', align: 'left' },
   { id: 'ressources', label: 'Ressources', align: 'left' },
-  { id: '', label: 'Actions', align: 'right' },
+  { id: '', label: 'Actions', align: 'center' },
 ];
 
 /** 3) Column Options for ColumnSelector */
@@ -139,27 +140,51 @@ interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
-  placeholder?: string;
 }
 
-const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => {
-  const theme = useTheme();
+const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSearchIconClick = () => {
+    setIsExpanded(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
 
   return (
     <TextField
       size="small"
-      fullWidth
+      inputRef={inputRef}
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
-      placeholder={placeholder || `Rechercher par ${columnId}`}
+      onFocus={() => setIsExpanded(true)}
+      onBlur={() => setIsExpanded(false)}
+      sx={{
+        width: isExpanded ? 200 : 50,
+        transition: 'width 0.3s ease-in-out',
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          '& fieldset': {
+            border: 'none !important',
+          },
+          '&:hover fieldset': {
+            border: 'none !important',
+          },
+        },
+      }}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
             <FontAwesomeIcon
               icon={faSearch}
+              onClick={handleSearchIconClick}
               style={{
-                color: theme.palette.text.disabled,
+                color: 'text.disabled',
                 fontSize: '0.875rem',
+                cursor: 'pointer',
               }}
             />
           </InputAdornment>
@@ -171,18 +196,6 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, 
             </IconButton>
           </InputAdornment>
         ) : null,
-      }}
-      sx={{
-        '& .MuiOutlinedInput-root': {
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          '& fieldset': {
-            borderWidth: '1px !important',
-          },
-          '&:hover fieldset': {
-            borderColor: 'primary.main',
-          },
-        },
       }}
     />
   );
@@ -239,6 +252,9 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
+  // State for exporting data
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     titre: '',
@@ -289,7 +305,31 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
   const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
   };
+  // Export handler
+  const handleExport = (format: string, options?: any) => {
+    console.log(`Exporting data in ${format} format with options:`, options);
 
+    setIsExporting(true);
+    setExportProgress(0);
+
+    // Simulate export progress
+    const interval = setInterval(() => {
+      setExportProgress((prevProgress) => {
+        const newProgress = prevProgress + Math.random() * 15;
+
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsExporting(false);
+            // Show success notification if needed
+          }, 500);
+          return 100;
+        }
+
+        return newProgress;
+      });
+    }, 300);
+  };
   const handleColumnSelectorChange = (columns: string[]) => {
     setVisibleColumns(columns);
     onColumnChange?.(columns);
@@ -305,6 +345,10 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
         bgcolor: 'background.paper',
         zIndex: 2,
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+        '& .MuiTableCell-root': {
+          padding: '2px 4px',
+          lineHeight: 1,
+        },
       }}
     >
       <TableCell padding="checkbox" />
@@ -321,13 +365,13 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
           );
         }
 
+        // Regular filter cells for data columns
         return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
               value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChange}
-              placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
         );
@@ -433,7 +477,6 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
         >
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
             <Stack direction="row" alignContent="end" spacing={2}>
-              {/* FilterDropdown: multi-field filters */}
               <FilterDropdown
                 filterOptions={FILTER_OPTIONS}
                 activeFilters={activeFilters}
@@ -442,12 +485,18 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
                 icon={<FontAwesomeIcon icon={faFilter} />}
               />
 
-              {/* ColumnSelector: dynamic columns */}
               <ColumnSelector
                 columns={COLUMN_OPTIONS}
                 visibleColumns={visibleColumns}
                 onColumnChange={handleColumnSelectorChange}
                 buttonText="Colonnes"
+              />
+              <AdvancedExportDropdown
+                onExport={handleExport}
+                isExporting={isExporting}
+                exportProgress={exportProgress}
+                withExportOptions
+                title="Exporter les données"
               />
             </Stack>
           </Box>

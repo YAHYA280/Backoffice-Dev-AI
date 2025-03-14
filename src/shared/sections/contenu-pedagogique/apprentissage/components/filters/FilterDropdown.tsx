@@ -54,7 +54,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
   filterOptions,
   activeFilters,
   onFilterChange,
-  buttonText = 'Filters',
+  buttonText = '',
   icon,
 }) => {
   const theme = useTheme();
@@ -153,7 +153,6 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
   return (
     <>
       <Button
-        variant="outlined"
         color="primary"
         onClick={handleOpenFilters}
         startIcon={
@@ -162,15 +161,20 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
           </Badge>
         }
         sx={{
-          minWidth: 100,
+          minWidth: 10,
           borderRadius: 1,
-          transition: theme.transitions.create(['background-color']),
+          justifyContent: 'center',
+          '.MuiButton-startIcon': {
+            marginLeft: 0,
+            marginRight: 0,
+          },
+          transition: (t) => t.transitions.create(['background-color']),
           ...(open && {
             bgcolor: 'primary.lighter',
           }),
         }}
       >
-        {buttonText}
+        {}
       </Button>
 
       <Popover
@@ -240,7 +244,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
           </Box>
         ) : (
           <Typography color="text.secondary" sx={{ mb: 3 }}>
-            No filters applied
+            Aucun filtre appliqué
           </Typography>
         )}
 
@@ -248,11 +252,11 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
         {tempFilter ? (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Add Filter
+              Ajouter un filtre
             </Typography>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Field</InputLabel>
+                <InputLabel>Champ</InputLabel>
                 <Select
                   value={tempFilter.field}
                   label="Field"
@@ -272,7 +276,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
                 if (fieldOption?.operators && fieldOption.operators.length > 0) {
                   return (
                     <FormControl fullWidth size="small">
-                      <InputLabel>Operator</InputLabel>
+                      <InputLabel>Opérateur</InputLabel>
                       <Select
                         value={tempFilter.operator}
                         label="Operator"
@@ -299,7 +303,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
                     case 'select':
                       return (
                         <FormControl fullWidth size="small">
-                          <InputLabel>Value</InputLabel>
+                          <InputLabel>Valeur</InputLabel>
                           <Select
                             value={tempFilter.value || ''}
                             label="Value"
@@ -355,7 +359,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
 
               <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                 <Button size="small" color="inherit" onClick={handleCancelFilter}>
-                  Cancel
+                  Annuler
                 </Button>
                 <Button
                   size="small"
@@ -363,7 +367,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
                   onClick={handleConfirmFilter}
                   disabled={!tempFilter.value}
                 >
-                  Add Filter
+                  Ajouter un filtre
                 </Button>
               </Box>
             </Stack>
@@ -375,7 +379,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
             onClick={handleAddFilter}
             sx={{ mb: 3, width: '100%' }}
           >
-            Add Filter
+            Ajouter un filtre
           </Button>
         )}
 
@@ -388,10 +392,10 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
             onClick={handleResetFilters}
             disabled={currentFilters.length === 0}
           >
-            Reset All
+            Réinitialiser
           </Button>
           <Button variant="contained" size="small" onClick={handleApplyFilters}>
-            Apply Filters
+            Appliquer les filtres
           </Button>
         </Box>
       </Popover>

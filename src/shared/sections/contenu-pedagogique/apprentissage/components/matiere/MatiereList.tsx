@@ -1,5 +1,5 @@
 import { m } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -49,6 +49,7 @@ import { MatiereItem } from './MatiereItem';
 import { FilterDropdown } from '../filters/FilterDropdown';
 import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
+import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Matiere, Pagination, FilterParams } from '../../types';
@@ -61,7 +62,7 @@ const TABLE_HEAD = [
   { id: 'description', label: 'Description', align: 'left' },
   { id: 'chapitresCount', label: 'Chapitres', align: 'center' },
   { id: 'dateCreated', label: 'Date de création', align: 'left' },
-  { id: '', label: 'Actions', align: 'right' },
+  { id: '', label: 'Actions', align: 'center' },
 ];
 
 // 2. Define column options for the ColumnSelector
@@ -131,46 +132,65 @@ interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
-  placeholder?: string;
 }
-const ColumnFilter: React.FC<ColumnFilterProps> = ({ columnId, value, onChange, placeholder }) => (
-  <TextField
-    size="small"
-    fullWidth
-    value={value}
-    onChange={(e) => onChange(columnId, e.target.value)}
-    placeholder={placeholder || `Filtrer par ${columnId}`}
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <FontAwesomeIcon
-            icon={faSearch}
-            style={{ color: 'text.disabled', fontSize: '0.875rem' }}
-          />
-        </InputAdornment>
-      ),
-      endAdornment: value ? (
-        <InputAdornment position="end">
-          <IconButton size="small" onClick={() => onChange(columnId, '')}>
-            <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
-          </IconButton>
-        </InputAdornment>
-      ) : null,
-    }}
-    sx={{
-      '& .MuiOutlinedInput-root': {
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        '& fieldset': {
-          borderWidth: '1px !important',
+const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSearchIconClick = () => {
+    setIsExpanded(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  return (
+    <TextField
+      size="small"
+      inputRef={inputRef}
+      value={value}
+      onChange={(e) => onChange(columnId, e.target.value)}
+      onFocus={() => setIsExpanded(true)}
+      onBlur={() => setIsExpanded(false)}
+      sx={{
+        width: isExpanded ? 200 : 50,
+        transition: 'width 0.3s ease-in-out',
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          '& fieldset': {
+            border: 'none !important',
+          },
+          '&:hover fieldset': {
+            border: 'none !important',
+          },
         },
-        '&:hover fieldset': {
-          borderColor: 'primary.main',
-        },
-      },
-    }}
-  />
-);
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <FontAwesomeIcon
+              icon={faSearch}
+              onClick={handleSearchIconClick}
+              style={{
+                color: 'text.disabled',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+              }}
+            />
+          </InputAdornment>
+        ),
+        endAdornment: value ? (
+          <InputAdornment position="end">
+            <IconButton size="small" onClick={() => onChange(columnId, '')}>
+              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
+            </IconButton>
+          </InputAdornment>
+        ) : null,
+      }}
+    />
+  );
+};
 
 interface BreadcrumbProps {
   currentNiveauId?: string | null;
@@ -217,6 +237,8 @@ export const MatiereList: React.FC<MatiereListProps> = ({
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   // Per-column text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
@@ -240,6 +262,31 @@ export const MatiereList: React.FC<MatiereListProps> = ({
     defaultCurrentPage: pagination.page - 1,
     defaultOrderBy: 'nom',
   });
+
+  const handleExport = (format: string, options?: any) => {
+    console.log(`Exporting data in ${format} format with options:`, options);
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    // Simulate export progress
+    const interval = setInterval(() => {
+      setExportProgress((prevProgress) => {
+        const newProgress = prevProgress + Math.random() * 15;
+
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsExporting(false);
+            // Show success notification if needed
+          }, 500);
+          return 100;
+        }
+
+        return newProgress;
+      });
+    }, 300);
+  };
 
   const handleOpenConfirm = () => {
     confirm.onTrue();
@@ -288,6 +335,10 @@ export const MatiereList: React.FC<MatiereListProps> = ({
         bgcolor: 'background.paper',
         zIndex: 2,
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+        '& .MuiTableCell-root': {
+          padding: '2px 4px',
+          lineHeight: 1,
+        },
       }}
     >
       <TableCell padding="checkbox" />
@@ -304,13 +355,13 @@ export const MatiereList: React.FC<MatiereListProps> = ({
           );
         }
 
+        // Regular filter cells for data columns
         return (
           <TableCell key={column.id}>
             <ColumnFilter
               columnId={column.id}
               value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChangeLocal}
-              placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
         );
@@ -401,6 +452,13 @@ export const MatiereList: React.FC<MatiereListProps> = ({
                 visibleColumns={visibleColumns}
                 onColumnChange={onColumnSelectorChange}
                 buttonText="Colonnes"
+              />
+              <AdvancedExportDropdown
+                onExport={handleExport}
+                isExporting={isExporting}
+                exportProgress={exportProgress}
+                withExportOptions
+                title="Exporter les données"
               />
             </Stack>
           </Box>

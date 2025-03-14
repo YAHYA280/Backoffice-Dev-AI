@@ -96,7 +96,7 @@ export const ExerciceItem = ({
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        {visibleColumns.includes('titre') && (
+        {visibleColumns.includes('titre') ? (
           <TableCell>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar
@@ -132,17 +132,14 @@ export const ExerciceItem = ({
                 >
                   {exercice.titre}
                 </Link>
-                {!isActive && (
-                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                    Inactif
-                  </Typography>
-                )}
               </Box>
             </Stack>
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('description') && (
+        {visibleColumns.includes('description') ? (
           <TableCell
             sx={{
               maxWidth: 280,
@@ -154,8 +151,10 @@ export const ExerciceItem = ({
           >
             {exercice.description}
           </TableCell>
+        ) : (
+          <></>
         )}
-        {visibleColumns.includes('statut') && (
+        {visibleColumns.includes('statut') ? (
           <TableCell>
             <Chip
               label={statutOption.label}
@@ -166,8 +165,10 @@ export const ExerciceItem = ({
               }}
             />
           </TableCell>
+        ) : (
+          <></>
         )}
-        {visibleColumns.includes('ressources') && (
+        {visibleColumns.includes('ressources') ? (
           <TableCell>
             {exercice.ressources && exercice.ressources.length > 0 ? (
               <Stack direction="row" spacing={0.5} flexWrap="wrap">
@@ -190,6 +191,8 @@ export const ExerciceItem = ({
               </Typography>
             )}
           </TableCell>
+        ) : (
+          <></>
         )}
 
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>

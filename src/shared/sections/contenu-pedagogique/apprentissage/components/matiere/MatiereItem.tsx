@@ -120,17 +120,12 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
                 >
                   {matiere.nom}
                 </Link>
-                {matiere.active === false && (
-                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                    Inactive
-                  </Typography>
-                )}
               </Box>
             </Stack>
           </TableCell>
         )}
 
-        {visibleColumns.includes('description') && (
+        {visibleColumns.includes('description') ? (
           <TableCell
             sx={{
               maxWidth: 280,
@@ -142,6 +137,8 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
           >
             {matiere.description}
           </TableCell>
+        ) : (
+          <></>
         )}
 
         {visibleColumns.includes('chapitresCount') && (

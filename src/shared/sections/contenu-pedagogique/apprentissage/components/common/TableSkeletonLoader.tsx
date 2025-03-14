@@ -14,10 +14,12 @@ export const TableSkeletonLoader = ({ rows = 5, columns = 4, sx }: TableSkeleton
   <>
     {[...Array(rows)].map((_, rowIndex) => (
       <TableRow key={rowIndex}>
-        {columns > 0 && (
+        {columns > 0 ? (
           <TableCell padding="checkbox">
             <Skeleton variant="rounded" width={20} height={20} />
           </TableCell>
+        ) : (
+          <></>
         )}
 
         {[...Array(columns - 1)].map((colIndex) => (

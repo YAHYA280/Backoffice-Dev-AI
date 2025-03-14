@@ -163,7 +163,11 @@ export const ChapitreForm = ({
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.difficulte && <FormHelperText>{errors.difficulte.message}</FormHelperText>}
+                {errors.difficulte ? (
+                  <FormHelperText>{errors.difficulte.message}</FormHelperText>
+                ) : (
+                  <></>
+                )}
               </FormControl>
             )}
           />

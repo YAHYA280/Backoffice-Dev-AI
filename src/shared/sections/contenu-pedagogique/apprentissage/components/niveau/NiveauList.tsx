@@ -1,5 +1,5 @@
 import { m } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
 
@@ -41,6 +41,7 @@ import { NiveauItem } from './NiveauItem';
 import { FilterDropdown } from '../filters/FilterDropdown';
 import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
+import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
 import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Niveau, Pagination, FilterParams } from '../../types';
@@ -61,47 +62,66 @@ interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
-  placeholder?: string;
 }
 
-const ColumnFilter = ({ columnId, value, onChange, placeholder }: ColumnFilterProps) => (
-  <TextField
-    size="small"
-    fullWidth
-    value={value}
-    onChange={(e) => onChange(columnId, e.target.value)}
-    placeholder={placeholder || `Filtrer par ${columnId}`}
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <FontAwesomeIcon
-            icon={faSearch}
-            style={{ color: 'text.disabled', fontSize: '0.875rem' }}
-          />
-        </InputAdornment>
-      ),
-      endAdornment: value ? (
-        <InputAdornment position="end">
-          <IconButton size="small" onClick={() => onChange(columnId, '')}>
-            <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
-          </IconButton>
-        </InputAdornment>
-      ) : null,
-    }}
-    sx={{
-      '& .MuiOutlinedInput-root': {
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        '& fieldset': {
-          borderWidth: '1px !important',
+const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSearchIconClick = () => {
+    setIsExpanded(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  return (
+    <TextField
+      size="small"
+      inputRef={inputRef}
+      value={value}
+      onChange={(e) => onChange(columnId, e.target.value)}
+      onFocus={() => setIsExpanded(true)}
+      onBlur={() => setIsExpanded(false)}
+      sx={{
+        width: isExpanded ? 200 : 50,
+        transition: 'width 0.3s ease-in-out',
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          '& fieldset': {
+            border: 'none !important',
+          },
+          '&:hover fieldset': {
+            border: 'none !important',
+          },
         },
-        '&:hover fieldset': {
-          borderColor: 'primary.main',
-        },
-      },
-    }}
-  />
-);
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <FontAwesomeIcon
+              icon={faSearch}
+              onClick={handleSearchIconClick}
+              style={{
+                color: 'text.disabled',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+              }}
+            />
+          </InputAdornment>
+        ),
+        endAdornment: value ? (
+          <InputAdornment position="end">
+            <IconButton size="small" onClick={() => onChange(columnId, '')}>
+              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
+            </IconButton>
+          </InputAdornment>
+        ) : null,
+      }}
+    />
+  );
+};
 
 const FILTER_OPTIONS: FilterOption[] = [
   {
@@ -204,6 +224,10 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   const confirm = useBoolean();
   const theme = useTheme();
 
+  // State for exporting data
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+
   // State for column-based text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
@@ -228,6 +252,32 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   // ColumnSelector callback
   const handleColumnChange = (columns: string[]) => {
     setVisibleColumns(columns);
+  };
+
+  // Export handler
+  const handleExport = (format: string, options?: any) => {
+    console.log(`Exporting data in ${format} format with options:`, options);
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    // Simulate export progress
+    const interval = setInterval(() => {
+      setExportProgress((prevProgress) => {
+        const newProgress = prevProgress + Math.random() * 15;
+
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsExporting(false);
+            // Show success notification if needed
+          }, 500);
+          return 100;
+        }
+
+        return newProgress;
+      });
+    }, 300);
   };
 
   // -------------------------------------------
@@ -285,6 +335,10 @@ export const NiveauList: React.FC<NiveauListProps> = ({
         bgcolor: 'background.paper',
         zIndex: 2,
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+        '& .MuiTableCell-root': {
+          padding: '2px 4px',
+          lineHeight: 1,
+        },
       }}
     >
       <TableCell padding="checkbox" />
@@ -308,7 +362,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               columnId={column.id}
               value={columnFilters[column.id as keyof typeof columnFilters] || ''}
               onChange={handleColumnFilterChangeLocal}
-              placeholder={`Rechercher par ${column.label}`}
             />
           </TableCell>
         );
@@ -380,7 +433,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                 filterOptions={FILTER_OPTIONS}
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChange}
-                buttonText="Filtres"
                 icon={<FontAwesomeIcon icon={faFilter} />}
               />
 
@@ -389,6 +441,13 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                 visibleColumns={visibleColumns}
                 onColumnChange={handleColumnChange}
                 buttonText="Colonnes"
+              />
+              <AdvancedExportDropdown
+                onExport={handleExport}
+                isExporting={isExporting}
+                exportProgress={exportProgress}
+                withExportOptions
+                title="Exporter les données"
               />
             </Stack>
           </Box>

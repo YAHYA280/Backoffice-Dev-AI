@@ -129,18 +129,13 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
                 >
                   {niveau.nom}
                 </Link>
-                {niveau.active === false && (
-                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                    Inactif
-                  </Typography>
-                )}
               </div>
             </Stack>
           </TableCell>
         )}
 
         {/* Description */}
-        {visibleColumns.includes('description') && (
+        {visibleColumns.includes('description') ? (
           <TableCell
             sx={{
               whiteSpace: 'nowrap',
@@ -152,6 +147,8 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
           >
             {niveau.description}
           </TableCell>
+        ) : (
+          <></>
         )}
 
         {/* Code */}

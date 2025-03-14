@@ -127,14 +127,9 @@ const ChapitreItem = ({
             >
               {chapitre.nom}
             </Link>
-            {chapitre.active === false && (
-              <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                Inactif
-              </Typography>
-            )}
           </TableCell>
         )}
-        {visibleColumns.includes('description') && (
+        {visibleColumns.includes('description') ? (
           <TableCell
             sx={{
               maxWidth: 280,
@@ -146,8 +141,10 @@ const ChapitreItem = ({
           >
             {chapitre.description}
           </TableCell>
+        ) : (
+          <></>
         )}
-        {visibleColumns.includes('difficulte') && (
+        {visibleColumns.includes('difficulte') ? (
           <TableCell>
             <Chip
               label={difficulteOption.label}
@@ -158,9 +155,11 @@ const ChapitreItem = ({
               }}
             />
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('exercicesCount') && (
+        {visibleColumns.includes('exercicesCount') ? (
           <TableCell align="center">
             <Typography
               variant="body2"
@@ -177,6 +176,8 @@ const ChapitreItem = ({
               {chapitre.exercicesCount || 0}
             </Typography>
           </TableCell>
+        ) : (
+          <></>
         )}
         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
@@ -237,7 +238,7 @@ const ChapitreItem = ({
               </IconButton>
             </Tooltip>
 
-            {onToggleActive && (
+            {onToggleActive ? (
               <Tooltip title={chapitre.active !== false ? 'Désactiver' : 'Activer'}>
                 <Box
                   onClick={(e) => e.stopPropagation()}
@@ -251,6 +252,8 @@ const ChapitreItem = ({
                   />
                 </Box>
               </Tooltip>
+            ) : (
+              <></>
             )}
           </Stack>
         </TableCell>
@@ -372,7 +375,7 @@ const ChapitreItem = ({
           Supprimer
         </MenuItem>
 
-        {onToggleActive && (
+        {onToggleActive ? (
           <MenuItem
             onClick={() => {
               if (onToggleActive) {
@@ -404,6 +407,8 @@ const ChapitreItem = ({
             />
             {chapitre.active !== false ? 'Désactiver' : 'Activer'}
           </MenuItem>
+        ) : (
+          <></>
         )}
       </CustomPopover>
     </>

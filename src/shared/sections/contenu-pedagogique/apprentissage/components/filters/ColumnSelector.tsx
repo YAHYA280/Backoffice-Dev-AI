@@ -116,7 +116,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
         }}
       >
         <Typography variant="h6" gutterBottom>
-          Display Columns
+          Afficher les colonnes
         </Typography>
 
         <Divider sx={{ my: 1.5 }} />
@@ -132,7 +132,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                   disableRipple
                 />
               </ListItemIcon>
-              <ListItemText primary="Select All" />
+              <ListItemText primary="Tout sélectionner" />
             </ListItemButton>
           </ListItem>
         </List>
@@ -163,7 +163,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
           <Button variant="contained" size="small" onClick={handleApplyColumns}>
-            Apply
+            Appliquer
           </Button>
         </Box>
       </Popover>

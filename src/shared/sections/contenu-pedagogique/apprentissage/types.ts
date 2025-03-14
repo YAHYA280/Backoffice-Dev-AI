@@ -1,4 +1,3 @@
-// In your types.ts file
 export interface Niveau {
   id: string;
   nom: string;
