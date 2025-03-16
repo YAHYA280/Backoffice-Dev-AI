@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Container } from '@mui/material';
 
-import { Container, Typography } from '@mui/material';
+// Import the types
+import { Challenge } from './types';
 
 // Import le hook pour gérer les challenges
 import { useChallenges } from './hooks/useChallenge';
@@ -51,6 +53,8 @@ export function ChallengesManagementView({
     handleSearch,
     handleColumnFilterChange,
     handleToggleActive,
+    handleAddChallenge,
+    handleUpdateChallenge,
     handleDeleteChallenge,
     handleDeleteMultipleChallenges,
     refetch,
@@ -67,17 +71,17 @@ export function ChallengesManagementView({
     setOpenAddDialog(true);
   };
 
-  const handleEditClick = (challenge: any) => {
+  const handleEditClick = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setOpenEditDialog(true);
   };
 
-  const handleDeleteClick = (challenge: any) => {
+  const handleDeleteClick = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setOpenDeleteDialog(true);
   };
 
-  const handleViewClick = (challenge: any) => {
+  const handleViewClick = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setOpenDetailDrawer(true);
   };
@@ -103,29 +107,33 @@ export function ChallengesManagementView({
   };
 
   // Gestionnaires pour les actions de soumission
-  const handleSubmitAdd = (data: any) => {
+  const handleSubmitAdd = async (data: Partial<Challenge>) => {
     console.log('Adding new challenge:', data);
+    await handleAddChallenge(data);
     handleCloseAddDialog();
     refetch();
   };
 
-  const handleSubmitEdit = (data: any) => {
+  const handleSubmitEdit = async (data: Partial<Challenge>) => {
     console.log('Editing challenge:', data);
+    if (selectedChallenge) {
+      await handleUpdateChallenge(selectedChallenge.id, data);
+    }
     handleCloseEditDialog();
     refetch();
   };
 
-  const handleSubmitDelete = () => {
+  const handleSubmitDelete = async () => {
     if (selectedChallenge) {
       console.log('Deleting challenge:', selectedChallenge.id);
-      handleDeleteChallenge(selectedChallenge.id);
+      await handleDeleteChallenge(selectedChallenge.id);
     }
     handleCloseDeleteDialog();
   };
 
-  const handleDeleteRows = (selectedRows: string[]) => {
+  const handleDeleteRows = async (selectedRows: string[]) => {
     console.log('Deleting multiple challenges:', selectedRows);
-    handleDeleteMultipleChallenges(selectedRows);
+    await handleDeleteMultipleChallenges(selectedRows);
   };
 
   return (

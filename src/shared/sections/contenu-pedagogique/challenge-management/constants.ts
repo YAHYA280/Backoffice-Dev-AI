@@ -1,14 +1,19 @@
+// src/shared/sections/contenu-pedagogique/challenge-management/constants.ts
+
+import { ChallengeStatus, Difficulty, ScoreMethod, QuestionType, MultimediaType } from './types';
+
+// Updated to use new ChallengeStatus enum
 export const STATUT_OPTIONS = [
-  { value: 'Actif', label: 'Actif', color: '#2e7d32', bgColor: '#C8E6C9' },
-  { value: 'Brouillon', label: 'Brouillon', color: '#FF6F00', bgColor: '#FFF9C4' },
-  { value: 'Terminé', label: 'Terminé', color: '#757575', bgColor: '#E0E0E0' },
-  { value: 'Archivé', label: 'Archivé', color: '#455A64', bgColor: '#CFD8DC' },
+  { value: ChallengeStatus.ACTIF, label: 'Actif', color: '#2e7d32', bgColor: '#C8E6C9' },
+  { value: ChallengeStatus.INACTIF, label: 'Inactif', color: '#FF6F00', bgColor: '#FFF9C4' },
+  { value: ChallengeStatus.SUPPRIME, label: 'Supprimé', color: '#455A64', bgColor: '#CFD8DC' },
 ];
 
+// Updated to use new Difficulty enum
 export const DIFFICULTE_OPTIONS = [
-  { value: 'Facile', label: 'Facile', color: '#2e7d32', bgColor: '#C8E6C9' },
-  { value: 'Moyen', label: 'Moyen', color: '#e65100', bgColor: '#FFECB3' },
-  { value: 'Difficile', label: 'Difficile', color: '#c62828', bgColor: '#EF9A9A' },
+  { value: Difficulty.FACILE, label: 'Facile', color: '#2e7d32', bgColor: '#C8E6C9' },
+  { value: Difficulty.MOYEN, label: 'Moyen', color: '#e65100', bgColor: '#FFECB3' },
+  { value: Difficulty.DIFFICILE, label: 'Difficile', color: '#c62828', bgColor: '#EF9A9A' },
 ];
 
 export const DEFAULT_PAGINATION = {
@@ -17,36 +22,39 @@ export const DEFAULT_PAGINATION = {
   total: 0,
 };
 
+// Updated to use QuestionType enum
 export const TYPE_QUESTION_OPTIONS = [
-  { value: 'QCM', label: 'Choix multiple' },
-  { value: 'OUVERTE', label: 'Question ouverte' },
-  { value: 'MINIJEU', label: 'Mini-jeu interactif' },
-  { value: 'VISUEL', label: 'Question visuelle' },
+  { value: QuestionType.QCM, label: 'Choix multiple' },
+  { value: QuestionType.OUVERTE, label: 'Question ouverte' },
+  { value: QuestionType.MINIJEU, label: 'Mini-jeu interactif' },
+  { value: QuestionType.VISUEL, label: 'Question visuelle' },
 ];
 
+// Updated to use ScoreMethod enum
 export const METHODE_CALCUL_SCORE_OPTIONS = [
   {
-    value: 'SIMPLE',
+    value: ScoreMethod.NB_BONNES_REPONSES,
     label: 'Somme des points',
     description: 'Additionne simplement les points obtenus à chaque question.',
   },
   {
-    value: 'TEMPS',
+    value: ScoreMethod.TEMPS,
     label: 'Basé sur le temps',
     description: "Plus l'élève répond vite, plus il obtient de points.",
   },
   {
-    value: 'PENALITES',
+    value: ScoreMethod.PENALITES,
     label: 'Avec pénalités',
     description: 'Des points sont déduits pour chaque tentative infructueuse.',
   },
 ];
 
-export const RECOMPENSE_TYPES = [
-  { value: 'badge', label: 'Badge' },
-  { value: 'trophy', label: 'Trophée' },
-  { value: 'points', label: 'Points' },
-  { value: 'certificat', label: 'Certificat' },
+// Multimedia type options
+export const MULTIMEDIA_TYPE_OPTIONS = [
+  { value: MultimediaType.IMAGE, label: 'Image' },
+  { value: MultimediaType.VIDEO, label: 'Vidéo' },
+  { value: MultimediaType.AUDIO, label: 'Audio' },
+  { value: MultimediaType.DOCUMENT, label: 'Document' },
 ];
 
 export const TENTATIVES_OPTIONS = [
@@ -68,21 +76,18 @@ export const TIMER_OPTIONS = [
   { value: 120, label: '2 heures' },
 ];
 
-export const MESSAGE_FINAL_DEFAUT = [
-  {
-    seuil: 80,
-    message: 'Félicitations ! Vous avez brillamment réussi ce challenge !',
-  },
-  {
-    seuil: 60,
-    message: 'Bien joué ! Vous avez réussi ce challenge avec succès.',
-  },
-  {
-    seuil: 40,
-    message: 'Pas mal ! Vous avez réussi ce challenge, mais vous pouvez encore vous améliorer.',
-  },
-  {
-    seuil: 0,
-    message: "Dommage, vous n'avez pas réussi ce challenge. Réessayez pour faire mieux !",
-  },
-];
+// Default messages for success/failure
+export const MESSAGE_FINAL_DEFAUT = {
+  success: 'Félicitations ! Vous avez réussi ce challenge !',
+  failure: "Dommage, vous n'avez pas réussi ce challenge. Réessayez pour faire mieux !",
+};
+
+// Default ScoreConfiguration
+export const DEFAULT_SCORE_CONFIGURATION = {
+  id: '1',
+  methode: ScoreMethod.NB_BONNES_REPONSES,
+  parametres: JSON.stringify({
+    pointsParBonneReponse: 10,
+    pointsTotal: 100,
+  }),
+};

@@ -11,7 +11,7 @@ import type { Challenge } from '../types';
 interface ChallengeDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Partial<Challenge>) => void;
   challenge?: Challenge;
   niveaux?: { id: string; nom: string }[];
   matieres?: { id: string; nom: string }[];
@@ -30,7 +30,7 @@ export const ChallengeDialog = ({
   const isEditMode = !!challenge;
   const title = isEditMode ? 'Modifier un challenge' : 'Ajouter un challenge';
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Partial<Challenge>) => {
     setIsSubmitting(true);
     try {
       // Ici, il y aurait un appel API pour sauvegarder/mettre à jour les données
@@ -69,7 +69,7 @@ export const ChallengeDialog = ({
           onCancel={onClose}
           isSubmitting={isSubmitting}
           niveaux={niveaux}
-          matieres={matieres}
+          prerequisChallenges={[]}
         />
       </DialogContent>
     </Dialog>

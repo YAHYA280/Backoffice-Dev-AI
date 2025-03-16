@@ -14,26 +14,32 @@ export { ChallengeDialog } from './components/ChallengeDialog';
 export { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
 export { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
-// Types
+// Types and Enums
+export { ChallengeStatus, Difficulty, QuestionType, ScoreMethod, MultimediaType } from './types';
+
 export type {
   Question,
   Challenge,
   Pagination,
   ApiResponse,
-  MessageFinal,
   FilterParams,
   ChallengeStats,
   PrerequisChallenge,
+  Reponse,
+  ScoreConfiguration,
+  Multimedia,
+  Niveau,
 } from './types';
 
 // Constants
 export {
   TIMER_OPTIONS,
   STATUT_OPTIONS,
-  RECOMPENSE_TYPES,
   DIFFICULTE_OPTIONS,
   TENTATIVES_OPTIONS,
   MESSAGE_FINAL_DEFAUT,
   TYPE_QUESTION_OPTIONS,
   METHODE_CALCUL_SCORE_OPTIONS,
+  MULTIMEDIA_TYPE_OPTIONS,
+  DEFAULT_SCORE_CONFIGURATION,
 } from './constants';

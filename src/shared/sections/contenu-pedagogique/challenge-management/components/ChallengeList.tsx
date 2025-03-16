@@ -5,7 +5,7 @@ import type {
 } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/filters/FilterDropdown';
 
 import { m } from 'framer-motion';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
 
@@ -25,6 +25,7 @@ import {
   IconButton,
   TableContainer,
   InputAdornment,
+  TableHead,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -50,35 +51,39 @@ import { AdvancedExportDropdown } from 'src/shared/sections/contenu-pedagogique/
 import { ChallengeItem } from './ChallengeItem';
 import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
 
-import type { Challenge, Pagination, FilterParams } from '../types';
+import type { Challenge, Pagination, FilterParams, ChallengeStatus, Difficulty } from '../types';
 
+// Updated to match screenshot columns exactly
 const TABLE_HEAD = [
-  { id: 'titre', label: 'Titre', align: 'left' },
-  { id: 'description', label: 'Description', align: 'left' },
-  { id: 'statut', label: 'Statut', align: 'left' },
-  { id: 'dateDebut', label: 'Date début', align: 'left' },
-  { id: 'dateFin', label: 'Date fin', align: 'left' },
-  { id: 'niveauDifficulte', label: 'Difficulté', align: 'left' },
-  { id: 'participantsCount', label: 'Participants', align: 'center' },
-  { id: '', label: 'Actions', align: 'center' },
+  { id: 'select', label: '', align: 'center', width: 50 },
+  { id: 'nom', label: 'Nom', align: 'left', width: 200 },
+  { id: 'description', label: 'Description', align: 'left', width: 300 },
+  { id: 'statut', label: 'Statut', align: 'center', width: 120 },
+  { id: 'datePublication', label: 'Date publication', align: 'center', width: 150 },
+  { id: 'dateMiseAJour', label: 'Dernière modification', align: 'center', width: 150 },
+  { id: 'difficulte', label: 'Difficulté', align: 'center', width: 120 },
+  { id: 'nbTentatives', label: 'Tentatives', align: 'center', width: 100 },
+  { id: 'participantsCount', label: 'Participants', align: 'center', width: 120 },
+  { id: 'actions', label: 'Actions', align: 'center', width: 150 },
 ];
 
-// Column options for the ColumnSelector
+// Column options for the ColumnSelector - Updated to match screenshot
 const COLUMN_OPTIONS: ColumnOption[] = [
-  { id: 'titre', label: 'Titre', required: true },
+  { id: 'nom', label: 'Nom', required: true },
   { id: 'description', label: 'Description' },
   { id: 'statut', label: 'Statut' },
-  { id: 'dateDebut', label: 'Date début' },
-  { id: 'dateFin', label: 'Date fin' },
-  { id: 'niveauDifficulte', label: 'Difficulté' },
+  { id: 'datePublication', label: 'Date publication' },
+  { id: 'dateMiseAJour', label: 'Dernière modification' },
+  { id: 'difficulte', label: 'Difficulté' },
+  { id: 'nbTentatives', label: 'Tentatives' },
   { id: 'participantsCount', label: 'Participants' },
 ];
 
 // Filter options for the FilterDropdown
 const FILTER_OPTIONS: FilterOption[] = [
   {
-    id: 'titre',
-    label: 'Titre',
+    id: 'nom',
+    label: 'Nom',
     type: 'text',
     operators: [
       { value: 'contains', label: 'Contient' },
@@ -107,8 +112,8 @@ const FILTER_OPTIONS: FilterOption[] = [
     })),
   },
   {
-    id: 'dateDebut',
-    label: 'Date début',
+    id: 'dateCreation',
+    label: 'Date création',
     type: 'date',
     operators: [
       { value: 'equals', label: 'Est égal à' },
@@ -117,8 +122,8 @@ const FILTER_OPTIONS: FilterOption[] = [
     ],
   },
   {
-    id: 'dateFin',
-    label: 'Date fin',
+    id: 'datePublication',
+    label: 'Date publication',
     type: 'date',
     operators: [
       { value: 'equals', label: 'Est égal à' },
@@ -127,7 +132,7 @@ const FILTER_OPTIONS: FilterOption[] = [
     ],
   },
   {
-    id: 'niveauDifficulte',
+    id: 'difficulte',
     label: 'Difficulté',
     type: 'select',
     operators: [{ value: 'equals', label: 'Est' }],
@@ -261,27 +266,43 @@ export const ChallengeList = ({
 
   // State for column-based text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
-    titre: '',
+    nom: '',
     description: '',
     statut: '',
-    dateDebut: '',
-    dateFin: '',
-    niveauDifficulte: '',
+    datePublication: '',
+    dateMiseAJour: '',
+    difficulte: '',
     participantsCount: '',
+    nbTentatives: '',
   });
 
   // State for FilterDropdown & ColumnSelector
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(
-    COLUMN_OPTIONS.map((col) => col.id)
-  );
+  // Default visible columns set to match the screenshot
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([
+    'nom',
+    'description',
+    'statut',
+    'datePublication',
+    'dateMiseAJour',
+    'difficulte',
+    'nbTentatives',
+    'participantsCount',
+  ]);
 
   // Table logic
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1,
-    defaultOrderBy: 'titre',
+    defaultOrderBy: 'nom',
   });
+
+  // Filter out deleted challenges
+  // Filter out deleted challenges
+  const filteredChallenges = useMemo(
+    () => challenges.filter((challenge) => challenge.statut !== 'Supprimé'),
+    [challenges]
+  );
 
   const handleOpenConfirm = () => {
     confirm.onTrue();
@@ -341,12 +362,42 @@ export const ChallengeList = ({
     }, 300);
   };
 
-  // Get only the table headers for visible columns
+  // Create the visible table headers based on selected columns
   const visibleTableHead = TABLE_HEAD.filter(
-    (col) => col.id === '' || visibleColumns.includes(col.id)
+    (col) => col.id === 'select' || col.id === 'actions' || visibleColumns.includes(col.id)
   );
 
-  const notFound = !challenges.length && !loading;
+  const notFound = !filteredChallenges.length && !loading;
+
+  // Custom table head to ensure perfect column alignment
+  const renderTableHead = () => (
+    <TableHead
+      sx={{
+        '& .MuiTableCell-head': {
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          fontWeight: 'fontWeightBold',
+          zIndex: 3,
+        },
+      }}
+    >
+      <TableRow>
+        {visibleTableHead.map((column) => (
+          <TableCell
+            key={column.id}
+            align={column.align as any}
+            width={column.width}
+            sx={{
+              whiteSpace: 'nowrap',
+              padding: '16px 8px',
+              fontSize: '0.875rem',
+            }}
+          >
+            {column.label}
+          </TableCell>
+        ))}
+      </TableRow>
+    </TableHead>
+  );
 
   // Render row for filter inputs (below header)
   const renderFilterRow = () => (
@@ -358,28 +409,28 @@ export const ChallengeList = ({
         zIndex: 2,
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
         '& .MuiTableCell-root': {
-          padding: '2px 4px',
+          padding: '4px 8px',
           lineHeight: 1,
         },
       }}
     >
-      <TableCell padding="checkbox" />
       {visibleTableHead.map((column) => {
-        if (column.id === '') {
+        if (column.id === 'select' || column.id === 'actions') {
           return (
             <TableCell
-              key="actions-filter-cell"
-              align="center"
+              key={`${column.id}-filter-cell`}
+              align={column.align as any}
+              width={column.width}
               sx={{ bgcolor: 'background.paper' }}
             >
-              {/* Empty cell for actions column */}
+              {/* Empty cell for action columns */}
             </TableCell>
           );
         }
 
         // Regular filter cells for data columns
         return (
-          <TableCell key={column.id}>
+          <TableCell key={column.id} align="left" width={column.width}>
             <ColumnFilter
               columnId={column.id}
               value={columnFilters[column.id as keyof typeof columnFilters] || ''}
@@ -470,11 +521,11 @@ export const ChallengeList = ({
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
-              rowCount={challenges.length}
+              rowCount={filteredChallenges.length}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  challenges.map((row) => row.id)
+                  filteredChallenges.map((row) => row.id)
                 )
               }
               action={
@@ -514,7 +565,7 @@ export const ChallengeList = ({
             />
 
             {/* TABLE + SCROLLBAR */}
-            <Scrollbar sx={{ height: 550 }}>
+            <Scrollbar sx={{ maxHeight: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
@@ -523,27 +574,8 @@ export const ChallengeList = ({
                 }}
               >
                 <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
-                  <TableHeadCustom
-                    order={table.order}
-                    orderBy={table.orderBy}
-                    headLabel={visibleTableHead}
-                    rowCount={challenges.length}
-                    numSelected={table.selected.length}
-                    onSort={table.onSort}
-                    onSelectAllRows={(checked) =>
-                      table.onSelectAllRows(
-                        checked,
-                        challenges.map((row) => row.id)
-                      )
-                    }
-                    sx={{
-                      '& .MuiTableCell-head': {
-                        bgcolor: alpha(theme.palette.primary.lighter, 0.2),
-                        fontWeight: 'fontWeightBold',
-                        zIndex: 3,
-                      },
-                    }}
-                  />
+                  {/* Custom Table Head for better column alignment */}
+                  {renderTableHead()}
 
                   <TableBody>
                     {renderFilterRow()}
@@ -551,7 +583,7 @@ export const ChallengeList = ({
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
-                      challenges.map((challenge) => (
+                      filteredChallenges.map((challenge) => (
                         <ChallengeItem
                           key={challenge.id}
                           challenge={challenge}
@@ -568,7 +600,11 @@ export const ChallengeList = ({
 
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
-                      emptyRows={emptyRows(table.page, table.rowsPerPage, challenges.length)}
+                      emptyRows={emptyRows(
+                        table.page,
+                        table.rowsPerPage,
+                        filteredChallenges.length
+                      )}
                     />
 
                     {notFound && (
@@ -599,6 +635,7 @@ export const ChallengeList = ({
             }}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
+            rowsPerPageOptions={[5, 10, 25, 50]}
           />
         </Card>
       </m.div>

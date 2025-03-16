@@ -118,7 +118,7 @@ export const ChallengeDeleteDialog = ({
       <DialogContent sx={{ pb: 3 }}>
         <DialogContentText>
           Êtes-vous sûr de vouloir supprimer le challenge{' '}
-          <strong>&quot;{challenge.titre}&quot;</strong> ?
+          <strong>&quot;{challenge.nom}&quot;</strong> ?
         </DialogContentText>
 
         {renderParticipantsWarning()}

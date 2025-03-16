@@ -3,49 +3,51 @@
 import { addDays, subDays, subMonths } from 'date-fns';
 import { useState, useEffect, useCallback } from 'react';
 
-import { DEFAULT_PAGINATION, MESSAGE_FINAL_DEFAUT } from '../constants';
+import {
+  DEFAULT_PAGINATION,
+  MESSAGE_FINAL_DEFAUT,
+  DEFAULT_SCORE_CONFIGURATION,
+} from '../constants';
+import { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from '../types';
 
-import type {
-  Question,
-  Challenge,
-  Pagination,
-  ApiResponse,
-  FilterParams,
-  MessageFinal,
-} from '../types';
+import type { Question, Challenge, Pagination, ApiResponse, FilterParams } from '../types';
 
+// Generate mock questions with the updated structure
 const generateMockQuestions = (): Question[] => [
   {
     id: '1',
-    type: 'QCM',
-    contenu: 'Quelle est la capitale de la France?',
-    options: ['Paris', 'Lyon', 'Marseille', 'Bordeaux'],
-    reponses: ['Paris'],
-    pointsMax: 10,
+    texte: 'Quelle est la capitale de la France?',
+    type: QuestionType.QCM,
     ordre: 1,
+    reponses: [
+      { id: '1-1', texte: 'Paris', estCorrecte: true },
+      { id: '1-2', texte: 'Lyon', estCorrecte: false },
+      { id: '1-3', texte: 'Marseille', estCorrecte: false },
+      { id: '1-4', texte: 'Bordeaux', estCorrecte: false },
+    ],
   },
   {
     id: '2',
-    type: 'QCM',
-    contenu: 'Quelles sont les couleurs du drapeau français?',
-    options: [
-      'Rouge et blanc',
-      'Bleu, blanc et rouge',
-      'Noir, jaune et rouge',
-      'Vert, blanc et rouge',
-    ],
-    reponses: ['Bleu, blanc et rouge'],
-    pointsMax: 10,
+    texte: 'Quelles sont les couleurs du drapeau français?',
+    type: QuestionType.QCM,
     ordre: 2,
+    reponses: [
+      { id: '2-1', texte: 'Rouge et blanc', estCorrecte: false },
+      { id: '2-2', texte: 'Bleu, blanc et rouge', estCorrecte: true },
+      { id: '2-3', texte: 'Noir, jaune et rouge', estCorrecte: false },
+      { id: '2-4', texte: 'Vert, blanc et rouge', estCorrecte: false },
+    ],
   },
   {
     id: '3',
-    type: 'OUVERTE',
-    contenu: 'Expliquez brièvement le principe de la photosynthèse.',
-    reponses: ['photosynthèse', 'lumière', 'plantes'],
-    indices: ["Il s'agit d'un processus utilisé par les plantes"],
-    pointsMax: 20,
+    texte: 'Expliquez brièvement le principe de la photosynthèse.',
+    type: QuestionType.OUVERTE,
     ordre: 3,
+    reponses: [
+      { id: '3-1', texte: 'photosynthèse', estCorrecte: true },
+      { id: '3-2', texte: 'lumière', estCorrecte: true },
+      { id: '3-3', texte: 'plantes', estCorrecte: true },
+    ],
   },
 ];
 
@@ -55,122 +57,156 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
   const mockData: Challenge[] = [
     {
       id: '1',
-      titre: 'Challenge de mathématiques',
+      nom: 'Challenge de mathématiques',
       description: 'Résoudre 10 problèmes de mathématiques en 30 minutes',
-      statut: 'Actif',
+      statut: ChallengeStatus.ACTIF,
       dateCreation: subMonths(new Date(), 2).toISOString(),
       datePublication: subDays(new Date(), 5).toISOString(),
-      dateFin: addDays(new Date(), 10).toISOString(),
-      dateDebut: subDays(new Date(), 5).toISOString(),
-      niveauId: '1',
-      niveauNom: 'CP1 - Cours Préparatoire 1',
-      niveauDifficulte: 'Moyen',
+      dateMiseAJour: subDays(new Date(), 1).toISOString(),
+      difficulte: Difficulty.MOYEN,
       participantsCount: 78,
       questionsCount: 10,
-      exercicesCount: 10,
       questions: generateMockQuestions(),
-      timeMaxMinutes: 30,
-      tentativesMax: 2,
+      timer: 30,
+      nbTentatives: 2,
       isRandomQuestions: false,
-      pointsRecompense: 100,
-      badgeRecompense: 'Mathématicien en herbe',
-      methodeCalculScore: 'SIMPLE',
-      messageFinaux: MESSAGE_FINAL_DEFAUT,
+      scoreConfiguration: {
+        id: '1',
+        methode: ScoreMethod.NB_BONNES_REPONSES,
+        parametres: JSON.stringify({ pointsParBonneReponse: 10 }),
+      },
+      messageSucces: 'Félicitations ! Vous avez réussi ce challenge !',
+      messageEchec: "Dommage, vous n'avez pas réussi ce challenge. Réessayez pour faire mieux !",
+      niveau: {
+        id: '1',
+        nom: 'CP1 - Cours Préparatoire 1',
+      },
+      multimedias: [
+        {
+          id: '1-1',
+          type: MultimediaType.IMAGE,
+          url: 'https://example.com/images/math-challenge.jpg',
+        },
+      ],
       active: true,
     },
     {
       id: '2',
-      titre: 'Quiz sur la nature',
+      nom: 'Quiz sur la nature',
       description: 'Testez vos connaissances sur les animaux et les plantes',
-      statut: 'Brouillon',
+      statut: ChallengeStatus.ACTIF,
       dateCreation: subMonths(new Date(), 1).toISOString(),
       datePublication: addDays(new Date(), 5).toISOString(),
-      dateDebut: addDays(new Date(), 5).toISOString(),
-      niveauId: '2',
-      niveauNom: 'CP2 - Cours Préparatoire 2',
-      niveauDifficulte: 'Facile',
+      difficulte: Difficulty.FACILE,
       questionsCount: 15,
-      exercicesCount: 15,
-      timeMaxMinutes: 20,
-      tentativesMax: 3,
+      timer: 20,
+      nbTentatives: 3,
       isRandomQuestions: true,
-      pointsRecompense: 150,
-      badgeRecompense: 'Ami de la nature',
-      methodeCalculScore: 'SIMPLE',
-      messageFinaux: MESSAGE_FINAL_DEFAUT,
+      scoreConfiguration: {
+        id: '2',
+        methode: ScoreMethod.TEMPS,
+        parametres: JSON.stringify({ pointsParBonneReponse: 10, bonusTemps: 2 }),
+      },
+      messageSucces: 'Bravo, vous êtes un expert de la nature !',
+      messageEchec: 'Vous pouvez encore améliorer vos connaissances sur la nature.',
+      niveau: {
+        id: '2',
+        nom: 'CP2 - Cours Préparatoire 2',
+      },
+      multimedias: [
+        {
+          id: '2-1',
+          type: MultimediaType.IMAGE,
+          url: 'https://example.com/images/nature-quiz.jpg',
+        },
+        {
+          id: '2-2',
+          type: MultimediaType.VIDEO,
+          url: 'https://example.com/videos/nature-intro.mp4',
+        },
+      ],
       active: true,
     },
     {
       id: '3',
-      titre: 'Challenge de sciences',
+      nom: 'Challenge de sciences',
       description: 'Réaliser une expérience scientifique simple et la documenter',
-      statut: 'Terminé',
+      statut: ChallengeStatus.ACTIF,
       dateCreation: subMonths(new Date(), 3).toISOString(),
       datePublication: subDays(new Date(), 30).toISOString(),
-      dateDebut: subDays(new Date(), 30).toISOString(),
-      dateFin: subDays(new Date(), 10).toISOString(),
-      niveauId: '3',
-      niveauNom: 'CE1 - Cours Élémentaire 1',
-      niveauDifficulte: 'Difficile',
+      dateMiseAJour: subDays(new Date(), 15).toISOString(),
+      difficulte: Difficulty.DIFFICILE,
       participantsCount: 45,
-      exercicesCount: 5,
       questionsCount: 5,
-      timeMaxMinutes: 60,
-      tentativesMax: 1,
+      timer: 60,
+      nbTentatives: 1,
       isRandomQuestions: false,
-      pointsRecompense: 200,
-      badgeRecompense: 'Scientifique en herbe',
-      methodeCalculScore: 'PENALITES',
-      messageFinaux: MESSAGE_FINAL_DEFAUT,
+      scoreConfiguration: {
+        id: '3',
+        methode: ScoreMethod.PENALITES,
+        parametres: JSON.stringify({ pointsParBonneReponse: 20, penaliteParErreur: -5 }),
+      },
+      messageSucces: 'Félicitations pour cette expérience réussie !',
+      messageEchec: "Votre expérience n'a pas abouti, réessayez avec une autre approche.",
+      niveau: {
+        id: '3',
+        nom: 'CE1 - Cours Élémentaire 1',
+      },
+      prerequis: {
+        id: '1',
+        nom: 'Challenge de mathématiques',
+        pourcentageMinimum: 70,
+      },
       active: false,
     },
     {
       id: '4',
-      titre: 'Quiz de français',
+      nom: 'Quiz de français',
       description: 'Testez vos connaissances en orthographe et grammaire',
-      statut: 'Actif',
+      statut: ChallengeStatus.ACTIF,
       dateCreation: subMonths(new Date(), 1.5).toISOString(),
       datePublication: subDays(new Date(), 15).toISOString(),
-      dateDebut: subDays(new Date(), 15).toISOString(),
-      dateFin: addDays(new Date(), 20).toISOString(),
-      niveauDifficulte: 'Moyen',
+      difficulte: Difficulty.MOYEN,
       participantsCount: 62,
-      exercicesCount: 20,
       questionsCount: 20,
-      timeMaxMinutes: 25,
-      tentativesMax: 2,
+      timer: 25,
+      nbTentatives: 2,
       isRandomQuestions: true,
-      pointsRecompense: 120,
-      badgeRecompense: 'Expert en français',
-      methodeCalculScore: 'TEMPS',
-      messageFinaux: MESSAGE_FINAL_DEFAUT,
+      scoreConfiguration: {
+        id: '4',
+        methode: ScoreMethod.TEMPS,
+        parametres: JSON.stringify({ pointsParBonneReponse: 5, bonusTemps: 1 }),
+      },
+      messageSucces: 'Bravo pour votre maîtrise de la langue française !',
+      messageEchec: 'Continuez à pratiquer pour améliorer votre français.',
       active: true,
     },
     {
       id: '5',
-      titre: "Challenge d'histoire",
+      nom: "Challenge d'histoire",
       description: "Découvrir les grands événements de l'histoire",
-      statut: 'Archivé',
+      statut: ChallengeStatus.ACTIF,
       dateCreation: subMonths(new Date(), 4).toISOString(),
       datePublication: subMonths(new Date(), 3).toISOString(),
-      dateDebut: subMonths(new Date(), 3).toISOString(),
-      dateFin: subMonths(new Date(), 2).toISOString(),
-      niveauId: '4',
-      niveauNom: 'CE2 - Cours Élémentaire 2',
-      niveauDifficulte: 'Moyen',
+      dateMiseAJour: subMonths(new Date(), 2).toISOString(),
+      difficulte: Difficulty.MOYEN,
       participantsCount: 38,
-      exercicesCount: 12,
       questionsCount: 12,
-      timeMaxMinutes: 40,
-      tentativesMax: 1,
+      timer: 40,
+      nbTentatives: 1,
       isRandomQuestions: false,
-      pointsRecompense: 180,
-      badgeRecompense: 'Historien en herbe',
-      methodeCalculScore: 'SIMPLE',
-      messageFinaux: MESSAGE_FINAL_DEFAUT,
+      scoreConfiguration: {
+        id: '5',
+        methode: ScoreMethod.NB_BONNES_REPONSES,
+        parametres: JSON.stringify({ pointsParBonneReponse: 15 }),
+      },
+      messageSucces: "Vous avez une excellente connaissance de l'histoire !",
+      messageEchec: 'Révisez vos connaissances historiques et réessayez.',
+      niveau: {
+        id: '4',
+        nom: 'CE2 - Cours Élémentaire 2',
+      },
       active: false,
-      suppressionDate: subMonths(new Date(), 1).toISOString(),
-      restaurable: true,
     },
   ];
 
@@ -180,17 +216,15 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
     const searchLower = params.searchTerm.toLowerCase();
     filteredData = filteredData.filter(
       (challenge) =>
-        challenge.titre.toLowerCase().includes(searchLower) ||
+        challenge.nom.toLowerCase().includes(searchLower) ||
         challenge.description.toLowerCase().includes(searchLower)
     );
   }
 
   // Apply column-specific filters
-  if (params.titreFilter) {
-    const filter = params.titreFilter.toLowerCase();
-    filteredData = filteredData.filter((challenge) =>
-      challenge.titre.toLowerCase().includes(filter)
-    );
+  if (params.nomFilter) {
+    const filter = params.nomFilter.toLowerCase();
+    filteredData = filteredData.filter((challenge) => challenge.nom.toLowerCase().includes(filter));
   }
 
   if (params.descriptionFilter) {
@@ -207,12 +241,12 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
 
   if (params.niveauIdFilter) {
     const filter = params.niveauIdFilter;
-    filteredData = filteredData.filter((challenge) => challenge.niveauId === filter);
+    filteredData = filteredData.filter((challenge) => challenge.niveau?.id === filter);
   }
 
-  if (params.niveauDifficulteFilter) {
-    const filter = params.niveauDifficulteFilter;
-    filteredData = filteredData.filter((challenge) => challenge.niveauDifficulte === filter);
+  if (params.difficulteFilter) {
+    const filter = params.difficulteFilter;
+    filteredData = filteredData.filter((challenge) => challenge.difficulte === filter);
   }
 
   // Date filters
@@ -235,14 +269,7 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
   // Filter by active status
   if (params.activeOnly) {
     filteredData = filteredData.filter(
-      (challenge) => challenge.active && challenge.statut !== 'Archivé'
-    );
-  }
-
-  // Filter for restaurable challenges
-  if (params.restaurableOnly) {
-    filteredData = filteredData.filter(
-      (challenge) => challenge.restaurable === true && challenge.statut === 'Archivé'
+      (challenge) => challenge.active && challenge.statut !== ChallengeStatus.SUPPRIME
     );
   }
 
@@ -306,7 +333,42 @@ const fetchChallengeDetailsAPI = async (challengeId: string): Promise<ApiRespons
   };
 };
 
-export function useChallenges() {
+// Interface for the hook's return values
+interface UseChallengesReturn {
+  challenges: Challenge[];
+  loading: boolean;
+  error: string | null;
+  pagination: Pagination;
+  filters: FilterParams;
+  selectedChallenge: Challenge | null;
+  setSelectedChallenge: (challenge: Challenge | null) => void;
+  handlePageChange: (page: number) => void;
+  handleLimitChange: (limit: number) => void;
+  handleSearch: (searchTerm: string) => void;
+  handleColumnFilterChange: (columnId: string, value: string) => void;
+  handleSortChange: (field: string, direction: 'asc' | 'desc') => void;
+  handleToggleActive: (challenge: Challenge, active: boolean) => void;
+  handleToggleActiveOnly: (activeOnly: boolean) => void;
+  handleAddChallenge: (challenge: Partial<Challenge>) => Promise<Challenge>;
+  handleUpdateChallenge: (id: string, data: Partial<Challenge>) => Promise<Challenge>;
+  handleDeleteChallenge: (id: string) => Promise<boolean>;
+  handleRestoreChallenge: (id: string) => Promise<boolean>;
+  handleDeleteMultipleChallenges: (ids: string[]) => Promise<boolean>;
+  handleResetChallengeParticipations: (id: string) => Promise<boolean>;
+  handleUpdateChallengeQuestions: (
+    challengeId: string,
+    questions: Question[]
+  ) => Promise<Question[]>;
+  fetchChallengeDetails: (challengeId: string) => Promise<Challenge | null>;
+  refetch: () => Promise<void>;
+
+  // Additional methods inspired by the UML diagram
+  ajouterQuestionToChallenge: (challengeId: string, question: Question) => Promise<Question>;
+  retirerQuestionFromChallenge: (challengeId: string, questionId: string) => Promise<boolean>;
+  reinitialiserChallenge: (challengeId: string) => Promise<boolean>;
+}
+
+export function useChallenges(): UseChallengesReturn {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -316,10 +378,9 @@ export function useChallenges() {
     searchTerm: '',
     page: 1,
     limit: 10,
-    sortBy: 'titre',
+    sortBy: 'nom',
     sortDirection: 'asc',
     activeOnly: false,
-    restaurableOnly: false,
   });
 
   const fetchChallenges = useCallback(async () => {
@@ -420,38 +481,27 @@ export function useChallenges() {
     }));
   };
 
-  const handleToggleRestaurableOnly = (restaurableOnly: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      restaurableOnly,
-      page: 1,
-    }));
-  };
-
-  const handleAddChallenge = async (challenge: Partial<Challenge>) => {
+  const handleAddChallenge = async (challenge: Partial<Challenge>): Promise<Challenge> => {
     // In a real app, call API to add challenge
     const newChallenge: Challenge = {
       id: `${challenges.length + 1}`,
-      titre: challenge.titre || '',
+      nom: challenge.nom || '',
       description: challenge.description || '',
-      statut: challenge.statut || 'Brouillon',
+      statut: challenge.statut || ChallengeStatus.ACTIF,
       dateCreation: new Date().toISOString(),
       datePublication: challenge.datePublication || new Date().toISOString(),
-      dateDebut: challenge.dateDebut || new Date().toISOString(),
-      dateFin: challenge.dateFin,
-      niveauId: challenge.niveauId,
-      niveauNom: challenge.niveauNom,
-      niveauDifficulte: challenge.niveauDifficulte || 'Moyen',
+      dateMiseAJour: challenge.dateMiseAJour,
+      difficulte: challenge.difficulte || Difficulty.MOYEN,
       questionsCount: 0,
-      exercicesCount: 0,
-      timeMaxMinutes: challenge.timeMaxMinutes || 30,
-      tentativesMax: challenge.tentativesMax || 1,
+      timer: challenge.timer || 30,
+      nbTentatives: challenge.nbTentatives || 1,
       isRandomQuestions: challenge.isRandomQuestions || false,
-      pointsRecompense: challenge.pointsRecompense || 100,
-      badgeRecompense: challenge.badgeRecompense,
-      methodeCalculScore: challenge.methodeCalculScore || 'SIMPLE',
-      messageFinaux: challenge.messageFinaux || MESSAGE_FINAL_DEFAUT,
-      prerequisChallenge: challenge.prerequisChallenge,
+      scoreConfiguration: challenge.scoreConfiguration || DEFAULT_SCORE_CONFIGURATION,
+      messageSucces: challenge.messageSucces || MESSAGE_FINAL_DEFAUT.success,
+      messageEchec: challenge.messageEchec || MESSAGE_FINAL_DEFAUT.failure,
+      prerequis: challenge.prerequis,
+      niveau: challenge.niveau,
+      multimedias: challenge.multimedias || [],
       active: challenge.active !== undefined ? challenge.active : true,
     };
 
@@ -459,7 +509,10 @@ export function useChallenges() {
     return newChallenge;
   };
 
-  const handleUpdateChallenge = async (id: string, data: Partial<Challenge>) => {
+  const handleUpdateChallenge = async (
+    id: string,
+    data: Partial<Challenge>
+  ): Promise<Challenge> => {
     // In a real app, call API to update challenge
     setChallenges((prev) => prev.map((item) => (item.id === id ? { ...item, ...data } : item)));
 
@@ -473,17 +526,16 @@ export function useChallenges() {
     return { ...selectedChallenge, ...data } as Challenge;
   };
 
-  const handleDeleteChallenge = async (id: string) => {
-    // In a real app, call API to delete (or archive) challenge
+  const handleDeleteChallenge = async (id: string): Promise<boolean> => {
+    // In a real app, call API to delete challenge
     setChallenges((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
               ...item,
-              statut: 'Archivé',
+              statut: ChallengeStatus.SUPPRIME,
               active: false,
-              suppressionDate: new Date().toISOString(),
-              restaurable: true,
+              dateMiseAJour: new Date().toISOString(),
             }
           : item
       )
@@ -492,27 +544,25 @@ export function useChallenges() {
     if (selectedChallenge && selectedChallenge.id === id) {
       setSelectedChallenge({
         ...selectedChallenge,
-        statut: 'Archivé',
+        statut: ChallengeStatus.SUPPRIME,
         active: false,
-        suppressionDate: new Date().toISOString(),
-        restaurable: true,
+        dateMiseAJour: new Date().toISOString(),
       });
     }
 
     return true;
   };
 
-  const handleRestoreChallenge = async (id: string) => {
+  const handleRestoreChallenge = async (id: string): Promise<boolean> => {
     // In a real app, call API to restore challenge
     setChallenges((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
               ...item,
-              statut: 'Brouillon',
+              statut: ChallengeStatus.INACTIF,
               active: false,
-              suppressionDate: undefined,
-              restaurable: undefined,
+              dateMiseAJour: new Date().toISOString(),
             }
           : item
       )
@@ -521,27 +571,25 @@ export function useChallenges() {
     if (selectedChallenge && selectedChallenge.id === id) {
       setSelectedChallenge({
         ...selectedChallenge,
-        statut: 'Brouillon',
+        statut: ChallengeStatus.INACTIF,
         active: false,
-        suppressionDate: undefined,
-        restaurable: undefined,
+        dateMiseAJour: new Date().toISOString(),
       });
     }
 
     return true;
   };
 
-  const handleDeleteMultipleChallenges = async (ids: string[]) => {
+  const handleDeleteMultipleChallenges = async (ids: string[]): Promise<boolean> => {
     // In a real app, call API to delete multiple challenges
     setChallenges((prev) =>
       prev.map((item) =>
         ids.includes(item.id)
           ? {
               ...item,
-              statut: 'Archivé',
+              statut: ChallengeStatus.SUPPRIME,
               active: false,
-              suppressionDate: new Date().toISOString(),
-              restaurable: true,
+              dateMiseAJour: new Date().toISOString(),
             }
           : item
       )
@@ -554,7 +602,7 @@ export function useChallenges() {
     return true;
   };
 
-  const handleResetChallengeParticipations = async (id: string) => {
+  const handleResetChallengeParticipations = async (id: string): Promise<boolean> => {
     // In a real app, call API to reset participations
     setChallenges((prev) =>
       prev.map((item) =>
@@ -562,6 +610,7 @@ export function useChallenges() {
           ? {
               ...item,
               participantsCount: 0,
+              dateMiseAJour: new Date().toISOString(),
             }
           : item
       )
@@ -571,14 +620,17 @@ export function useChallenges() {
       setSelectedChallenge({
         ...selectedChallenge,
         participantsCount: 0,
+        dateMiseAJour: new Date().toISOString(),
       });
     }
 
     return true;
   };
 
-  // Fonction pour ajouter/modifier des questions dans un challenge
-  const handleUpdateChallengeQuestions = async (challengeId: string, questions: Question[]) => {
+  const handleUpdateChallengeQuestions = async (
+    challengeId: string,
+    questions: Question[]
+  ): Promise<Question[]> => {
     // In a real app, call API to update challenge questions
     const updatedQuestions = questions.map((q, idx) => ({
       ...q,
@@ -592,6 +644,7 @@ export function useChallenges() {
               ...item,
               questions: updatedQuestions,
               questionsCount: updatedQuestions.length,
+              dateMiseAJour: new Date().toISOString(),
             }
           : item
       )
@@ -602,36 +655,118 @@ export function useChallenges() {
         ...selectedChallenge,
         questions: updatedQuestions,
         questionsCount: updatedQuestions.length,
+        dateMiseAJour: new Date().toISOString(),
       });
     }
 
     return updatedQuestions;
   };
 
-  // Fonction pour mettre à jour les messages finaux
-  const handleUpdateChallengeMessages = async (challengeId: string, messages: MessageFinal[]) => {
-    // In a real app, call API to update challenge messages
-    const sortedMessages = [...messages].sort((a, b) => b.seuil - a.seuil);
+  // Additional methods inspired by the UML diagram
+  const ajouterQuestionToChallenge = async (
+    challengeId: string,
+    question: Question
+  ): Promise<Question> => {
+    const challenge = challenges.find((c) => c.id === challengeId);
+    if (!challenge) {
+      throw new Error('Challenge not found');
+    }
+
+    const existingQuestions = challenge.questions || [];
+    const newQuestion = {
+      ...question,
+      id: question.id || `q-${Date.now()}`,
+      ordre: existingQuestions.length + 1,
+    };
+
+    const updatedQuestions = [...existingQuestions, newQuestion];
 
     setChallenges((prev) =>
-      prev.map((item) =>
-        item.id === challengeId
+      prev.map((c) =>
+        c.id === challengeId
           ? {
-              ...item,
-              messageFinaux: sortedMessages,
+              ...c,
+              questions: updatedQuestions,
+              questionsCount: updatedQuestions.length,
+              dateMiseAJour: new Date().toISOString(),
             }
-          : item
+          : c
       )
     );
 
     if (selectedChallenge && selectedChallenge.id === challengeId) {
       setSelectedChallenge({
         ...selectedChallenge,
-        messageFinaux: sortedMessages,
+        questions: updatedQuestions,
+        questionsCount: updatedQuestions.length,
+        dateMiseAJour: new Date().toISOString(),
       });
     }
 
-    return sortedMessages;
+    return newQuestion;
+  };
+
+  const retirerQuestionFromChallenge = async (
+    challengeId: string,
+    questionId: string
+  ): Promise<boolean> => {
+    const challenge = challenges.find((c) => c.id === challengeId);
+    if (!challenge || !challenge.questions) {
+      throw new Error('Challenge or questions not found');
+    }
+
+    const updatedQuestions = challenge.questions
+      .filter((q) => q.id !== questionId)
+      .map((q, idx) => ({ ...q, ordre: idx + 1 }));
+
+    setChallenges((prev) =>
+      prev.map((c) =>
+        c.id === challengeId
+          ? {
+              ...c,
+              questions: updatedQuestions,
+              questionsCount: updatedQuestions.length,
+              dateMiseAJour: new Date().toISOString(),
+            }
+          : c
+      )
+    );
+
+    if (selectedChallenge && selectedChallenge.id === challengeId) {
+      setSelectedChallenge({
+        ...selectedChallenge,
+        questions: updatedQuestions,
+        questionsCount: updatedQuestions.length,
+        dateMiseAJour: new Date().toISOString(),
+      });
+    }
+
+    return true;
+  };
+
+  const reinitialiserChallenge = async (challengeId: string): Promise<boolean> => {
+    // Reset the challenge's statistics and participation data
+    setChallenges((prev) =>
+      prev.map((c) =>
+        c.id === challengeId
+          ? {
+              ...c,
+              participantsCount: 0,
+              dateMiseAJour: new Date().toISOString(),
+            }
+          : c
+      )
+    );
+
+    if (selectedChallenge && selectedChallenge.id === challengeId) {
+      setSelectedChallenge({
+        ...selectedChallenge,
+        participantsCount: 0,
+        dateMiseAJour: new Date().toISOString(),
+      });
+    }
+
+    return true;
   };
 
   return {
@@ -649,7 +784,6 @@ export function useChallenges() {
     handleSortChange,
     handleToggleActive,
     handleToggleActiveOnly,
-    handleToggleRestaurableOnly,
     handleAddChallenge,
     handleUpdateChallenge,
     handleDeleteChallenge,
@@ -657,9 +791,13 @@ export function useChallenges() {
     handleDeleteMultipleChallenges,
     handleResetChallengeParticipations,
     handleUpdateChallengeQuestions,
-    handleUpdateChallengeMessages,
     fetchChallengeDetails,
     refetch: fetchChallenges,
+
+    // New methods from UML diagram
+    ajouterQuestionToChallenge,
+    retirerQuestionFromChallenge,
+    reinitialiserChallenge,
   };
 }
 

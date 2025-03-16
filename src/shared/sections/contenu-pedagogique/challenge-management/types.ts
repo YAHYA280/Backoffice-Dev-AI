@@ -1,63 +1,123 @@
+export enum ChallengeStatus {
+  ACTIF = 'Actif',
+  INACTIF = 'Inactif',
+  SUPPRIME = 'Supprimé',
+}
+
+// Enum for Difficulty levels
+export enum Difficulty {
+  FACILE = 'Facile',
+  MOYEN = 'Moyen',
+  DIFFICILE = 'Difficile',
+}
+
+// Enum for Question Types
+export enum QuestionType {
+  QCM = 'QCM',
+  OUVERTE = 'Ouverte',
+  MINIJEU = 'MiniJeu',
+  VISUEL = 'Visuel',
+}
+
+// Enum for Score Methods
+export enum ScoreMethod {
+  NB_BONNES_REPONSES = 'NbBonnesReponses',
+  TEMPS = 'Temps',
+  PENALITES = 'Penalites',
+}
+
+// Enum for Multimedia Types
+export enum MultimediaType {
+  IMAGE = 'Image',
+  VIDEO = 'Video',
+  AUDIO = 'Audio',
+  DOCUMENT = 'Document',
+}
+
+// Interface for Response (Réponse in the diagram)
+export interface Reponse {
+  id: string;
+  texte: string;
+  estCorrecte: boolean;
+}
+
+// Interface for Question
 export interface Question {
   id: string;
-  type: 'QCM' | 'OUVERTE' | 'MINIJEU' | 'VISUEL';
-  contenu: string;
-  options?: string[];
-  reponses: string[];
-  indices?: string[];
-  pointsMax: number;
-  mediaUrl?: string;
-  tempsMaxSeconds?: number;
+  texte: string;
+  type: QuestionType;
   ordre: number;
+  reponses?: Reponse[];
+  // Methods from diagram
+  ajouterReponse?: (reponse: Reponse) => void;
+  retirerReponse?: (reponse: Reponse) => void;
 }
 
+// Interface for ScoreConfiguration
+export interface ScoreConfiguration {
+  id: string;
+  methode: ScoreMethod;
+  parametres: string; // JSON string containing method parameters
+}
+
+// Interface for Multimedia
+export interface Multimedia {
+  id: string;
+  type: MultimediaType;
+  url: string;
+}
+
+// Interface for prerequisite Challenge
 export interface PrerequisChallenge {
   id: string;
-  titre: string;
-  pourcentageMinimum: number;
+  nom: string;
+  pourcentageMinimum: number; // Added for business logic
 }
 
-export interface MessageFinal {
-  seuil: number;
-  message: string;
-}
-
+// Updated Challenge interface
 export interface Challenge {
   id: string;
-  titre: string;
+  nom: string; // Renamed from 'titre' to match diagram
   description: string;
-  statut: 'Actif' | 'Brouillon' | 'Terminé' | 'Archivé';
-  dateCreation: string;
+  statut: ChallengeStatus;
+  difficulte: Difficulty; // Renamed from 'niveauDifficulte'
+  timer: number; // In minutes
+  nbTentatives: number; // Renamed from 'tentativesMax'
   datePublication: string;
-  dateDebut?: string;
-  dateFin?: string;
-  niveauId?: string;
-  niveauNom?: string;
-  niveauDifficulte: 'Facile' | 'Moyen' | 'Difficile';
+  dateCreation: string;
+  dateMiseAJour?: string; // Added to match diagram
+  messageSucces: string; // Renamed from 'messageFinalSuccess'
+  messageEchec: string; // Renamed from 'messageFinalFailure'
+  prerequis?: PrerequisChallenge;
+  niveau?: {
+    id: string;
+    nom: string;
+  };
+  scoreConfiguration: ScoreConfiguration;
+  multimedias?: Multimedia[];
+  questions?: Question[];
+
+  // Business properties from original code, not in diagram but needed for UI
+  isRandomQuestions?: boolean;
   participantsCount?: number;
   questionsCount?: number;
-  exercicesCount?: number;
-  questions?: Question[];
-  timeMaxMinutes?: number;
-  tentativesMax: number;
-  isRandomQuestions: boolean;
-  pointsRecompense: number;
-  badgeRecompense?: string;
-  methodeCalculScore: 'SIMPLE' | 'TEMPS' | 'PENALITES';
-  messageFinaux: MessageFinal[];
-  prerequisChallenge?: PrerequisChallenge;
-  mediaIntro?: string;
-  active: boolean;
-  suppressionDate?: string;
-  restaurable?: boolean;
+  active?: boolean;
+
+  // Methods from diagram
+  ajouterQuestion?: (question: Question) => void;
+  retirerQuestion?: (question: Question) => void;
+  reinitialiser?: () => void;
+  modifierChallenge?: (updatedData: Partial<Challenge>) => void;
 }
 
+// Pagination interface (carried over from original)
 export interface Pagination {
   page: number;
   limit: number;
   total: number;
 }
 
+// Filter parameters interface (carried over from original with updates)
 export interface FilterParams {
   searchTerm?: string;
   page?: number;
@@ -65,25 +125,24 @@ export interface FilterParams {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
 
-  // Filtres spécifiques pour Challenge
-  titreFilter?: string;
+  // Updated filter names to match new property names
+  nomFilter?: string;
   descriptionFilter?: string;
-  statutFilter?: string;
+  statutFilter?: ChallengeStatus;
   dateCreationFilter?: string;
   datePublicationFilter?: string;
-  dateFinFilter?: string;
+  dateMiseAJourFilter?: string;
   niveauIdFilter?: string;
-  niveauDifficulteFilter?: string;
+  difficulteFilter?: Difficulty;
   activeOnly?: boolean;
-  restaurableOnly?: boolean;
-  prerequisChallengeIdFilter?: string;
-  tentativesMaxFilter?: string;
+  nbTentativesFilter?: string;
+  prerequisFilter?: string;
 
-  // Autres filtres potentiels
+  // Other filters
   [key: string]: any;
 }
 
-// Réponse API
+// API Response interface (carried over from original)
 export interface ApiResponse<T> {
   data: T;
   pagination?: Pagination;
@@ -91,7 +150,7 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
-// Interface pour gérer les statistiques d'un challenge
+// Challenge stats interface (carried over from original)
 export interface ChallengeStats {
   id: string;
   challengeId: string;
@@ -105,8 +164,8 @@ export interface ChallengeStats {
   dateGeneration: string;
 }
 
-// Interface pour les niveaux simplifiés (puisque les challenges sont liés aux niveaux uniquement)
-export interface NiveauSimple {
+// Niveau interface (simplified from original)
+export interface Niveau {
   id: string;
   nom: string;
 }
