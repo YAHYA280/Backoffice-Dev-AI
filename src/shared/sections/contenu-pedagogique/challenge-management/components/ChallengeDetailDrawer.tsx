@@ -48,7 +48,7 @@ interface ChallengeDetailDrawerProps {
   onToggleActive?: (challenge: Challenge, active: boolean) => void;
 }
 
-const ChallengeDetailDrawer = ({
+export const ChallengeDetailDrawer = ({
   open,
   onClose,
   challenge,
@@ -68,6 +68,19 @@ const ChallengeDetailDrawer = ({
       onToggleActive(challenge, event.target.checked);
     }
   };
+
+  // Helper to safely format dates
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return fDate(new Date(dateString));
+    } catch (error) {
+      return 'Date invalide';
+    }
+  };
+
+  const exercicesCount = challenge.exercicesCount || challenge.questionsCount || 0;
+  const participantsCount = challenge.participantsCount || 0;
 
   return (
     <Drawer
@@ -211,7 +224,7 @@ const ChallengeDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {challenge.participantsCount || 0}
+              {participantsCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Participants
@@ -238,7 +251,7 @@ const ChallengeDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {challenge.exercicesCount || 0}
+              {exercicesCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Questions
@@ -347,7 +360,7 @@ const ChallengeDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    {fDate(new Date(challenge.dateDebut))}
+                    {safeFormatDate(challenge.dateDebut)}
                   </Typography>
                 }
               />
@@ -383,7 +396,7 @@ const ChallengeDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    {fDate(new Date(challenge.dateFin))}
+                    {safeFormatDate(challenge.dateFin)}
                   </Typography>
                 }
               />
@@ -419,7 +432,7 @@ const ChallengeDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    30 minutes
+                    {challenge.timeMaxMinutes || 30} minutes
                   </Typography>
                 }
               />
@@ -455,7 +468,9 @@ const ChallengeDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    2 tentatives
+                    {challenge.tentativesMax === -1
+                      ? 'Illimité'
+                      : `${challenge.tentativesMax} tentative${challenge.tentativesMax > 1 ? 's' : ''}`}
                   </Typography>
                 }
               />

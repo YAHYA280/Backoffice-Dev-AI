@@ -7,10 +7,10 @@ import { Container, Typography } from '@mui/material';
 // Import le hook pour gérer les challenges
 import { useChallenges } from './hooks/useChallenge';
 // Import les composants
-import ChallengeList from './components/ChallengeList';
-import ChallengeDialog from './components/ChallengeDialog';
-import ChallengeDetailDrawer from './components/ChallengeDetailDrawer';
-import ChallengeDeleteDialog from './components/ChallengeDeleteDialog';
+import { ChallengeList } from './components/ChallengeList';
+import { ChallengeDialog } from './components/ChallengeDialog';
+import { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
+import { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
 // Définissez quelques données de test pour les niveaux et matières
 const MOCK_NIVEAUX = [

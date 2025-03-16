@@ -30,7 +30,7 @@ interface ChallengeDeleteDialogProps {
   allowPermanentDelete?: boolean;
 }
 
-const ChallengeDeleteDialog = ({
+export const ChallengeDeleteDialog = ({
   open,
   onClose,
   onSubmit,

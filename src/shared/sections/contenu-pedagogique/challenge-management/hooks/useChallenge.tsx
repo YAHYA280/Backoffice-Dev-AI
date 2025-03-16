@@ -1,16 +1,16 @@
 'use client';
 
+import { addDays, subDays, subMonths } from 'date-fns';
 import { useState, useEffect, useCallback } from 'react';
-import { format, addDays, subDays, subMonths } from 'date-fns';
 
 import { DEFAULT_PAGINATION, MESSAGE_FINAL_DEFAUT } from '../constants';
 
 import type {
+  Question,
   Challenge,
   Pagination,
   ApiResponse,
   FilterParams,
-  Question,
   MessageFinal,
 } from '../types';
 
@@ -61,11 +61,13 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
       dateCreation: subMonths(new Date(), 2).toISOString(),
       datePublication: subDays(new Date(), 5).toISOString(),
       dateFin: addDays(new Date(), 10).toISOString(),
+      dateDebut: subDays(new Date(), 5).toISOString(),
       niveauId: '1',
       niveauNom: 'CP1 - Cours Préparatoire 1',
       niveauDifficulte: 'Moyen',
       participantsCount: 78,
       questionsCount: 10,
+      exercicesCount: 10,
       questions: generateMockQuestions(),
       timeMaxMinutes: 30,
       tentativesMax: 2,
@@ -83,10 +85,12 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
       statut: 'Brouillon',
       dateCreation: subMonths(new Date(), 1).toISOString(),
       datePublication: addDays(new Date(), 5).toISOString(),
+      dateDebut: addDays(new Date(), 5).toISOString(),
       niveauId: '2',
       niveauNom: 'CP2 - Cours Préparatoire 2',
       niveauDifficulte: 'Facile',
       questionsCount: 15,
+      exercicesCount: 15,
       timeMaxMinutes: 20,
       tentativesMax: 3,
       isRandomQuestions: true,
@@ -103,11 +107,13 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
       statut: 'Terminé',
       dateCreation: subMonths(new Date(), 3).toISOString(),
       datePublication: subDays(new Date(), 30).toISOString(),
+      dateDebut: subDays(new Date(), 30).toISOString(),
       dateFin: subDays(new Date(), 10).toISOString(),
       niveauId: '3',
       niveauNom: 'CE1 - Cours Élémentaire 1',
       niveauDifficulte: 'Difficile',
       participantsCount: 45,
+      exercicesCount: 5,
       questionsCount: 5,
       timeMaxMinutes: 60,
       tentativesMax: 1,
@@ -125,9 +131,11 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
       statut: 'Actif',
       dateCreation: subMonths(new Date(), 1.5).toISOString(),
       datePublication: subDays(new Date(), 15).toISOString(),
+      dateDebut: subDays(new Date(), 15).toISOString(),
       dateFin: addDays(new Date(), 20).toISOString(),
       niveauDifficulte: 'Moyen',
       participantsCount: 62,
+      exercicesCount: 20,
       questionsCount: 20,
       timeMaxMinutes: 25,
       tentativesMax: 2,
@@ -145,11 +153,13 @@ const fetchChallengesAPI = async (params: FilterParams): Promise<ApiResponse<Cha
       statut: 'Archivé',
       dateCreation: subMonths(new Date(), 4).toISOString(),
       datePublication: subMonths(new Date(), 3).toISOString(),
+      dateDebut: subMonths(new Date(), 3).toISOString(),
       dateFin: subMonths(new Date(), 2).toISOString(),
       niveauId: '4',
       niveauNom: 'CE2 - Cours Élémentaire 2',
       niveauDifficulte: 'Moyen',
       participantsCount: 38,
+      exercicesCount: 12,
       questionsCount: 12,
       timeMaxMinutes: 40,
       tentativesMax: 1,
@@ -343,10 +353,10 @@ export function useChallenges() {
       if (response.success) {
         setSelectedChallenge(response.data);
         return response.data;
-      } else {
-        setError(response.message || 'Une erreur est survenue');
-        return null;
       }
+
+      setError(response.message || 'Une erreur est survenue');
+      return null;
     } catch (err) {
       setError('Erreur lors du chargement des détails du challenge');
       console.error(err);
@@ -427,11 +437,13 @@ export function useChallenges() {
       statut: challenge.statut || 'Brouillon',
       dateCreation: new Date().toISOString(),
       datePublication: challenge.datePublication || new Date().toISOString(),
+      dateDebut: challenge.dateDebut || new Date().toISOString(),
       dateFin: challenge.dateFin,
       niveauId: challenge.niveauId,
       niveauNom: challenge.niveauNom,
       niveauDifficulte: challenge.niveauDifficulte || 'Moyen',
       questionsCount: 0,
+      exercicesCount: 0,
       timeMaxMinutes: challenge.timeMaxMinutes || 30,
       tentativesMax: challenge.tentativesMax || 1,
       isRandomQuestions: challenge.isRandomQuestions || false,

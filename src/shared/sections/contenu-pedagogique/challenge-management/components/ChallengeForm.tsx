@@ -26,6 +26,7 @@ import {
   FormHelperText,
   CircularProgress,
   FormControlLabel,
+  Paper,
 } from '@mui/material';
 
 import { Upload } from 'src/shared/components/upload';
@@ -109,7 +110,7 @@ export const ChallengeForm = ({
   const formatDateForInput = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     return date.toISOString().slice(0, 16);
   };
@@ -529,7 +530,7 @@ export const ChallengeForm = ({
             sx={{
               p: 2.5,
               borderRadius: 2,
-              bgcolor: alpha('#f5f5f5', 0.5),
+              bgcolor: (theme) => alpha('#f5f5f5', 0.5),
               border: (theme) => `1px dashed ${theme.palette.divider}`,
             }}
           >

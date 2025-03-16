@@ -29,12 +29,14 @@ export interface Challenge {
   statut: 'Actif' | 'Brouillon' | 'Terminé' | 'Archivé';
   dateCreation: string;
   datePublication: string;
+  dateDebut?: string;
   dateFin?: string;
   niveauId?: string;
   niveauNom?: string;
   niveauDifficulte: 'Facile' | 'Moyen' | 'Difficile';
   participantsCount?: number;
   questionsCount?: number;
+  exercicesCount?: number;
   questions?: Question[];
   timeMaxMinutes?: number;
   tentativesMax: number;

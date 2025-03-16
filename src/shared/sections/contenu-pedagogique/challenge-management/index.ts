@@ -3,16 +3,16 @@
 // Hooks
 export * from './hooks/useChallenge';
 
-// Composants principaux
+// Main components
 export { ChallengesManagementView as default } from './view';
 
-// Composants de challenge
-export { default as ChallengeList } from './components/ChallengeList';
-export { default as ChallengeItem } from './components/ChallengeItem';
-export { default as ChallengeForm } from './components/ChallengeForm';
-export { default as ChallengeDialog } from './components/ChallengeDialog';
-export { default as ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
-export { default as ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
+// Challenge components
+export { ChallengeList } from './components/ChallengeList';
+export { ChallengeItem } from './components/ChallengeItem';
+export { ChallengeForm } from './components/ChallengeForm';
+export { ChallengeDialog } from './components/ChallengeDialog';
+export { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
+export { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
 // Types
 export type {

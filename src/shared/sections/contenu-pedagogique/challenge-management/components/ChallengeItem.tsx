@@ -97,6 +97,7 @@ export const ChallengeItem = ({
   };
 
   const isArchived = challenge.statut === 'Archivé';
+  const participantsCount = challenge.participantsCount || 0;
 
   return (
     <>
@@ -282,7 +283,7 @@ export const ChallengeItem = ({
               }}
             >
               <FontAwesomeIcon icon={faUsers} style={{ fontSize: '0.75rem' }} />
-              {challenge.participantsCount || 0}
+              {participantsCount}
             </Typography>
           </TableCell>
         )}
@@ -348,7 +349,7 @@ export const ChallengeItem = ({
                   </IconButton>
                 </Tooltip>
 
-                {onResetClick && challenge.participantsCount > 0 && (
+                {onResetClick && participantsCount > 0 && (
                   <Tooltip title="Réinitialiser les participations">
                     <IconButton
                       color="warning"
@@ -503,7 +504,7 @@ export const ChallengeItem = ({
               Supprimer
             </MenuItem>
 
-            {onResetClick && challenge.participantsCount > 0 && (
+            {onResetClick && participantsCount > 0 && (
               <MenuItem
                 onClick={() => {
                   popover.onClose();
