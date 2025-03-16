@@ -42,12 +42,24 @@ export interface Reponse {
 }
 
 // Interface for Question
+// Interface for Question
 export interface Question {
   id: string;
   texte: string;
   type: QuestionType;
   ordre: number;
+  points: number; // Add this - points value for the question
+  duree: number; // Add this - time allowed for the question
+  isRequired?: boolean; // Add this - whether question is mandatory
   reponses?: Reponse[];
+  reponseAttendue?: string; // Add this - expected answer for open questions
+  elements?: {
+    // Add this - elements for visual/game questions
+    id: string;
+    texte?: string;
+    position?: number;
+    cible?: string;
+  }[];
   // Methods from diagram
   ajouterReponse?: (reponse: Reponse) => void;
   retirerReponse?: (reponse: Reponse) => void;

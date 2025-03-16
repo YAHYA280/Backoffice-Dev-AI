@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import Checkbox from '@mui/material/Checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { CustomUpload } from 'src/shared/components/upload/upload-custom';
 import {
   faSave,
   faTimes,
@@ -20,7 +22,6 @@ import {
   faGamepad,
   faPuzzlePiece,
   faClock,
-  faTrophy,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -35,7 +36,6 @@ import {
   Switch,
   Slider,
   Divider,
-  Tooltip,
   MenuItem,
   TextField,
   FormGroup,
@@ -54,7 +54,6 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  ListItemSecondaryAction,
   Tabs,
   Tab,
   Dialog,
@@ -109,21 +108,35 @@ const QUESTION_TYPE_OPTIONS = [
   },
 ];
 
+// Define types for editable responses and questions
+interface EditableReponse {
+  id?: string; // Make id optional for new responses
+  texte: string;
+  estCorrecte: boolean;
+}
+
 // Extended Question type with media files
-interface QuestionWithMedia extends Omit<Question, 'id' | 'reponses'> {
+interface EditableQuestion {
   id?: string;
-  reponses?: Omit<Reponse, 'id'>[];
+  texte: string;
+  type: QuestionType;
+  ordre?: number;
+  points: number;
+  duree: number;
+  reponses: EditableReponse[];
   fichier_image?: File | null;
   fichier_video?: File | null;
+  isRequired?: boolean;
+  elements?: {
+    id?: string;
+    texte?: string;
+    position?: number;
+    cible?: string;
+  }[];
+  reponseAttendue?: string;
 }
 
-// Extended Challenge type with extra files
-interface ChallengeWithFiles extends Omit<Challenge, 'id'> {
-  id?: string;
-  fichiers_supplementaires?: File[];
-}
-
-// Updated schema to match your types.ts
+// Schema for the form validation
 const schema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
@@ -177,7 +190,6 @@ const schema = z.object({
               id: z.string().optional(),
               texte: z.string().min(1, 'Le texte de la réponse est requis'),
               estCorrecte: z.boolean().optional().default(false),
-              feedback: z.string().optional(),
               ordre: z.number().optional(),
             })
           )
@@ -204,7 +216,7 @@ const schema = z.object({
 type ChallengeFormData = z.infer<typeof schema>;
 
 interface ChallengeFormProps {
-  initialValues?: Partial<ChallengeWithFiles>;
+  initialValues?: Partial<Challenge>;
   onSubmit: (data: Challenge) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -239,9 +251,7 @@ export const ChallengeForm = ({
   // Question editor state
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
-
-  // Temporary state for question being edited
-  const [currentQuestion, setCurrentQuestion] = useState<QuestionWithMedia | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<EditableQuestion | null>(null);
 
   // Generate ID function
   const generateId = () => `tmp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -283,10 +293,10 @@ export const ChallengeForm = ({
   // Watch values for conditional rendering
   const isRandomQuestions = watch('isRandomQuestions');
   const niveauId = watch('niveauId');
-  const statut = watch('statut');
   const scoreMethod = watch('scoreConfiguration.methode');
   const prerequisId = watch('prerequisId');
   const questions = watch('questions');
+  const UploadWithChildren = Upload as React.FC<UploadProps & { children?: React.ReactNode }>;
 
   // Define the steps
   const steps = [
@@ -373,7 +383,7 @@ export const ChallengeForm = ({
 
   // Question dialog handlers
   const openNewQuestionDialog = () => {
-    setCurrentQuestion({
+    const newQuestion: EditableQuestion = {
       id: generateId(),
       type: QuestionType.QCM,
       texte: '',
@@ -387,7 +397,8 @@ export const ChallengeForm = ({
         { texte: '', estCorrecte: false },
         { texte: '', estCorrecte: false },
       ],
-    });
+    };
+    setCurrentQuestion(newQuestion);
     setEditingQuestionIndex(null);
     setQuestionDialogOpen(true);
   };
@@ -396,16 +407,35 @@ export const ChallengeForm = ({
     // Make a copy to avoid modifying the watched value directly
     const questionToEdit = { ...questions[index] };
 
-    // Add media properties
-    const questionWithMedia: QuestionWithMedia = {
-      ...questionToEdit,
+    // Convert to EditableQuestion format
+    const editableQuestion: EditableQuestion = {
+      id: questionToEdit.id,
+      type: questionToEdit.type,
+      texte: questionToEdit.texte,
+      ordre: questionToEdit.ordre,
+      points: questionToEdit.points || 10,
+      duree: questionToEdit.duree || 60,
+      isRequired: (questionToEdit as any).isRequired,
       fichier_image: null,
       fichier_video: null,
-      // Ensure reponses is an array
-      reponses: questionToEdit.reponses || [],
+      // Ensure reponses is properly mapped
+      reponses: (questionToEdit.reponses || []).map((rep) => ({
+        id: rep.id,
+        texte: rep.texte,
+        estCorrecte: rep.estCorrecte,
+      })),
     };
 
-    setCurrentQuestion(questionWithMedia);
+    // Add optional properties if they exist
+    if (questionToEdit.reponseAttendue) {
+      editableQuestion.reponseAttendue = questionToEdit.reponseAttendue;
+    }
+
+    if (questionToEdit.elements) {
+      editableQuestion.elements = questionToEdit.elements;
+    }
+
+    setCurrentQuestion(editableQuestion);
     setEditingQuestionIndex(index);
     setQuestionDialogOpen(true);
   };
@@ -419,36 +449,41 @@ export const ChallengeForm = ({
     if (!currentQuestion) return;
 
     // Prepare the question data for saving, adding generated IDs where needed
-    const questionToSave: Question = {
+    const questionToSave = {
       id: currentQuestion.id || generateId(),
       type: currentQuestion.type,
       texte: currentQuestion.texte,
       ordre: currentQuestion.ordre || 0,
-      points: currentQuestion.points || 10,
-      duree: currentQuestion.duree || 60,
-      reponses: currentQuestion.reponses
-        ? currentQuestion.reponses.map((reponse) => ({
-            id: reponse.id || generateId(),
-            texte: reponse.texte,
-            estCorrecte: reponse.estCorrecte || false,
-          }))
-        : [],
-    };
+      points: currentQuestion.points,
+      duree: currentQuestion.duree,
+      // Always include isRequired as a definite boolean
+      isRequired: currentQuestion.isRequired === undefined ? true : currentQuestion.isRequired,
+      // Make sure each response has an ID
+      reponses: currentQuestion.reponses.map((reponse) => ({
+        id: reponse.id || generateId(),
+        texte: reponse.texte,
+        estCorrecte: reponse.estCorrecte,
+      })),
+    } as any; // Use type assertion to avoid TypeScript errors
 
-    if (currentQuestion.isRequired !== undefined) {
-      (questionToSave as any).isRequired = currentQuestion.isRequired;
-    }
-
+    // Add optional properties if needed
     if (currentQuestion.reponseAttendue) {
       questionToSave.reponseAttendue = currentQuestion.reponseAttendue;
     }
 
     if (currentQuestion.elements && currentQuestion.elements.length > 0) {
-      questionToSave.elements = currentQuestion.elements;
+      questionToSave.elements = currentQuestion.elements.map((element) => ({
+        id: element.id || generateId(),
+        texte: element.texte || '',
+        position: element.position || 0,
+        cible: element.cible || '',
+      }));
     }
 
-    // Handle media uploads here - in a real application, you would upload the files
-    // and store the URLs in the question object
+    // In a real application, here you would:
+    // 1. Upload the image/video files to your server
+    // 2. Get the URLs
+    // 3. Add the URLs to the multimedia array
 
     if (editingQuestionIndex !== null) {
       // Update existing question
@@ -457,7 +492,7 @@ export const ChallengeForm = ({
       setValue('questions', updatedQuestions);
     } else {
       // Add new question
-      appendQuestion(questionToSave as any);
+      appendQuestion(questionToSave);
     }
 
     setQuestionDialogOpen(false);
@@ -468,14 +503,15 @@ export const ChallengeForm = ({
   const handleAddOption = () => {
     if (!currentQuestion) return;
 
+    const newReponse: EditableReponse = { texte: '', estCorrecte: false };
     setCurrentQuestion({
       ...currentQuestion,
-      reponses: [...(currentQuestion.reponses || []), { texte: '', estCorrecte: false }],
+      reponses: [...currentQuestion.reponses, newReponse],
     });
   };
 
   const handleRemoveOption = (index: number) => {
-    if (!currentQuestion || !currentQuestion.reponses) return;
+    if (!currentQuestion) return;
 
     setCurrentQuestion({
       ...currentQuestion,
@@ -484,11 +520,17 @@ export const ChallengeForm = ({
   };
 
   const handleOptionChange = (index: number, field: string, value: any) => {
-    if (!currentQuestion || !currentQuestion.reponses) return;
+    if (!currentQuestion) return;
 
     const newReponses = [...currentQuestion.reponses];
-    newReponses[index] = { ...newReponses[index], [field]: value };
-    setCurrentQuestion({ ...currentQuestion, reponses: newReponses });
+    newReponses[index] = {
+      ...newReponses[index],
+      [field]: value,
+    };
+    setCurrentQuestion({
+      ...currentQuestion,
+      reponses: newReponses,
+    });
   };
 
   // Handlers for question reordering
@@ -735,39 +777,56 @@ export const ChallengeForm = ({
       </Grid>
 
       <Grid item xs={12}>
-        {initialValues.fichiers_supplementaires !== undefined && (
-          <FormControl fullWidth>
-            <FormLabel component="legend" sx={{ mb: 1 }}>
-              Documents supplémentaires (supports pédagogiques)
-            </FormLabel>
-            <Upload
-              multiple
-              thumbnail
-              value={initialValues.fichiers_supplementaires}
-              onDrop={(acceptedFiles) => {
-                if (initialValues.fichiers_supplementaires) {
-                  initialValues.fichiers_supplementaires = [
-                    ...initialValues.fichiers_supplementaires,
-                    ...acceptedFiles,
-                  ];
-                } else {
-                  initialValues.fichiers_supplementaires = acceptedFiles;
-                }
-              }}
-              onRemoveAll={() => {
-                if (initialValues.fichiers_supplementaires) {
-                  initialValues.fichiers_supplementaires = [];
-                }
-              }}
-              onRemove={(file) => {
-                if (initialValues.fichiers_supplementaires) {
-                  initialValues.fichiers_supplementaires =
-                    initialValues.fichiers_supplementaires.filter((f) => f !== file);
-                }
-              }}
-            />
-          </FormControl>
-        )}
+        <FormControl fullWidth>
+          <FormLabel component="legend" sx={{ mb: 1 }}>
+            Documents supplémentaires (supports pédagogiques)
+          </FormLabel>
+          <Upload
+            multiple
+            thumbnail
+            // Use a temporary state for files or handle in your application logic
+            onDrop={(acceptedFiles) => {
+              // Here you would handle the file uploads to your server
+              // In this example, we just log the files
+              console.log('Files uploaded:', acceptedFiles);
+
+              // In a real application, you would:
+              // 1. Upload these files to your server
+              // 2. Get the URLs
+              // 3. Add the URLs to multimedias array with appropriate type (DOCUMENT)
+              // Example:
+              /*
+              const newMedias = acceptedFiles.map(file => ({
+                id: generateId(),
+                type: MultimediaType.DOCUMENT,
+                url: "URL from server after upload",
+                fileName: file.name
+              }));
+              setValue('multimedias', [...watch('multimedias'), ...newMedias]);
+              */
+            }}
+            onRemoveAll={() => {
+              // Handle removing all uploaded files
+              console.log('All files removed');
+
+              // In a real application, you might filter the multimedias array
+              // to remove all documents:
+              // setValue('multimedias', watch('multimedias')
+              //    .filter(m => m.type !== MultimediaType.DOCUMENT));
+            }}
+            onRemove={(file) => {
+              // Handle removing a specific file
+              console.log('File removed:', file);
+
+              // In a real application, you would find the file in your
+              // multimedias array and remove it:
+              // const fileIndex = findFileIndex(file);
+              // const newMedias = [...watch('multimedias')];
+              // newMedias.splice(fileIndex, 1);
+              // setValue('multimedias', newMedias);
+            }}
+          />
+        </FormControl>
       </Grid>
     </Grid>
   );
@@ -1146,25 +1205,36 @@ export const ChallengeForm = ({
                     label="Type de question"
                     onChange={(e) => {
                       // Reset options when changing question type
-                      const newReponses =
-                        e.target.value === QuestionType.QCM
+                      const newType = e.target.value as QuestionType;
+                      const newReponses: EditableReponse[] =
+                        newType === QuestionType.QCM
                           ? [
                               { texte: '', estCorrecte: false },
                               { texte: '', estCorrecte: false },
                             ]
                           : [];
 
-                      setCurrentQuestion({
+                      // Create updated question with the new type
+                      const updatedQuestion: EditableQuestion = {
                         ...currentQuestion,
-                        type: e.target.value as QuestionType,
+                        type: newType,
                         reponses: newReponses,
-                        reponseAttendue: e.target.value === QuestionType.OUVERTE ? '' : undefined,
-                        elements:
-                          e.target.value === QuestionType.VISUEL ||
-                          e.target.value === QuestionType.MINIJEU
-                            ? []
-                            : undefined,
-                      });
+                      };
+
+                      // Add type-specific properties
+                      if (newType === QuestionType.OUVERTE) {
+                        updatedQuestion.reponseAttendue = '';
+                      } else {
+                        delete updatedQuestion.reponseAttendue;
+                      }
+
+                      if (newType === QuestionType.VISUEL || newType === QuestionType.MINIJEU) {
+                        updatedQuestion.elements = [];
+                      } else {
+                        delete updatedQuestion.elements;
+                      }
+
+                      setCurrentQuestion(updatedQuestion);
                     }}
                   >
                     {QUESTION_TYPE_OPTIONS.map((option) => (
@@ -1279,59 +1349,49 @@ export const ChallengeForm = ({
                 {!currentQuestion.fichier_image && !currentQuestion.fichier_video && (
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Upload
-                        accept={{ 'image/*': [] }}
-                        thumbnail
-                        onDrop={(acceptedFiles) => {
-                          if (acceptedFiles.length > 0) {
-                            handleQuestionImageChange(acceptedFiles[0]);
-                          }
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            border: '1px dashed grey',
-                            p: 3,
-                            textAlign: 'center',
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faImage} size="2x" style={{ marginBottom: 8 }} />
-                          <Typography>
-                            Déposer une image ici ou cliquer pour sélectionner
-                          </Typography>
-                        </Box>
-                      </Upload>
+                      <Controller
+                        name="fichier_image"
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <Upload
+                            multiple
+                            thumbnail
+                            value={value}
+                            onDrop={(acceptedFiles: File[]) => {
+                              onChange(
+                                value ? [...(value as File[]), ...acceptedFiles] : acceptedFiles
+                              );
+                            }}
+                            onRemoveAll={() => {
+                              onChange([]);
+                            }}
+                            onRemove={(file: File) => {
+                              const filteredItems = (value as File[])?.filter(
+                                (_file) => _file !== file
+                              );
+                              onChange(filteredItems);
+                            }}
+                          />
+                        )}
+                      />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <Upload
-                        accept={{ 'video/*': [] }}
-                        thumbnail
-                        onDrop={(acceptedFiles) => {
-                          if (acceptedFiles.length > 0) {
-                            handleQuestionVideoChange(acceptedFiles[0]);
-                          }
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            border: '1px dashed grey',
-                            p: 3,
-                            textAlign: 'center',
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faVideo} size="2x" style={{ marginBottom: 8 }} />
-                          <Typography>
-                            Déposer une vidéo ici ou cliquer pour sélectionner
-                          </Typography>
-                        </Box>
-                      </Upload>
+                      <Controller
+                        name="fichier_video"
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <CustomUpload
+                            accept={{ 'video/*': [] }}
+                            value={value}
+                            multiple={false}
+                            error={!!errors.fichier_video}
+                            helperText={errors.fichier_video?.message}
+                            onDrop={(acceptedFiles: File[]) => onChange(acceptedFiles[0])}
+                            onDelete={() => onChange(null)}
+                          />
+                        )}
+                      />
                     </Grid>
                   </Grid>
                 )}
@@ -1391,44 +1451,41 @@ export const ChallengeForm = ({
                       Options de réponse
                     </Typography>
 
-                    {currentQuestion.reponses &&
-                      currentQuestion.reponses.map((reponse, index) => (
-                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                          <Grid item xs={8}>
-                            <TextField
-                              label={`Option ${index + 1}`}
-                              fullWidth
-                              value={reponse.texte}
-                              onChange={(e) => handleOptionChange(index, 'texte', e.target.value)}
-                              required
-                            />
-                          </Grid>
-                          <Grid item xs={3}>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={reponse.estCorrecte || false}
-                                  onChange={(e) =>
-                                    handleOptionChange(index, 'estCorrecte', e.target.checked)
-                                  }
-                                />
-                              }
-                              label="Correcte"
-                            />
-                          </Grid>
-                          <Grid item xs={1}>
-                            <IconButton
-                              color="error"
-                              onClick={() => handleRemoveOption(index)}
-                              disabled={
-                                !currentQuestion.reponses || currentQuestion.reponses.length <= 2
-                              }
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </IconButton>
-                          </Grid>
+                    {currentQuestion.reponses.map((reponse, index) => (
+                      <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                        <Grid item xs={8}>
+                          <TextField
+                            label={`Option ${index + 1}`}
+                            fullWidth
+                            value={reponse.texte}
+                            onChange={(e) => handleOptionChange(index, 'texte', e.target.value)}
+                            required
+                          />
                         </Grid>
-                      ))}
+                        <Grid item xs={3}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={reponse.estCorrecte || false}
+                                onChange={(e) =>
+                                  handleOptionChange(index, 'estCorrecte', e.target.checked)
+                                }
+                              />
+                            }
+                            label="Correcte"
+                          />
+                        </Grid>
+                        <Grid item xs={1}>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleRemoveOption(index)}
+                            disabled={currentQuestion.reponses.length <= 2}
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
+                    ))}
 
                     <Button
                       variant="outlined"
@@ -1505,7 +1562,7 @@ export const ChallengeForm = ({
                 !currentQuestion ||
                 !currentQuestion.texte ||
                 (currentQuestion.type === QuestionType.QCM &&
-                  (!currentQuestion.reponses ||
+                  (currentQuestion.reponses.length === 0 ||
                     currentQuestion.reponses.some((r) => !r.texte) ||
                     !currentQuestion.reponses.some((r) => r.estCorrecte)))
               }
@@ -1701,7 +1758,24 @@ export const ChallengeForm = ({
           <Button
             variant="contained"
             type="submit"
-            onClick={handleSubmit(onSubmit as any)}
+            onClick={handleSubmit((data) => {
+              // Make sure all questions have proper IDs before submitting
+              const finalQuestions = data.questions.map((q, idx) => ({
+                ...q,
+                id: q.id || generateId(),
+                ordre: idx,
+                reponses: (q.reponses || []).map((r) => ({
+                  ...r,
+                  id: r.id || generateId(),
+                })),
+              }));
+
+              // Submit with the properly formatted questions
+              onSubmit({
+                ...data,
+                questions: finalQuestions,
+              } as Challenge);
+            })}
             disabled={isSubmitting || !isValid || questions.length === 0}
             startIcon={
               isSubmitting ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />
