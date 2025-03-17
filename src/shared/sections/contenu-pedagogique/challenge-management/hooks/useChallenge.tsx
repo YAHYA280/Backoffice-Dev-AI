@@ -19,34 +19,78 @@ const generateMockQuestions = (): Question[] => [
     texte: 'Quelle est la capitale de la France?',
     type: QuestionType.QCM,
     ordre: 1,
+    points: 10, // Added points
+    duree: 30, // Added duration in seconds
+    isRequired: true, // Added isRequired
     reponses: [
       { id: '1-1', texte: 'Paris', estCorrecte: true },
       { id: '1-2', texte: 'Lyon', estCorrecte: false },
       { id: '1-3', texte: 'Marseille', estCorrecte: false },
       { id: '1-4', texte: 'Bordeaux', estCorrecte: false },
     ],
+    elements: [], // Added empty elements array
   },
   {
     id: '2',
     texte: 'Quelles sont les couleurs du drapeau français?',
     type: QuestionType.QCM,
     ordre: 2,
+    points: 15, // Added points
+    duree: 45, // Added duration in seconds
+    isRequired: true, // Added isRequired
     reponses: [
       { id: '2-1', texte: 'Rouge et blanc', estCorrecte: false },
       { id: '2-2', texte: 'Bleu, blanc et rouge', estCorrecte: true },
       { id: '2-3', texte: 'Noir, jaune et rouge', estCorrecte: false },
       { id: '2-4', texte: 'Vert, blanc et rouge', estCorrecte: false },
     ],
+    elements: [], // Added empty elements array
   },
   {
     id: '3',
     texte: 'Expliquez brièvement le principe de la photosynthèse.',
     type: QuestionType.OUVERTE,
     ordre: 3,
+    points: 20, // Added points
+    duree: 120, // Added duration in seconds
+    isRequired: false, // Added isRequired
     reponses: [
       { id: '3-1', texte: 'photosynthèse', estCorrecte: true },
       { id: '3-2', texte: 'lumière', estCorrecte: true },
       { id: '3-3', texte: 'plantes', estCorrecte: true },
+    ],
+    reponseAttendue:
+      'La photosynthèse est un processus utilisé par les plantes pour convertir la lumière du soleil en énergie chimique.', // Added expected answer
+    elements: [], // Added empty elements array
+  },
+  // Added a new question with visual elements
+  {
+    id: '4',
+    texte: 'Placez les éléments au bon endroit sur la carte.',
+    type: QuestionType.VISUEL,
+    ordre: 4,
+    points: 25,
+    duree: 90,
+    isRequired: true,
+    elements: [
+      {
+        id: '4-1',
+        texte: 'Paris',
+        position: 1,
+        cible: 'center',
+      },
+      {
+        id: '4-2',
+        texte: 'Lyon',
+        position: 2,
+        cible: 'southeast',
+      },
+      {
+        id: '4-3',
+        texte: 'Marseille',
+        position: 3,
+        cible: 'south',
+      },
     ],
   },
 ];

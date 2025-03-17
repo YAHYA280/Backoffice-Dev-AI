@@ -174,6 +174,7 @@ const schema = z.object({
     )
     .optional()
     .default([]),
+  fichiers_supplementaires: z.array(z.custom<File>()).optional().default([]),
   questions: z
     .array(
       z.object({
@@ -296,7 +297,6 @@ export const ChallengeForm = ({
   const scoreMethod = watch('scoreConfiguration.methode');
   const prerequisId = watch('prerequisId');
   const questions = watch('questions');
-  const UploadWithChildren = Upload as React.FC<UploadProps & { children?: React.ReactNode }>;
 
   // Define the steps
   const steps = [
@@ -777,56 +777,34 @@ export const ChallengeForm = ({
       </Grid>
 
       <Grid item xs={12}>
-        <FormControl fullWidth>
-          <FormLabel component="legend" sx={{ mb: 1 }}>
-            Documents supplémentaires (supports pédagogiques)
-          </FormLabel>
-          <Upload
-            multiple
-            thumbnail
-            // Use a temporary state for files or handle in your application logic
-            onDrop={(acceptedFiles) => {
-              // Here you would handle the file uploads to your server
-              // In this example, we just log the files
-              console.log('Files uploaded:', acceptedFiles);
-
-              // In a real application, you would:
-              // 1. Upload these files to your server
-              // 2. Get the URLs
-              // 3. Add the URLs to multimedias array with appropriate type (DOCUMENT)
-              // Example:
-              /*
-              const newMedias = acceptedFiles.map(file => ({
-                id: generateId(),
-                type: MultimediaType.DOCUMENT,
-                url: "URL from server after upload",
-                fileName: file.name
-              }));
-              setValue('multimedias', [...watch('multimedias'), ...newMedias]);
-              */
-            }}
-            onRemoveAll={() => {
-              // Handle removing all uploaded files
-              console.log('All files removed');
-
-              // In a real application, you might filter the multimedias array
-              // to remove all documents:
-              // setValue('multimedias', watch('multimedias')
-              //    .filter(m => m.type !== MultimediaType.DOCUMENT));
-            }}
-            onRemove={(file) => {
-              // Handle removing a specific file
-              console.log('File removed:', file);
-
-              // In a real application, you would find the file in your
-              // multimedias array and remove it:
-              // const fileIndex = findFileIndex(file);
-              // const newMedias = [...watch('multimedias')];
-              // newMedias.splice(fileIndex, 1);
-              // setValue('multimedias', newMedias);
-            }}
-          />
-        </FormControl>
+        <Controller
+          name="fichiers_supplementaires"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <FormControl fullWidth>
+              <FormLabel component="legend" sx={{ mb: 1 }}>
+                Documents supplémentaires (supports pédagogiques)
+              </FormLabel>
+              <Upload
+                multiple
+                thumbnail
+                value={value || []}
+                onDrop={(acceptedFiles) => {
+                  const newFiles = value ? [...value, ...acceptedFiles] : acceptedFiles;
+                  onChange(newFiles);
+                }}
+                onRemoveAll={() => {
+                  onChange([]);
+                }}
+                onRemove={(file) => {
+                  if (!value) return;
+                  const filteredItems = value.filter((_file) => _file !== file);
+                  onChange(filteredItems);
+                }}
+              />
+            </FormControl>
+          )}
+        />
       </Grid>
     </Grid>
   );
@@ -1169,7 +1147,8 @@ export const ChallengeForm = ({
             }}
           >
             <Typography color="text.secondary">
-              Aucune question n'a été ajoutée. Cliquez sur "Ajouter une Question" pour commencer.
+              Aucune question n&apos;a été ajoutée. Cliquez sur &apos;Ajouter une Question&apos;
+              pour commencer.
             </Typography>
           </Paper>
         )}
@@ -1345,53 +1324,36 @@ export const ChallengeForm = ({
                     iconPosition="start"
                   />
                 </Tabs>
-
                 {!currentQuestion.fichier_image && !currentQuestion.fichier_video && (
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                      <Controller
-                        name="fichier_image"
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <Upload
-                            multiple
-                            thumbnail
-                            value={value}
-                            onDrop={(acceptedFiles: File[]) => {
-                              onChange(
-                                value ? [...(value as File[]), ...acceptedFiles] : acceptedFiles
-                              );
-                            }}
-                            onRemoveAll={() => {
-                              onChange([]);
-                            }}
-                            onRemove={(file: File) => {
-                              const filteredItems = (value as File[])?.filter(
-                                (_file) => _file !== file
-                              );
-                              onChange(filteredItems);
-                            }}
-                          />
-                        )}
-                      />
+                      <FormControl fullWidth>
+                        <FormLabel component="legend" sx={{ mb: 1 }}>
+                          Image
+                        </FormLabel>
+                        <CustomUpload
+                          accept={{ 'image/*': [] }}
+                          value={currentQuestion.fichier_image}
+                          multiple={false}
+                          onDrop={(acceptedFiles) => handleQuestionImageChange(acceptedFiles[0])}
+                          onDelete={() => handleRemoveQuestionMedia()}
+                        />
+                      </FormControl>
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <Controller
-                        name="fichier_video"
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <CustomUpload
-                            accept={{ 'video/*': [] }}
-                            value={value}
-                            multiple={false}
-                            error={!!errors.fichier_video}
-                            helperText={errors.fichier_video?.message}
-                            onDrop={(acceptedFiles: File[]) => onChange(acceptedFiles[0])}
-                            onDelete={() => onChange(null)}
-                          />
-                        )}
-                      />
+                      <FormControl fullWidth>
+                        <FormLabel component="legend" sx={{ mb: 1 }}>
+                          Vidéo
+                        </FormLabel>
+                        <CustomUpload
+                          accept={{ 'video/*': [] }}
+                          value={currentQuestion.fichier_video}
+                          multiple={false}
+                          onDrop={(acceptedFiles) => handleQuestionVideoChange(acceptedFiles[0])}
+                          onDelete={() => handleRemoveQuestionMedia()}
+                        />
+                      </FormControl>
                     </Grid>
                   </Grid>
                 )}
@@ -1543,7 +1505,7 @@ export const ChallengeForm = ({
                     >
                       <Typography color="text.secondary">
                         La configuration avancée des éléments visuels peut être effectuée après la
-                        création du challenge via l'éditeur spécialisé.
+                        création du challenge via l&apos;éditeur spécialisé.
                       </Typography>
                     </Paper>
                   </>
@@ -1703,7 +1665,7 @@ export const ChallengeForm = ({
                 </Accordion>
               ) : (
                 <Typography color="error">
-                  Aucune question n'a été ajoutée. Veuillez retourner à l'étape 3.
+                  Aucune question n&apos;a été ajoutée. Veuillez retourner à l&apos;étape 3.
                 </Typography>
               )}
             </Box>
@@ -1755,33 +1717,78 @@ export const ChallengeForm = ({
         <Box sx={{ flex: '1 1 auto' }} />
 
         {activeStep === steps.length - 1 ? (
+          // Corrected submit button implementation for the ChallengeForm component
           <Button
             variant="contained"
             type="submit"
             onClick={handleSubmit((data) => {
               // Make sure all questions have proper IDs before submitting
-              const finalQuestions = data.questions.map((q, idx) => ({
-                ...q,
-                id: q.id || generateId(),
-                ordre: idx,
-                reponses: (q.reponses || []).map((r) => ({
-                  ...r,
-                  id: r.id || generateId(),
-                })),
-              }));
+              const finalQuestions = data.questions.map((q, idx) => {
+                // Ensure all elements have IDs
+                const elements = (q.elements || []).map((element) => ({
+                  ...element,
+                  id: element.id || generateId(), // Ensure id is always a string
+                }));
 
-              // Submit with the properly formatted questions
-              onSubmit({
-                ...data,
+                return {
+                  ...q,
+                  id: q.id || generateId(),
+                  ordre: idx,
+                  reponses: (q.reponses || []).map((r) => ({
+                    ...r,
+                    id: r.id || generateId(),
+                  })),
+                  elements,
+                };
+              });
+
+              // Fix ScoreConfiguration - ensure id is always present
+              const scoreConfig = {
+                ...data.scoreConfiguration,
+                id: data.scoreConfiguration.id || generateId(),
+              };
+
+              // Create prerequis object if prerequisId is provided
+              const prerequisChallenge = data.prerequisId
+                ? prerequisChallenges.find((pc) => pc.id === data.prerequisId)
+                : undefined;
+
+              // Create a properly formatted Challenge object
+              const challengeData: Challenge = {
+                id: initialValues.id || generateId(),
+                nom: data.nom,
+                description: data.description,
+                statut: data.statut,
+                difficulte: data.difficulte,
+                timer: data.timer,
+                nbTentatives: data.nbTentatives,
+                datePublication: data.datePublication,
+                dateCreation: data.dateCreation || new Date().toISOString(),
+                dateMiseAJour: new Date().toISOString(),
+                messageSucces: data.messageSucces || MESSAGE_FINAL_DEFAUT.success,
+                messageEchec: data.messageEchec || MESSAGE_FINAL_DEFAUT.failure,
+                scoreConfiguration: scoreConfig,
                 questions: finalQuestions,
-              } as Challenge);
+                multimedias: data.multimedias || [],
+                isRandomQuestions: data.isRandomQuestions || false,
+                // prerequis: prerequisChallenge,
+                niveau: data.niveauId
+                  ? {
+                      id: data.niveauId,
+                      nom: niveaux.find((n) => n.id === data.niveauId)?.nom || '',
+                    }
+                  : undefined,
+              };
+
+              // Now submit the properly formatted challenge data
+              onSubmit(challengeData);
             })}
             disabled={isSubmitting || !isValid || questions.length === 0}
             startIcon={
               isSubmitting ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />
             }
           >
-            {initialValues.nom ? 'Mettre à jour' : 'Créer le challenge'}
+            {initialValues.id ? 'Mettre à jour' : 'Créer le challenge'}
           </Button>
         ) : (
           <Button
