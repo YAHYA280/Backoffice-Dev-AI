@@ -273,7 +273,6 @@ export function UserRoleEditForm({ currentRole, open, onClose, onUpdateRole }: P
                       gap: 0.5,
                       padding: '14px',
                       height: 'auto',
-                      minHeight: '42px',
                     },
                   }}
                   MenuProps={{

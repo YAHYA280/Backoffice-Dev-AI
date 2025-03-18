@@ -9,8 +9,8 @@ import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
 import TableHead from '@mui/material/TableHead';
 import TableCell from '@mui/material/TableCell';
+import { TextField, IconButton } from '@mui/material';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import { Collapse, TextField, IconButton } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ export function TableRoleHeadCustom({
 }: TableRoleHeadCustomProps) {
   const [searchValues, setSearchValues] = useState({
     name: '',
-    description: ''
+    description: '',
   });
 
   const [expandedSearchFields, setExpandedSearchFields] = useState({
@@ -71,7 +71,7 @@ export function TableRoleHeadCustom({
   const handleSelectAllRows = (checked: boolean) => {
     setSearchValues({
       name: '',
-      description: ''
+      description: '',
     });
 
     setExpandedSearchFields({
@@ -114,7 +114,8 @@ export function TableRoleHeadCustom({
             />
           </TableCell>
         ) : (
-          <></>
+          <>
+          </>
         )}
 
         {headLabel.map((headCell) => (
@@ -147,8 +148,16 @@ export function TableRoleHeadCustom({
                 )}
               </Box>
 
-              {(numSelected === 0 && ['name', 'description'].includes(headCell.id)) ? (
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'left', width: '100%', justifyContent: 'flex-start' }}>
+              {numSelected === 0 && ['name', 'description'].includes(headCell.id) ? (
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: 'flex',
+                    alignItems: 'left',
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                  }}
+                >
                   <IconButton
                     size="small"
                     onClick={() => handleToggleSearchField(headCell.id as 'name' | 'description')}
@@ -160,7 +169,7 @@ export function TableRoleHeadCustom({
                   >
                     <FontAwesomeIcon icon={faSearch} size="xs" />
                   </IconButton>
-                  
+
                   {expandedSearchFields[headCell.id as 'name' | 'description'] ? (
                     <TextField
                       variant="outlined"
@@ -177,11 +186,13 @@ export function TableRoleHeadCustom({
                       autoFocus
                     />
                   ) : (
-                    <></>
+                    <>
+                    </>
                   )}
                 </Box>
               ) : (
-                <></>
+                <>
+                </>
               )}
             </Box>
           </TableCell>

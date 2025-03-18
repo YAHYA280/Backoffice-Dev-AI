@@ -1,9 +1,11 @@
+
 import { CONFIG } from 'src/config-global';
 import { DashboardLayout } from 'src/shared/layouts/dashboard';
 
 import { Snackbar } from 'src/shared/components/snackbar';
 
 import { AuthGuard } from 'src/auth/guard';
+
 
 // ----------------------------------------------------------------------
 
@@ -22,11 +24,11 @@ export default function Layout({ children }: Props) {
   }
 
   return (
-    <>
-      <Snackbar />
-      <AuthGuard>
-        <DashboardLayout>{children}</DashboardLayout>
-      </AuthGuard>
-    </>
+    <AuthGuard>
+      <DashboardLayout>
+        <Snackbar />
+        {children}
+      </DashboardLayout>
+    </AuthGuard>
   );
 }

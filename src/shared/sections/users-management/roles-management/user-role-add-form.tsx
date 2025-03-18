@@ -160,7 +160,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
         sx={{ p: 3, pt: 3, bgcolor: (theme) => alpha(theme.palette.background.default, 0.4) }}
       >
         <Typography sx={{ mb: 3, mt: 3, color: 'text.secondary', fontWeight: 500 }}>
-          Veuillez reseigner les détails du rôle que vous souhaitez ajouter.
+          Veuillez renseigner les détails du rôle que vous souhaitez ajouter.
         </Typography>
 
         {/* Role Name */}

@@ -65,7 +65,7 @@ interface TableColumn {
 // Updated to match screenshot columns exactly
 const TABLE_HEAD: TableColumn[] = [
   { id: 'select', label: '', align: 'center', width: 50 },
-  { id: 'nom', label: 'Nom', align: 'left', width: 260 },
+  { id: 'nom', label: 'Nom', align: 'center', width: 260 },
   { id: 'description', label: 'Description', align: 'left', width: 300 },
   { id: 'statut', label: 'Statut', align: 'left', width: 120 },
   { id: 'datePublication', label: 'Date publication', align: 'center', width: 150 },
@@ -200,9 +200,9 @@ const ColumnFilter = ({
         width: isExpanded ? 'auto' : 'auto',
         minWidth: isExpanded ? 80 : 24, // Just enough width for the icon when not expanded
         transition: 'all 0.2s ease-in-out',
-        marginTop: '-6px', // Reduce space between search icon and column title
+        marginTop: dense ? '-3px' : '-6px', // Reduce space between search icon and column title in dense mode
         '& .MuiOutlinedInput-root': {
-          height: 28,
+          height: dense ? '24px' : '28px', // Smaller height in dense mode
           background: 'transparent',
           '& fieldset': {
             border: 'none !important',
@@ -213,8 +213,8 @@ const ColumnFilter = ({
         },
         // Make the input text smaller and remove padding
         '& .MuiInputBase-input': {
-          padding: '2px 0px',
-          fontSize: '0.75rem',
+          padding: dense ? '0px 0px' : '2px 0px', // Reduced padding in dense mode
+          fontSize: dense ? '0.7rem' : '0.75rem', // Smaller font in dense mode
           textAlign: align, // Match alignment with column header
         },
       }}
@@ -227,7 +227,7 @@ const ColumnFilter = ({
               onClick={handleSearchIconClick}
               style={{
                 color: 'text.disabled',
-                fontSize: '1rem',
+                fontSize: dense ? '0.8rem' : '1rem', // Smaller icon in dense mode
                 cursor: 'pointer',
               }}
             />
@@ -236,7 +236,7 @@ const ColumnFilter = ({
         endAdornment: value ? (
           <InputAdornment position="end">
             <IconButton
-              size="medium"
+              size="small"
               onClick={() => onChange(columnId, '')}
               sx={{
                 padding: 0,
@@ -245,7 +245,7 @@ const ColumnFilter = ({
                 },
               }}
             >
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '1 rem' }} />
+              <FontAwesomeIcon icon={faTimes} style={{ fontSize: dense ? '0.8rem' : '1rem' }} />
             </IconButton>
           </InputAdornment>
         ) : null,
@@ -253,7 +253,6 @@ const ColumnFilter = ({
     />
   );
 };
-
 interface ChallengeListProps {
   challenges: Challenge[];
   loading: boolean;
@@ -408,6 +407,7 @@ export const ChallengeList = ({
   const notFound = !filteredChallenges.length && !loading;
 
   // Custom table head to ensure perfect column alignment
+  // Custom table head to ensure perfect column alignment
   const renderTableHeader = () => (
     <TableHead
       sx={{
@@ -417,7 +417,7 @@ export const ChallengeList = ({
         '& .MuiTableCell-head': {
           bgcolor: alpha(theme.palette.primary.lighter, 0.2),
           fontWeight: 'fontWeightBold',
-          padding: table.dense ? '8px 6px 0px' : '12px 8px 0px', // Adjust padding based on dense mode
+          padding: table.dense ? '2px 6px' : '8px 8px', // Reduced padding in both modes
         },
       }}
     >
@@ -427,14 +427,15 @@ export const ChallengeList = ({
         <TableCell
           padding="checkbox"
           sx={{
-            width: 50,
-            minWidth: 50,
-            maxWidth: 50,
+            width: table.dense ? 60 : 50, // Increased width in dense mode
+            minWidth: table.dense ? 60 : 50, // Increased min-width in dense mode
+            maxWidth: table.dense ? 60 : 50, // Increased max-width in dense mode
             bgcolor: alpha(theme.palette.primary.lighter, 0.2),
             position: 'sticky',
             top: 0,
-            zIndex: 11,
-            padding: table.dense ? '4px' : '8px', // Adjust checkbox padding in dense mode
+            zIndex: 12,
+            padding: table.dense ? '2px 12px 2px 6px' : '4px 8px', // Reduced padding in both modes
+            height: table.dense ? '28px' : '23px', // For non-dense, 38px * 0.6 ≈ 23px
           }}
         >
           <Checkbox
@@ -446,7 +447,7 @@ export const ChallengeList = ({
                 challenges.map((row) => row.id)
               )
             }
-            size={table.dense ? 'small' : 'medium'} // Use smaller checkboxes in dense mode
+            size={table.dense ? 'small' : 'medium'}
           />
         </TableCell>
 
@@ -460,7 +461,7 @@ export const ChallengeList = ({
               sx={{
                 whiteSpace: 'nowrap',
                 borderBottom: 'none',
-                fontSize: table.dense ? '0.8125rem' : '0.875rem', // Smaller font in dense mode
+                fontSize: table.dense ? '0.8125rem' : '0.875rem',
                 minWidth: column.width,
                 maxWidth: column.width,
                 width: column.width,
@@ -468,7 +469,8 @@ export const ChallengeList = ({
                 position: 'sticky',
                 top: 0,
                 zIndex: 11,
-                padding: table.dense ? '8px 6px' : '12px 8px', // Adjust padding based on dense mode
+                padding: table.dense ? '2px 6px' : '8px 8px', // Reduced padding in both modes
+                height: table.dense ? '28px' : '23px', // For non-dense, 38px * 0.6 ≈ 23px
               }}
             >
               {column.label}
@@ -481,8 +483,9 @@ export const ChallengeList = ({
         sx={{
           bgcolor: alpha(theme.palette.primary.lighter, 0.2),
           '& .MuiTableCell-root': {
-            padding: table.dense ? '0px 6px 6px' : '0px 8px 8px', // Adjust padding based on dense mode
+            padding: table.dense ? '0px 6px 2px' : '0px 8px 4px', // Reduced bottom padding in both modes
             borderTop: 'none',
+            height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
           },
         }}
       >
@@ -490,13 +493,15 @@ export const ChallengeList = ({
         <TableCell
           padding="checkbox"
           sx={{
-            width: 50,
-            minWidth: 50,
-            maxWidth: 50,
+            width: table.dense ? 60 : 50, // Match first row width
+            minWidth: table.dense ? 60 : 50, // Match first row min-width
+            maxWidth: table.dense ? 60 : 50, // Match first row max-width
             bgcolor: alpha(theme.palette.primary.lighter, 0.2),
             position: 'sticky',
-            top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+            top: table.dense ? '28px' : '23px', // Non-dense: first row height is now 23px
             zIndex: 11,
+            height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
+            padding: table.dense ? '0 12px 0 6px' : '0 8px', // Match first row padding
           }}
         />
 
@@ -515,8 +520,9 @@ export const ChallengeList = ({
                     width: column.width,
                     bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                     position: 'sticky',
-                    top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+                    top: table.dense ? '28px' : '23px', // Non-dense: updated to match the new first row height
                     zIndex: 11,
+                    height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
                   }}
                 >
                   {/* Empty cell for action columns */}
@@ -536,8 +542,9 @@ export const ChallengeList = ({
                   width: column.width,
                   bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                   position: 'sticky',
-                  top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+                  top: table.dense ? '28px' : '23px', // Non-dense: updated to match the new first row height
                   zIndex: 11,
+                  height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
                 }}
               >
                 <ColumnFilter
@@ -545,7 +552,7 @@ export const ChallengeList = ({
                   value={columnFilters[column.id as keyof typeof columnFilters] || ''}
                   onChange={handleColumnFilterChangeLocal}
                   align={column.align}
-                  dense={table.dense} // Pass dense mode to ColumnFilter
+                  dense={table.dense}
                 />
               </TableCell>
             );
@@ -659,16 +666,18 @@ export const ChallengeList = ({
                       <Button
                         variant="contained"
                         color="error"
-                        startIcon={<FontAwesomeIcon icon={faTrash} />}
+                        size="medium"
                         onClick={handleOpenConfirm}
                         sx={{
-                          px: 2,
+                          minWidth: 'auto',
+                          px: 1,
                           py: 1,
+                          m: 0.5,
                           fontWeight: 'fontWeightBold',
                           transition: theme.transitions.create(['background-color']),
                         }}
                       >
-                        Supprimer
+                        <FontAwesomeIcon icon={faTrash} />
                       </Button>
                     )}
                   </Box>

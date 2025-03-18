@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { faCircleInfo, faCheckCircle, faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 
 import Portal from '@mui/material/Portal';
@@ -8,8 +7,6 @@ import Portal from '@mui/material/Portal';
 import { StyledToaster } from './styles';
 import {FontAwesome} from '../fontawesome';
 import { toasterClasses } from './classes';
-
-export { toast };
 
 // ----------------------------------------------------------------------
 

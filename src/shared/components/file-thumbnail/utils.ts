@@ -73,7 +73,7 @@ export function fileThumb(fileUrl: string) {
   let thumb;
 
   switch (fileFormat(fileUrl)) {
-    case 'folder':
+    case 'dossier':
       thumb = iconUrl('ic-folder');
       break;
     case 'txt':

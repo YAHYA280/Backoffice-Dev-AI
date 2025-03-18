@@ -47,7 +47,8 @@ export const ColorPreview = forwardRef<HTMLDivElement, BoxProps & ColorPreviewPr
         {colors.length > limit ? (
           <Box component="span" sx={{ typography: 'subtitle2' }}>{`+${restColors}`}</Box>
         ) : (
-          <></>
+          <>
+          </>
         )}
       </Box>
     );

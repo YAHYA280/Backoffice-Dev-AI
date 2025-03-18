@@ -46,9 +46,9 @@ export type IKanbanTask = {
   description?: string;
   attachments?: string[];
   comments: IKanbanComment[];
-  niveau?: string,
-  matiere?: string,
-  exercice?: string[],
+  niveau?: string;
+  matiere?: string;
+  exercice?: string[];
   assignee: IKanbanAssignee[];
   due?: [IDateValue, IDateValue];
   reporter: {

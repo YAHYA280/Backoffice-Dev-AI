@@ -115,7 +115,8 @@ const CustomColumnHeader = ({
               <FontAwesomeIcon icon={faSearch} size="xs" />
             </IconButton>
           ) : (
-            <></>
+            <>
+            </>
           )}
 
           {/* Wrapper Box for Calendar Icon & DateField */}
@@ -139,7 +140,8 @@ const CustomColumnHeader = ({
                 <FontAwesomeIcon icon={faCalendar} size="xs" />
               </IconButton>
             ): (
-              <></>
+              <>
+              </>
             )}
 
             {/* DateField (Only appears when clicking calendar) */}
@@ -168,7 +170,8 @@ const CustomColumnHeader = ({
                 }}
               />
             ) : (
-              <></>
+              <>
+              </>
             )}
           </Box>
 
@@ -196,7 +199,8 @@ const CustomColumnHeader = ({
               }}
             />
           ) : (
-            <></>
+            <>
+            </>
           )}
         </Box>
       </Box>

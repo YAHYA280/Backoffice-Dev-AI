@@ -1,4 +1,4 @@
-import { MultimediaRessourcesView } from "src/shared/sections/contenu-pedagogique/ressources-multim-management/view";
+import { FileManagerView } from "src/shared/sections/contenu-pedagogique/ressources-multim-management/view/file-manager-view";
 // ----------------------------------------------------------------------
 
 
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function MultimediaRessourcesPage() {
-  return <MultimediaRessourcesView />;
+  return <FileManagerView />;
 }

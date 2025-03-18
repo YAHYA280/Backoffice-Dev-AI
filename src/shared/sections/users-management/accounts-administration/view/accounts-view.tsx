@@ -13,6 +13,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Table, Button, TableBody } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
@@ -32,6 +33,7 @@ import { useTable, TableNoData, getComparator, TablePaginationCustom } from 'src
 import { UserNewForm } from '../user-new-form';
 import { UserTableRow } from '../user-table-row';
 import { TableHeadWithFilters } from '../table-head-with-filters';
+
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -53,6 +55,7 @@ type Props = { title?: string };
 
 export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
   const table = useTable();
+  const router = useRouter();
   const newForm = useBoolean();
   const [tableData, setTableData] = useState<IUserItem[]>([]);
   const [baseFilteredData, setBaseFilteredData] = useState<IUserItem[]>([]);
@@ -92,6 +95,13 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
       filters.setState({ statut: newValue === 'Tous' ? [] : [newValue] });
     },
     [filters, table]
+  );
+
+  const handleEditRow = useCallback(
+    (id: string) => {
+      router.push(paths.dashboard.user.edit(id));
+    },
+    [router]
   );
 
   const computedTableHead = useMemo(() => {
@@ -252,6 +262,7 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
                     selected={table.selected.includes(row.id)}
                     onSelectRow={() => table.onSelectRow(row.id)}
                     statusFilter={filters.state.statut.length ? filters.state.statut[0] : 'Tous'}
+                    onEditRow={() => handleEditRow(row.id)}
                   />
                 ))}
                 {notFound && <TableNoData notFound />}

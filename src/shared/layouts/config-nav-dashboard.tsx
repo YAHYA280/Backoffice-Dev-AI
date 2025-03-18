@@ -171,6 +171,11 @@ export const navData = [
         path: paths.dashboard.ai.assistants_management,
         icon: ICONS.assistants,
       },
+      {
+        title: 'Moderation et signalement',
+        path: paths.dashboard.moderation.root,
+        icon: ICONS.kanban,
+      },
     ],
   },
 ];

@@ -1,13 +1,13 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import { forwardRef, useCallback } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import ButtonBase from '@mui/material/ButtonBase';
-import { alpha as hexAlpha, useTheme } from '@mui/material/styles';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 import { varAlpha } from 'src/shared/theme/styles';
 
@@ -18,7 +18,7 @@ import type { ColorPickerProps } from './types';
 export const ColorPicker = forwardRef<HTMLDivElement, BoxProps & ColorPickerProps>(
   ({ colors, selected, onSelectColor, limit = 'auto', sx, slotProps, ...other }, ref) => {
     const singleSelect = typeof selected === 'string';
-    const theme = useTheme(); 
+    const theme = useTheme();
 
     const handleSelect = useCallback(
       (color: string) => {
@@ -85,7 +85,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, BoxProps & ColorPickerProp
                       transform: 'scale(1.3)',
                       boxShadow: `4px 4px 8px 0 ${hexAlpha(color, 0.48)}`,
                       outline: `solid 2px ${hexAlpha(color, 0.08)}`,
-                      transition: transitionStyle
+                      transition: transitionStyle,
                     }),
                   }}
                 >

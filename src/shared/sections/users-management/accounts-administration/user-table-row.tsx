@@ -16,6 +16,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Select, TextField, InputLabel, FormControl } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { useBoolean } from 'src/hooks';
 
 import { Label } from 'src/shared/components/label';
@@ -28,13 +31,14 @@ type Props = {
   row: IUserItem;
   selected: boolean;
   onSelectRow: () => void;
+  onEditRow: () => void;
   statusFilter?: string;
 };
 
-export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous' }: Props) {
+export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilter = 'Tous' }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
-  
+  const router = useRouter();
   const confirmDelete = useBoolean();
   const confirmBlock = useBoolean();
   const confirmSuspend = useBoolean();
@@ -88,7 +92,8 @@ export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous'
         {statusFilter === 'Suspendu' ? (
           <TableCell>{row.dureRestante} jours</TableCell>
         ) : (
-          <TableCell>—</TableCell>
+          <>
+          </>
         )}
         <TableCell>
           <IconButton onClick={handleOpenMenu}>
@@ -97,13 +102,21 @@ export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous'
           <Menu open={menuOpen} anchorEl={anchorEl} onClose={handleCloseMenu} PaperProps={{ sx: { width: 200 } }}>
             {row.status === 'Actif' ? (
               <>
-                <MenuItem>
+                <MenuItem
+              onClick={() => {
+                handleCloseMenu();
+                router.push(paths.dashboard.user.consulter(row.id));
+              }}
+              >
                   <ListItemIcon>
                     <FontAwesomeIcon icon={faEye} color="#2196F3" />
                   </ListItemIcon>
                   <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
                 </MenuItem>
-                <MenuItem>
+                <MenuItem
+              onClick={() => {
+                onEditRow();
+              }}>
                   <ListItemIcon>
                     <FontAwesomeIcon icon={faEdit} color="#4CAF50" />
                   </ListItemIcon>
@@ -149,7 +162,11 @@ export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous'
             )}
             {row.status === 'Supprimé' ? (
               <>
-                <MenuItem>
+                <MenuItem
+              onClick={() => {
+                handleCloseMenu();
+                router.push(paths.dashboard.user.consulter(row.id));
+              }}>
                   <ListItemIcon>
                     <FontAwesomeIcon icon={faEye} color="#2196F3" />
                   </ListItemIcon>
@@ -173,7 +190,11 @@ export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous'
             )}
             {row.status === 'Bloqué' ? (
               <>
-                <MenuItem>
+                <MenuItem
+              onClick={() => {
+                handleCloseMenu();
+                router.push(paths.dashboard.user.consulter(row.id));
+              }}>
                   <ListItemIcon>
                     <FontAwesomeIcon icon={faEye} color="#2196F3" />
                   </ListItemIcon>
@@ -197,7 +218,11 @@ export function UserTableRow({ row, selected, onSelectRow, statusFilter = 'Tous'
             )}
             {row.status === 'Suspendu' ? (
               <>
-                <MenuItem>
+                <MenuItem
+              onClick={() => {
+                handleCloseMenu();
+                router.push(paths.dashboard.user.consulter(row.id));
+              }}>
                   <ListItemIcon>
                     <FontAwesomeIcon icon={faEye} color="#2196F3" />
                   </ListItemIcon>

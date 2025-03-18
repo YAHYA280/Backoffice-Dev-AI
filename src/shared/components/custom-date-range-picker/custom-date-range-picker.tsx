@@ -64,6 +64,10 @@ export function CustomDateRangePicker({
             </>
           ) : (
             <>
+              {startDate ? <DateCalendar value={startDate} onChange={onChangeStartDate} /> : 
+              <>
+              </>
+              }
 
               {startDate ? (
                 <DateCalendar value={startDate} onChange={onChangeStartDate} />
@@ -80,10 +84,13 @@ export function CustomDateRangePicker({
           )}
         </Stack>
 
-        {error && (
+        {error ? (
           <FormHelperText error sx={{ px: 2 }}>
             End date must be later than start date
           </FormHelperText>
+        ) : (
+          <>
+          </>
         )}
       </DialogContent>
 

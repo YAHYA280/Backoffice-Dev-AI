@@ -332,7 +332,7 @@ export function TableHeadWithFilters({
           }
         })}
       </TableRow>
-      {filterChips.length > 0 && (
+      {filterChips.length > 0 ? (
         <TableRow>
           <TableCell colSpan={columns.length}>
             <FiltersResult totalResults={totalResults} onReset={() => filters.onResetState()}>
@@ -344,6 +344,9 @@ export function TableHeadWithFilters({
             </FiltersResult>
           </TableCell>
         </TableRow>
+      ) : (
+        <>
+        </>
       )}
     </TableHead>
   );

@@ -163,7 +163,7 @@ export function UserRoleListView() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'lignes_sélectionnées.csv');
+    link.setAttribute('download', 'rôles_sélectionnées.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -307,11 +307,11 @@ export function UserRoleListView() {
             localeText={{
               toolbarColumns: 'Colonnes',
               toolbarColumnsLabel: 'Sélectionner les colonnes',
-              toolbarFilters: 'Filtres',
+              toolbarFilters: '',
               toolbarFiltersLabel: 'Afficher les filtres',
               toolbarFiltersTooltipHide: 'Masquer les filtres',
               toolbarFiltersTooltipShow: 'Afficher les filtres',
-              toolbarExport: 'Exporter',
+              toolbarExport: '',
               toolbarDensity: 'Densité',
               filterPanelOperator: 'Opérateur',
               filterPanelInputLabel: 'Valeur',

@@ -74,41 +74,49 @@ export const paths = {
       profile: `${ROOTS.DASHBOARD}/user/profile`,
       account: `${ROOTS.DASHBOARD}/user/account`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
+      consulter: (id: string) => `${ROOTS.DASHBOARD}/user/${id}/consulter`,
       demo: {
         edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
+        consulter: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/consulter`,
       },
     },
-    contenu_pedagogique : {
+    contenu_pedagogique: {
       root: `${ROOTS.DASHBOARD}/contenu-pedagogique`,
       apprentissage: `${ROOTS.DASHBOARD}/contenu-pedagogique/apprentissage`,
       challenges: `${ROOTS.DASHBOARD}/contenu-pedagogique/challenges`,
       ressourcesMultimedia: `${ROOTS.DASHBOARD}/contenu-pedagogique/ressources-multimedia`,
       ameliorations: `${ROOTS.DASHBOARD}/contenu-pedagogique/ameliorations`,
     },
-    analytics : {
+    analytics: {
       root: `${ROOTS.DASHBOARD}/analytics`,
       usage_statistics: `${ROOTS.DASHBOARD}/analytics/usage-statistics`,
       logs: `${ROOTS.DASHBOARD}/analytics/logs-tracabilite`,
       users_performances: `${ROOTS.DASHBOARD}/analytics/users-performances`,
       suivi_erreurs: `${ROOTS.DASHBOARD}/analytics/suivi-erreurs`,
     },
-    notifications_config : {
+    notifications_config: {
       root: `${ROOTS.DASHBOARD}/notifications`,
     },
-    support : {
+    support: {
       root: `${ROOTS.DASHBOARD}/support`,
       faqs: `${ROOTS.DASHBOARD}/support/faqs`,
       chatbot: `${ROOTS.DASHBOARD}/support/chatbot`,
       tickets: `${ROOTS.DASHBOARD}/support/tickets`,
     },
-    abonnements : {
+    abonnements: {
       root: `${ROOTS.DASHBOARD}/abonnements`,
+      new: `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/new`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/${id}`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/${id}/edit`,
       suivi_facturation: `${ROOTS.DASHBOARD}/abonnements/suivi-factures`,
       gestion_abonnements: `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements`,
     },
-    ai : {
+    ai: {
       root: `${ROOTS.DASHBOARD}/ai`,
       assistants_management: `${ROOTS.DASHBOARD}/ai/assistants-management`,
-    }
-  }
+    },
+    moderation : {
+      root: `${ROOTS.DASHBOARD}/moderation`,
+    },
+  },
 };
