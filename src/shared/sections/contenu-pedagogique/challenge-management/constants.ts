@@ -91,3 +91,72 @@ export const DEFAULT_SCORE_CONFIGURATION = {
     pointsTotal: 100,
   }),
 };
+
+export const MOCK_PREREQUIS_CHALLENGES = [
+  // Niveau CP1
+  {
+    id: 'c1',
+    nom: 'Bases de mathématiques CP1',
+    niveau: { id: '1', nom: 'CP1 - Cours Préparatoire 1' },
+  },
+  {
+    id: 'c2',
+    nom: 'Lecture débutant CP1',
+    niveau: { id: '1', nom: 'CP1 - Cours Préparatoire 1' },
+  },
+  // Niveau CP2
+  {
+    id: 'c3',
+    nom: 'Additions et soustractions CP2',
+    niveau: { id: '2', nom: 'CP2 - Cours Préparatoire 2' },
+  },
+  {
+    id: 'c4',
+    nom: 'Vocabulaire de base CP2',
+    niveau: { id: '2', nom: 'CP2 - Cours Préparatoire 2' },
+  },
+  // Niveau CE1
+  {
+    id: 'c5',
+    nom: 'Multiplication et division CE1',
+    niveau: { id: '3', nom: 'CE1 - Cours Élémentaire 1' },
+  },
+  {
+    id: 'c6',
+    nom: 'Grammaire simple CE1',
+    niveau: { id: '3', nom: 'CE1 - Cours Élémentaire 1' },
+  },
+  // Niveau CE2
+  {
+    id: 'c7',
+    nom: 'Fractions CE2',
+    niveau: { id: '4', nom: 'CE2 - Cours Élémentaire 2' },
+  },
+  {
+    id: 'c8',
+    nom: 'Conjugaison CE2',
+    niveau: { id: '4', nom: 'CE2 - Cours Élémentaire 2' },
+  },
+  // Niveau CM1
+  {
+    id: 'c9',
+    nom: 'Géométrie CM1',
+    niveau: { id: '5', nom: 'CM1 - Cours Moyen 1' },
+  },
+  {
+    id: 'c10',
+    nom: 'Rédaction CM1',
+    niveau: { id: '5', nom: 'CM1 - Cours Moyen 1' },
+  },
+  // Niveau CM2
+  {
+    id: 'c11',
+    nom: 'Problèmes complexes CM2',
+    niveau: { id: '6', nom: 'CM2 - Cours Moyen 2' },
+  },
+  {
+    id: 'c12',
+    nom: 'Littérature CM2',
+    niveau: { id: '6', nom: 'CM2 - Cours Moyen 2' },
+  },
+];

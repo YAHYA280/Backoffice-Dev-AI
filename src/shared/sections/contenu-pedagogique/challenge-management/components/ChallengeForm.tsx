@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { useState } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import Checkbox from '@mui/material/Checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { CustomUpload } from 'src/shared/components/upload/upload-custom';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import {
   faSave,
   faTimes,
@@ -24,10 +22,16 @@ import {
   faClock,
 } from '@fortawesome/free-solid-svg-icons';
 
+import Checkbox from '@mui/material/Checkbox';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
+  Tab,
   Grid,
   Chip,
+  Step,
+  List,
+  Tabs,
   Stack,
   alpha,
   Paper,
@@ -35,38 +39,35 @@ import {
   Select,
   Switch,
   Slider,
+  Dialog,
   Divider,
+  Stepper,
   MenuItem,
+  ListItem,
   TextField,
   FormGroup,
+  FormLabel,
+  StepLabel,
+  Accordion,
   InputLabel,
   Typography,
-  FormLabel,
   IconButton,
   FormControl,
-  Stepper,
-  Step,
-  StepLabel,
+  DialogTitle,
+  ListItemText,
+  ListItemIcon,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
   FormHelperText,
   CircularProgress,
   FormControlLabel,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Tabs,
-  Tab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Accordion,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
 import { Upload } from 'src/shared/components/upload';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { CustomUpload } from 'src/shared/components/upload/upload-custom';
 
 import { Difficulty, ScoreMethod, MultimediaType, ChallengeStatus, QuestionType } from '../types';
 import {
@@ -74,6 +75,7 @@ import {
   DIFFICULTE_OPTIONS,
   TENTATIVES_OPTIONS,
   MESSAGE_FINAL_DEFAUT,
+  MOCK_PREREQUIS_CHALLENGES,
   DEFAULT_SCORE_CONFIGURATION,
   METHODE_CALCUL_SCORE_OPTIONS,
 } from '../constants';
@@ -297,6 +299,12 @@ export const ChallengeForm = ({
   const scoreMethod = watch('scoreConfiguration.methode');
   const prerequisId = watch('prerequisId');
   const questions = watch('questions');
+
+  const allPrerequisChallenges = [...prerequisChallenges, ...MOCK_PREREQUIS_CHALLENGES];
+
+  const filteredPrerequisChallenges = niveauId
+    ? allPrerequisChallenges.filter((challenge) => challenge.niveau?.id === niveauId)
+    : allPrerequisChallenges;
 
   // Define the steps
   const steps = [
@@ -536,23 +544,39 @@ export const ChallengeForm = ({
   // Handlers for question reordering
   const handleMoveQuestionUp = (index: number) => {
     if (index === 0) return;
-    swapQuestion(index, index - 1);
 
-    // Update ordre property
     const updatedQuestions = [...questions];
-    updatedQuestions[index].ordre = index - 1;
-    updatedQuestions[index - 1].ordre = index;
+
+    // Swap questions
+    [updatedQuestions[index - 1], updatedQuestions[index]] = [
+      updatedQuestions[index],
+      updatedQuestions[index - 1],
+    ];
+
+    // Update ordre explicitly
+    updatedQuestions.forEach((q, idx) => {
+      q.ordre = idx;
+    });
+
     setValue('questions', updatedQuestions);
   };
 
   const handleMoveQuestionDown = (index: number) => {
     if (index === questions.length - 1) return;
-    swapQuestion(index, index + 1);
 
-    // Update ordre property
     const updatedQuestions = [...questions];
-    updatedQuestions[index].ordre = index + 1;
-    updatedQuestions[index + 1].ordre = index;
+
+    // Swap questions
+    [updatedQuestions[index + 1], updatedQuestions[index]] = [
+      updatedQuestions[index],
+      updatedQuestions[index + 1],
+    ];
+
+    // Update ordre explicitly
+    updatedQuestions.forEach((q, idx) => {
+      q.ordre = idx;
+    });
+
     setValue('questions', updatedQuestions);
   };
 
@@ -950,55 +974,81 @@ export const ChallengeForm = ({
       )}
 
       <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-          Prérequis (Challenge dépendant)
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-      </Grid>
+        <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+            Prérequis (Challenge dépendant)
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
 
-      <Grid item xs={12} md={6}>
-        <Controller
-          name="prerequisId"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth>
-              <InputLabel>Challenge prérequis</InputLabel>
-              <Select {...field} label="Challenge prérequis" displayEmpty>
-                <MenuItem value="">
-                  <em>Aucun prérequis</em>
-                </MenuItem>
-                {prerequisChallenges.map((challenge) => (
-                  <MenuItem key={challenge.id} value={challenge.id}>
-                    {challenge.nom}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-        />
-      </Grid>
-
-      {prerequisId && (
-        <Grid item xs={12} md={6}>
-          <Controller
-            name="prerequisPourcentage"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Pourcentage minimum requis"
-                type="number"
-                fullWidth
-                InputProps={{
-                  inputProps: { min: 0, max: 100 },
-                  endAdornment: <Typography variant="body2">%</Typography>,
-                }}
-                placeholder="Ex: 70"
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Controller
+                name="prerequisId"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <FormControl variant="outlined" fullWidth>
+                    <InputLabel id="prerequis-select-label">Challenge prérequis</InputLabel>
+                    <Select
+                      {...field}
+                      labelId="prerequis-select-label"
+                      label="Challenge prérequis"
+                      displayEmpty
+                      id="prerequis-select"
+                    >
+                      <MenuItem value="none">
+                        <em>Aucun prérequis</em>
+                      </MenuItem>
+                      {filteredPrerequisChallenges.map((challenge) => (
+                        <MenuItem key={challenge.id} value={challenge.id}>
+                          {challenge.nom}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      Sélectionnez un challenge qui doit être complété avant
+                      {niveauId && filteredPrerequisChallenges.length === 0 && (
+                        <Typography variant="caption" color="error" display="block">
+                          Aucun challenge disponible pour ce niveau
+                        </Typography>
+                      )}
+                    </FormHelperText>
+                  </FormControl>
+                )}
               />
+            </Grid>
+
+            {prerequisId !== 'none' && (
+              <Grid item xs={12} md={6}>
+                <Controller
+                  name="prerequisPourcentage"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth>
+                      <TextField
+                        {...field}
+                        label="Pourcentage minimum requis"
+                        type="number"
+                        variant="outlined"
+                        InputProps={{
+                          inputProps: { min: 0, max: 100 },
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Typography variant="body2">%</Typography>
+                            </InputAdornment>
+                          ),
+                        }}
+                        placeholder="Ex: 70"
+                        helperText="Score minimum nécessaire pour accéder à ce challenge"
+                      />
+                    </FormControl>
+                  )}
+                />
+              </Grid>
             )}
-          />
-        </Grid>
-      )}
+          </Grid>
+        </Paper>
+      </Grid>
 
       <Grid item xs={12}>
         <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
@@ -1076,20 +1126,28 @@ export const ChallengeForm = ({
                       <IconButton
                         onClick={() => handleMoveQuestionUp(index)}
                         disabled={index === 0}
+                        size="medium"
+                        sx={{ color: '#1976D2' }} // Blue color
                       >
-                        <FontAwesomeIcon icon={faChevronLeft} rotation={90} />
+                        <FontAwesomeIcon icon={faChevronLeft} rotation={90} fontSize="medium" />
                       </IconButton>
                       <IconButton
                         onClick={() => handleMoveQuestionDown(index)}
                         disabled={index === questions.length - 1}
+                        size="medium"
+                        sx={{ color: '#388E3C' }} // Green color
                       >
-                        <FontAwesomeIcon icon={faChevronLeft} rotation={270} />
+                        <FontAwesomeIcon icon={faChevronLeft} rotation={270} fontSize="medium" />
                       </IconButton>
-                      <IconButton onClick={() => openEditQuestionDialog(index)}>
-                        <FontAwesomeIcon icon={faEye} />
+                      <IconButton onClick={() => openEditQuestionDialog(index)} size="medium">
+                        <FontAwesomeIcon icon={faEye} fontSize="medium" />
                       </IconButton>
-                      <IconButton onClick={() => removeQuestion(index)}>
-                        <FontAwesomeIcon icon={faTrash} />
+                      <IconButton
+                        onClick={() => removeQuestion(index)}
+                        size="medium"
+                        sx={{ color: '#D32F2F' }}
+                      >
+                        <FontAwesomeIcon icon={faTrash} fontSize="medium" />
                       </IconButton>
                     </Stack>
                   }
@@ -1177,9 +1235,11 @@ export const ChallengeForm = ({
           <DialogContent dividers>
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormControl fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Type de question</InputLabel>
                   <Select
+                    labelId="question-type-label"
+                    id="question-type-select"
                     value={currentQuestion.type}
                     label="Type de question"
                     onChange={(e) => {
@@ -1215,16 +1275,42 @@ export const ChallengeForm = ({
 
                       setCurrentQuestion(updatedQuestion);
                     }}
+                    MenuProps={{
+                      PaperProps: {
+                        style: { zIndex: 1500 },
+                      },
+                    }}
                   >
                     {QUESTION_TYPE_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <FontAwesomeIcon icon={option.icon} />
-                          <Typography>{option.label}</Typography>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 30,
+                              height: 30,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              color: 'primary.main',
+                            }}
+                          >
+                            <FontAwesomeIcon icon={option.icon} />
+                          </Box>
+                          <Box>
+                            <Typography variant="body1">{option.label}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {option.description}
+                            </Typography>
+                          </Box>
                         </Stack>
                       </MenuItem>
                     ))}
                   </Select>
+                  <FormHelperText>
+                    Choisissez le type de question adapté à votre contenu pédagogique
+                  </FormHelperText>
                 </FormControl>
               </Grid>
 

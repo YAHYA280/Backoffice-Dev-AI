@@ -26,6 +26,7 @@ import {
   TableContainer,
   InputAdornment,
   TableHead,
+  Checkbox,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -53,12 +54,20 @@ import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
 
 import type { Challenge, Pagination, FilterParams, ChallengeStatus, Difficulty } from '../types';
 
+// Define interface for table columns
+interface TableColumn {
+  id: string;
+  label: string;
+  align: 'left' | 'center' | 'right';
+  width?: number | string;
+}
+
 // Updated to match screenshot columns exactly
-const TABLE_HEAD = [
+const TABLE_HEAD: TableColumn[] = [
   { id: 'select', label: '', align: 'center', width: 50 },
-  { id: 'nom', label: 'Nom', align: 'left', width: 200 },
+  { id: 'nom', label: 'Nom', align: 'left', width: 260 },
   { id: 'description', label: 'Description', align: 'left', width: 300 },
-  { id: 'statut', label: 'Statut', align: 'center', width: 120 },
+  { id: 'statut', label: 'Statut', align: 'left', width: 120 },
   { id: 'datePublication', label: 'Date publication', align: 'center', width: 150 },
   { id: 'dateMiseAJour', label: 'Dernière modification', align: 'center', width: 150 },
   { id: 'difficulte', label: 'Difficulté', align: 'center', width: 120 },
@@ -158,9 +167,17 @@ interface ColumnFilterProps {
   columnId: string;
   value: string;
   onChange: (columnId: string, value: string) => void;
+  align?: 'left' | 'center' | 'right';
+  dense?: boolean;
 }
 
-const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
+const ColumnFilter = ({
+  columnId,
+  value,
+  onChange,
+  align = 'left',
+  dense = false,
+}: ColumnFilterProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -178,13 +195,15 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
       onFocus={() => setIsExpanded(true)}
-      onBlur={() => setIsExpanded(false)}
+      onBlur={() => !value && setIsExpanded(false)} // Only collapse if no value
       sx={{
-        width: isExpanded ? 200 : 50,
-        transition: 'width 0.3s ease-in-out',
+        width: isExpanded ? 'auto' : 'auto',
+        minWidth: isExpanded ? 80 : 24, // Just enough width for the icon when not expanded
+        transition: 'all 0.2s ease-in-out',
+        marginTop: '-6px', // Reduce space between search icon and column title
         '& .MuiOutlinedInput-root': {
-          borderRadius: 1,
-          bgcolor: 'background.paper',
+          height: 28,
+          background: 'transparent',
           '& fieldset': {
             border: 'none !important',
           },
@@ -192,8 +211,15 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
             border: 'none !important',
           },
         },
+        // Make the input text smaller and remove padding
+        '& .MuiInputBase-input': {
+          padding: '2px 0px',
+          fontSize: '0.75rem',
+          textAlign: align, // Match alignment with column header
+        },
       }}
       InputProps={{
+        // Always show the search icon at the start
         startAdornment: (
           <InputAdornment position="start">
             <FontAwesomeIcon
@@ -201,7 +227,7 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
               onClick={handleSearchIconClick}
               style={{
                 color: 'text.disabled',
-                fontSize: '0.875rem',
+                fontSize: '1rem',
                 cursor: 'pointer',
               }}
             />
@@ -209,8 +235,17 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
         ),
         endAdornment: value ? (
           <InputAdornment position="end">
-            <IconButton size="small" onClick={() => onChange(columnId, '')}>
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
+            <IconButton
+              size="medium"
+              onClick={() => onChange(columnId, '')}
+              sx={{
+                padding: 0,
+                '&:hover': {
+                  background: 'transparent',
+                },
+              }}
+            >
+              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '1 rem' }} />
             </IconButton>
           </InputAdornment>
         ) : null,
@@ -298,7 +333,6 @@ export const ChallengeList = ({
   });
 
   // Filter out deleted challenges
-  // Filter out deleted challenges
   const filteredChallenges = useMemo(
     () => challenges.filter((challenge) => challenge.statut !== 'Supprimé'),
     [challenges]
@@ -363,83 +397,161 @@ export const ChallengeList = ({
   };
 
   // Create the visible table headers based on selected columns
-  const visibleTableHead = TABLE_HEAD.filter(
-    (col) => col.id === 'select' || col.id === 'actions' || visibleColumns.includes(col.id)
+  const visibleTableHead = useMemo(
+    () =>
+      TABLE_HEAD.filter(
+        (col) => col.id === 'select' || col.id === 'actions' || visibleColumns.includes(col.id)
+      ),
+    [visibleColumns]
   );
 
   const notFound = !filteredChallenges.length && !loading;
 
   // Custom table head to ensure perfect column alignment
-  const renderTableHead = () => (
+  const renderTableHeader = () => (
     <TableHead
       sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
         '& .MuiTableCell-head': {
           bgcolor: alpha(theme.palette.primary.lighter, 0.2),
           fontWeight: 'fontWeightBold',
-          zIndex: 3,
+          padding: table.dense ? '8px 6px 0px' : '12px 8px 0px', // Adjust padding based on dense mode
         },
       }}
     >
+      {/* First row - Column Headers */}
       <TableRow>
-        {visibleTableHead.map((column) => (
-          <TableCell
-            key={column.id}
-            align={column.align as any}
-            width={column.width}
-            sx={{
-              whiteSpace: 'nowrap',
-              padding: '16px 8px',
-              fontSize: '0.875rem',
-            }}
-          >
-            {column.label}
-          </TableCell>
-        ))}
+        {/* Checkbox column for row selection */}
+        <TableCell
+          padding="checkbox"
+          sx={{
+            width: 50,
+            minWidth: 50,
+            maxWidth: 50,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: 0,
+            zIndex: 11,
+            padding: table.dense ? '4px' : '8px', // Adjust checkbox padding in dense mode
+          }}
+        >
+          <Checkbox
+            indeterminate={table.selected.length > 0 && table.selected.length < challenges.length}
+            checked={challenges.length > 0 && table.selected.length === challenges.length}
+            onChange={(event) =>
+              table.onSelectAllRows(
+                event.target.checked,
+                challenges.map((row) => row.id)
+              )
+            }
+            size={table.dense ? 'small' : 'medium'} // Use smaller checkboxes in dense mode
+          />
+        </TableCell>
+
+        {visibleTableHead
+          .filter((col) => col.id !== 'select')
+          .map((column) => (
+            <TableCell
+              key={column.id}
+              align={column.align}
+              width={column.width}
+              sx={{
+                whiteSpace: 'nowrap',
+                borderBottom: 'none',
+                fontSize: table.dense ? '0.8125rem' : '0.875rem', // Smaller font in dense mode
+                minWidth: column.width,
+                maxWidth: column.width,
+                width: column.width,
+                bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                position: 'sticky',
+                top: 0,
+                zIndex: 11,
+                padding: table.dense ? '8px 6px' : '12px 8px', // Adjust padding based on dense mode
+              }}
+            >
+              {column.label}
+            </TableCell>
+          ))}
+      </TableRow>
+
+      {/* Second row - Filters */}
+      <TableRow
+        sx={{
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          '& .MuiTableCell-root': {
+            padding: table.dense ? '0px 6px 6px' : '0px 8px 8px', // Adjust padding based on dense mode
+            borderTop: 'none',
+          },
+        }}
+      >
+        {/* Empty checkbox cell for filter row */}
+        <TableCell
+          padding="checkbox"
+          sx={{
+            width: 50,
+            minWidth: 50,
+            maxWidth: 50,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+            zIndex: 11,
+          }}
+        />
+
+        {visibleTableHead
+          .filter((col) => col.id !== 'select')
+          .map((column) => {
+            if (column.id === 'actions') {
+              return (
+                <TableCell
+                  key={`${column.id}-filter-cell`}
+                  align={column.align}
+                  width={column.width}
+                  sx={{
+                    minWidth: column.width,
+                    maxWidth: column.width,
+                    width: column.width,
+                    bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                    position: 'sticky',
+                    top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+                    zIndex: 11,
+                  }}
+                >
+                  {/* Empty cell for action columns */}
+                </TableCell>
+              );
+            }
+
+            // Regular filter cells for data columns
+            return (
+              <TableCell
+                key={`${column.id}-filter`}
+                align={column.align}
+                width={column.width}
+                sx={{
+                  minWidth: column.width,
+                  maxWidth: column.width,
+                  width: column.width,
+                  bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                  position: 'sticky',
+                  top: table.dense ? '38px' : '48px', // Adjust based on height of first row in dense mode
+                  zIndex: 11,
+                }}
+              >
+                <ColumnFilter
+                  columnId={column.id}
+                  value={columnFilters[column.id as keyof typeof columnFilters] || ''}
+                  onChange={handleColumnFilterChangeLocal}
+                  align={column.align}
+                  dense={table.dense} // Pass dense mode to ColumnFilter
+                />
+              </TableCell>
+            );
+          })}
       </TableRow>
     </TableHead>
-  );
-
-  // Render row for filter inputs (below header)
-  const renderFilterRow = () => (
-    <TableRow
-      sx={{
-        position: 'sticky',
-        top: table.dense ? '37px' : '57px',
-        bgcolor: 'background.paper',
-        zIndex: 2,
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-        '& .MuiTableCell-root': {
-          padding: '4px 8px',
-          lineHeight: 1,
-        },
-      }}
-    >
-      {visibleTableHead.map((column) => {
-        if (column.id === 'select' || column.id === 'actions') {
-          return (
-            <TableCell
-              key={`${column.id}-filter-cell`}
-              align={column.align as any}
-              width={column.width}
-              sx={{ bgcolor: 'background.paper' }}
-            >
-              {/* Empty cell for action columns */}
-            </TableCell>
-          );
-        }
-
-        // Regular filter cells for data columns
-        return (
-          <TableCell key={column.id} align="left" width={column.width}>
-            <ColumnFilter
-              columnId={column.id}
-              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
-              onChange={handleColumnFilterChangeLocal}
-            />
-          </TableCell>
-        );
-      })}
-    </TableRow>
   );
 
   return (
@@ -571,15 +683,18 @@ export const ChallengeList = ({
                   position: 'relative',
                   minHeight: 240,
                   maxHeight: 500,
+                  tableLayout: 'fixed', // Important for fixed column widths
                 }}
               >
-                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
+                <Table
+                  size={table.dense ? 'small' : 'medium'}
+                  stickyHeader
+                  sx={{ tableLayout: 'fixed' }} // Important for fixed column widths
+                >
                   {/* Custom Table Head for better column alignment */}
-                  {renderTableHead()}
+                  {renderTableHeader()}
 
                   <TableBody>
-                    {renderFilterRow()}
-
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
@@ -594,6 +709,7 @@ export const ChallengeList = ({
                           onSelectRow={() => table.onSelectRow(challenge.id)}
                           onToggleActive={onToggleActive}
                           visibleColumns={visibleColumns}
+                          // tableHead={visibleTableHead}
                         />
                       ))
                     )}

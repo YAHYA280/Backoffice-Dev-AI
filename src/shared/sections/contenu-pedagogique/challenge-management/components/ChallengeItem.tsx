@@ -39,6 +39,20 @@ import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
 
 import { Challenge, ChallengeStatus } from '../types';
 
+// Define column widths to match the header
+const COLUMN_WIDTHS = {
+  select: 50,
+  nom: 200,
+  description: 300,
+  statut: 120,
+  datePublication: 150,
+  dateMiseAJour: 150,
+  difficulte: 120,
+  nbTentatives: 100,
+  participantsCount: 120,
+  actions: 150,
+};
+
 interface ChallengeItemProps {
   challenge: Challenge;
   selected: boolean;
@@ -101,6 +115,16 @@ export const ChallengeItem = ({
   const questionsCount = challenge.questionsCount || 0;
   const nbTentatives = challenge.nbTentatives || 1;
 
+  // Helper function to get cell styling based on column ID
+  const getCellProps = (columnId: string, align: 'left' | 'center' | 'right' = 'left') => ({
+    align,
+    sx: {
+      width: COLUMN_WIDTHS[columnId as keyof typeof COLUMN_WIDTHS],
+      minWidth: COLUMN_WIDTHS[columnId as keyof typeof COLUMN_WIDTHS],
+      maxWidth: COLUMN_WIDTHS[columnId as keyof typeof COLUMN_WIDTHS],
+    },
+  });
+
   return (
     <>
       <TableRow
@@ -126,12 +150,20 @@ export const ChallengeItem = ({
             }),
         }}
       >
-        <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+        <TableCell
+          padding="checkbox"
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            width: COLUMN_WIDTHS.select,
+            minWidth: COLUMN_WIDTHS.select,
+            maxWidth: COLUMN_WIDTHS.select,
+          }}
+        >
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
         {visibleColumns.includes('nom') && (
-          <TableCell>
+          <TableCell {...getCellProps('nom')}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Avatar
                 sx={{
@@ -174,8 +206,9 @@ export const ChallengeItem = ({
 
         {visibleColumns.includes('description') && (
           <TableCell
+            {...getCellProps('description')}
             sx={{
-              maxWidth: 280,
+              ...getCellProps('description').sx,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -187,7 +220,7 @@ export const ChallengeItem = ({
         )}
 
         {visibleColumns.includes('statut') && (
-          <TableCell align="center">
+          <TableCell {...getCellProps('statut', 'center')}>
             <Chip
               label={statutOption.label}
               size="small"
@@ -202,19 +235,33 @@ export const ChallengeItem = ({
         )}
 
         {visibleColumns.includes('datePublication') && (
-          <TableCell align="center" sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+          <TableCell
+            {...getCellProps('datePublication', 'center')}
+            sx={{
+              ...getCellProps('datePublication').sx,
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
+            }}
+          >
             {formatDate(challenge.datePublication)}
           </TableCell>
         )}
 
         {visibleColumns.includes('dateMiseAJour') && (
-          <TableCell align="center" sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+          <TableCell
+            {...getCellProps('dateMiseAJour', 'center')}
+            sx={{
+              ...getCellProps('dateMiseAJour').sx,
+              whiteSpace: 'nowrap',
+              color: 'text.secondary',
+            }}
+          >
             {challenge.dateMiseAJour ? formatDate(challenge.dateMiseAJour) : '-'}
           </TableCell>
         )}
 
         {visibleColumns.includes('difficulte') && (
-          <TableCell align="center">
+          <TableCell {...getCellProps('difficulte', 'center')}>
             <Chip
               label={difficulteOption.label}
               size="small"
@@ -229,7 +276,7 @@ export const ChallengeItem = ({
         )}
 
         {visibleColumns.includes('nbTentatives') && (
-          <TableCell align="center">
+          <TableCell {...getCellProps('nbTentatives', 'center')}>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <FontAwesomeIcon
                 icon={faClock}
@@ -241,7 +288,7 @@ export const ChallengeItem = ({
         )}
 
         {visibleColumns.includes('participantsCount') && (
-          <TableCell align="center">
+          <TableCell {...getCellProps('participantsCount', 'center')}>
             <Typography
               variant="body2"
               sx={{
@@ -273,7 +320,13 @@ export const ChallengeItem = ({
           </TableCell>
         )}
 
-        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+        <TableCell
+          {...getCellProps('actions', 'right')}
+          sx={{
+            ...getCellProps('actions').sx,
+            whiteSpace: 'nowrap',
+          }}
+        >
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
             <Tooltip title="Voir détails">
               <IconButton
