@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { faColumns } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -39,6 +39,10 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(visibleColumns);
+
+  useEffect(() => {
+    setSelectedColumns(visibleColumns);
+  }, [visibleColumns]);
 
   const handleOpenColumns = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);

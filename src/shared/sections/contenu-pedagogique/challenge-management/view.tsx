@@ -1,20 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Container } from '@mui/material';
 
-// Import the types
-import { Challenge } from './types';
-
-// Import le hook pour gérer les challenges
 import { useChallenges } from './hooks/useChallenge';
-// Import les composants
 import { ChallengeList } from './components/ChallengeList';
 import { ChallengeDialog } from './components/ChallengeDialog';
 import { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
 import { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
-// Définissez quelques données de test pour les niveaux et matières
+import type { Challenge } from './types';
+
 const MOCK_NIVEAUX = [
   { id: '1', nom: 'CP1 - Cours Préparatoire 1' },
   { id: '2', nom: 'CP2 - Cours Préparatoire 2' },
@@ -40,7 +37,6 @@ interface ChallengesManagementViewProps {
 export function ChallengesManagementView({
   title = 'Gestion des challenges',
 }: ChallengesManagementViewProps) {
-  // Utiliser le hook pour obtenir les challenges
   const {
     challenges,
     loading,
@@ -60,13 +56,11 @@ export function ChallengesManagementView({
     refetch,
   } = useChallenges();
 
-  // États pour les dialogues et tiroirs
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openDetailDrawer, setOpenDetailDrawer] = useState(false);
 
-  // Gestionnaires pour les événements de l'interface utilisateur
   const handleAddClick = () => {
     setOpenAddDialog(true);
   };
@@ -86,7 +80,6 @@ export function ChallengesManagementView({
     setOpenDetailDrawer(true);
   };
 
-  // Gestionnaires pour fermer les dialogues et tiroirs
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
   };
@@ -106,7 +99,6 @@ export function ChallengesManagementView({
     setSelectedChallenge(null);
   };
 
-  // Gestionnaires pour les actions de soumission
   const handleSubmitAdd = async (data: Partial<Challenge>) => {
     console.log('Adding new challenge:', data);
     await handleAddChallenge(data);
@@ -138,7 +130,6 @@ export function ChallengesManagementView({
 
   return (
     <Container maxWidth={false}>
-      {/* Liste des challenges */}
       <ChallengeList
         challenges={challenges}
         loading={loading}
@@ -156,7 +147,6 @@ export function ChallengesManagementView({
         onToggleActive={handleToggleActive}
       />
 
-      {/* Dialogue d'ajout */}
       <ChallengeDialog
         open={openAddDialog}
         onClose={handleCloseAddDialog}
@@ -165,8 +155,7 @@ export function ChallengesManagementView({
         matieres={MOCK_MATIERES}
       />
 
-      {/* Dialogue d'édition */}
-      {selectedChallenge && (
+      {selectedChallenge ? (
         <>
           <ChallengeDialog
             open={openEditDialog}
@@ -193,6 +182,8 @@ export function ChallengesManagementView({
             onToggleActive={handleToggleActive}
           />
         </>
+      ) : (
+        <></>
       )}
     </Container>
   );

@@ -4,22 +4,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import {
+  faEye,
   faSave,
+  faPlus,
   faTimes,
   faImage,
   faVideo,
   faTrash,
-  faInfoCircle,
-  faPlus,
-  faChevronLeft,
-  faChevronRight,
   faCheck,
-  faEye,
-  faListOl,
-  faQuestion,
-  faGamepad,
-  faPuzzlePiece,
   faClock,
+  faListOl,
+  faGamepad,
+  faQuestion,
+  faInfoCircle,
+  faChevronLeft,
+  faPuzzlePiece,
+  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 
 import Checkbox from '@mui/material/Checkbox';
@@ -69,7 +69,7 @@ import {
 import { Upload } from 'src/shared/components/upload';
 import { CustomUpload } from 'src/shared/components/upload/upload-custom';
 
-import { Difficulty, ScoreMethod, MultimediaType, ChallengeStatus, QuestionType } from '../types';
+import { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from '../types';
 import {
   STATUT_OPTIONS,
   DIFFICULTE_OPTIONS,
@@ -80,9 +80,8 @@ import {
   METHODE_CALCUL_SCORE_OPTIONS,
 } from '../constants';
 
-import type { Challenge, Question, Reponse } from '../types';
+import type { Challenge } from '../types';
 
-// Define constants for question types
 const QUESTION_TYPE_OPTIONS = [
   {
     value: QuestionType.QCM,
@@ -110,14 +109,12 @@ const QUESTION_TYPE_OPTIONS = [
   },
 ];
 
-// Define types for editable responses and questions
 interface EditableReponse {
-  id?: string; // Make id optional for new responses
+  id?: string;
   texte: string;
   estCorrecte: boolean;
 }
 
-// Extended Question type with media files
 interface EditableQuestion {
   id?: string;
   texte: string;
@@ -138,7 +135,6 @@ interface EditableQuestion {
   reponseAttendue?: string;
 }
 
-// Schema for the form validation
 const schema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
@@ -247,19 +243,15 @@ export const ChallengeForm = ({
   niveaux = [],
   prerequisChallenges = [],
 }: ChallengeFormProps) => {
-  // Step management
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState<{ [k: number]: boolean }>({});
 
-  // Question editor state
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<EditableQuestion | null>(null);
 
-  // Generate ID function
   const generateId = () => `tmp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-  // Ensure initial multimedias have ids
   const initialMultimedias =
     initialValues.multimedias?.map((item) => ({
       ...item,
@@ -283,7 +275,6 @@ export const ChallengeForm = ({
     mode: 'onChange',
   });
 
-  // Use useFieldArray for questions
   const {
     append: appendQuestion,
     remove: removeQuestion,
@@ -293,8 +284,7 @@ export const ChallengeForm = ({
     name: 'questions',
   });
 
-  // Watch values for conditional rendering
-  const isRandomQuestions = watch('isRandomQuestions');
+  // const isRandomQuestions = watch('isRandomQuestions');
   const niveauId = watch('niveauId');
   const scoreMethod = watch('scoreConfiguration.methode');
   const prerequisId = watch('prerequisId');
@@ -306,7 +296,6 @@ export const ChallengeForm = ({
     ? allPrerequisChallenges.filter((challenge) => challenge.niveau?.id === niveauId)
     : allPrerequisChallenges;
 
-  // Define the steps
   const steps = [
     {
       label: 'Informations générales',
@@ -330,7 +319,6 @@ export const ChallengeForm = ({
     },
   ];
 
-  // Step navigation functions
   const handleNext = async () => {
     let fieldsToValidate: string[] = [];
 
@@ -412,10 +400,8 @@ export const ChallengeForm = ({
   };
 
   const openEditQuestionDialog = (index: number) => {
-    // Make a copy to avoid modifying the watched value directly
     const questionToEdit = { ...questions[index] };
 
-    // Convert to EditableQuestion format
     const editableQuestion: EditableQuestion = {
       id: questionToEdit.id,
       type: questionToEdit.type,
@@ -426,7 +412,6 @@ export const ChallengeForm = ({
       isRequired: (questionToEdit as any).isRequired,
       fichier_image: null,
       fichier_video: null,
-      // Ensure reponses is properly mapped
       reponses: (questionToEdit.reponses || []).map((rep) => ({
         id: rep.id,
         texte: rep.texte,
@@ -434,7 +419,6 @@ export const ChallengeForm = ({
       })),
     };
 
-    // Add optional properties if they exist
     if (questionToEdit.reponseAttendue) {
       editableQuestion.reponseAttendue = questionToEdit.reponseAttendue;
     }
@@ -456,7 +440,6 @@ export const ChallengeForm = ({
   const handleSaveQuestion = () => {
     if (!currentQuestion) return;
 
-    // Prepare the question data for saving, adding generated IDs where needed
     const questionToSave = {
       id: currentQuestion.id || generateId(),
       type: currentQuestion.type,
@@ -464,17 +447,14 @@ export const ChallengeForm = ({
       ordre: currentQuestion.ordre || 0,
       points: currentQuestion.points,
       duree: currentQuestion.duree,
-      // Always include isRequired as a definite boolean
       isRequired: currentQuestion.isRequired === undefined ? true : currentQuestion.isRequired,
-      // Make sure each response has an ID
       reponses: currentQuestion.reponses.map((reponse) => ({
         id: reponse.id || generateId(),
         texte: reponse.texte,
         estCorrecte: reponse.estCorrecte,
       })),
-    } as any; // Use type assertion to avoid TypeScript errors
+    } as any;
 
-    // Add optional properties if needed
     if (currentQuestion.reponseAttendue) {
       questionToSave.reponseAttendue = currentQuestion.reponseAttendue;
     }
@@ -488,18 +468,11 @@ export const ChallengeForm = ({
       }));
     }
 
-    // In a real application, here you would:
-    // 1. Upload the image/video files to your server
-    // 2. Get the URLs
-    // 3. Add the URLs to the multimedia array
-
     if (editingQuestionIndex !== null) {
-      // Update existing question
       const updatedQuestions = [...questions];
       updatedQuestions[editingQuestionIndex] = questionToSave;
       setValue('questions', updatedQuestions);
     } else {
-      // Add new question
       appendQuestion(questionToSave);
     }
 
@@ -507,7 +480,6 @@ export const ChallengeForm = ({
     setCurrentQuestion(null);
   };
 
-  // Helper for question option management
   const handleAddOption = () => {
     if (!currentQuestion) return;
 
@@ -541,19 +513,16 @@ export const ChallengeForm = ({
     });
   };
 
-  // Handlers for question reordering
   const handleMoveQuestionUp = (index: number) => {
     if (index === 0) return;
 
     const updatedQuestions = [...questions];
 
-    // Swap questions
     [updatedQuestions[index - 1], updatedQuestions[index]] = [
       updatedQuestions[index],
       updatedQuestions[index - 1],
     ];
 
-    // Update ordre explicitly
     updatedQuestions.forEach((q, idx) => {
       q.ordre = idx;
     });
@@ -566,13 +535,11 @@ export const ChallengeForm = ({
 
     const updatedQuestions = [...questions];
 
-    // Swap questions
     [updatedQuestions[index + 1], updatedQuestions[index]] = [
       updatedQuestions[index],
       updatedQuestions[index + 1],
     ];
 
-    // Update ordre explicitly
     updatedQuestions.forEach((q, idx) => {
       q.ordre = idx;
     });
@@ -580,14 +547,13 @@ export const ChallengeForm = ({
     setValue('questions', updatedQuestions);
   };
 
-  // Handlers for question media
   const handleQuestionImageChange = (file: File) => {
     if (!currentQuestion) return;
 
     setCurrentQuestion({
       ...currentQuestion,
       fichier_image: file,
-      fichier_video: null, // Remove video if image is selected
+      fichier_video: null,
     });
   };
 
@@ -597,7 +563,7 @@ export const ChallengeForm = ({
     setCurrentQuestion({
       ...currentQuestion,
       fichier_video: file,
-      fichier_image: null, // Remove image if video is selected
+      fichier_image: null,
     });
   };
 
@@ -611,7 +577,6 @@ export const ChallengeForm = ({
     });
   };
 
-  // Function to render the current step content
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -627,7 +592,6 @@ export const ChallengeForm = ({
     }
   };
 
-  // Step 1: General Information
   const renderGeneralInfoStep = () => (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -937,7 +901,7 @@ export const ChallengeForm = ({
       </Grid>
 
       {/* Additional parameters based on score method selected */}
-      {scoreMethod === ScoreMethod.TEMPS && (
+      {scoreMethod === ScoreMethod.TEMPS ? (
         <Grid item xs={12} md={6}>
           <TextField
             label="Bonus de temps (points)"
@@ -953,9 +917,11 @@ export const ChallengeForm = ({
             }}
           />
         </Grid>
+      ) : (
+        <></>
       )}
 
-      {scoreMethod === ScoreMethod.PENALITES && (
+      {scoreMethod === ScoreMethod.PENALITES ? (
         <Grid item xs={12} md={6}>
           <TextField
             label="Pénalité par erreur (points)"
@@ -971,6 +937,8 @@ export const ChallengeForm = ({
             }}
           />
         </Grid>
+      ) : (
+        <></>
       )}
 
       <Grid item xs={12}>
@@ -1007,10 +975,12 @@ export const ChallengeForm = ({
                     </Select>
                     <FormHelperText>
                       Sélectionnez un challenge qui doit être complété avant
-                      {niveauId && filteredPrerequisChallenges.length === 0 && (
+                      {niveauId && filteredPrerequisChallenges.length === 0 ? (
                         <Typography variant="caption" color="error" display="block">
                           Aucun challenge disponible pour ce niveau
                         </Typography>
+                      ) : (
+                        <></>
                       )}
                     </FormHelperText>
                   </FormControl>
@@ -1018,7 +988,7 @@ export const ChallengeForm = ({
               />
             </Grid>
 
-            {prerequisId !== 'none' && (
+            {prerequisId !== 'none' ? (
               <Grid item xs={12} md={6}>
                 <Controller
                   name="prerequisPourcentage"
@@ -1045,6 +1015,8 @@ export const ChallengeForm = ({
                   )}
                 />
               </Grid>
+            ) : (
+              <></>
             )}
           </Grid>
         </Paper>
@@ -1182,11 +1154,13 @@ export const ChallengeForm = ({
                         <Typography variant="body2" component="span" color="text.primary">
                           {question.points} points · {question.duree} sec
                         </Typography>
-                        {question.type === QuestionType.QCM && question.reponses && (
+                        {question.type === QuestionType.QCM && question.reponses ? (
                           <Typography variant="body2" sx={{ mt: 1 }}>
                             {question.reponses.length} options,{' '}
                             {question.reponses.filter((rep) => rep.estCorrecte).length} correcte(s)
                           </Typography>
+                        ) : (
+                          <></>
                         )}
                       </>
                     }
@@ -1213,7 +1187,7 @@ export const ChallengeForm = ({
       </Grid>
 
       {/* Question creation/edit dialog */}
-      {currentQuestion && (
+      {currentQuestion ? (
         <Dialog
           open={questionDialogOpen}
           onClose={handleCloseQuestionDialog}
@@ -1410,7 +1384,7 @@ export const ChallengeForm = ({
                     iconPosition="start"
                   />
                 </Tabs>
-                {!currentQuestion.fichier_image && !currentQuestion.fichier_video && (
+                {!currentQuestion.fichier_image && !currentQuestion.fichier_video ? (
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
                       <FormControl fullWidth>
@@ -1442,9 +1416,11 @@ export const ChallengeForm = ({
                       </FormControl>
                     </Grid>
                   </Grid>
+                ) : (
+                  <></>
                 )}
 
-                {currentQuestion.fichier_image && (
+                {currentQuestion.fichier_image ? (
                   <Box sx={{ position: 'relative' }}>
                     <img
                       src={URL.createObjectURL(currentQuestion.fichier_image)}
@@ -1468,9 +1444,11 @@ export const ChallengeForm = ({
                       <FontAwesomeIcon icon={faTrash} />
                     </IconButton>
                   </Box>
+                ) : (
+                  <></>
                 )}
 
-                {currentQuestion.fichier_video && (
+                {currentQuestion.fichier_video ? (
                   <Box sx={{ position: 'relative' }}>
                     <Box sx={{ p: 1, bgcolor: 'rgba(0,0,0,0.04)', borderRadius: 1 }}>
                       <Stack direction="row" alignItems="center" spacing={2}>
@@ -1487,13 +1465,15 @@ export const ChallengeForm = ({
                       </Stack>
                     </Box>
                   </Box>
+                ) : (
+                  <></>
                 )}
               </Grid>
 
               {/* Question-type specific content */}
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
-                {currentQuestion.type === QuestionType.QCM && (
+                {currentQuestion.type === QuestionType.QCM ? (
                   <>
                     <Typography variant="subtitle1" gutterBottom>
                       Options de réponse
@@ -1544,9 +1524,11 @@ export const ChallengeForm = ({
                       Ajouter une option
                     </Button>
                   </>
+                ) : (
+                  <></>
                 )}
 
-                {currentQuestion.type === QuestionType.OUVERTE && (
+                {currentQuestion.type === QuestionType.OUVERTE ? (
                   <>
                     <Typography variant="subtitle1" gutterBottom>
                       Réponse attendue
@@ -1566,10 +1548,12 @@ export const ChallengeForm = ({
                       helperText="Laissez vide si plusieurs réponses sont possibles ou si la réponse sera évaluée manuellement."
                     />
                   </>
+                ) : (
+                  <></>
                 )}
 
-                {(currentQuestion.type === QuestionType.VISUEL ||
-                  currentQuestion.type === QuestionType.MINIJEU) && (
+                {currentQuestion.type === QuestionType.VISUEL ||
+                currentQuestion.type === QuestionType.MINIJEU ? (
                   <>
                     <Typography variant="subtitle1" gutterBottom>
                       {currentQuestion.type === QuestionType.VISUEL
@@ -1595,6 +1579,8 @@ export const ChallengeForm = ({
                       </Typography>
                     </Paper>
                   </>
+                ) : (
+                  <></>
                 )}
               </Grid>
             </Grid>
@@ -1619,6 +1605,8 @@ export const ChallengeForm = ({
             </Button>
           </DialogActions>
         </Dialog>
+      ) : (
+        <></>
       )}
     </Grid>
   );
@@ -1729,7 +1717,7 @@ export const ChallengeForm = ({
                           · {question.points} points
                         </Typography>
 
-                        {question.type === QuestionType.QCM && question.reponses && (
+                        {question.type === QuestionType.QCM && question.reponses ? (
                           <List dense>
                             {question.reponses.map((reponse, i) => (
                               <ListItem key={i}>
@@ -1744,6 +1732,8 @@ export const ChallengeForm = ({
                               </ListItem>
                             ))}
                           </List>
+                        ) : (
+                          <></>
                         )}
                       </Box>
                     ))}

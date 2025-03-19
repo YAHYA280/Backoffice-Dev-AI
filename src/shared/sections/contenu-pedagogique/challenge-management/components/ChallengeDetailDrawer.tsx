@@ -5,17 +5,15 @@ import {
   faRedo,
   faTimes,
   faUsers,
-  faMedal,
+  faVideo,
   faTrophy,
+  faFileAlt,
   faToggleOn,
   faStopwatch,
+  faCalculator,
   faCalendarAlt,
   faGraduationCap,
   faQuestionCircle,
-  faImage,
-  faVideo,
-  faFileAlt,
-  faCalculator,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -580,7 +578,7 @@ export const ChallengeDetailDrawer = ({
               />
             </ListItem>
 
-            {challenge.dateMiseAJour && (
+            {challenge.dateMiseAJour ? (
               <ListItem
                 sx={{
                   py: 1.5,
@@ -616,6 +614,8 @@ export const ChallengeDetailDrawer = ({
                   }
                 />
               </ListItem>
+            ) : (
+              <></>
             )}
 
             <ListItem
@@ -692,7 +692,7 @@ export const ChallengeDetailDrawer = ({
               />
             </ListItem>
 
-            {challenge.niveau && (
+            {challenge.niveau ? (
               <ListItem
                 sx={{
                   py: 1.5,
@@ -728,6 +728,8 @@ export const ChallengeDetailDrawer = ({
                   }
                 />
               </ListItem>
+            ) : (
+              <></>
             )}
 
             <ListItem
@@ -771,7 +773,7 @@ export const ChallengeDetailDrawer = ({
                       {challenge.active !== false ? 'Actif' : 'Inactif'}
                     </Typography>
 
-                    {onToggleActive && (
+                    {onToggleActive ? (
                       <Tooltip title={challenge.active !== false ? 'Désactiver' : 'Activer'}>
                         <Switch
                           size="small"
@@ -780,6 +782,8 @@ export const ChallengeDetailDrawer = ({
                           color="success"
                         />
                       </Tooltip>
+                    ) : (
+                      <></>
                     )}
                   </Box>
                 }

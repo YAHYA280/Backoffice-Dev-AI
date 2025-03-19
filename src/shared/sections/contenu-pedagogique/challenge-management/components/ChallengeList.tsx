@@ -5,9 +5,16 @@ import type {
 } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/filters/FilterDropdown';
 
 import { m } from 'framer-motion';
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faFilter,
+  faSearch,
+  faSyncAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -16,17 +23,21 @@ import {
   alpha,
   Stack,
   Button,
+  Select,
+  Tooltip,
   useTheme,
   TableRow,
+  Checkbox,
+  MenuItem,
   TableBody,
   TextField,
   TableCell,
+  TableHead,
   Typography,
   IconButton,
+  FormControl,
   TableContainer,
   InputAdornment,
-  TableHead,
-  Checkbox,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -39,44 +50,54 @@ import {
   emptyRows,
   TableNoData,
   TableEmptyRows,
-  TableHeadCustom,
   TableSelectedAction,
   TablePaginationCustom,
 } from 'src/shared/components/table';
 
-import { FilterDropdown } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/filters/FilterDropdown';
 import { ColumnSelector } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/filters/ColumnSelector';
+import { FilterDropdown } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/filters/FilterDropdown';
 import { TableSkeletonLoader } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/common/TableSkeletonLoader';
 import { AdvancedExportDropdown } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/export/AdvancedExportDropdown ';
 
 import { ChallengeItem } from './ChallengeItem';
 import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
 
-import type { Challenge, Pagination, FilterParams, ChallengeStatus, Difficulty } from '../types';
+import type { Challenge, Pagination, FilterParams } from '../types';
 
-// Define interface for table columns
 interface TableColumn {
   id: string;
   label: string;
   align: 'left' | 'center' | 'right';
   width?: number | string;
+  type?: 'text' | 'select' | 'date' | 'number';
+  options?: { value: string; label: string }[];
 }
 
-// Updated to match screenshot columns exactly
 const TABLE_HEAD: TableColumn[] = [
-  { id: 'select', label: '', align: 'center', width: 50 },
-  { id: 'nom', label: 'Nom', align: 'center', width: 260 },
-  { id: 'description', label: 'Description', align: 'left', width: 300 },
-  { id: 'statut', label: 'Statut', align: 'left', width: 120 },
-  { id: 'datePublication', label: 'Date publication', align: 'center', width: 150 },
-  { id: 'dateMiseAJour', label: 'Dernière modification', align: 'center', width: 150 },
-  { id: 'difficulte', label: 'Difficulté', align: 'center', width: 120 },
-  { id: 'nbTentatives', label: 'Tentatives', align: 'center', width: 100 },
-  { id: 'participantsCount', label: 'Participants', align: 'center', width: 120 },
-  { id: 'actions', label: 'Actions', align: 'center', width: 150 },
+  { id: 'select', label: '', align: 'center' },
+  { id: 'nom', label: 'Nom', align: 'left', type: 'text' },
+  { id: 'description', label: 'Description', align: 'left', type: 'text' },
+  {
+    id: 'statut',
+    label: 'Statut',
+    align: 'left',
+    type: 'select',
+    options: STATUT_OPTIONS,
+  },
+  { id: 'datePublication', label: 'Date publication', align: 'center', type: 'date' },
+  { id: 'dateMiseAJour', label: 'Dernière modification', align: 'center', type: 'date' },
+  {
+    id: 'difficulte',
+    label: 'Difficulté',
+    align: 'center',
+    type: 'select',
+    options: DIFFICULTE_OPTIONS,
+  },
+  { id: 'nbTentatives', label: 'Tentatives', align: 'center', type: 'number' },
+  { id: 'participantsCount', label: 'Participants', align: 'center', type: 'number' },
+  { id: 'actions', label: 'Actions', align: 'center' },
 ];
 
-// Column options for the ColumnSelector - Updated to match screenshot
 const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'nom', label: 'Nom', required: true },
   { id: 'description', label: 'Description' },
@@ -88,7 +109,17 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'participantsCount', label: 'Participants' },
 ];
 
-// Filter options for the FilterDropdown
+const DEFAULT_VISIBLE_COLUMNS = [
+  'nom',
+  'description',
+  'statut',
+  'datePublication',
+  'dateMiseAJour',
+  'difficulte',
+  'nbTentatives',
+  'participantsCount',
+];
+
 const FILTER_OPTIONS: FilterOption[] = [
   {
     id: 'nom',
@@ -115,9 +146,9 @@ const FILTER_OPTIONS: FilterOption[] = [
     label: 'Statut',
     type: 'select',
     operators: [{ value: 'equals', label: 'Est' }],
-    selectOptions: STATUT_OPTIONS.map((option) => ({
-      value: option.value,
-      label: option.label,
+    selectOptions: STATUT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label,
     })),
   },
   {
@@ -145,14 +176,14 @@ const FILTER_OPTIONS: FilterOption[] = [
     label: 'Difficulté',
     type: 'select',
     operators: [{ value: 'equals', label: 'Est' }],
-    selectOptions: DIFFICULTE_OPTIONS.map((option) => ({
-      value: option.value,
-      label: option.label,
+    selectOptions: DIFFICULTE_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label,
     })),
   },
   {
     id: 'isActive',
-    label: 'Statut',
+    label: 'Actif/inactif',
     type: 'select',
     operators: [{ value: 'equals', label: 'Est' }],
     selectOptions: [
@@ -162,9 +193,52 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
-// Per-column filter component
+function applySingleFilter(challenge: Challenge, filter: ActiveFilter, filterOption: FilterOption) {
+  const { field, operator, value } = filter;
+  if (!value) return true;
+  const fieldVal = (challenge as any)[field];
+  if (!filterOption) return true;
+
+  if (filterOption.type === 'text') {
+    const fieldStr = fieldVal ? String(fieldVal).toLowerCase() : '';
+    const valStr = String(value).toLowerCase();
+    if (operator === 'contains') return fieldStr.includes(valStr);
+    if (operator === 'equals') return fieldStr === valStr;
+    if (operator === 'startsWith') return fieldStr.startsWith(valStr);
+    if (operator === 'endsWith') return fieldStr.endsWith(valStr);
+    return true;
+  }
+
+  if (filterOption.type === 'select') {
+    return String(fieldVal) === String(value);
+  }
+
+  if (filterOption.type === 'date') {
+    const cDate = fieldVal ? new Date(fieldVal) : null;
+    const fDate = value ? new Date(value) : null;
+    if (!cDate || !fDate || Number.isNaN(cDate.getTime()) || Number.isNaN(fDate.getTime()))
+      return false;
+    if (operator === 'equals') return cDate.toDateString() === fDate.toDateString();
+    if (operator === 'before') return cDate.getTime() < fDate.getTime();
+    if (operator === 'after') return cDate.getTime() > fDate.getTime();
+    return true;
+  }
+
+  if (filterOption.type === 'number') {
+    const cNum = Number(fieldVal);
+    const fNum = Number(value);
+    if (Number.isNaN(cNum) || Number.isNaN(fNum)) return false;
+    if (operator === 'equals') return cNum === fNum;
+    return true;
+  }
+
+  return true;
+}
+
 interface ColumnFilterProps {
   columnId: string;
+  columnType?: string;
+  options?: any[];
   value: string;
   onChange: (columnId: string, value: string) => void;
   align?: 'left' | 'center' | 'right';
@@ -173,20 +247,237 @@ interface ColumnFilterProps {
 
 const ColumnFilter = ({
   columnId,
+  columnType = 'text',
+  options = [],
   value,
   onChange,
   align = 'left',
   dense = false,
 }: ColumnFilterProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(Boolean(value));
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const selectRef = useRef<HTMLElement | null>(null);
 
-  const handleSearchIconClick = () => {
+  const handleSearchIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsExpanded(true);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    if (columnType === 'select' && selectRef.current) {
+      setTimeout(() => {
+        const selectElement = selectRef.current as HTMLElement;
+        selectElement.click();
+        const clickEvent = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+        selectElement.dispatchEvent(clickEvent);
+      }, 50);
+    } else {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 10);
+    }
   };
+
+  const handleClearClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(columnId, '');
+    if (columnType !== 'text' && columnType !== 'number') {
+      setIsExpanded(false);
+    } else if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const inputStyles = {
+    width: isExpanded ? 'auto' : '28px',
+    minWidth: isExpanded ? 80 : 28,
+    maxWidth: isExpanded ? '100%' : 28,
+    transition: 'all 0.2s ease-in-out',
+    marginTop: dense ? '-3px' : '-6px',
+    position: 'relative',
+    '& .MuiOutlinedInput-root': {
+      height: dense ? '24px' : '28px',
+      background: 'transparent',
+      '& fieldset': { border: 'none !important' },
+      '&:hover fieldset': { border: 'none !important' },
+      '&.Mui-focused fieldset': { border: 'none !important' },
+    },
+    '& .MuiInputBase-input': {
+      padding: dense ? '0px 0px' : '2px 0px',
+      fontSize: dense ? '0.7rem' : '0.75rem',
+      textAlign: align,
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+    '& .MuiSelect-select': {
+      paddingRight: '24px !important',
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+  };
+
+  const iconStyles = {
+    color: value ? 'primary.main' : 'text.disabled',
+    fontSize: dense ? '0.8rem' : '1rem',
+    cursor: 'pointer',
+    opacity: value ? 1 : 0.6,
+    '&:hover': {
+      opacity: 1,
+      transform: 'scale(1.1)',
+    },
+    transition: 'all 0.2s ease',
+  };
+
+  const renderEndAdornment = () =>
+    value ? (
+      <InputAdornment position="end">
+        <IconButton
+          size="small"
+          onClick={handleClearClick}
+          sx={{ padding: 0, '&:hover': { background: 'transparent' } }}
+        >
+          <FontAwesomeIcon icon={faTimes} style={{ fontSize: dense ? '0.8rem' : '1rem' }} />
+        </IconButton>
+      </InputAdornment>
+    ) : null;
+
+  const renderStartAdornment = () => (
+    <InputAdornment position="start" sx={{ ml: 0 }}>
+      <Box
+        onClick={handleSearchIconClick}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+        }}
+      >
+        <FontAwesomeIcon icon={faSearch} style={iconStyles} />
+      </Box>
+    </InputAdornment>
+  );
+
+  if (columnType === 'select') {
+    return (
+      <FormControl size="small" sx={inputStyles}>
+        <Select
+          value={value}
+          onChange={(e) => onChange(columnId, e.target.value)}
+          displayEmpty
+          variant="outlined"
+          sx={{
+            fontSize: dense ? '0.7rem' : '0.75rem',
+            '& .MuiSelect-icon': {
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 0.2s',
+              display: isExpanded ? 'block' : 'none',
+            },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+            paddingRight: isExpanded ? '32px' : '0px',
+          }}
+          MenuProps={{
+            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            PaperProps: {
+              elevation: 3,
+              sx: {
+                maxHeight: 300,
+                mt: 1,
+                '& .MuiMenuItem-root': {
+                  fontSize: dense ? '0.7rem' : '0.75rem',
+                  py: dense ? 0.5 : 1,
+                },
+              },
+            },
+          }}
+          startAdornment={renderStartAdornment()}
+          endAdornment={renderEndAdornment()}
+          ref={selectRef}
+          onOpen={() => setIsExpanded(true)}
+          onClose={() => !value && setIsExpanded(false)}
+          inputProps={{ sx: { p: dense ? '3px' : '5px', paddingRight: 0 } }}
+        >
+          <MenuItem value="">
+            <em>Tous</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                fontSize: dense ? '0.7rem' : '0.75rem',
+                minHeight: 'auto',
+                py: dense ? 0.5 : 1,
+              }}
+            >
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  }
+
+  if (columnType === 'date') {
+    return (
+      <TextField
+        size="small"
+        type="date"
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        inputRef={inputRef}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: {
+            pl: 0,
+            '& input': {
+              pl: isExpanded ? 1 : 0,
+              width: isExpanded ? 'auto' : '0px',
+              opacity: isExpanded ? 1 : 0,
+            },
+          },
+        }}
+        InputLabelProps={{ shrink: true }}
+        sx={inputStyles}
+      />
+    );
+  }
+
+  if (columnType === 'number') {
+    return (
+      <TextField
+        size="small"
+        type="number"
+        inputRef={inputRef}
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: { pl: 0, '& input': { pl: isExpanded ? 1 : 0 } },
+        }}
+        sx={inputStyles}
+      />
+    );
+  }
 
   return (
     <TextField
@@ -195,64 +486,19 @@ const ColumnFilter = ({
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
       onFocus={() => setIsExpanded(true)}
-      onBlur={() => !value && setIsExpanded(false)} // Only collapse if no value
-      sx={{
-        width: isExpanded ? 'auto' : 'auto',
-        minWidth: isExpanded ? 80 : 24, // Just enough width for the icon when not expanded
-        transition: 'all 0.2s ease-in-out',
-        marginTop: dense ? '-3px' : '-6px', // Reduce space between search icon and column title in dense mode
-        '& .MuiOutlinedInput-root': {
-          height: dense ? '24px' : '28px', // Smaller height in dense mode
-          background: 'transparent',
-          '& fieldset': {
-            border: 'none !important',
-          },
-          '&:hover fieldset': {
-            border: 'none !important',
-          },
-        },
-        // Make the input text smaller and remove padding
-        '& .MuiInputBase-input': {
-          padding: dense ? '0px 0px' : '2px 0px', // Reduced padding in dense mode
-          fontSize: dense ? '0.7rem' : '0.75rem', // Smaller font in dense mode
-          textAlign: align, // Match alignment with column header
-        },
-      }}
+      onBlur={() => !value && setIsExpanded(false)}
+      onClick={() => setIsExpanded(true)}
+      variant="outlined"
       InputProps={{
-        // Always show the search icon at the start
-        startAdornment: (
-          <InputAdornment position="start">
-            <FontAwesomeIcon
-              icon={faSearch}
-              onClick={handleSearchIconClick}
-              style={{
-                color: 'text.disabled',
-                fontSize: dense ? '0.8rem' : '1rem', // Smaller icon in dense mode
-                cursor: 'pointer',
-              }}
-            />
-          </InputAdornment>
-        ),
-        endAdornment: value ? (
-          <InputAdornment position="end">
-            <IconButton
-              size="small"
-              onClick={() => onChange(columnId, '')}
-              sx={{
-                padding: 0,
-                '&:hover': {
-                  background: 'transparent',
-                },
-              }}
-            >
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: dense ? '0.8rem' : '1rem' }} />
-            </IconButton>
-          </InputAdornment>
-        ) : null,
+        startAdornment: renderStartAdornment(),
+        endAdornment: renderEndAdornment(),
+        sx: { pl: 0, '& input': { pl: isExpanded ? 1 : 0 } },
       }}
+      sx={inputStyles}
     />
   );
 };
+
 interface ChallengeListProps {
   challenges: Challenge[];
   loading: boolean;
@@ -264,7 +510,6 @@ interface ChallengeListProps {
   onColumnFilterChange?: (columnId: string, value: string) => void;
   onFilterChange?: (filters: ActiveFilter[]) => void;
   onColumnChange?: (columns: string[]) => void;
-
   onEditClick: (challenge: Challenge) => void;
   onDeleteClick: (challenge: Challenge) => void;
   onViewClick: (challenge: Challenge) => void;
@@ -293,12 +538,9 @@ export const ChallengeList = ({
 }: ChallengeListProps) => {
   const confirm = useBoolean();
   const theme = useTheme();
-
-  // State for exporting data
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  // State for column-based text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
     description: '',
@@ -310,32 +552,25 @@ export const ChallengeList = ({
     nbTentatives: '',
   });
 
-  // State for FilterDropdown & ColumnSelector
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  // Default visible columns set to match the screenshot
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([
-    'nom',
-    'description',
-    'statut',
-    'datePublication',
-    'dateMiseAJour',
-    'difficulte',
-    'nbTentatives',
-    'participantsCount',
-  ]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
 
-  // Table logic
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1,
     defaultOrderBy: 'nom',
   });
 
-  // Filter out deleted challenges
-  const filteredChallenges = useMemo(
-    () => challenges.filter((challenge) => challenge.statut !== 'Supprimé'),
-    [challenges]
-  );
+  const filteredChallenges = useMemo(() => {
+    let data = challenges.filter((ch) => ch.statut !== 'Supprimé');
+    activeFilters.forEach((filter) => {
+      const filterOption = FILTER_OPTIONS.find((fo) => fo.id === filter.field);
+      if (filterOption) {
+        data = data.filter((challenge) => applySingleFilter(challenge, filter, filterOption));
+      }
+    });
+    return data;
+  }, [challenges, activeFilters]);
 
   const handleOpenConfirm = () => {
     confirm.onTrue();
@@ -350,52 +585,56 @@ export const ChallengeList = ({
   };
 
   const handleColumnFilterChangeLocal = (columnId: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }));
+    setColumnFilters((prev) => ({ ...prev, [columnId]: value }));
     onColumnFilterChange?.(columnId, value);
   };
 
-  // FilterDropdown callback
   const handleFilterChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 
-  // ColumnSelector callback
   const handleColumnChange = (columns: string[]) => {
     setVisibleColumns(columns);
     onColumnChange?.(columns);
   };
 
-  // Export handler
   const handleExport = (format: string, options?: any) => {
-    console.log(`Exporting data in ${format} format with options:`, options);
-
     setIsExporting(true);
     setExportProgress(0);
-
-    // Simulate export progress
     const interval = setInterval(() => {
-      setExportProgress((prevProgress) => {
-        const newProgress = prevProgress + Math.random() * 15;
-
+      setExportProgress((prev) => {
+        const newProgress = prev + Math.random() * 15;
         if (newProgress >= 100) {
           clearInterval(interval);
-          setTimeout(() => {
-            setIsExporting(false);
-            // Show success notification if needed
-          }, 500);
+          setTimeout(() => setIsExporting(false), 500);
           return 100;
         }
-
         return newProgress;
       });
     }, 300);
   };
 
-  // Create the visible table headers based on selected columns
+  const handleReset = () => {
+    setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+    onColumnChange?.(DEFAULT_VISIBLE_COLUMNS);
+    setActiveFilters([]);
+    onFilterChange?.([]);
+    setColumnFilters({
+      nom: '',
+      description: '',
+      statut: '',
+      datePublication: '',
+      dateMiseAJour: '',
+      difficulte: '',
+      nbTentatives: '',
+      participantsCount: '',
+    });
+    Object.keys(columnFilters).forEach((colId) => onColumnFilterChange?.(colId, ''));
+    onPageChange(1);
+    onLimitChange(10);
+  };
+
   const visibleTableHead = useMemo(
     () =>
       TABLE_HEAD.filter(
@@ -406,8 +645,6 @@ export const ChallengeList = ({
 
   const notFound = !filteredChallenges.length && !loading;
 
-  // Custom table head to ensure perfect column alignment
-  // Custom table head to ensure perfect column alignment
   const renderTableHeader = () => (
     <TableHead
       sx={{
@@ -417,138 +654,114 @@ export const ChallengeList = ({
         '& .MuiTableCell-head': {
           bgcolor: alpha(theme.palette.primary.lighter, 0.2),
           fontWeight: 'fontWeightBold',
-          padding: table.dense ? '2px 6px' : '8px 8px', // Reduced padding in both modes
+          padding: table.dense ? '2px 6px' : '8px 8px',
         },
       }}
     >
-      {/* First row - Column Headers */}
       <TableRow>
-        {/* Checkbox column for row selection */}
         <TableCell
           padding="checkbox"
           sx={{
-            width: table.dense ? 60 : 50, // Increased width in dense mode
-            minWidth: table.dense ? 60 : 50, // Increased min-width in dense mode
-            maxWidth: table.dense ? 60 : 50, // Increased max-width in dense mode
             bgcolor: alpha(theme.palette.primary.lighter, 0.2),
             position: 'sticky',
             top: 0,
             zIndex: 12,
-            padding: table.dense ? '2px 12px 2px 6px' : '4px 8px', // Reduced padding in both modes
-            height: table.dense ? '28px' : '23px', // For non-dense, 38px * 0.6 ≈ 23px
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
+            padding: table.dense ? '2px 12px 2px 6px' : '4px 8px',
           }}
         >
           <Checkbox
-            indeterminate={table.selected.length > 0 && table.selected.length < challenges.length}
-            checked={challenges.length > 0 && table.selected.length === challenges.length}
+            indeterminate={
+              table.selected.length > 0 && table.selected.length < filteredChallenges.length
+            }
+            checked={
+              filteredChallenges.length > 0 && table.selected.length === filteredChallenges.length
+            }
             onChange={(event) =>
               table.onSelectAllRows(
                 event.target.checked,
-                challenges.map((row) => row.id)
+                filteredChallenges.map((row) => row.id)
               )
             }
             size={table.dense ? 'small' : 'medium'}
           />
         </TableCell>
-
         {visibleTableHead
           .filter((col) => col.id !== 'select')
           .map((column) => (
             <TableCell
               key={column.id}
               align={column.align}
-              width={column.width}
               sx={{
-                whiteSpace: 'nowrap',
-                borderBottom: 'none',
-                fontSize: table.dense ? '0.8125rem' : '0.875rem',
-                minWidth: column.width,
-                maxWidth: column.width,
-                width: column.width,
                 bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                 position: 'sticky',
                 top: 0,
                 zIndex: 11,
-                padding: table.dense ? '2px 6px' : '8px 8px', // Reduced padding in both modes
-                height: table.dense ? '28px' : '23px', // For non-dense, 38px * 0.6 ≈ 23px
+                whiteSpace: 'nowrap',
+                borderBottom: 'none',
+                fontSize: table.dense ? '0.8125rem' : '0.875rem',
+                padding: table.dense ? '2px 6px' : '8px 8px',
               }}
             >
               {column.label}
             </TableCell>
           ))}
       </TableRow>
-
-      {/* Second row - Filters */}
       <TableRow
         sx={{
           bgcolor: alpha(theme.palette.primary.lighter, 0.2),
           '& .MuiTableCell-root': {
-            padding: table.dense ? '0px 6px 2px' : '0px 8px 4px', // Reduced bottom padding in both modes
+            padding: table.dense ? '0px 6px 2px' : '0px 8px 4px',
             borderTop: 'none',
-            height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
           },
         }}
       >
-        {/* Empty checkbox cell for filter row */}
         <TableCell
           padding="checkbox"
           sx={{
-            width: table.dense ? 60 : 50, // Match first row width
-            minWidth: table.dense ? 60 : 50, // Match first row min-width
-            maxWidth: table.dense ? 60 : 50, // Match first row max-width
             bgcolor: alpha(theme.palette.primary.lighter, 0.2),
             position: 'sticky',
-            top: table.dense ? '28px' : '23px', // Non-dense: first row height is now 23px
+            top: table.dense ? '28px' : '23px',
             zIndex: 11,
-            height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
-            padding: table.dense ? '0 12px 0 6px' : '0 8px', // Match first row padding
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
           }}
         />
-
         {visibleTableHead
           .filter((col) => col.id !== 'select')
           .map((column) => {
             if (column.id === 'actions') {
               return (
                 <TableCell
-                  key={`${column.id}-filter-cell`}
+                  key={`${column.id}-filter`}
                   align={column.align}
-                  width={column.width}
                   sx={{
-                    minWidth: column.width,
-                    maxWidth: column.width,
-                    width: column.width,
                     bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                     position: 'sticky',
-                    top: table.dense ? '28px' : '23px', // Non-dense: updated to match the new first row height
+                    top: table.dense ? '28px' : '23px',
                     zIndex: 11,
-                    height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
                   }}
-                >
-                  {/* Empty cell for action columns */}
-                </TableCell>
+                />
               );
             }
-
-            // Regular filter cells for data columns
             return (
               <TableCell
                 key={`${column.id}-filter`}
                 align={column.align}
-                width={column.width}
                 sx={{
-                  minWidth: column.width,
-                  maxWidth: column.width,
-                  width: column.width,
                   bgcolor: alpha(theme.palette.primary.lighter, 0.2),
                   position: 'sticky',
-                  top: table.dense ? '28px' : '23px', // Non-dense: updated to match the new first row height
+                  top: table.dense ? '28px' : '23px',
                   zIndex: 11,
-                  height: table.dense ? '20px' : '18px', // For non-dense, 30px * 0.6 = 18px
                 }}
               >
                 <ColumnFilter
                   columnId={column.id}
+                  columnType={column.type}
+                  options={column.options}
                   value={columnFilters[column.id as keyof typeof columnFilters] || ''}
                   onChange={handleColumnFilterChangeLocal}
                   align={column.align}
@@ -563,13 +776,11 @@ export const ChallengeList = ({
 
   return (
     <MotionContainer>
-      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Challenges
           </Typography>
-
           <Stack direction="row" spacing={2}>
             {onAddClick && (
               <Button
@@ -582,10 +793,7 @@ export const ChallengeList = ({
                   py: 1,
                   boxShadow: theme.customShadows?.z8,
                   transition: theme.transitions.create(['transform', 'box-shadow']),
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: theme.customShadows?.z16,
-                  },
+                  '&:hover': { transform: 'translateY(-2px)', boxShadow: theme.customShadows?.z16 },
                 }}
               >
                 Ajouter un challenge
@@ -600,16 +808,19 @@ export const ChallengeList = ({
           sx={{
             boxShadow: theme.customShadows?.z8,
             transition: theme.transitions.create(['box-shadow']),
-            '&:hover': {
-              boxShadow: theme.customShadows?.z16,
-            },
+            '&:hover': { boxShadow: theme.customShadows?.z16 },
             borderRadius: 2,
             overflow: 'hidden',
           }}
         >
-          {/* Filter Controls (FilterDropdown + ColumnSelector + Advanced Filter) */}
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
             <Stack direction="row" alignContent="end" spacing={2}>
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={handleColumnChange}
+                buttonText="Colonnes"
+              />
               <FilterDropdown
                 filterOptions={FILTER_OPTIONS}
                 activeFilters={activeFilters}
@@ -617,14 +828,19 @@ export const ChallengeList = ({
                 buttonText="Filtres"
                 icon={<FontAwesomeIcon icon={faFilter} />}
               />
-
-              <ColumnSelector
-                columns={COLUMN_OPTIONS}
-                visibleColumns={visibleColumns}
-                onColumnChange={handleColumnChange}
-                buttonText="Colonnes"
-              />
-
+              <Tooltip title="Réinitialiser" arrow>
+                <IconButton
+                  color="primary"
+                  onClick={handleReset}
+                  sx={{
+                    p: 1,
+                    transition: theme.transitions.create(['transform', 'box-shadow']),
+                    '&:hover': { transform: 'translateY(-2px)' },
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSyncAlt} />
+                </IconButton>
+              </Tooltip>
               <AdvancedExportDropdown
                 onExport={handleExport}
                 isExporting={isExporting}
@@ -635,7 +851,6 @@ export const ChallengeList = ({
             </Stack>
           </Box>
 
-          {/* Bulk Actions (Selected Rows) */}
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -649,19 +864,13 @@ export const ChallengeList = ({
               }
               action={
                 <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
                     {table.selected.length} sélectionné
                     {table.selected.length > 1 ? 's' : ''}
                   </Typography>
-
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {/* Delete action button */}
                     {onDeleteRows && (
                       <Button
                         variant="contained"
@@ -674,7 +883,6 @@ export const ChallengeList = ({
                           py: 1,
                           m: 0.5,
                           fontWeight: 'fontWeightBold',
-                          transition: theme.transitions.create(['background-color']),
                         }}
                       >
                         <FontAwesomeIcon icon={faTrash} />
@@ -685,24 +893,16 @@ export const ChallengeList = ({
               }
             />
 
-            {/* TABLE + SCROLLBAR */}
             <Scrollbar sx={{ maxHeight: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
                   minHeight: 240,
                   maxHeight: 500,
-                  tableLayout: 'fixed', // Important for fixed column widths
                 }}
               >
-                <Table
-                  size={table.dense ? 'small' : 'medium'}
-                  stickyHeader
-                  sx={{ tableLayout: 'fixed' }} // Important for fixed column widths
-                >
-                  {/* Custom Table Head for better column alignment */}
+                <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
                   {renderTableHeader()}
-
                   <TableBody>
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
@@ -718,11 +918,9 @@ export const ChallengeList = ({
                           onSelectRow={() => table.onSelectRow(challenge.id)}
                           onToggleActive={onToggleActive}
                           visibleColumns={visibleColumns}
-                          // tableHead={visibleTableHead}
                         />
                       ))
                     )}
-
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
                       emptyRows={emptyRows(
@@ -731,33 +929,22 @@ export const ChallengeList = ({
                         filteredChallenges.length
                       )}
                     />
-
-                    {notFound && (
-                      <TableNoData
-                        notFound={notFound}
-                        sx={{
-                          py: 10,
-                        }}
-                      />
-                    )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
             </Scrollbar>
           </Box>
 
-          {/* Table Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
             onPageChange={(e, page) => {
               table.onChangePage(e, page);
-              onPageChange(page + 1); // Convert 0-based back to 1-based
+              onPageChange(page + 1);
             }}
-            onRowsPerPageChange={(e) => {
-              onLimitChange(parseInt(e.target.value, 10));
-            }}
+            onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
             rowsPerPageOptions={[5, 10, 25, 50]}
@@ -765,7 +952,6 @@ export const ChallengeList = ({
         </Card>
       </m.div>
 
-      {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -788,12 +974,7 @@ export const ChallengeList = ({
             color="error"
             startIcon={<FontAwesomeIcon icon={faTrash} />}
             onClick={handleDeleteRows}
-            sx={{
-              px: 2,
-              py: 1,
-              fontWeight: 'fontWeightBold',
-              boxShadow: theme.customShadows?.z8,
-            }}
+            sx={{ px: 2, py: 1, fontWeight: 'fontWeightBold', boxShadow: theme.customShadows?.z8 }}
           >
             Supprimer
           </Button>

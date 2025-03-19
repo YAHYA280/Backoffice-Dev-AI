@@ -3,12 +3,12 @@
 import { addDays, subDays, subMonths } from 'date-fns';
 import { useState, useEffect, useCallback } from 'react';
 
+import { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from '../types';
 import {
   DEFAULT_PAGINATION,
   MESSAGE_FINAL_DEFAUT,
   DEFAULT_SCORE_CONFIGURATION,
 } from '../constants';
-import { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from '../types';
 
 import type { Question, Challenge, Pagination, ApiResponse, FilterParams } from '../types';
 

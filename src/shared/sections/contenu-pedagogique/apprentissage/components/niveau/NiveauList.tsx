@@ -1,7 +1,14 @@
 import { m } from 'framer-motion';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faTimes, faFilter, faSearch } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faFilter,
+  faSearch,
+  faSyncAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -10,14 +17,20 @@ import {
   alpha,
   Stack,
   Button,
+  Select,
+  Tooltip,
   useTheme,
   TableRow,
+  Checkbox,
+  MenuItem,
   TableBody,
   TextField,
   TableCell,
+  TableHead,
   Typography,
   IconButton,
   Breadcrumbs,
+  FormControl,
   TableContainer,
   InputAdornment,
 } from '@mui/material';
@@ -32,7 +45,6 @@ import {
   emptyRows,
   TableNoData,
   TableEmptyRows,
-  TableHeadCustom,
   TableSelectedAction,
   TablePaginationCustom,
 } from 'src/shared/components/table';
@@ -47,33 +59,262 @@ import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Niveau, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
-const TABLE_HEAD = [
-  { id: 'nom', label: 'Nom', align: 'left' },
-  { id: 'description', label: 'Description', align: 'left' },
-  { id: 'code', label: 'Code', align: 'left' },
-  { id: 'dateCreated', label: 'Date de création', align: 'left' },
-  { id: '', label: 'Actions', align: 'center' },
+interface TableColumn {
+  id: string;
+  label: string;
+  align: 'left' | 'center' | 'right';
+  type?: 'text' | 'select' | 'date' | 'number';
+  options?: { value: string; label: string }[];
+  width?: number | string;
+}
+
+const TABLE_HEAD: TableColumn[] = [
+  { id: 'nom', label: 'Nom', align: 'left', type: 'text' },
+  { id: 'description', label: 'Description', align: 'left', type: 'text' },
+  { id: 'code', label: 'Code', align: 'left', type: 'text' },
+  { id: 'dateCreated', label: 'Date de création', align: 'left', type: 'date' },
+  { id: 'actions', label: 'Actions', align: 'center' },
 ];
 
-// -------------------------------------------
-// 3) ColumnFilter (the per-column search bar)
-// -------------------------------------------
 interface ColumnFilterProps {
   columnId: string;
   value: string;
+  options?: any[];
   onChange: (columnId: string, value: string) => void;
+  align?: 'left' | 'center' | 'right';
+  dense?: boolean;
+  columnType?: string;
 }
 
-const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const ColumnFilter = ({
+  columnId,
+  columnType = 'text',
+  options = [],
+  value,
+  onChange,
+  align = 'left',
+  dense = false,
+}: ColumnFilterProps) => {
+  const [isExpanded, setIsExpanded] = useState(Boolean(value));
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const selectRef = useRef<HTMLElement | null>(null);
 
-  const handleSearchIconClick = () => {
+  const handleSearchIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsExpanded(true);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    if (columnType === 'select' && selectRef.current) {
+      setTimeout(() => {
+        const selectElement = selectRef.current as HTMLElement;
+        selectElement.click();
+        const clickEvent = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+        selectElement.dispatchEvent(clickEvent);
+      }, 50);
+    } else {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 10);
+    }
   };
+
+  const handleClearClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(columnId, '');
+    if (columnType !== 'text' && columnType !== 'number') {
+      setIsExpanded(false);
+    } else if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const inputStyles = {
+    width: isExpanded ? 'auto' : '28px',
+    minWidth: isExpanded ? 80 : 28,
+    transition: 'all 0.2s ease-in-out',
+    marginTop: dense ? '-3px' : '-6px',
+    position: 'relative',
+    '& .MuiOutlinedInput-root': {
+      height: dense ? '24px' : '28px',
+      background: 'transparent',
+      '& fieldset': { border: 'none !important' },
+      '&:hover fieldset': { border: 'none !important' },
+      '&.Mui-focused fieldset': { border: 'none !important' },
+    },
+    '& .MuiInputBase-input': {
+      padding: dense ? '0px 0px' : '2px 0px',
+      fontSize: dense ? '0.7rem' : '0.75rem',
+      textAlign: align,
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+    '& .MuiSelect-select': {
+      paddingRight: '24px !important',
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+  };
+
+  const iconStyles = {
+    color: value ? 'primary.main' : 'text.disabled',
+    fontSize: dense ? '0.8rem' : '1rem',
+    cursor: 'pointer',
+    opacity: value ? 1 : 0.6,
+    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+    transition: 'all 0.2s ease',
+  };
+
+  const renderEndAdornment = () =>
+    value ? (
+      <InputAdornment position="end">
+        <IconButton
+          size="small"
+          onClick={handleClearClick}
+          sx={{ padding: 0, '&:hover': { background: 'transparent' } }}
+        >
+          <FontAwesomeIcon icon={faTimes} style={{ fontSize: dense ? '0.8rem' : '1rem' }} />
+        </IconButton>
+      </InputAdornment>
+    ) : null;
+
+  const renderStartAdornment = () => (
+    <InputAdornment position="start" sx={{ ml: 0 }}>
+      <Box
+        onClick={handleSearchIconClick}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+        }}
+      >
+        <FontAwesomeIcon icon={faSearch} style={iconStyles} />
+      </Box>
+    </InputAdornment>
+  );
+
+  if (columnType === 'select') {
+    return (
+      <FormControl size="small" sx={inputStyles}>
+        <Select
+          value={value}
+          onChange={(e) => onChange(columnId, e.target.value)}
+          displayEmpty
+          variant="outlined"
+          sx={{
+            fontSize: dense ? '0.7rem' : '0.75rem',
+            '& .MuiSelect-icon': {
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 0.2s',
+              display: isExpanded ? 'block' : 'none',
+            },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+            paddingRight: isExpanded ? '32px' : '0px',
+          }}
+          MenuProps={{
+            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            PaperProps: {
+              elevation: 3,
+              sx: {
+                maxHeight: 300,
+                mt: 1,
+                '& .MuiMenuItem-root': {
+                  fontSize: dense ? '0.7rem' : '0.75rem',
+                  py: dense ? 0.5 : 1,
+                },
+              },
+            },
+          }}
+          startAdornment={renderStartAdornment()}
+          endAdornment={renderEndAdornment()}
+          ref={selectRef}
+          onOpen={() => setIsExpanded(true)}
+          onClose={() => !value && setIsExpanded(false)}
+          inputProps={{ sx: { p: dense ? '3px' : '5px', paddingRight: 0 } }}
+        >
+          <MenuItem value="">
+            <em>Tous</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                fontSize: dense ? '0.7rem' : '0.75rem',
+                minHeight: 'auto',
+                py: dense ? 0.5 : 1,
+              }}
+            >
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  }
+
+  if (columnType === 'date') {
+    return (
+      <TextField
+        size="small"
+        type="date"
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        inputRef={inputRef}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: {
+            pl: 0,
+            '& input': {
+              pl: isExpanded ? 1 : 0,
+              width: isExpanded ? 'auto' : '0px',
+              opacity: isExpanded ? 1 : 0,
+            },
+          },
+        }}
+        InputLabelProps={{ shrink: true }}
+        sx={inputStyles}
+      />
+    );
+  }
+
+  if (columnType === 'number') {
+    return (
+      <TextField
+        size="small"
+        type="number"
+        inputRef={inputRef}
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: { pl: 0, '& input': { pl: isExpanded ? 1 : 0 } },
+        }}
+        sx={inputStyles}
+      />
+    );
+  }
 
   return (
     <TextField
@@ -82,43 +323,20 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
       onFocus={() => setIsExpanded(true)}
-      onBlur={() => setIsExpanded(false)}
-      sx={{
-        width: isExpanded ? 200 : 50,
-        transition: 'width 0.3s ease-in-out',
-        '& .MuiOutlinedInput-root': {
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          '& fieldset': {
-            border: 'none !important',
-          },
-          '&:hover fieldset': {
-            border: 'none !important',
+      onBlur={() => !value && setIsExpanded(false)}
+      onClick={() => setIsExpanded(true)}
+      variant="outlined"
+      InputProps={{
+        startAdornment: renderStartAdornment(),
+        endAdornment: renderEndAdornment(),
+        sx: {
+          pl: 0,
+          '& input': {
+            pl: isExpanded ? 1 : 0,
           },
         },
       }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <FontAwesomeIcon
-              icon={faSearch}
-              onClick={handleSearchIconClick}
-              style={{
-                color: 'text.disabled',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}
-            />
-          </InputAdornment>
-        ),
-        endAdornment: value ? (
-          <InputAdornment position="end">
-            <IconButton size="small" onClick={() => onChange(columnId, '')}>
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
-            </IconButton>
-          </InputAdornment>
-        ) : null,
-      }}
+      sx={inputStyles}
     />
   );
 };
@@ -182,6 +400,44 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'dateCreated', label: 'Date de création' },
 ];
 
+function applySingleFilter(niveau: Niveau, filter: ActiveFilter, filterOption: FilterOption) {
+  const { field, operator, value } = filter;
+  if (!value) return true;
+  const fieldVal = (niveau as any)[field];
+  if (!filterOption) return true;
+
+  if (filterOption.type === 'text') {
+    const fieldStr = fieldVal ? String(fieldVal).toLowerCase() : '';
+    const valStr = String(value).toLowerCase();
+    if (operator === 'contains') return fieldStr.includes(valStr);
+    if (operator === 'equals') return fieldStr === valStr;
+    if (operator === 'startsWith') return fieldStr.startsWith(valStr);
+    if (operator === 'endsWith') return fieldStr.endsWith(valStr);
+    return true;
+  }
+  if (filterOption.type === 'select') {
+    return String(fieldVal) === String(value);
+  }
+  if (filterOption.type === 'date') {
+    const cDate = fieldVal ? new Date(fieldVal) : null;
+    const fDate = value ? new Date(value) : null;
+    if (!cDate || !fDate || Number.isNaN(cDate.getTime()) || Number.isNaN(fDate.getTime()))
+      return false;
+    if (operator === 'equals') return cDate.toDateString() === fDate.toDateString();
+    if (operator === 'before') return cDate.getTime() < fDate.getTime();
+    if (operator === 'after') return cDate.getTime() > fDate.getTime();
+    return true;
+  }
+  if (filterOption.type === 'number') {
+    const cNum = Number(fieldVal);
+    const fNum = Number(value);
+    if (Number.isNaN(cNum) || Number.isNaN(fNum)) return false;
+    if (operator === 'equals') return cNum === fNum;
+    return true;
+  }
+  return true;
+}
+
 interface NiveauListProps {
   niveaux: Niveau[];
   loading: boolean;
@@ -191,7 +447,7 @@ interface NiveauListProps {
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
-
+  onFilterChange?: (filters: ActiveFilter[]) => void;
   onEditClick: (niveau: Niveau) => void;
   onDeleteClick: (niveau: Niveau) => void;
   onViewClick: (niveau: Niveau) => void;
@@ -201,9 +457,6 @@ interface NiveauListProps {
   onToggleActive?: (niveau: Niveau, active: boolean) => void;
 }
 
-// -------------------------------------------
-// 6) NiveauList Implementation
-// -------------------------------------------
 export const NiveauList: React.FC<NiveauListProps> = ({
   niveaux,
   loading,
@@ -217,72 +470,83 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   onDeleteClick,
   onViewClick,
   onDeleteRows,
+  onFilterChange,
   onViewMatieres,
   onAddClick,
   onToggleActive,
 }) => {
   const confirm = useBoolean();
   const theme = useTheme();
-
-  // State for exporting data
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-
-  // State for column-based text filters
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({
     nom: '',
     description: '',
     code: '',
     dateCreated: '',
   });
-
-  // -------------------------------------------
-  // 7) State for FilterDropdown & ColumnSelector
-  // -------------------------------------------
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     COLUMN_OPTIONS.map((col) => col.id)
   );
 
+  const filteredNiveaux = useMemo(() => {
+    let data = niveaux;
+    activeFilters.forEach((filter) => {
+      const filterOption = FILTER_OPTIONS.find((fo) => fo.id === filter.field);
+      if (filterOption) {
+        data = data.filter((niveau) => applySingleFilter(niveau, filter, filterOption));
+      }
+    });
+    Object.entries(columnFilters).forEach(([colId, val]) => {
+      if (val) {
+        data = data.filter((niveau) => {
+          const fieldVal = (niveau as any)[colId];
+          if (!fieldVal) return false;
+          return String(fieldVal).toLowerCase().includes(String(val).toLowerCase());
+        });
+      }
+    });
+    return data;
+  }, [niveaux, activeFilters, columnFilters]);
+
   const handleFilterChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
-    // API call, do it here.
+    onFilterChange?.(newFilters);
   };
 
-  // ColumnSelector callback
   const handleColumnChange = (columns: string[]) => {
     setVisibleColumns(columns);
   };
 
-  // Export handler
-  const handleExport = (format: string, options?: any) => {
-    console.log(`Exporting data in ${format} format with options:`, options);
+  const handleReset = () => {
+    setVisibleColumns(COLUMN_OPTIONS.map((col) => col.id));
+    setActiveFilters([]);
+    onFilterChange?.([]);
+    setColumnFilters({ nom: '', description: '', code: '', dateCreated: '' });
+    Object.keys(columnFilters).forEach((colId) => {
+      onColumnFilterChange?.(colId, '');
+    });
+    onPageChange(1);
+    onLimitChange(10);
+  };
 
+  const handleExport = (format: string, options?: any) => {
     setIsExporting(true);
     setExportProgress(0);
-
-    // Simulate export progress
     const interval = setInterval(() => {
-      setExportProgress((prevProgress) => {
-        const newProgress = prevProgress + Math.random() * 15;
-
-        if (newProgress >= 100) {
+      setExportProgress((prev) => {
+        const newProg = prev + Math.random() * 15;
+        if (newProg >= 100) {
           clearInterval(interval);
-          setTimeout(() => {
-            setIsExporting(false);
-            // Show success notification if needed
-          }, 500);
+          setTimeout(() => setIsExporting(false), 500);
           return 100;
         }
-
-        return newProgress;
+        return newProg;
       });
     }, 300);
   };
 
-  // -------------------------------------------
-  // 9) Table logic
-  // -------------------------------------------
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
     defaultCurrentPage: pagination.page - 1,
@@ -301,77 +565,142 @@ export const NiveauList: React.FC<NiveauListProps> = ({
     confirm.onFalse();
   };
 
-  // -------------------------------------------
-  // 10) Per-column filter
-  // -------------------------------------------
-  const handleColumnFilterChangeLocal = (columnId: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }));
-    onColumnFilterChange?.(columnId, value);
+  const handleColumnFilterChangeLocal = (columnId: string, val: string) => {
+    setColumnFilters((prev) => ({ ...prev, [columnId]: val }));
+    onColumnFilterChange?.(columnId, val);
   };
 
-  // -------------------------------------------
-  // 11) Which columns to show in the table
-  // -------------------------------------------
   const visibleTableHead = TABLE_HEAD.filter(
-    (col) => col.id === '' || visibleColumns.includes(col.id)
+    (col) => col.id === '' || col.id === 'actions' || visibleColumns.includes(col.id)
   );
 
-  // -------------------------------------------
-  // 12) "No data" condition
-  // -------------------------------------------
-  const notFound = !niveaux.length && !loading;
+  const notFound = !filteredNiveaux.length && !loading;
 
-  // -------------------------------------------
-  // 13) Render row for filter inputs (below header)
-  // -------------------------------------------
-  const renderFilterRow = () => (
-    <TableRow
+  const renderTableHeader = () => (
+    <TableHead
       sx={{
         position: 'sticky',
-        top: table.dense ? '37px' : '57px',
-        bgcolor: 'background.paper',
-        zIndex: 2,
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-        '& .MuiTableCell-root': {
-          padding: '2px 4px',
-          lineHeight: 1,
+        top: 0,
+        zIndex: 10,
+        '& .MuiTableCell-head': {
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          fontWeight: 'fontWeightBold',
+          padding: table.dense ? '2px 6px' : '8px 8px',
         },
       }}
     >
-      <TableCell padding="checkbox" />
-      {visibleTableHead.map((column) => {
-        if (column.id === '') {
-          return (
+      <TableRow>
+        <TableCell
+          padding="checkbox"
+          sx={{
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: 0,
+            zIndex: 12,
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
+          }}
+        >
+          <Checkbox
+            indeterminate={
+              table.selected.length > 0 && table.selected.length < filteredNiveaux.length
+            }
+            checked={filteredNiveaux.length > 0 && table.selected.length === filteredNiveaux.length}
+            onChange={(e) =>
+              table.onSelectAllRows(
+                e.target.checked,
+                filteredNiveaux.map((row) => row.id)
+              )
+            }
+            size={table.dense ? 'small' : 'medium'}
+          />
+        </TableCell>
+        {visibleTableHead
+          .filter((col) => col.id !== 'select')
+          .map((column) => (
             <TableCell
-              key="actions-filter-cell"
-              align="center"
-              sx={{ bgcolor: 'background.paper' }}
+              key={column.id}
+              align={column.align}
+              sx={{
+                bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                position: 'sticky',
+                top: 0,
+                zIndex: 11,
+                whiteSpace: 'nowrap',
+                borderBottom: 'none',
+                fontSize: table.dense ? '0.8125rem' : '0.875rem',
+              }}
             >
-              {/* Empty cell for actions column */}
+              {column.label}
             </TableCell>
-          );
-        }
-
-        // Regular filter cells for data columns
-        return (
-          <TableCell key={column.id}>
-            <ColumnFilter
-              columnId={column.id}
-              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
-              onChange={handleColumnFilterChangeLocal}
-            />
-          </TableCell>
-        );
-      })}
-    </TableRow>
+          ))}
+      </TableRow>
+      <TableRow
+        sx={{
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          '& .MuiTableCell-root': {
+            padding: table.dense ? '0px 6px 2px' : '0px 8px 4px',
+            borderTop: 'none',
+          },
+        }}
+      >
+        <TableCell
+          padding="checkbox"
+          sx={{
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: table.dense ? '28px' : '23px',
+            zIndex: 11,
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
+          }}
+        />
+        {visibleTableHead
+          .filter((col) => col.id !== 'select')
+          .map((column) => {
+            if (column.id === 'actions') {
+              return (
+                <TableCell
+                  key={column.id}
+                  align={column.align}
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                    position: 'sticky',
+                    top: table.dense ? '28px' : '23px',
+                    zIndex: 11,
+                  }}
+                />
+              );
+            }
+            return (
+              <TableCell
+                key={column.id}
+                align={column.align}
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                  position: 'sticky',
+                  top: table.dense ? '28px' : '23px',
+                  zIndex: 11,
+                }}
+              >
+                <ColumnFilter
+                  columnId={column.id}
+                  columnType={column.type}
+                  options={column.options}
+                  value={columnFilters[column.id] || ''}
+                  onChange={handleColumnFilterChangeLocal}
+                  align={column.align}
+                  dense={table.dense}
+                />
+              </TableCell>
+            );
+          })}
+      </TableRow>
+    </TableHead>
   );
 
-  // -------------------------------------------
-  // 14) Simple breadcrumb
-  // -------------------------------------------
   const renderBreadcrumbs = () => (
     <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
       <Typography color="text.primary">Niveaux d&apos;enseignement</Typography>
@@ -380,13 +709,11 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 
   return (
     <MotionContainer>
-      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
+          <Typography variant="h4" sx={{ fontWeight: 'fontWeightBold' }}>
             Niveaux
           </Typography>
-
           {onAddClick && (
             <Button
               variant="contained"
@@ -411,7 +738,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
         {renderBreadcrumbs()}
       </m.div>
 
-      {/* Filter Controls (FilterDropdown + ColumnSelector + Advanced Filter) */}
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
@@ -424,24 +750,35 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             overflow: 'hidden',
           }}
         >
-          {/* 
-           FilterDropdown + ColumnSelector 
-          */}
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
-            <Stack direction="row" alignContent="end" spacing={2}>
-              <FilterDropdown
-                filterOptions={FILTER_OPTIONS}
-                activeFilters={activeFilters}
-                onFilterChange={handleFilterChange}
-                icon={<FontAwesomeIcon icon={faFilter} />}
-              />
-
+            <Stack direction="row" spacing={2}>
               <ColumnSelector
                 columns={COLUMN_OPTIONS}
                 visibleColumns={visibleColumns}
                 onColumnChange={handleColumnChange}
                 buttonText="Colonnes"
               />
+              <FilterDropdown
+                filterOptions={FILTER_OPTIONS}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                icon={<FontAwesomeIcon icon={faFilter} />}
+              />
+              <Tooltip title="Réinitialiser" arrow>
+                <IconButton
+                  onClick={handleReset}
+                  color="primary"
+                  sx={{
+                    p: 1,
+                    transition: theme.transitions.create(['transform', 'box-shadow']),
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                    },
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSyncAlt} />
+                </IconButton>
+              </Tooltip>
               <AdvancedExportDropdown
                 onExport={handleExport}
                 isExporting={isExporting}
@@ -452,7 +789,6 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             </Stack>
           </Box>
 
-          {/* Bulk Actions (Selected Rows) */}
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
@@ -461,36 +797,25 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  niveaux.map((row) => row.id)
+                  filteredNiveaux.map((row) => row.id)
                 )
               }
               action={
                 <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
                     {table.selected.length} sélectionné
                     {table.selected.length > 1 ? 's' : ''}
                   </Typography>
-
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {/* Delete action button */}
                     {onDeleteRows && (
                       <Button
                         variant="contained"
                         color="error"
                         startIcon={<FontAwesomeIcon icon={faTrash} />}
                         onClick={handleOpenConfirm}
-                        sx={{
-                          px: 2,
-                          py: 1,
-                          fontWeight: 'fontWeightBold',
-                          transition: theme.transitions.create(['background-color']),
-                        }}
+                        sx={{ px: 2, py: 1, fontWeight: 'fontWeightBold' }}
                       >
                         Supprimer
                       </Button>
@@ -500,45 +825,21 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               }
             />
 
-            {/* TABLE + SCROLLBAR */}
-            <Scrollbar sx={{ height: 550 }}>
+            <Scrollbar style={{ maxHeight: 550 }}>
               <TableContainer
                 sx={{
                   position: 'relative',
-                  minHeight: 240,
+                  minHeight: 400,
                   maxHeight: 500,
                 }}
               >
                 <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
-                  <TableHeadCustom
-                    order={table.order}
-                    orderBy={table.orderBy}
-                    headLabel={visibleTableHead}
-                    rowCount={niveaux.length}
-                    numSelected={table.selected.length}
-                    onSort={table.onSort}
-                    onSelectAllRows={(checked) =>
-                      table.onSelectAllRows(
-                        checked,
-                        niveaux.map((row) => row.id)
-                      )
-                    }
-                    sx={{
-                      '& .MuiTableCell-head': {
-                        bgcolor: alpha(theme.palette.primary.lighter, 0.2),
-                        fontWeight: 'fontWeightBold',
-                        zIndex: 3,
-                      },
-                    }}
-                  />
-
+                  {renderTableHeader()}
                   <TableBody>
-                    {renderFilterRow()}
-
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
-                      niveaux.map((niveau) => (
+                      filteredNiveaux.map((niveau) => (
                         <NiveauItem
                           key={niveau.id}
                           niveau={niveau}
@@ -553,45 +854,32 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                         />
                       ))
                     )}
-
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
                       emptyRows={emptyRows(table.page, table.rowsPerPage, niveaux.length)}
                     />
-
-                    {notFound && (
-                      <TableNoData
-                        notFound={notFound}
-                        sx={{
-                          py: 10,
-                        }}
-                      />
-                    )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
             </Scrollbar>
           </Box>
 
-          {/* Table Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
-            onPageChange={(e, page) => {
-              table.onChangePage(e, page);
-              onPageChange(page + 1);
+            onPageChange={(e, newPage) => {
+              table.onChangePage(e, newPage);
+              onPageChange(newPage + 1);
             }}
-            onRowsPerPageChange={(e) => {
-              onLimitChange(parseInt(e.target.value, 10));
-            }}
+            onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
           />
         </Card>
       </m.div>
 
-      {/* Confirmation dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -614,12 +902,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             color="error"
             startIcon={<FontAwesomeIcon icon={faTrash} />}
             onClick={handleDeleteRows}
-            sx={{
-              px: 2,
-              py: 1,
-              fontWeight: 'fontWeightBold',
-              boxShadow: theme.customShadows?.z8,
-            }}
+            sx={{ px: 2, py: 1, fontWeight: 'fontWeightBold' }}
           >
             Supprimer
           </Button>

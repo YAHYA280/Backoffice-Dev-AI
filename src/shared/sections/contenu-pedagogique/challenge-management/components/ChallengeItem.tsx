@@ -10,12 +10,10 @@ import {
   faTrophy,
   faToggleOn,
   faPenToSquare,
-  faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
-  Link,
   Chip,
   Stack,
   alpha,
@@ -35,9 +33,10 @@ import { fDate } from 'src/utils/format-time';
 import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
+import { ChallengeStatus } from '../types';
 import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
 
-import { Challenge, ChallengeStatus } from '../types';
+import type { Challenge } from '../types';
 
 // Define column widths to match the header
 const COLUMN_WIDTHS = {
@@ -162,7 +161,7 @@ export const ChallengeItem = ({
           <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        {visibleColumns.includes('nom') && (
+        {visibleColumns.includes('nom') ? (
           <TableCell {...getCellProps('nom')}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Avatar
@@ -202,9 +201,11 @@ export const ChallengeItem = ({
               </Box>
             </Stack>
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('description') && (
+        {visibleColumns.includes('description') ? (
           <TableCell
             {...getCellProps('description')}
             sx={{
@@ -217,9 +218,11 @@ export const ChallengeItem = ({
           >
             {challenge.description}
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('statut') && (
+        {visibleColumns.includes('statut') ? (
           <TableCell {...getCellProps('statut', 'center')}>
             <Chip
               label={statutOption.label}
@@ -232,9 +235,11 @@ export const ChallengeItem = ({
               }}
             />
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('datePublication') && (
+        {visibleColumns.includes('datePublication') ? (
           <TableCell
             {...getCellProps('datePublication', 'center')}
             sx={{
@@ -245,9 +250,11 @@ export const ChallengeItem = ({
           >
             {formatDate(challenge.datePublication)}
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('dateMiseAJour') && (
+        {visibleColumns.includes('dateMiseAJour') ? (
           <TableCell
             {...getCellProps('dateMiseAJour', 'center')}
             sx={{
@@ -258,9 +265,11 @@ export const ChallengeItem = ({
           >
             {challenge.dateMiseAJour ? formatDate(challenge.dateMiseAJour) : '-'}
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('difficulte') && (
+        {visibleColumns.includes('difficulte') ? (
           <TableCell {...getCellProps('difficulte', 'center')}>
             <Chip
               label={difficulteOption.label}
@@ -273,9 +282,11 @@ export const ChallengeItem = ({
               }}
             />
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('nbTentatives') && (
+        {visibleColumns.includes('nbTentatives') ? (
           <TableCell {...getCellProps('nbTentatives', 'center')}>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <FontAwesomeIcon
@@ -285,9 +296,11 @@ export const ChallengeItem = ({
               <Typography variant="body2">{nbTentatives === -1 ? '∞' : nbTentatives}</Typography>
             </Box>
           </TableCell>
+        ) : (
+          <></>
         )}
 
-        {visibleColumns.includes('participantsCount') && (
+        {visibleColumns.includes('participantsCount') ? (
           <TableCell {...getCellProps('participantsCount', 'center')}>
             <Typography
               variant="body2"
@@ -318,6 +331,8 @@ export const ChallengeItem = ({
               {participantsCount}
             </Typography>
           </TableCell>
+        ) : (
+          <></>
         )}
 
         <TableCell
@@ -347,7 +362,7 @@ export const ChallengeItem = ({
               </IconButton>
             </Tooltip>
 
-            {!isDeleted && (
+            {!isDeleted ? (
               <>
                 <Tooltip title="Modifier">
                   <IconButton
@@ -387,7 +402,7 @@ export const ChallengeItem = ({
                   </IconButton>
                 </Tooltip>
 
-                {onResetClick && participantsCount > 0 && (
+                {onResetClick && participantsCount > 0 ? (
                   <Tooltip title="Réinitialiser les participations">
                     <IconButton
                       color="warning"
@@ -406,9 +421,11 @@ export const ChallengeItem = ({
                       <FontAwesomeIcon icon={faUndo} />
                     </IconButton>
                   </Tooltip>
+                ) : (
+                  <></>
                 )}
 
-                {onToggleActive && (
+                {onToggleActive ? (
                   <Box
                     component="span"
                     onClick={(e) => e.stopPropagation()}
@@ -422,11 +439,15 @@ export const ChallengeItem = ({
                       sx={{ transform: 'scale(0.8)' }}
                     />
                   </Box>
+                ) : (
+                  <></>
                 )}
               </>
+            ) : (
+              <></>
             )}
 
-            {isDeleted && onRestoreClick && (
+            {isDeleted && onRestoreClick ? (
               <Tooltip title="Restaurer">
                 <IconButton
                   color="success"
@@ -445,6 +466,8 @@ export const ChallengeItem = ({
                   <FontAwesomeIcon icon={faUndo} />
                 </IconButton>
               </Tooltip>
+            ) : (
+              <></>
             )}
           </Stack>
         </TableCell>
@@ -486,7 +509,7 @@ export const ChallengeItem = ({
           Voir détails
         </MenuItem>
 
-        {!isDeleted && (
+        {!isDeleted ? (
           <>
             <MenuItem
               onClick={() => {
@@ -542,7 +565,7 @@ export const ChallengeItem = ({
               Supprimer
             </MenuItem>
 
-            {onResetClick && participantsCount > 0 && (
+            {onResetClick && participantsCount > 0 ? (
               <MenuItem
                 onClick={() => {
                   popover.onClose();
@@ -572,9 +595,11 @@ export const ChallengeItem = ({
                 />
                 Réinitialiser
               </MenuItem>
+            ) : (
+              <></>
             )}
 
-            {onToggleActive && (
+            {onToggleActive ? (
               <MenuItem
                 onClick={() => {
                   if (onToggleActive) {
@@ -606,11 +631,15 @@ export const ChallengeItem = ({
                 />
                 {challenge.active ? 'Désactiver' : 'Activer'}
               </MenuItem>
+            ) : (
+              <></>
             )}
           </>
+        ) : (
+          <></>
         )}
 
-        {isDeleted && onRestoreClick && (
+        {isDeleted && onRestoreClick ? (
           <MenuItem
             onClick={() => {
               popover.onClose();
@@ -640,6 +669,8 @@ export const ChallengeItem = ({
             />
             Restaurer
           </MenuItem>
+        ) : (
+          <></>
         )}
       </CustomPopover>
     </>

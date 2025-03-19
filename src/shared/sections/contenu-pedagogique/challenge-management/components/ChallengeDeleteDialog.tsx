@@ -123,7 +123,7 @@ export const ChallengeDeleteDialog = ({
 
         {renderParticipantsWarning()}
 
-        {allowPermanentDelete && (
+        {allowPermanentDelete ? (
           <Box
             sx={{
               mt: 3,
@@ -147,19 +147,25 @@ export const ChallengeDeleteDialog = ({
                 </Typography>
               }
             />
-            {permanentDelete && (
+            {permanentDelete ? (
               <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
                 ATTENTION : Cette action est irréversible. Toutes les données seront définitivement
                 supprimées.
               </Typography>
+            ) : (
+              <></>
             )}
           </Box>
+        ) : (
+          <></>
         )}
 
-        {!permanentDelete && (
+        {!permanentDelete ? (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             Note : Le challenge sera archivé et pourra être restauré ultérieurement si nécessaire.
           </Typography>
+        ) : (
+          <></>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>

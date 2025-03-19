@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -60,6 +60,10 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [currentFilters, setCurrentFilters] = useState<ActiveFilter[]>(activeFilters);
+
+  useEffect(() => {
+    setCurrentFilters(activeFilters);
+  }, [activeFilters]);
 
   // Add a new empty filter
   const [tempFilter, setTempFilter] = useState<ActiveFilter | null>(null);
