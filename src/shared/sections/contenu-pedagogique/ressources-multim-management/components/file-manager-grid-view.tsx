@@ -14,8 +14,6 @@ import { FileManagerFileItem } from './file-manager-file-item';
 import { FileManagerFolderItem } from './file-manager-folder-item';
 import { FileManagerNewFolderDialog } from './file-manager-new-folder-dialog';
 
-// ----------------------------------------------------------------------
-
 type Props = {
   table: TableProps;
   dataFiltered: IFile[];
@@ -25,34 +23,34 @@ type Props = {
 
 export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenConfirm }: Props) {
   const { selected, onSelectRow: onSelectItem } = table;
-
   const files = useBoolean();
-
   const upload = useBoolean();
-
   const folders = useBoolean();
-
   const newFolder = useBoolean();
-
   const containerRef = useRef(null);
-
   const [folderName, setFolderName] = useState('');
 
   const handleChangeFolderName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setFolderName(event.target.value);
   }, []);
 
+  const foldersData = dataFiltered.filter((item) => item.type === 'dossier');
+  const filesData = dataFiltered.filter((item) => item.type !== 'dossier');
+  const startIdx = table.page * table.rowsPerPage;
+  const endIdx = startIdx + table.rowsPerPage;
+  const filesInPage = filesData.slice(startIdx, endIdx);
+
   return (
     <>
       <Box ref={containerRef}>
         <FileManagerPanel
+          sx={{ m: 2 }}
           title="Dossiers"
-          subtitle={`${dataFiltered.filter((item) => item.type === 'dossier').length} dossiers`}
+          subtitle={`${foldersData.length} dossiers`}
           onOpen={newFolder.onTrue}
           collapse={folders.value}
           onCollapse={folders.onToggle}
         />
-
         <Collapse in={!folders.value} unmountOnExit>
           <Box
             gap={3}
@@ -64,31 +62,27 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
               lg: 'repeat(4, 1fr)',
             }}
           >
-            {dataFiltered
-              .filter((i) => i.type === 'dossier')
-              .map((folder) => (
-                <FileManagerFolderItem
-                  key={folder.id}
-                  folder={folder}
-                  selected={selected.includes(folder.id)}
-                  onSelect={() => onSelectItem(folder.id)}
-                  onDelete={() => onDeleteItem(folder.id)}
-                  sx={{ maxWidth: 'auto' }}
-                />
-              ))}
+            {foldersData.map((folder) => (
+              <FileManagerFolderItem
+                key={folder.id}
+                folder={folder}
+                selected={selected.includes(folder.id)}
+                onSelect={() => onSelectItem(folder.id)}
+                onDelete={() => onDeleteItem(folder.id)}
+                sx={{ maxWidth: 'auto' }}
+              />
+            ))}
           </Box>
         </Collapse>
-
         <Divider sx={{ my: 5, borderStyle: 'dashed' }} />
-
         <FileManagerPanel
+          sx={{ m: 2 }}
           title="Fichiers"
-          subtitle={`${dataFiltered.filter((item) => item.type !== 'dossier').length} fichiers`}
+          subtitle={`${filesData.length} fichiers`}
           onOpen={upload.onTrue}
           collapse={files.value}
           onCollapse={files.onToggle}
         />
-
         <Collapse in={!files.value} unmountOnExit>
           <Box
             display="grid"
@@ -100,26 +94,33 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
             }}
             gap={3}
           >
-            {dataFiltered
-              .filter((i) => i.type !== 'dossier')
-              .map((file) => (
-                <FileManagerFileItem
-                  key={file.id}
-                  file={file}
-                  selected={selected.includes(file.id)}
-                  onSelect={() => onSelectItem(file.id)}
-                  onDelete={() => onDeleteItem(file.id)}
-                  sx={{ maxWidth: 'auto' }}
-                />
-              ))}
+            {filesInPage.map((file) => (
+              <FileManagerFileItem
+                key={file.id}
+                file={file}
+                selected={selected.includes(file.id)}
+                onSelect={() => onSelectItem(file.id)}
+                onDelete={() => onDeleteItem(file.id)}
+                sx={{ maxWidth: 'auto' }}
+                folder={{
+                  id: '',
+                  name: '',
+                  size: 0,
+                  type: '',
+                  url: '',
+                  tags: [],
+                  totalFiles: undefined,
+                  isFavorited: false,
+                  shared: null,
+                  createdAt: null,
+                  modifiedAt: null,
+                }}
+              />
+            ))}
           </Box>
         </Collapse>
-
-       
       </Box>
-
       <FileManagerNewFolderDialog open={upload.value} onClose={upload.onFalse} />
-
       <FileManagerNewFolderDialog
         open={newFolder.value}
         onClose={newFolder.onFalse}
@@ -127,7 +128,6 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
         onCreate={() => {
           newFolder.onFalse();
           setFolderName('');
-          console.info('CREATE NEW FOLDER', folderName);
         }}
         folderName={folderName}
         onChangeFolderName={handleChangeFolderName}

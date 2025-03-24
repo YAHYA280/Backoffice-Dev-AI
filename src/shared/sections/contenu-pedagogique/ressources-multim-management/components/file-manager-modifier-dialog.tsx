@@ -54,7 +54,6 @@ export function FileManagerModifierDialog({
   const [fileName, setFileName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
-
   const [selectedNiveau, setSelectedNiveau] = useState<string>('');
   const [selectedMatiere, setSelectedMatiere] = useState<string>('');
   const [selectedChapitre, setSelectedChapitre] = useState<string>('');
@@ -89,17 +88,6 @@ export function FileManagerModifierDialog({
   );
 
   const handleUpload = () => {
-    console.info('Updating file with info:', {
-      fileId: fileData?.id,
-      fileName,
-      description,
-      selectedNiveau,
-      selectedMatiere,
-      selectedChapitre,
-      selectedExercice,
-      tags,
-      files,
-    });
     onClose();
   };
 
@@ -121,7 +109,6 @@ export function FileManagerModifierDialog({
       : selectedNiveau === 'Niveau 2'
       ? ['Matière 3', 'Matière 4']
       : [];
-
 
   const chapitreOptions =
     selectedMatiere === 'Matière 1'
@@ -179,7 +166,6 @@ export function FileManagerModifierDialog({
       >
         {title}
       </DialogTitle>
-
       <DialogContent
         dividers
         sx={{
@@ -205,7 +191,6 @@ export function FileManagerModifierDialog({
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
           />
-
           <TextField
             fullWidth
             label="Description"
@@ -214,7 +199,6 @@ export function FileManagerModifierDialog({
             multiline
             rows={3}
           />
-
           <FormControl fullWidth>
             <InputLabel>Niveau</InputLabel>
             <Select value={selectedNiveau} label="Niveau" onChange={handleNiveauChange}>
@@ -225,7 +209,6 @@ export function FileManagerModifierDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedNiveau}>
             <InputLabel>Matière</InputLabel>
             <Select value={selectedMatiere} label="Matière" onChange={handleMatiereChange}>
@@ -236,7 +219,6 @@ export function FileManagerModifierDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedMatiere}>
             <InputLabel>Chapitre</InputLabel>
             <Select value={selectedChapitre} label="Chapitre" onChange={handleChapitreChange}>
@@ -247,7 +229,6 @@ export function FileManagerModifierDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedChapitre}>
             <InputLabel>Exercice</InputLabel>
             <Select value={selectedExercice} label="Exercice" onChange={handleExerciceChange}>
@@ -258,7 +239,6 @@ export function FileManagerModifierDialog({
               ))}
             </Select>
           </FormControl>
-
           <Autocomplete
             multiple
             freeSolo
@@ -287,7 +267,6 @@ export function FileManagerModifierDialog({
             )}
           />
         </Stack>
-
         <Upload
           multiple
           value={files}
@@ -296,7 +275,6 @@ export function FileManagerModifierDialog({
           sx={{ mt: 2 }}
         />
       </DialogContent>
-
       <DialogActions sx={{ p: 2 }}>
         <Button
           variant="contained"
@@ -306,20 +284,18 @@ export function FileManagerModifierDialog({
         >
           Mettre à jour
         </Button>
-
         {files.length > 0 ? (
           <Button variant="outlined" color="inherit" onClick={handleRemoveAllFiles}>
-            Remove all
+            Supprimer tout
           </Button>
-        ):(
+        ) : (
           <>
           </>
         )}
-
         {(onCreate || onUpdate) ? (
           <Stack direction="row" justifyContent="flex-end" flexGrow={1}>
             <Button variant="soft" onClick={onCreate || onUpdate}>
-              {onUpdate ? 'Save' : 'Create'}
+              {onUpdate ? 'Enregistrer' : 'Créer'}
             </Button>
           </Stack>
         ) : (

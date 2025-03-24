@@ -1,4 +1,4 @@
-import type { IDateValue, ISocialLink, IDatePickerControl } from './common';
+import type { IDateValue, ISocialLink } from './common';
 
 export type IUserItem = {
     id: string;
@@ -17,9 +17,9 @@ export type IUserItem = {
     phoneNumber: string;
     dureRestante:number;
     isVerified: boolean;
-    createdAt: string | null;
-    lastLogin: string | null;
-    birthDate: string | null;
+    createdAt: IDateValue;
+    lastLogin: IDateValue;
+    birthDate: IDateValue;
     parentId : string;
     motif : string;
     duree : number;
@@ -32,9 +32,10 @@ name: string;
 email:string;
 role: string[];
 statut : string[];
-createdAt: IDatePickerControl;
-lastLogin: IDatePickerControl;
+createdAt: IDateValue;
+lastLogin: IDateValue;
 };
+
 
 export type IUserProfileCover = {
   name: string;

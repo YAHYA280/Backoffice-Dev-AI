@@ -29,3 +29,10 @@ export type ISocialLink = {
   linkedin: string;
   twitter: string;
 };
+
+export type IAbonnementSubscribers = {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string;
+};

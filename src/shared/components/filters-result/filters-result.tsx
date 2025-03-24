@@ -25,7 +25,7 @@ export function FiltersResult({ totalResults, onReset, sx, children }: FiltersRe
       <Box sx={{ mb: 1.5, typography: 'body2' }}>
         <strong>{totalResults}</strong>
         <Box component="span" sx={{ color: 'text.secondary', ml: 0.25 }}>
-          results found
+          Résultats trouvés
         </Box>
       </Box>
 
@@ -37,7 +37,7 @@ export function FiltersResult({ totalResults, onReset, sx, children }: FiltersRe
           onClick={onReset}
           startIcon={<FontAwesomeIcon icon={faTrash} />}
         >
-          Clear
+          Effacer
         </Button>
       </Box>
     </Box>

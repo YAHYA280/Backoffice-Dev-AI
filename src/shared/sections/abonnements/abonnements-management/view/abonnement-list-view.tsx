@@ -1,6 +1,6 @@
 'use client';
 
-import type { IAbonnementItem, IAbonnementFilters } from 'src/types/abonnement';
+import type { IAbonnementItem, IAbonnementFilters } from 'src/contexts/types/abonnement';
 
 import { useState, useCallback } from 'react';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';

@@ -7,7 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useMemo, useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import { faCheck, faChild, faSearch, faUserShield, faUserFriends } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheck,
+  faChild,
+  faSearch,
+  faUserShield,
+  faUserFriends,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -52,7 +58,10 @@ const administrationRoles = _ADMINISTRATION_ROLES;
 const UserNewSchema = zod.object({
   firstName: zod.string().min(1, { message: 'Le prénom est requis.' }),
   lastName: zod.string().min(1, { message: 'Le nom est requis.' }),
-  email: zod.string().min(1, { message: 'Adresse e-mail requise.' }).email({ message: 'Adresse e-mail invalide.' }),
+  email: zod
+    .string()
+    .min(1, { message: 'Adresse e-mail requise.' })
+    .email({ message: 'Adresse e-mail invalide.' }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   birthDate: zod.string().min(1, { message: 'La date de naissance est requise.' }),
   role: zod.string().min(1, { message: 'Le rôle est requis.' }),
@@ -70,12 +79,14 @@ type Props = {
 export function UserNewForm({ open, onClose }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const parents = _parents;
   const [parentSearch, setParentSearch] = useState('');
   const filteredParents = parents.filter((p) =>
     p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
     p.email.toLowerCase().includes(parentSearch.toLowerCase())
   );
+
   const defaultValues = useMemo(
     () => ({
       firstName: '',
@@ -89,12 +100,23 @@ export function UserNewForm({ open, onClose }: Props) {
     }),
     []
   );
+
   const methods = useForm<UserNewSchemaType>({
     mode: 'all',
     resolver: zodResolver(UserNewSchema),
     defaultValues,
   });
-  const { control, reset, handleSubmit, setValue, getValues, trigger, watch } = methods;
+  const {
+    control,
+    reset,
+    handleSubmit,
+    setValue,
+    getValues,
+    trigger,
+    watch,
+  } = methods;
+  const adminRole = watch('adminRole');
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
@@ -104,9 +126,9 @@ export function UserNewForm({ open, onClose }: Props) {
   const [invitationContent, setInvitationContent] = useState('');
   const [cinRectoFile, setCinRectoFile] = useState<File | null>(null);
   const [cinVersoFile, setCinVersoFile] = useState<File | null>(null);
-  const adminRole = watch('adminRole');
 
-  const buildDefaultInvitationText = useCallback(() => `Invitation à rejoindre notre plateforme éducative
+  const buildDefaultInvitationText = useCallback(
+    () => `Invitation à rejoindre notre plateforme éducative
 
 Bonjour ${getValues('lastName') || ''},
 
@@ -123,7 +145,9 @@ Veuillez cliquer sur le bouton ci-dessous pour activer votre compte :
 Ce lien expirera dans 24 heures.
 
 Cordialement,
-L'équipe de la plateforme`, [getValues]);
+L'équipe de la plateforme`,
+    [getValues]
+  );
 
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
@@ -149,7 +173,14 @@ L'équipe de la plateforme`, [getValues]);
         setAdminRoleError('Veuillez sélectionner un rôle administrateur.');
         return;
       }
-      const fieldsToValidate = ['firstName', 'lastName', 'email', 'phoneNumber', 'birthDate', 'role'];
+      const fieldsToValidate = [
+        'firstName',
+        'lastName',
+        'email',
+        'phoneNumber',
+        'birthDate',
+        'role',
+      ];
       const isValid = await trigger(fieldsToValidate as any);
       if (!isValid) return;
       if (selectedRole === 'admin') {
@@ -227,8 +258,8 @@ L'équipe de la plateforme`, [getValues]);
                     width: '100%',
                     cursor: 'pointer',
                     border: selectedRole === role.value ? '2px solid' : '1px solid',
-                    borderColor: selectedRole === role.value ? 'primary.main' : 'divider',
-                    bgcolor: selectedRole === role.value ? 'primary.lighter' : 'background.paper',
+                    borderColor: selectedRole === role.value ? '#C8FAD6' : 'divider',
+                    bgcolor: selectedRole === role.value ? '#C8FAD6' : 'background.paper',
                   }}
                 >
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
@@ -245,15 +276,18 @@ L'équipe de la plateforme`, [getValues]);
                 </Card>
               ))}
             </Stack>
-            {roleSelectionError && (
+            {roleSelectionError ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {roleSelectionError}
               </Alert>
+            ):(
+              <>
+              </>
             )}
             <Box
+              display="grid"
               rowGap={3}
               columnGap={2}
-              display="grid"
               gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
               sx={{ mb: 2 }}
             >
@@ -287,12 +321,16 @@ L'équipe de la plateforme`, [getValues]);
                   />
                 )}
               />
-              {selectedRole === 'admin' && (
+              {selectedRole === 'admin' ? (
                 <Controller
                   name="adminRole"
                   control={control}
                   render={({ field }) => (
-                    <FormControl fullWidth error={!!adminRoleError} sx={{ gridColumn: { xs: '1', sm: '1 / span 2' } }}>
+                    <FormControl
+                      fullWidth
+                      error={!!adminRoleError}
+                      sx={{ gridColumn: { xs: '1', sm: '1 / span 2' } }}
+                    >
                       <InputLabel>Rôle administratif</InputLabel>
                       <Select
                         {...field}
@@ -314,14 +352,20 @@ L'équipe de la plateforme`, [getValues]);
                           </MenuItem>
                         ))}
                       </Select>
-                      {adminRoleError && (
+                      {adminRoleError ? (
                         <Typography color="error" variant="caption" sx={{ mt: 1, ml: 1.5 }}>
                           {adminRoleError}
                         </Typography>
+                      ):(
+                        <>
+                        </>
                       )}
                     </FormControl>
                   )}
                 />
+              ):(
+                <>
+                </>
               )}
             </Box>
           </>
@@ -360,10 +404,14 @@ L'équipe de la plateforme`, [getValues]);
                     sx={{
                       p: 2,
                       border: '1px solid',
-                      borderColor: selectedParent?.id === parent.id ? 'primary.main' : 'divider',
+                      borderColor:
+                        selectedParent?.id === parent.id ? 'primary.main' : 'divider',
                       borderRadius: 1,
                       cursor: 'pointer',
-                      bgcolor: selectedParent?.id === parent.id ? 'primary.lighter' : 'background.paper',
+                      bgcolor:
+                        selectedParent?.id === parent.id
+                          ? 'primary.lighter'
+                          : 'background.paper',
                       display: 'flex',
                       alignItems: 'center',
                     }}
@@ -375,7 +423,7 @@ L'équipe de la plateforme`, [getValues]);
                     <Box sx={{ flexGrow: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="subtitle2">{parent.name}</Typography>
-                        {parent.verified && (
+                        {parent.verified ? (
                           <Box
                             sx={{
                               ml: 1,
@@ -392,6 +440,9 @@ L'équipe de la plateforme`, [getValues]);
                           >
                             ✓
                           </Box>
+                        ):(
+                          <>
+                          </>
                         )}
                       </Box>
                       <Typography variant="body2" color="text.secondary">
@@ -403,7 +454,8 @@ L'équipe de la plateforme`, [getValues]);
               </Stack>
             </Box>
           );
-        } if (selectedRole === 'parent') {
+        }
+        if (selectedRole === 'parent') {
           return (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
@@ -427,10 +479,13 @@ L'équipe de la plateforme`, [getValues]);
                       }}
                     />
                   </Button>
-                  {cinRectoFile && (
+                  {cinRectoFile ? (
                     <Box sx={{ mt: 2 }}>
                       <FilePreview file={cinRectoFile} label="Recto" />
                     </Box>
+                  ):(
+                    <>
+                    </>
                   )}
                 </Box>
                 <Box>
@@ -447,10 +502,13 @@ L'équipe de la plateforme`, [getValues]);
                       }}
                     />
                   </Button>
-                  {cinVersoFile && (
+                  {cinVersoFile ? (
                     <Box sx={{ mt: 2 }}>
                       <FilePreview file={cinVersoFile} label="Verso" />
                     </Box>
+                  ):(
+                    <>
+                    </>
                   )}
                 </Box>
               </Stack>
@@ -481,13 +539,22 @@ L'équipe de la plateforme`, [getValues]);
                   mb: 2,
                 }}
               >
-                <FontAwesomeIcon icon={faCheck} style={{ width: 20, height: 20, color: 'white' }} />
+                <FontAwesomeIcon
+                  icon={faCheck}
+                  style={{ width: 20, height: 20, color: 'white' }}
+                />
               </Box>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Informations vérifiées
               </Typography>
-              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                Les informations de l&apos;utilisateur ont été vérifiées et sont prêtes à être enregistrées.
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ mb: 4 }}
+              >
+                Les informations de l&apos;utilisateur ont été vérifiées et sont prêtes à être
+                enregistrées.
               </Typography>
             </Box>
             <Typography variant="h6" gutterBottom>
@@ -506,7 +573,7 @@ L'équipe de la plateforme`, [getValues]);
                   Nom complet:
                 </Typography>
                 <Typography variant="body2">
-                  {methods.getValues('firstName')} {methods.getValues('lastName')}
+                  {getValues('firstName')} {getValues('lastName')}
                 </Typography>
                 <Typography variant="subtitle2" color="text.secondary">
                   Type de compte:
@@ -516,25 +583,30 @@ L'équipe de la plateforme`, [getValues]);
                   {selectedRole === 'parent' && 'Parent'}
                   {selectedRole === 'enfant' && 'Enfant'}
                 </Typography>
-                {selectedRole === 'admin' && methods.getValues('adminRole') && (
+                {selectedRole === 'admin' && getValues('adminRole') ? (
                   <>
                     <Typography variant="subtitle2" color="text.secondary">
                       Rôle administratif:
                     </Typography>
                     <Typography variant="body2">
-                      {administrationRoles.find(role => role.value === methods.getValues('adminRole'))?.label}
+                      {administrationRoles.find(
+                        (role) => role.value === getValues('adminRole')
+                      )?.label}
                     </Typography>
+                  </>
+                ):(
+                  <>
                   </>
                 )}
                 <Typography variant="subtitle2" color="text.secondary">
                   Email:
                 </Typography>
-                <Typography variant="body2">{methods.getValues('email')}</Typography>
+                <Typography variant="body2">{getValues('email')}</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
                   Téléphone:
                 </Typography>
-                <Typography variant="body2">{methods.getValues('phoneNumber')}</Typography>
-                {selectedRole === 'enfant' && selectedParent && (
+                <Typography variant="body2">{getValues('phoneNumber')}</Typography>
+                {selectedRole === 'enfant' && selectedParent ? (
                   <>
                     <Typography variant="subtitle2" color="text.secondary">
                       Compte parent:
@@ -542,6 +614,9 @@ L'équipe de la plateforme`, [getValues]);
                     <Typography variant="body2">
                       {selectedParent.name} ({selectedParent.email})
                     </Typography>
+                  </>
+                ):(
+                  <>
                   </>
                 )}
               </Box>
@@ -597,7 +672,7 @@ L'équipe de la plateforme`, [getValues]);
               >
                 {isCustomizing ? 'Enregistrer' : 'Personnaliser'}
               </Button>
-              <Button variant="contained" onClick={onSubmit}>
+              <Button variant="contained" onClick={onSubmit} color="primary">
                 Envoyer l&apos;invitation
               </Button>
             </Box>
@@ -695,7 +770,10 @@ L'équipe de la plateforme`, [getValues]);
                 }}
               >
                 {item.step < currentStep ? (
-                  <FontAwesomeIcon icon={faCheck} style={{ width: 20, height: 20, color: 'white' }} />
+                  <FontAwesomeIcon
+                    icon={faCheck}
+                    style={{ width: 20, height: 20, color: 'white' }}
+                  />
                 ) : (
                   item.step
                 )}
@@ -721,7 +799,7 @@ L'équipe de la plateforme`, [getValues]);
         </Stack>
         <Form methods={methods} onSubmit={onSubmit}>
           {renderStepContent()}
-          {currentStep !== 4 && (
+          {currentStep !== 4 ? (
             <DialogActions
               sx={{
                 mt: 3,
@@ -739,12 +817,18 @@ L'équipe de la plateforme`, [getValues]);
                   Annuler
                 </Button>
               )}
-              {currentStep < 4 && (
-                <Button variant="contained" onClick={handleContinue}>
+              {currentStep < 4 ? (
+                <Button variant="contained" onClick={handleContinue} color="primary">
                   {currentStep === 3 ? 'Confirmer' : 'Continuer'}
                 </Button>
+              ):(
+                <>
+                </>
               )}
             </DialogActions>
+          ):(
+            <>
+            </>
           )}
         </Form>
       </DialogContent>

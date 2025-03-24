@@ -30,13 +30,11 @@ export function TableSelectedAction({
       direction="row"
       alignItems="center"
       sx={{
-        pl: 1,
-        pr: 2,
         top: 0,
         left: 0,
         width: 1,
         zIndex: 9,
-        height: 58,
+        height: 65,
         position: 'absolute',
         bgcolor: 'primary.lighter',
         ...(dense && { height: 38 }),
@@ -61,7 +59,7 @@ export function TableSelectedAction({
           ...(dense && { ml: 3 }),
         }}
       >
-        {numSelected} selected
+        {numSelected} sélectionné
       </Typography>
 
       {action && action}

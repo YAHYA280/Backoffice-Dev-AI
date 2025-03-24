@@ -782,7 +782,7 @@ export const ChallengeList = ({
             Challenges
           </Typography>
           <Stack direction="row" spacing={2}>
-            {onAddClick && (
+            {onAddClick ? (
               <Button
                 variant="contained"
                 color="primary"
@@ -798,6 +798,8 @@ export const ChallengeList = ({
               >
                 Ajouter un challenge
               </Button>
+            ) : (
+              <></>
             )}
           </Stack>
         </Stack>
@@ -871,7 +873,7 @@ export const ChallengeList = ({
                     {table.selected.length > 1 ? 's' : ''}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {onDeleteRows && (
+                    {onDeleteRows ? (
                       <Button
                         variant="contained"
                         color="error"
@@ -887,6 +889,8 @@ export const ChallengeList = ({
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </Button>
+                    ) : (
+                      <></>
                     )}
                   </Box>
                 </Box>

@@ -1,6 +1,6 @@
 'use client';
 
-import type { IAbonnementItem } from 'src/types/abonnement';
+import type { IAbonnementItem } from 'src/contexts/types/abonnement';
 
 import { useState, useCallback } from 'react';
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';

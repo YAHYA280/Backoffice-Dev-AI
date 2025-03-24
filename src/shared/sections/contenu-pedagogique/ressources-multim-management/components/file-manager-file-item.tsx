@@ -1,14 +1,25 @@
+'use client';
+
 import type { CardProps } from '@mui/material/Card';
-import type { IFileManager } from 'src/contexts/types/file';
+import type { FileDetail, IFileManager, IFolderManager } from 'src/contexts/types/file';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrash, faCircle, faEllipsisV, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faEye,
+  faTrash,
+  faCircle,
+  faDownload,
+  faEllipsisV,
+  faCheckCircle,
+  faPenToSquare,
+} from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
@@ -26,37 +37,39 @@ import { fDateTime } from 'src/utils/format-time';
 
 import { maxLine } from 'src/shared/theme/styles';
 
+import { toast } from 'src/shared/components/snackbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { FileThumbnail } from 'src/shared/components/file-thumbnail';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
+import { FileDetailDrawer } from './FileDetailDrawer';
 import { FileManagerModifierDialog } from './file-manager-modifier-dialog';
 
-// ----------------------------------------------------------------------
+export type ColumnDefinition = {
+  id: string;
+  label: string;
+  width?: number;
+};
 
 type Props = CardProps & {
   selected?: boolean;
   file: IFileManager;
   onDelete: () => void;
   onSelect?: () => void;
+  onDeleteRow?: () => void;
+  folder: IFolderManager;
 };
 
 export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ...other }: Props) {
   const theme = useTheme();
-
   const confirm = useBoolean();
-
   const details = useBoolean();
-
   const popover = usePopover();
   const editFolder = useBoolean();
-
+  const consultFolder = useBoolean();
   const checkbox = useBoolean();
 
   useCopyToClipboard();
-
-
-
 
   const renderIcon = (
     <Box
@@ -70,7 +83,7 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
           onClick={onSelect}
           icon={<FontAwesomeIcon icon={faCircle} />}
           checkedIcon={<FontAwesomeIcon icon={faCheckCircle} />}
-          inputProps={{ id: `item-checkbox-${file.id}`, 'aria-label': `Item checkbox` }}
+          inputProps={{ id: `item-checkbox-${file.id}`, 'aria-label': 'Item checkbox' }}
           sx={{ width: 1, height: 1 }}
         />
       ) : (
@@ -81,9 +94,11 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
 
   const renderAction = (
     <Stack direction="row" alignItems="center" sx={{ top: 8, right: 8, position: 'absolute' }}>
-      <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
-        <FontAwesomeIcon icon={faEllipsisV} />
-      </IconButton>
+      <Tooltip title="Actions">
+        <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen} size="small">
+          <FontAwesomeIcon icon={faEllipsisV} />
+        </IconButton>
+      </Tooltip>
     </Stack>
   );
 
@@ -97,11 +112,12 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
           mt: 2,
           mb: 0.5,
           width: 1,
+          cursor: 'pointer',
+          fontWeight: details.value ? 600 : 400,
         }}
       >
         {file.name}
       </Typography>
-
       <Stack
         direction="row"
         alignItems="center"
@@ -113,7 +129,6 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         }}
       >
         {fData(file.size)}
-
         <Box
           component="span"
           sx={{
@@ -172,14 +187,10 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         {...other}
       >
         {renderIcon}
-
         {renderText}
-
         {renderAvatar}
-
         {renderAction}
       </Paper>
-
       <CustomPopover
         open={popover.open}
         anchorEl={popover.anchorEl}
@@ -187,41 +198,66 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuList>
-
-        <MenuItem
-  onClick={() => {
-    editFolder.onTrue();
-  }}
->
-  <FontAwesomeIcon icon={faPen} style={{ marginRight: 8 }} />
-  Modifier
-</MenuItem>
-
-          <Divider sx={{ borderStyle: 'dashed' }} />
-
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              consultFolder.onTrue();
+            }}
+          >
+            <FontAwesomeIcon icon={faEye} style={{ marginRight: 8, color: theme.palette.info.main }} />
+            Voir détails
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              editFolder.onTrue();
+              popover.onClose();
+            }}
+            sx={{ color: theme.palette.error.main }}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} style={{ marginRight: 8, color: theme.palette.primary.main }} />
+            Modifier
+          </MenuItem>
           <MenuItem
             onClick={() => {
               confirm.onTrue();
               popover.onClose();
             }}
-            sx={{ color: 'error.main' }}
+            sx={{ color: theme.palette.error.main }}
           >
-            <FontAwesomeIcon icon={faTrash} />
+            <FontAwesomeIcon icon={faTrash} style={{ marginRight: 8, color: theme.palette.error.main }} />
             Supprimer
+          </MenuItem>
+          <Divider sx={{ borderStyle: 'dashed' }} />
+          <MenuItem
+            onClick={() => {
+              toast.success(`${file.name} a été téléchargé`);
+              popover.onClose();
+            }}
+          >
+            <FontAwesomeIcon icon={faDownload} style={{ marginRight: 8, color: 'default' }} />
+            Télécharger
           </MenuItem>
         </MenuList>
       </CustomPopover>
-
       <FileManagerModifierDialog
         open={editFolder.value}
         onClose={editFolder.onFalse}
-        title=" le fichier"
+        title="Modifier le fichier"
         onUpdate={() => {
           editFolder.onFalse();
         }}
         fileData={file}
       />
-
+      {consultFolder.value ? (
+        <FileDetailDrawer
+          open={consultFolder.value}
+          onClose={consultFolder.onFalse}
+          file={file as FileDetail}
+        />
+      ) : (
+        <>
+        </>
+      )}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

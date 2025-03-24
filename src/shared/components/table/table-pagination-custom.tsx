@@ -24,6 +24,7 @@ export function TablePaginationCustom({
       <TablePagination
         rowsPerPageOptions={rowsPerPageOptions}
         component="div"
+        labelRowsPerPage="Ligne par page"
         {...other}
         sx={{ borderTopColor: 'transparent' }}
       />

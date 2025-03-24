@@ -76,7 +76,17 @@ const CustomToolbar = ({
         <GridToolbarColumnsButton
           slotProps={{
             tooltip: { title: 'Sélectionner colonnes' },
-            button: { variant: 'outlined', startIcon: <FontAwesomeIcon icon={faColumns} /> },
+            button: {
+              variant: 'outlined',
+              startIcon: <FontAwesomeIcon icon={faColumns} />,
+              sx: {
+                color: 'primary.contrastText',
+                backgroundColor: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.dark',
+                },
+              },
+            },
           }}
         />
 
@@ -90,6 +100,7 @@ const CustomToolbar = ({
                 '& .MuiButton-startIcon': { mr: 0 },
                 '& .MuiButton-endIcon': { ml: 0 },
                 '& .MuiButton-text': { ml: 0 },
+                color: 'primary.main',
               },
             },
           }}
@@ -108,7 +119,7 @@ const CustomToolbar = ({
               '& .MuiButton-startIcon': { mr: 0 },
               '& .MuiButton-endIcon': { ml: 0 },
               '& .MuiButton-text': { ml: 0 },
-              color: 'black',
+              color: 'primary.main',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)',
               },
@@ -126,6 +137,7 @@ const CustomToolbar = ({
                 '& .MuiButton-startIcon': { mr: 0 },
                 '& .MuiButton-endIcon': { ml: 0 },
                 '& .MuiButton-text': { ml: 0 },
+                color: 'primary.main',
               },
               startIcon: <FontAwesomeIcon icon={faFileExport} />,
             },

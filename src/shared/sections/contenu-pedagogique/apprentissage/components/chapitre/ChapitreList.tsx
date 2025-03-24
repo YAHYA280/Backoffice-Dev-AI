@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -9,6 +9,7 @@ import {
   faTimes,
   faFilter,
   faSearch,
+  faSyncAlt,
   faChevronLeft,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -20,14 +21,20 @@ import {
   alpha,
   Stack,
   Button,
+  Select,
+  Tooltip,
   useTheme,
   TableRow,
+  Checkbox,
+  MenuItem,
   TableBody,
   TextField,
   TableCell,
+  TableHead,
   Typography,
   IconButton,
   Breadcrumbs,
+  FormControl,
   TableContainer,
   InputAdornment,
 } from '@mui/material';
@@ -42,7 +49,6 @@ import {
   emptyRows,
   TableNoData,
   TableEmptyRows,
-  TableHeadCustom,
   TableSelectedAction,
   TablePaginationCustom,
 } from 'src/shared/components/table';
@@ -58,13 +64,29 @@ import type { ColumnOption } from '../filters/ColumnSelector';
 import type { Chapitre, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
-const TABLE_HEAD = [
-  { id: 'ordre', label: 'Ordre', align: 'center', width: 80 },
-  { id: 'nom', label: 'Chapitre', align: 'left' },
-  { id: 'description', label: 'Description', align: 'left' },
-  { id: 'difficulte', label: 'Difficulté', align: 'left', width: 120 },
-  { id: 'exercicesCount', label: 'Exercices', align: 'center', width: 100 },
-  { id: '', label: 'Actions', align: 'center', width: 100 },
+interface TableColumn {
+  id: string;
+  label: string;
+  align: 'left' | 'center' | 'right';
+  type?: 'text' | 'select' | 'date' | 'number';
+  options?: { value: string; label: string }[];
+  width?: number | string;
+}
+
+const TABLE_HEAD: TableColumn[] = [
+  { id: 'ordre', label: 'Ordre', align: 'center', type: 'number', width: 80 },
+  { id: 'nom', label: 'Chapitre', align: 'left', type: 'text' },
+  { id: 'description', label: 'Description', align: 'left', type: 'text' },
+  {
+    id: 'difficulte',
+    label: 'Difficulté',
+    align: 'left',
+    type: 'select',
+    options: DIFFICULTE_OPTIONS,
+    width: 120,
+  },
+  { id: 'exercicesCount', label: 'Exercices', align: 'center', type: 'number', width: 100 },
+  { id: 'actions', label: 'Actions', align: 'center', width: 100 },
 ];
 
 const COLUMN_OPTIONS: ColumnOption[] = [
@@ -74,6 +96,8 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'difficulte', label: 'Difficulté' },
   { id: 'exercicesCount', label: 'Exercices' },
 ];
+
+const DEFAULT_VISIBLE_COLUMNS = ['ordre', 'nom', 'description', 'difficulte', 'exercicesCount'];
 
 const FILTER_OPTIONS: FilterOption[] = [
   {
@@ -138,22 +162,289 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
-interface ColumnFilterProps {
-  columnId: string;
-  value: string;
-  onChange: (columnId: string, value: string) => void;
+function applySingleFilter(chapitre: Chapitre, filter: ActiveFilter, filterOption: FilterOption) {
+  const { field, operator, value } = filter;
+  if (!value) return true;
+  const fieldVal = (chapitre as any)[field];
+  if (!filterOption) return true;
+
+  if (filterOption.type === 'text') {
+    const fieldStr = fieldVal ? String(fieldVal).toLowerCase() : '';
+    const valStr = String(value).toLowerCase();
+    if (operator === 'contains') return fieldStr.includes(valStr);
+    if (operator === 'equals') return fieldStr === valStr;
+    if (operator === 'startsWith') return fieldStr.startsWith(valStr);
+    if (operator === 'endsWith') return fieldStr.endsWith(valStr);
+    return true;
+  }
+
+  if (filterOption.type === 'select') {
+    return String(fieldVal) === String(value);
+  }
+
+  if (filterOption.type === 'date') {
+    const cDate = fieldVal ? new Date(fieldVal) : null;
+    const fDate = value ? new Date(value) : null;
+    if (!cDate || !fDate || Number.isNaN(cDate.getTime()) || Number.isNaN(fDate.getTime()))
+      return false;
+    if (operator === 'equals') return cDate.toDateString() === fDate.toDateString();
+    if (operator === 'before') return cDate.getTime() < fDate.getTime();
+    if (operator === 'after') return cDate.getTime() > fDate.getTime();
+    return true;
+  }
+
+  if (filterOption.type === 'number') {
+    const cNum = Number(fieldVal);
+    const fNum = Number(value);
+    if (Number.isNaN(cNum) || Number.isNaN(fNum)) return false;
+    if (operator === 'equals') return cNum === fNum;
+    if (operator === 'greaterThan') return cNum > fNum;
+    if (operator === 'lessThan') return cNum < fNum;
+    return true;
+  }
+
+  return true;
 }
 
-const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+interface ColumnFilterProps {
+  columnId: string;
+  columnType?: string;
+  options?: any[];
+  value: string;
+  onChange: (columnId: string, value: string) => void;
+  align?: 'left' | 'center' | 'right';
+  dense?: boolean;
+}
 
-  const handleSearchIconClick = () => {
+const ColumnFilter = ({
+  columnId,
+  columnType = 'text',
+  options = [],
+  value,
+  onChange,
+  align = 'left',
+  dense = false,
+}: ColumnFilterProps) => {
+  const [isExpanded, setIsExpanded] = useState(Boolean(value));
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const selectRef = useRef<HTMLElement | null>(null);
+
+  const handleSearchIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsExpanded(true);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    if (columnType === 'select' && selectRef.current) {
+      setTimeout(() => {
+        const selectElement = selectRef.current as HTMLElement;
+        selectElement.click();
+        const clickEvent = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+        selectElement.dispatchEvent(clickEvent);
+      }, 50);
+    } else {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 10);
+    }
   };
+
+  const handleClearClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(columnId, '');
+    if (columnType !== 'text' && columnType !== 'number') {
+      setIsExpanded(false);
+    } else if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const inputStyles = {
+    width: isExpanded ? 'auto' : '28px',
+    minWidth: isExpanded ? 80 : 28,
+    transition: 'all 0.2s ease-in-out',
+    marginTop: dense ? '-3px' : '-6px',
+    position: 'relative',
+    '& .MuiOutlinedInput-root': {
+      height: dense ? '24px' : '28px',
+      background: 'transparent',
+      '& fieldset': { border: 'none !important' },
+      '&:hover fieldset': { border: 'none !important' },
+      '&.Mui-focused fieldset': { border: 'none !important' },
+    },
+    '& .MuiInputBase-input': {
+      padding: dense ? '0px 0px' : '2px 0px',
+      fontSize: dense ? '0.7rem' : '0.75rem',
+      textAlign: align,
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+    '& .MuiSelect-select': {
+      paddingRight: '24px !important',
+      width: isExpanded ? 'auto' : '0px',
+      opacity: isExpanded ? 1 : 0,
+      transition: 'opacity 0.2s, width 0.2s',
+    },
+  };
+
+  const iconStyles = {
+    color: value ? 'primary.main' : 'text.disabled',
+    fontSize: dense ? '0.8rem' : '1rem',
+    cursor: 'pointer',
+    opacity: value ? 1 : 0.6,
+    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+    transition: 'all 0.2s ease',
+  };
+
+  const renderEndAdornment = () =>
+    value ? (
+      <InputAdornment position="end">
+        <IconButton
+          size="small"
+          onClick={handleClearClick}
+          sx={{ padding: 0, '&:hover': { background: 'transparent' } }}
+        >
+          <FontAwesomeIcon icon={faTimes} style={{ fontSize: dense ? '0.8rem' : '1rem' }} />
+        </IconButton>
+      </InputAdornment>
+    ) : null;
+
+  const renderStartAdornment = () => (
+    <InputAdornment position="start" sx={{ ml: 0 }}>
+      <Box
+        onClick={handleSearchIconClick}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+        }}
+      >
+        <FontAwesomeIcon icon={faSearch} style={iconStyles} />
+      </Box>
+    </InputAdornment>
+  );
+
+  if (columnType === 'select') {
+    return (
+      <FormControl size="small" sx={inputStyles}>
+        <Select
+          value={value}
+          onChange={(e) => onChange(columnId, e.target.value)}
+          displayEmpty
+          variant="outlined"
+          sx={{
+            fontSize: dense ? '0.7rem' : '0.75rem',
+            '& .MuiSelect-icon': {
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 0.2s',
+              display: isExpanded ? 'block' : 'none',
+            },
+            '& .MuiOutlinedInput-notchedOutline': { border: 'none !important' },
+            paddingRight: isExpanded ? '32px' : '0px',
+          }}
+          MenuProps={{
+            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            PaperProps: {
+              elevation: 3,
+              sx: {
+                maxHeight: 300,
+                mt: 1,
+                '& .MuiMenuItem-root': {
+                  fontSize: dense ? '0.7rem' : '0.75rem',
+                  py: dense ? 0.5 : 1,
+                },
+              },
+            },
+          }}
+          startAdornment={renderStartAdornment()}
+          endAdornment={renderEndAdornment()}
+          ref={selectRef}
+          onOpen={() => setIsExpanded(true)}
+          onClose={() => !value && setIsExpanded(false)}
+          inputProps={{ sx: { p: dense ? '3px' : '5px', paddingRight: 0 } }}
+        >
+          <MenuItem value="">
+            <em>Tous</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                fontSize: dense ? '0.7rem' : '0.75rem',
+                minHeight: 'auto',
+                py: dense ? 0.5 : 1,
+              }}
+            >
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  }
+
+  if (columnType === 'date') {
+    return (
+      <TextField
+        size="small"
+        type="date"
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        inputRef={inputRef}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: {
+            pl: 0,
+            '& input': {
+              pl: isExpanded ? 1 : 0,
+              width: isExpanded ? 'auto' : '0px',
+              opacity: isExpanded ? 1 : 0,
+            },
+          },
+        }}
+        InputLabelProps={{ shrink: true }}
+        sx={inputStyles}
+      />
+    );
+  }
+
+  if (columnType === 'number') {
+    return (
+      <TextField
+        size="small"
+        type="number"
+        inputRef={inputRef}
+        value={value}
+        onChange={(e) => onChange(columnId, e.target.value)}
+        onFocus={() => setIsExpanded(true)}
+        onBlur={() => !value && setIsExpanded(false)}
+        onClick={() => setIsExpanded(true)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: renderStartAdornment(),
+          endAdornment: renderEndAdornment(),
+          sx: { pl: 0, '& input': { pl: isExpanded ? 1 : 0 } },
+        }}
+        sx={inputStyles}
+      />
+    );
+  }
 
   return (
     <TextField
@@ -162,43 +453,15 @@ const ColumnFilter = ({ columnId, value, onChange }: ColumnFilterProps) => {
       value={value}
       onChange={(e) => onChange(columnId, e.target.value)}
       onFocus={() => setIsExpanded(true)}
-      onBlur={() => setIsExpanded(false)}
-      sx={{
-        width: isExpanded ? 200 : 50,
-        transition: 'width 0.3s ease-in-out',
-        '& .MuiOutlinedInput-root': {
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          '& fieldset': {
-            border: 'none !important',
-          },
-          '&:hover fieldset': {
-            border: 'none !important',
-          },
-        },
-      }}
+      onBlur={() => !value && setIsExpanded(false)}
+      onClick={() => setIsExpanded(true)}
+      variant="outlined"
       InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <FontAwesomeIcon
-              icon={faSearch}
-              onClick={handleSearchIconClick}
-              style={{
-                color: 'text.disabled',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}
-            />
-          </InputAdornment>
-        ),
-        endAdornment: value ? (
-          <InputAdornment position="end">
-            <IconButton size="small" onClick={() => onChange(columnId, '')}>
-              <FontAwesomeIcon icon={faTimes} style={{ fontSize: '0.75rem' }} />
-            </IconButton>
-          </InputAdornment>
-        ) : null,
+        startAdornment: renderStartAdornment(),
+        endAdornment: renderEndAdornment(),
+        sx: { pl: 0, '& input': { pl: isExpanded ? 1 : 0 } },
       }}
+      sx={inputStyles}
     />
   );
 };
@@ -221,6 +484,8 @@ interface ChapitreListProps {
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
+  onFilterChange?: (filters: ActiveFilter[]) => void;
+  onColumnChange?: (columns: string[]) => void;
   onEditClick: (chapitre: Chapitre) => void;
   onDeleteClick: (chapitre: Chapitre) => void;
   onViewClick: (chapitre: Chapitre) => void;
@@ -240,6 +505,8 @@ export const ChapitreList = ({
   onLimitChange,
   onSearchChange,
   onColumnFilterChange,
+  onFilterChange,
+  onColumnChange,
   onEditClick,
   onDeleteClick,
   onViewClick,
@@ -251,7 +518,6 @@ export const ChapitreList = ({
 }: ChapitreListProps) => {
   const confirm = useBoolean();
   const theme = useTheme();
-  // State for exporting data
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
@@ -264,15 +530,32 @@ export const ChapitreList = ({
   });
 
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(
-    COLUMN_OPTIONS.map((col) => col.id)
-  );
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
 
-  const visibleTableHead = TABLE_HEAD.filter(
-    (col) => col.id === '' || visibleColumns.includes(col.id)
-  );
+  const filteredChapitres = useMemo(() => {
+    let data = chapitres;
+    activeFilters.forEach((filter) => {
+      const filterOption = FILTER_OPTIONS.find((fo) => fo.id === filter.field);
+      if (filterOption) {
+        data = data.filter((chap) => applySingleFilter(chap, filter, filterOption));
+      }
+    });
+    Object.entries(columnFilters).forEach(([colId, val]) => {
+      if (val) {
+        data = data.filter((chapitre) => {
+          const fieldVal = (chapitre as any)[colId];
+          if (fieldVal === undefined || fieldVal === null) return false;
+          return String(fieldVal).toLowerCase().includes(String(val).toLowerCase());
+        });
+      }
+    });
+    return data;
+  }, [chapitres, activeFilters, columnFilters]);
 
-  useEffect(() => {}, [activeFilters]);
+  const visibleTableHead = useMemo(
+    () => TABLE_HEAD.filter((col) => col.id === 'actions' || visibleColumns.includes(col.id)),
+    [visibleColumns]
+  );
 
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
@@ -291,95 +574,185 @@ export const ChapitreList = ({
     }
     confirm.onFalse();
   };
-  // Export handler
-  const handleExport = (format: string, options?: any) => {
-    console.log(`Exporting data in ${format} format with options:`, options);
 
+  const handleExport = (format: string, options?: any) => {
     setIsExporting(true);
     setExportProgress(0);
-
-    // Simulate export progress
     const interval = setInterval(() => {
       setExportProgress((prevProgress) => {
         const newProgress = prevProgress + Math.random() * 15;
-
         if (newProgress >= 100) {
           clearInterval(interval);
-          setTimeout(() => {
-            setIsExporting(false);
-            // Show success notification if needed
-          }, 500);
+          setTimeout(() => setIsExporting(false), 500);
           return 100;
         }
-
         return newProgress;
       });
     }, 300);
   };
 
-  const handleColumnFilterChange = (columnId: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }));
+  const handleColumnFilterChangeLocal = (columnId: string, value: string) => {
+    setColumnFilters((prev) => ({ ...prev, [columnId]: value }));
     onColumnFilterChange?.(columnId, value);
   };
 
   const handleFilterDropdownChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
+    onFilterChange?.(newFilters);
   };
 
   const handleColumnSelectorChange = (columns: string[]) => {
     setVisibleColumns(columns);
+    onColumnChange?.(columns);
   };
 
-  const isChapterFound = !chapitres.length && !loading;
+  const handleReset = () => {
+    setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+    onColumnChange?.(DEFAULT_VISIBLE_COLUMNS);
+    setActiveFilters([]);
+    onFilterChange?.([]);
+    setColumnFilters({
+      ordre: '',
+      nom: '',
+      description: '',
+      difficulte: '',
+      exercicesCount: '',
+    });
+    Object.keys(columnFilters).forEach((colId) => {
+      onColumnFilterChange?.(colId, '');
+    });
+    onPageChange(1);
+    onLimitChange(10);
+  };
 
-  const renderFilterRow = () => (
-    <TableRow
+  const notFound = !filteredChapitres.length && !loading;
+
+  const renderTableHeader = () => (
+    <TableHead
       sx={{
         position: 'sticky',
-        top: table.dense ? '37px' : '57px',
-        bgcolor: 'background.paper',
-        zIndex: 2,
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-        '& .MuiTableCell-root': {
-          padding: '2px 4px',
-          lineHeight: 1,
+        top: 0,
+        zIndex: 10,
+        '& .MuiTableCell-head': {
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          fontWeight: 'fontWeightBold',
+          padding: table.dense ? '2px 6px' : '8px 8px',
         },
       }}
     >
-      <TableCell padding="checkbox" />
-      {visibleTableHead.map((column) => {
-        if (column.id === '') {
+      <TableRow>
+        <TableCell
+          padding="checkbox"
+          sx={{
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: 0,
+            zIndex: 12,
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
+          }}
+        >
+          <Checkbox
+            indeterminate={
+              table.selected.length > 0 && table.selected.length < filteredChapitres.length
+            }
+            checked={
+              filteredChapitres.length > 0 && table.selected.length === filteredChapitres.length
+            }
+            onChange={(e) =>
+              table.onSelectAllRows(
+                e.target.checked,
+                filteredChapitres.map((row) => row.id)
+              )
+            }
+            size={table.dense ? 'small' : 'medium'}
+          />
+        </TableCell>
+        {visibleTableHead.map((column) => (
+          <TableCell
+            key={column.id}
+            align={column.align}
+            sx={{
+              bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+              position: 'sticky',
+              top: 0,
+              zIndex: 11,
+              whiteSpace: 'nowrap',
+              borderBottom: 'none',
+              fontSize: table.dense ? '0.8125rem' : '0.875rem',
+              width: column.width,
+            }}
+          >
+            {column.label}
+          </TableCell>
+        ))}
+      </TableRow>
+      <TableRow
+        sx={{
+          bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+          '& .MuiTableCell-root': {
+            padding: table.dense ? '0px 6px 2px' : '0px 8px 4px',
+            borderTop: 'none',
+          },
+        }}
+      >
+        <TableCell
+          padding="checkbox"
+          sx={{
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            position: 'sticky',
+            top: table.dense ? '28px' : '23px',
+            zIndex: 11,
+            width: table.dense ? 60 : 50,
+            minWidth: table.dense ? 60 : 50,
+            maxWidth: table.dense ? 60 : 50,
+          }}
+        />
+        {visibleTableHead.map((column) => {
+          if (column.id === 'actions') {
+            return (
+              <TableCell
+                key={column.id}
+                align={column.align}
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                  position: 'sticky',
+                  top: table.dense ? '28px' : '23px',
+                  zIndex: 11,
+                }}
+              />
+            );
+          }
           return (
             <TableCell
-              key="actions-filter-cell"
-              align="center"
-              sx={{ bgcolor: 'background.paper' }}
+              key={column.id}
+              align={column.align}
+              sx={{
+                bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+                position: 'sticky',
+                top: table.dense ? '28px' : '23px',
+                zIndex: 11,
+              }}
             >
-              {/* Empty cell for actions column */}
+              <ColumnFilter
+                columnId={column.id}
+                columnType={column.type}
+                options={column.options}
+                value={columnFilters[column.id] || ''}
+                onChange={handleColumnFilterChangeLocal}
+                align={column.align}
+                dense={table.dense}
+              />
             </TableCell>
           );
-        }
-
-        // Regular filter cells for data columns
-        return (
-          <TableCell key={column.id}>
-            <ColumnFilter
-              columnId={column.id}
-              value={columnFilters[column.id as keyof typeof columnFilters] || ''}
-              onChange={handleColumnFilterChange}
-            />
-          </TableCell>
-        );
-      })}
-    </TableRow>
+        })}
+      </TableRow>
+    </TableHead>
   );
 
   const renderBreadcrumbs = () => {
     if (!breadcrumbs) return null;
-
     return (
       <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
         <Link
@@ -412,13 +785,11 @@ export const ChapitreList = ({
 
   return (
     <MotionContainer>
-      {/* Title + Add Button */}
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
             Chapitres
           </Typography>
-
           <Stack direction="row" spacing={2}>
             {onAddClick ? (
               <Button
@@ -447,21 +818,24 @@ export const ChapitreList = ({
         {renderBreadcrumbs()}
       </m.div>
 
-      {/* Main Card */}
       <m.div variants={varFade().inUp}>
         <Card
           sx={{
             boxShadow: theme.customShadows?.z8,
             transition: theme.transitions.create(['box-shadow']),
-            '&:hover': {
-              boxShadow: theme.customShadows?.z16,
-            },
+            '&:hover': { boxShadow: theme.customShadows?.z16 },
             borderRadius: 2,
             overflow: 'hidden',
           }}
         >
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'end', flexWrap: 'wrap', gap: 4 }}>
             <Stack direction="row" alignContent="end" spacing={2}>
+              <ColumnSelector
+                columns={COLUMN_OPTIONS}
+                visibleColumns={visibleColumns}
+                onColumnChange={handleColumnSelectorChange}
+                buttonText="Colonnes"
+              />
               <FilterDropdown
                 filterOptions={FILTER_OPTIONS}
                 activeFilters={activeFilters}
@@ -470,12 +844,19 @@ export const ChapitreList = ({
                 icon={<FontAwesomeIcon icon={faFilter} />}
               />
 
-              <ColumnSelector
-                columns={COLUMN_OPTIONS}
-                visibleColumns={visibleColumns}
-                onColumnChange={handleColumnSelectorChange}
-                buttonText="Colonnes"
-              />
+              <Tooltip title="Réinitialiser" arrow>
+                <IconButton
+                  color="primary"
+                  onClick={handleReset}
+                  sx={{
+                    p: 1,
+                    transition: theme.transitions.create(['transform', 'box-shadow']),
+                    '&:hover': { transform: 'translateY(-2px)' },
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSyncAlt} />
+                </IconButton>
+              </Tooltip>
               <AdvancedExportDropdown
                 onExport={handleExport}
                 isExporting={isExporting}
@@ -485,33 +866,28 @@ export const ChapitreList = ({
               />
             </Stack>
           </Box>
-          {/* Bulk Actions (Selected Rows) */}
+
           <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
-              rowCount={chapitres.length}
+              rowCount={filteredChapitres.length}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  chapitres.map((row) => row.id)
+                  filteredChapitres.map((row) => row.id)
                 )
               }
               action={
                 <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                   <Typography variant="subtitle1" sx={{ fontWeight: 'fontWeightBold' }}>
                     {table.selected.length} sélectionné
                     {table.selected.length > 1 ? 's' : ''}
                   </Typography>
-
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {onDeleteRows && (
+                    {onDeleteRows ? (
                       <Button
                         variant="contained"
                         color="error"
@@ -526,49 +902,24 @@ export const ChapitreList = ({
                       >
                         Supprimer
                       </Button>
+                    ) : (
+                      <></>
                     )}
                   </Box>
                 </Box>
               }
             />
 
-            <Scrollbar sx={{ height: 550 }}>
-              <TableContainer
-                sx={{
-                  position: 'relative',
-                  minHeight: 240,
-                  maxHeight: 500,
-                }}
-              >
+            {/* Use maxHeight so the table doesn't overflow, rather than a fixed height */}
+            <Scrollbar sx={{ maxHeight: 550 }}>
+              <TableContainer sx={{ position: 'relative', minHeight: 240 }}>
                 <Table size={table.dense ? 'small' : 'medium'} stickyHeader>
-                  <TableHeadCustom
-                    order={table.order}
-                    orderBy={table.orderBy}
-                    headLabel={visibleTableHead}
-                    rowCount={chapitres.length}
-                    numSelected={table.selected.length}
-                    onSort={table.onSort}
-                    onSelectAllRows={(checked) =>
-                      table.onSelectAllRows(
-                        checked,
-                        chapitres.map((row) => row.id)
-                      )
-                    }
-                    sx={{
-                      '& .MuiTableCell-head': {
-                        bgcolor: alpha(theme.palette.primary.lighter, 0.2),
-                        fontWeight: 'fontWeightBold',
-                      },
-                    }}
-                  />
-
+                  {renderTableHeader()}
                   <TableBody>
-                    {renderFilterRow()}
-
                     {loading ? (
-                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
+                      <TableSkeletonLoader rows={5} columns={visibleTableHead.length + 1} />
                     ) : (
-                      chapitres.map((chapitre) => (
+                      filteredChapitres.map((chapitre) => (
                         <ChapitreItem
                           key={chapitre.id}
                           chapitre={chapitre}
@@ -579,52 +930,37 @@ export const ChapitreList = ({
                           onSelectRow={() => table.onSelectRow(chapitre.id)}
                           onViewExercices={() => onViewExercices(chapitre)}
                           onToggleActive={onToggleActive}
-                          // If you need the visible columns in your row item, pass them along:
                           visibleColumns={visibleColumns}
                         />
                       ))
                     )}
-
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
-                      emptyRows={emptyRows(table.page, table.rowsPerPage, chapitres.length)}
+                      emptyRows={emptyRows(table.page, table.rowsPerPage, filteredChapitres.length)}
                     />
-
-                    {isChapterFound ? (
-                      <TableNoData
-                        notFound={isChapterFound}
-                        sx={{
-                          py: 10,
-                        }}
-                      />
-                    ) : (
-                      <></>
-                    )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
             </Scrollbar>
           </Box>
 
-          {/* Table Pagination */}
           <TablePaginationCustom
             count={pagination.total}
             page={table.page}
             rowsPerPage={table.rowsPerPage}
             onPageChange={(e, page) => {
               table.onChangePage(e, page);
-              onPageChange(page + 1); // Convert 0-based to 1-based
+              onPageChange(page + 1);
             }}
-            onRowsPerPageChange={(e) => {
-              onLimitChange(parseInt(e.target.value, 10));
-            }}
+            onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
+            rowsPerPageOptions={[5, 10, 25, 50]}
           />
         </Card>
       </m.div>
 
-      {/* Confirmation Dialog for bulk delete */}
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -646,12 +982,7 @@ export const ChapitreList = ({
             color="error"
             startIcon={<FontAwesomeIcon icon={faTrash} />}
             onClick={handleDeleteRows}
-            sx={{
-              px: 2,
-              py: 1,
-              fontWeight: 'fontWeightBold',
-              boxShadow: theme.customShadows?.z8,
-            }}
+            sx={{ px: 2, py: 1, fontWeight: 'fontWeightBold', boxShadow: theme.customShadows?.z8 }}
           >
             Supprimer
           </Button>

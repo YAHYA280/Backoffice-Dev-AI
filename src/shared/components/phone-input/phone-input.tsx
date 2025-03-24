@@ -27,7 +27,7 @@ export const PhoneInput = forwardRef<HTMLDivElement, PhoneInputProps>(
         inputComponent={CustomInput}
         value={value}
         onChange={onChange}
-        placeholder={placeholder ?? 'Enter phone number'}
+        placeholder={placeholder ?? 'Entrez le numéro de téléphone'}
         InputProps={
           disableSelect
             ? undefined

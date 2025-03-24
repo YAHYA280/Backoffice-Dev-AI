@@ -1,4 +1,4 @@
-import type { IAbonnementFilters } from 'src/types/abonnement'; // Assurez-vous que le chemin est correct
+import type { IAbonnementFilters } from 'src/contexts/types/abonnement'; // Assurez-vous que le chemin est correct
 import type { Theme, SxProps } from '@mui/material/styles';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 

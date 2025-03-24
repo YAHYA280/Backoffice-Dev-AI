@@ -2,28 +2,32 @@ import type { IRoleItem } from 'src/contexts/types/role';
 
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
+import { m } from 'framer-motion';
 import { useMemo, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
   Chip,
+  List,
+  Stack,
   alpha,
+  Paper,
+  Button,
+  Drawer,
   Select,
-  Divider,
   MenuItem,
+  useTheme,
   TextField,
-  InputLabel,
   Typography,
+  IconButton,
+  InputLabel,
   FormControl,
+  ListItemText,
   OutlinedInput,
 } from '@mui/material';
 
@@ -31,6 +35,7 @@ import { allPermissions } from 'src/shared/_mock/_role';
 import { LocalizationProvider } from 'src/shared/locales';
 
 import { toast } from 'src/shared/components/snackbar';
+import { varFade } from 'src/shared/components/animate/variants/fade';
 
 // ----------------------------------------------------------------------
 
@@ -55,7 +60,9 @@ type Props = {
   onUpdateRole: (updatedRole: IRoleItem) => void;
 };
 
-export function UserRoleEditForm({ currentRole, open, onClose, onUpdateRole }: Props) {
+export function UserRoleEditDrawer({ currentRole, open, onClose, onUpdateRole }: Props) {
+  const theme = useTheme();
+
   const defaultValues = useMemo(
     () => ({
       id: currentRole?.id || '',
@@ -97,8 +104,8 @@ export function UserRoleEditForm({ currentRole, open, onClose, onUpdateRole }: P
 
       toast.promise(promise, {
         loading: 'Loading...',
-        success: 'Update success!',
-        error: 'Update error!',
+        success: 'Mise à jour réussie!',
+        error: 'Erreur de mise à jour!',
       });
 
       await promise;
@@ -133,225 +140,332 @@ export function UserRoleEditForm({ currentRole, open, onClose, onUpdateRole }: P
   };
 
   return (
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: '0 8px 24px 0 rgba(0,0,0,0.12)',
-            overflow: 'hidden',
-          },
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={handleClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 450 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
+        },
+      }}
+    >
+      {/* Header with background and icon */}
+      <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
+        sx={{
+          p: 3,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(
+            theme.palette.primary.main,
+            0.8
+          )} 100%)`,
+          color: 'white',
         }}
       >
-        <DialogTitle
+        <IconButton
+          onClick={handleClose}
+          edge="end"
           sx={{
-            m: 0,
-            p: 3,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            color: 'primary.main',
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: alpha('#fff', 0.1),
+            },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">Modifier le rôle</Typography>
+          <FontAwesomeIcon icon={faTimes} />
+        </IconButton>
+
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              Modifier rôle
+            </Typography>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                label={currentRole?.name || 'NAME'}
+                size="small"
+                sx={{
+                  bgcolor: alpha('#fff', 0.2),
+                  color: 'white',
+                  fontWeight: 'fontWeightMedium',
+                  backdropFilter: 'blur(6px)',
+                }}
+              />
+            </Stack>
           </Box>
-        </DialogTitle>
+        </Stack>
+      </Box>
 
-        <Divider />
+      {/* Main content */}
+      <Box sx={{ p: 3 }}>
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Modifier les détails du rôle
+          </Typography>
+          <Typography variant="body2">
+            Vous pouvez modifier les informations et les permissions du rôle.
+          </Typography>
+        </Paper>
 
-        <DialogContent sx={{ p: 3, pt: 3 }}>
-          <Alert
-            variant="outlined"
-            severity="info"
+        {/* Form content */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <List
             sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
               mb: 3,
-              borderRadius: 1.5,
-              '& .MuiAlert-icon': {
-                color: 'primary.main',
-              },
             }}
           >
-            Modifier les détails du rôle
-          </Alert>
+            <ListItemText
+              sx={{ px: 3, py: 2 }}
+              primary={
+                <Typography variant="subtitle1" fontWeight="fontWeightBold">
+                  Informations principales
+                </Typography>
+              }
+            />
 
-          {/* Role Name */}
-          <Controller
-            name="name"
-            control={methods.control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                autoFocus
-                fullWidth
-                type="text"
-                margin="dense"
-                variant="outlined"
-                label="Nom du rôle"
+            <Box sx={{ px: 3, pb: 3 }}>
+              {/* Role Name */}
+              <Controller
                 name="name"
-                error={!!errors.name}
-                helperText={errors.name?.message}
-                InputProps={{
-                  sx: { borderRadius: 1.5 },
-                }}
-                sx={{ mb: 1 }}
+                control={methods.control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    type="text"
+                    variant="outlined"
+                    label="Nom du rôle"
+                    name="name"
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                    InputProps={{
+                      sx: { borderRadius: 1.5 },
+                    }}
+                    sx={{ mb: 2.5 }}
+                  />
+                )}
               />
-            )}
-          />
 
-          {/* Description */}
-          <Controller
-            name="description"
-            control={methods.control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                margin="dense"
-                variant="outlined"
-                label="Description"
-                multiline
+              {/* Description */}
+              <Controller
                 name="description"
-                rows={4}
-                error={!!errors.description}
-                helperText={errors.description?.message}
-                InputProps={{
-                  sx: { borderRadius: 1.5 },
-                }}
-                sx={{ mt: 1, mb: 1 }}
+                control={methods.control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    variant="outlined"
+                    label="Description"
+                    multiline
+                    name="description"
+                    rows={4}
+                    error={!!errors.description}
+                    helperText={errors.description?.message}
+                    InputProps={{
+                      sx: { borderRadius: 1.5 },
+                    }}
+                    sx={{ mb: 2.5 }}
+                  />
+                )}
               />
-            )}
-          />
 
-          {/* Permissions */}
-          <FormControl fullWidth sx={{ mt: 2 }} error={!!errors.permissionLevel}>
-            <InputLabel id="permissions-select-label">Permissions</InputLabel>
-            <Controller
-              name="permissionLevel"
-              control={methods.control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  multiple
-                  labelId="permissions-select-label"
-                  value={field.value || []}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  input={<OutlinedInput label="Permissions" sx={{ borderRadius: 1.5 }} />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip
-                          key={value}
-                          label={value}
-                          size="small"
-                          onDelete={() => handleDeletePermission(value)}
-                          onMouseDown={(event) => {
-                            event.stopPropagation();
-                          }}
+              {/* Date de création */}
+              <Controller
+                name="createdAt"
+                control={methods.control}
+                render={({ field }) => (
+                  <LocalizationProvider>
+                    <DatePicker
+                      label="Date de création"
+                      value={field.value ? dayjs(field.value) : null}
+                      onChange={(newValue) => field.onChange(newValue?.toDate())}
+                      format="DD/MM/YYYY"
+                      sx={{
+                        width: '100%',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 1.5,
+                        },
+                      }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: 'dense',
+                          error: !!errors.createdAt,
+                          helperText: errors.createdAt?.message,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                )}
+              />
+            </Box>
+          </List>
+
+          {/* Permissions Section */}
+          <List
+            component={m.div}
+            initial="initial"
+            animate="animate"
+            variants={varFade().inUp}
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
+              mb: 3,
+            }}
+          >
+            <ListItemText
+              sx={{ px: 3, py: 2 }}
+              primary={
+                <Typography variant="subtitle1" fontWeight="fontWeightBold">
+                  Permissions
+                </Typography>
+              }
+            />
+
+            <Box sx={{ px: 3, pb: 3 }}>
+              <FormControl fullWidth error={!!errors.permissionLevel}>
+                <InputLabel id="permissions-select-label">Permissions</InputLabel>
+                <Controller
+                  name="permissionLevel"
+                  control={methods.control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      multiple
+                      labelId="permissions-select-label"
+                      value={field.value || []}
+                      onChange={(event) => field.onChange(event.target.value)}
+                      input={<OutlinedInput label="Permissions" sx={{ borderRadius: 1.5 }} />}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {selected.map((value) => (
+                            <Chip
+                              key={value}
+                              label={value}
+                              size="small"
+                              onDelete={() => handleDeletePermission(value)}
+                              onMouseDown={(event) => {
+                                event.stopPropagation();
+                              }}
+                              sx={{
+                                bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+                                color: 'primary.main',
+                                fontWeight: 600,
+                                borderRadius: 1,
+                                '&:hover': {
+                                  bgcolor: (t) => alpha(t.palette.primary.main, 0.2),
+                                },
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                      sx={{
+                        minHeight: 56,
+                        '& .MuiOutlinedInput-input': {
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 0.5,
+                          padding: '14px',
+                          height: 'auto',
+                        },
+                      }}
+                      MenuProps={{
+                        anchorOrigin: {
+                          vertical: 'top',
+                          horizontal: 'left',
+                        },
+                        transformOrigin: {
+                          vertical: 'bottom',
+                          horizontal: 'left',
+                        },
+                        PaperProps: {
+                          style: {
+                            maxHeight: 190,
+                            borderRadius: 12,
+                          },
+                        },
+                      }}
+                    >
+                      {allPermissions.map((permission) => (
+                        <MenuItem
+                          key={permission}
+                          value={permission}
                           sx={{
-                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                            color: 'primary.main',
-                            fontWeight: 500,
                             borderRadius: 1,
+                            mx: 0.5,
+                            my: 0.5,
                             '&:hover': {
-                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                              bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                            },
+                            '&.Mui-selected': {
+                              bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                              '&:hover': {
+                                bgcolor: (t) => alpha(t.palette.primary.main, 0.16),
+                              },
                             },
                           }}
-                        />
+                        >
+                          {permission}
+                        </MenuItem>
                       ))}
-                    </Box>
+                    </Select>
                   )}
-                  sx={{
-                    minHeight: 56,
-                    '& .MuiOutlinedInput-input': {
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 0.5,
-                      padding: '14px',
-                      height: 'auto',
-                    },
-                  }}
-                  MenuProps={{
-                    anchorOrigin: {
-                      vertical: 'bottom',
-                      horizontal: 'left',
-                    },
-                    transformOrigin: {
-                      vertical: 'top',
-                      horizontal: 'left',
-                    },
-                    PaperProps: {
-                      style: {
-                        maxHeight: 190,
-                        borderRadius: 12,
-                        marginTop: 8,
-                      },
-                    },
-                  }}
-                >
-                  {allPermissions.map((permission) => (
-                    <MenuItem key={permission} value={permission}>
-                      {permission}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            {errors.permissionLevel && (
-              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                {errors.permissionLevel.message}
-              </Typography>
-            )}
-          </FormControl>
-
-          {/* Date de création */}
-          <Controller
-            name="createdAt"
-            control={methods.control}
-            render={({ field }) => (
-              <LocalizationProvider>
-                <DatePicker
-                  label="Date de création"
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(newValue) => field.onChange(newValue?.toDate())}
-                  format="DD/MM/YYYY"
-                  sx={{
-                    width: '100%',
-                    mt: 3,
-                    mb: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&.Mui-focused': {
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderWidth: 2,
-                        },
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      '&.Mui-focused': {
-                        color: 'primary.main',
-                        fontWeight: 600,
-                      },
-                    },
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      margin: 'dense',
-                    },
-                  }}
                 />
-              </LocalizationProvider>
-            )}
-          />
-        </DialogContent>
+                {errors.permissionLevel ? (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {errors.permissionLevel.message}
+                  </Typography>
+                ) : (
+                  <></>
+                )}
+              </FormControl>
+            </Box>
+          </List>
+        </Box>
 
-        <DialogActions
-          sx={{ p: 2.5, bgcolor: (theme) => alpha(theme.palette.background.default, 0.4) }}
+        {/* Action buttons */}
+        <Box
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          sx={{
+            mt: 3,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+          }}
         >
           <Button
             onClick={handleClose}
@@ -375,11 +489,17 @@ export function UserRoleEditForm({ currentRole, open, onClose, onUpdateRole }: P
               textTransform: 'none',
               fontWeight: 600,
               boxShadow: 2,
+              color: 'primary.contrastText',
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
             }}
           >
             Enregistrer
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Box>
+    </Drawer>
   );
 }

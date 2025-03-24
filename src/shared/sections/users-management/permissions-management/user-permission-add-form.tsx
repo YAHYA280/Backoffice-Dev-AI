@@ -3,7 +3,7 @@ import type { SelectChangeEvent } from '@mui/material';
 import type { IPermission } from 'src/shared/_mock/_permission';
 
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -13,7 +13,16 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Box, Chip, Select, MenuItem, InputLabel, FormControl, OutlinedInput } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  OutlinedInput,
+  alpha,
+} from '@mui/material';
 
 import roleData from 'src/shared/_mock/_role';
 import { LocalizationProvider } from 'src/shared/locales';
@@ -161,6 +170,15 @@ export function UserPermissionAddDialog({
                       onMouseDown={(event) => {
                         event.stopPropagation();
                       }}
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                        fontWeight: 600,
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                        },
+                      }}
                     />
                   ))}
                 </Box>
@@ -177,7 +195,22 @@ export function UserPermissionAddDialog({
               }}
             >
               {allRoles.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
+                <MenuItem
+                  key={role.value}
+                  value={role.value}
+                  sx={{
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                    },
+                    '&.Mui-selected': {
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                      '&:hover': {
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                      },
+                    },
+                  }}
+                >
                   {role.label}
                 </MenuItem>
               ))}
@@ -224,7 +257,18 @@ export function UserPermissionAddDialog({
           <Button onClick={handleClose} variant="outlined" color="inherit">
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={!isFormValid} variant="contained">
+          <Button
+            onClick={handleSubmit}
+            disabled={!isFormValid}
+            variant="contained"
+            sx={{
+              color: 'primary.contrastText',
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
+          >
             Enregister
           </Button>
         </DialogActions>

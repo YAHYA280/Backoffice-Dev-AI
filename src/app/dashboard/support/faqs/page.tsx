@@ -1,5 +1,4 @@
-import { FaqsView } from "src/shared/sections/support/faqs-management/view";
-// ----------------------------------------------------------------------
+import { FaqsView } from "src/shared/sections/support/faqs-management/view/view";
 
 
 export const metadata = {

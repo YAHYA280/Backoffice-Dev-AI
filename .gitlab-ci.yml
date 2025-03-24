@@ -1,11 +1,61 @@
-stages:
-  - build
+include:
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'npm.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'build-publish-docker-npm.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'staging-version-management.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'validate-front-changes.yml'
+  - project: 'marketing-confort/template-ci'
+    ref: main
+    file: 'default-variables.yml'
 
-build_test:
-  stage: build
-  image: node:20
-  script:
-    - npm install
-    - npm run build
+stages:
+  - validate-changes
+  - test
+  - build
+  - staging-version-management
+
+
+
+variables:
+  APP_NAME: 'marketingconfort/brainboost-front'
+  MANIFEST_PROJECT_PATH: 'marketing-confort/brainboost/brainboost-k8s-manifests'
+  MANIFEST_BRANCH: 'main'
+  VERSION_FILE: 'version.txt'
+  MANIFEST_FOLDER: 'apps/front'
+
+
+validate-changes:
+  extends: .validate_changes_template
   only:
-    - merge_requests
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+
+test:
+  extends: .test_template
+  only:
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+  
+
+build-and-publish:
+  extends: .build_template
+  only:
+    - develop
+  before_script:
+    - if [ ! -f "$VERSION_FILE" ]; then echo "1.0.0" > "$VERSION_FILE"; fi
+
+staging-version-management:
+  extends: .staging_version_management_template
+  only:
+    - develop

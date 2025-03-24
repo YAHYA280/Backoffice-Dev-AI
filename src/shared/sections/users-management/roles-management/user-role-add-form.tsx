@@ -78,7 +78,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
         name,
         description,
         permissionLevel: permissions,
-        createdAt: createdAt.toDate(), // Convert dayjs to Date object
+        createdAt: createdAt.toDate(),
       };
       const promise = new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -144,6 +144,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
           sx={{
             bgcolor: 'background.paper',
             boxShadow: (theme) => `0 2px 8px 0 ${alpha(theme.palette.common.black, 0.08)}`,
+            py: '2px',
             transition: 'all 0.2s',
             '&:hover': {
               bgcolor: 'background.default',
@@ -222,7 +223,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        
+
         {/* Permissions as Select with Tags */}
         <FormControl
           fullWidth
@@ -252,7 +253,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
             multiple
             value={permissions}
             onChange={handlePermissionChange}
-            input={<OutlinedInput label="Permissions" />}
+            input={<OutlinedInput label="Permissions" sx={{ borderRadius: 1.5 }} />}
             MenuProps={{
               anchorOrigin: {
                 vertical: 'bottom',
@@ -270,7 +271,6 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
                 },
               },
             }}
-
             renderValue={(selected) => (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
                 {selected.map((value) => (
@@ -283,15 +283,12 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
                       event.stopPropagation();
                     }}
                     sx={{
-                      borderRadius: 1.5,
                       bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                      color: 'primary.dark',
+                      color: 'primary.main',
                       fontWeight: 600,
-                      '& .MuiChip-deleteIcon': {
-                        color: 'primary.main',
-                        '&:hover': {
-                          color: 'error.main',
-                        },
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
                       },
                     }}
                   />
@@ -299,14 +296,13 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
               </Box>
             )}
             sx={{
-              minHeight: 'auto',
+              minHeight: '56p',
               '& .MuiOutlinedInput-input': {
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: 0.8,
+                gap: 0.5,
                 padding: '14px',
                 height: 'auto',
-                minHeight: '42px',
               },
             }}
           >
@@ -364,7 +360,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
             slotProps={{
               textField: {
                 fullWidth: true,
-                margin: "dense",
+                margin: 'dense',
               },
             }}
           />
@@ -412,12 +408,10 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
             fontWeight: 600,
             boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.3)}`,
             transition: 'all 0.2s',
+            color: 'primary.contrastText',
+            backgroundColor: 'primary.main',
             '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.4)}`,
-            },
-            '&.Mui-disabled': {
-              bgcolor: (theme) => alpha(theme.palette.action.disabled, 0.3),
+              backgroundColor: 'primary.dark',
             },
           }}
         >

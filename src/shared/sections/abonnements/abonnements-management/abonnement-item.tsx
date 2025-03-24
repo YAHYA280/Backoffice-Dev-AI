@@ -1,4 +1,4 @@
-import type { IAbonnementItem } from 'src/types/abonnement';
+import type { IAbonnementItem } from 'src/contexts/types/abonnement';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {

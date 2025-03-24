@@ -67,9 +67,10 @@ export function KanbanBoardHeader({
               onClick={onOpenDeletedTickets}
               sx={{
                 borderWidth: 1.5,
+                color: 'primary.contrastText',
+                backgroundColor: 'primary.main',
                 '&:hover': {
-                  color: 'error.contrastText',
-                  borderColor: 'error.dark',
+                  backgroundColor: 'primary.dark',
                 },
                 px: 2.5,
                 py: 0.75,

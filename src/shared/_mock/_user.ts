@@ -1,4 +1,4 @@
-import { fSub, fDate, formatStr } from 'src/utils/format-time';
+import dayjs from 'dayjs';
 
 import { _mock, _mockListUsers } from './_mock';
 
@@ -176,9 +176,9 @@ export const _listUsers = [...Array(20)].map((_, index) => ({
   avatarUrl: _mockListUsers.image.avatar(index),
   phoneNumber: _mockListUsers.phoneNumber(index),
   status : _mockListUsers.status(index),
-  createdAt: fDate(fSub({ days: index * 5 + 2 + index}), formatStr.split.date),
-  lastLogin: fDate(fSub({ days: index * 5 }), formatStr.split.date),
-  birthDate: fDate(fSub({ days: index * 50, years: 24 }), formatStr.split.date),
+  createdAt: _mock.time(index),
+  lastLogin: dayjs(_mock.time(index)).add(5, 'day').toISOString(),
+  birthDate: dayjs(_mock.time(index)).subtract(20, 'year').toISOString(),
   dureRestante: Math.floor(Math.random() * 7) + 1,
   motif : "Violation des conditions d'utilisation",
   duree : 14,

@@ -1,6 +1,5 @@
-import { SuiviFacturationView } from "src/shared/sections/abonnements/suivi-facturation/view";
+import { SuiviFacturationView } from 'src/shared/sections/abonnements/suivi-facturation/view/view';
 // ----------------------------------------------------------------------
-
 
 export const metadata = {
   title: 'Suivi et facturation',

@@ -1,12 +1,14 @@
-import type { IDateValue, IDatePickerControl } from './common';
+import type { IDateValue} from 'src/contexts/types/common'
+
 
 // ----------------------------------------------------------------------
 
 export type IFileFilters = {
   name: string;
+  size:string;
   type: string[];
-  startDate: IDatePickerControl;
-  endDate: IDatePickerControl;
+  startDate: IDateValue;
+  endDate: IDateValue;
 };
 
 export type IFileShared = {
@@ -42,6 +44,14 @@ export type IFileManager = {
   shared: IFileShared[] | null;
   createdAt: IDateValue;
   modifiedAt: IDateValue;
+};
+
+export type FileDetail = IFileManager & {
+  description: string;
+  niveau: string;
+  matiere: string;
+  chapitre: string;
+  exercice: string;
 };
 
 export type IFile = IFileManager | IFolderManager;

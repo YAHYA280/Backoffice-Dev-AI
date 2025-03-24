@@ -3,11 +3,11 @@ import type { IUserItem } from 'src/contexts/types/user';
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useMemo, useState } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import { faChevronDown,faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -28,10 +28,6 @@ import { _cin, _parents } from 'src/shared/_mock';
 import { Label } from 'src/shared/components/label';
 import { toast } from 'src/shared/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/shared/components/hook-form';
-
-// ----------------------------------------------------------------------
-
-export type NewUserSchemaType = zod.infer<typeof NewUserSchema>;
 
 export const NewUserSchema = zod.object({
   avatarUrl: schemaHelper.file({ message: { required_error: 'Avatar is required!' } }),
@@ -57,7 +53,7 @@ export const NewUserSchema = zod.object({
   cinVerso: schemaHelper.file().optional(),
 });
 
-// ----------------------------------------------------------------------
+export type NewUserSchemaType = zod.infer<typeof NewUserSchema>;
 
 type Props = {
   currentUser?: IUserItem;
@@ -65,22 +61,18 @@ type Props = {
 
 export function UserNewEditForm({ currentUser }: Props) {
   const router = useRouter();
-
   const parents = _parents;
   const [parentSearch] = useState('');
-  const filteredParents = parents.filter((p) =>
-    p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
-    p.email.toLowerCase().includes(parentSearch.toLowerCase())
+  const filteredParents = parents.filter(
+    (p) =>
+      p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
+      p.email.toLowerCase().includes(parentSearch.toLowerCase())
   );
 
-  // Mock existing CIN
   const existingCIN = _cin.length > 0 ? _cin[0] : null;
 
-  // Local state for newly uploaded files
   const [cinRectoFile, setCinRectoFile] = useState<File | null>(null);
   const [cinVersoFile, setCinVersoFile] = useState<File | null>(null);
-
-  // Collapsible states for recto/verso
   const [rectoOpen, setRectoOpen] = useState(false);
   const [versoOpen, setVersoOpen] = useState(false);
 
@@ -93,7 +85,7 @@ export function UserNewEditForm({ currentUser }: Props) {
       lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       phoneNumber: currentUser?.phoneNumber || '',
-      birthDate: currentUser?.birthDate || '',
+      birthDate: currentUser?.birthDate != null ? String(currentUser.birthDate) : '',
       country: currentUser?.country || '',
       state: currentUser?.state || '',
       city: currentUser?.city || '',
@@ -125,10 +117,10 @@ export function UserNewEditForm({ currentUser }: Props) {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      // If user has uploaded new CIN files, attach them to the form data
       if (cinRectoFile) data.cinRecto = cinRectoFile;
       if (cinVersoFile) data.cinVerso = cinVersoFile;
 
+      // Simulate an API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       toast.success(currentUser ? 'Update success!' : 'Create success!');
       reset();
@@ -140,26 +132,17 @@ export function UserNewEditForm({ currentUser }: Props) {
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
-      <Grid
-        container
-        spacing={3}
-        sx={{
-          // Make both columns match in height
-          alignItems: 'stretch',
-        }}
-      >
-        {/* LEFT COLUMN */}
+      <Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
         <Grid xs={12} md={4}>
           <Card
             sx={{
-              height: '100%',          // Fill entire column height
+              height: '100%',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
               p: 3,
             }}
           >
-            {/* Show role/status labels if there's a current user */}
             {currentUser ? (
               <>
                 <Label color="success" sx={{ position: 'absolute', top: 16, left: 16 }}>
@@ -169,12 +152,11 @@ export function UserNewEditForm({ currentUser }: Props) {
                   {values.status}
                 </Label>
               </>
-            ) : (
+            ):(
               <>
               </>
             )}
 
-            {/* Avatar upload */}
             <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
               <Field.UploadAvatar
                 name="avatarUrl"
@@ -197,10 +179,8 @@ export function UserNewEditForm({ currentUser }: Props) {
               />
             </Box>
 
-            {/* If role=Parent, show collapsible CIN sections */}
             {values.role === 'Parent' ? (
               <>
-                {/* CIN Recto Collapsible */}
                 <Box
                   sx={{
                     mb: 2,
@@ -222,7 +202,6 @@ export function UserNewEditForm({ currentUser }: Props) {
                       style={{ width: 20, height: 20 }}
                     />
                   </Box>
-
                   {rectoOpen && existingCIN ? (
                     <Box
                       component="img"
@@ -237,14 +216,9 @@ export function UserNewEditForm({ currentUser }: Props) {
                         mt: 2,
                       }}
                     />
-                  ) : (
-                    <>
-                    </>
-                  )
-                }
+                  ) : null}
                 </Box>
 
-                {/* CIN Verso Collapsible */}
                 <Box
                   sx={{
                     p: 2,
@@ -265,7 +239,6 @@ export function UserNewEditForm({ currentUser }: Props) {
                       style={{ width: 20, height: 20 }}
                     />
                   </Box>
-
                   {versoOpen && existingCIN ? (
                     <Box
                       component="img"
@@ -280,40 +253,30 @@ export function UserNewEditForm({ currentUser }: Props) {
                         mt: 2,
                       }}
                     />
-                  )
-                  : (
-                    <>
-                    </>
-                  )
-                }
+                  ) : null}
                 </Box>
               </>
-            ) : (
+            ):(
               <>
               </>
-            )
-          }
-
-            {/* Optional flex spacer to push content to top if needed */}
+            )}
             <Box sx={{ flexGrow: 1 }} />
           </Card>
         </Grid>
 
-        {/* RIGHT COLUMN */}
         <Grid xs={12} md={8}>
           <Card
             sx={{
-              height: '100%',          // Fill entire column height
+              height: '100%',
               display: 'flex',
               flexDirection: 'column',
               p: 3,
             }}
           >
-            {/* User Fields */}
             <Box
+              display="grid"
               rowGap={3}
               columnGap={2}
-              display="grid"
               gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }}
             >
               <Field.Text name="firstName" label="Prénom" />
@@ -327,10 +290,10 @@ export function UserNewEditForm({ currentUser }: Props) {
                 render={({ field, fieldState }) => (
                   <DatePicker
                     label="Date de naissance"
-                    value={field.value ? dayjs(field.value, 'DD/MM/YYYY') : null}
+                    value={field.value ? dayjs(field.value, 'YYYY-MM-DD') : null}
                     onChange={(newValue) => {
                       if (newValue) {
-                        field.onChange(newValue.format('DD/MM/YYYY'));
+                        field.onChange(newValue.format('YYYY-MM-DD'));
                       } else {
                         field.onChange('');
                       }
@@ -354,22 +317,19 @@ export function UserNewEditForm({ currentUser }: Props) {
                 label="Pays"
                 placeholder="Choisissez un pays"
               />
-
               <Field.Text name="state" label="Région" />
               <Field.Text name="city" label="Ville" />
               <Field.Text name="address" label="Adresse" />
               <Field.Text name="zipCode" label="Code postal" />
 
-              {/* If role=Enfant, show parent selection */}
               {values.role === 'Enfant' ? (
                 <Controller
                   name="parentId"
                   control={control}
                   render={({ field, fieldState }) => {
-                    const defaultSelection =
-                      field.value
-                        ? filteredParents.find((p) => p.id === field.value)
-                        : filteredParents[0] || null;
+                    const defaultSelection = field.value
+                      ? filteredParents.find((p) => p.id === field.value)
+                      : filteredParents[0] || null;
 
                     if (!field.value && filteredParents[0]) {
                       field.onChange(filteredParents[0].id);
@@ -396,22 +356,18 @@ export function UserNewEditForm({ currentUser }: Props) {
                     );
                   }}
                 />
-              ) : (
+              ):(
                 <>
                 </>
-              )
-            }
+              )}
             </Box>
 
-            {/* If role=Parent, show upload fields (Recto/Verso) */}
             {values.role === 'Parent' ? (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>
                   Réimporter CIN
                 </Typography>
-
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-                  {/* Recto Upload */}
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
                       Recto
@@ -433,15 +389,12 @@ export function UserNewEditForm({ currentUser }: Props) {
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         Fichier sélectionné : {cinRectoFile.name}
                       </Typography>
-                    )
-                    : (
+                    ):(
                       <>
                       </>
-                    )
-                  }
+                    )}
                   </Box>
 
-                  {/* Verso Upload */}
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
                       Verso
@@ -463,24 +416,25 @@ export function UserNewEditForm({ currentUser }: Props) {
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         Fichier sélectionné : {cinVersoFile.name}
                       </Typography>
-                    ) : (
+                    ):(
                       <>
                       </>
-                    )
-                  }
+                    )}
                   </Box>
                 </Stack>
               </Box>
-            ) : (
+            ):(
               <>
               </>
-            )
-          }
-
+            )}
             <Box sx={{ flexGrow: 1 }} />
-
             <Box sx={{ textAlign: 'right', mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                loading={isSubmitting}
+                color="primary"
+              >
                 {!currentUser ? 'Create user' : 'Enregistrer les modifications'}
               </LoadingButton>
             </Box>

@@ -1,6 +1,6 @@
 'use client';
 
-import type { IAbonnementSubscribers } from 'src/types/abonnement';
+import type { IAbonnementSubscribers } from 'src/contexts/types/common';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';

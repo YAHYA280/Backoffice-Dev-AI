@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 import { _mock } from 'src/shared/_mock/_mock';
 import { _tags, _fileNames } from 'src/shared/_mock/assets';
 
@@ -54,9 +56,6 @@ export const FILE_TYPE_OPTIONS = [
   'pdf',
 ];
 
-// ----------------------------------------------------------------------
-
-// Hierarchical data for the items
 const hierarchy = [
   {
     niveau: 'Niveau 1',
@@ -106,7 +105,6 @@ const shared = (index: number) =>
   (index === 3 && SHARED_PERSONS.slice(11, 12)) ||
   [];
 
-// Helper function to generate random hierarchical data
 function getRandomHierarchy(index: number) {
   const randomNiveauIndex = Math.floor(Math.random() * hierarchy.length);
   const niveauData = hierarchy[randomNiveauIndex];
@@ -128,23 +126,22 @@ function getRandomHierarchy(index: number) {
     matiere,
     chapitre,
     exercice,
-    description: _mock.description(index), // e.g. a short text
+    description: _mock.description(index),
   };
 }
 
-// Generate files
 export const _files = _fileNames.map((name, index) => {
   const { niveau, matiere, chapitre, exercice, description } = getRandomHierarchy(index);
 
   return {
-    id: `${_mock.id(index)}_file`,
+    id: `${_mock.id(index)}_file_${index}`,
     name,
     url: URLS[index],
     shared: shared(index),
     tags: _tags.slice(0, 5),
     size: GB / ((index + 1) * 500),
     createdAt: _mock.time(index),
-    modifiedAt: _mock.time(index),
+    modifiedAt: dayjs(_mock.time(index)).add(5, 'day').toISOString(),
     type: name.split('.').pop() || 'txt',
     description,
     niveau,
@@ -155,7 +152,6 @@ export const _files = _fileNames.map((name, index) => {
   };
 });
 
-// Generate folders with the same fields
 export const _folders = FOLDERS.map((name, index) => {
   const { niveau, matiere, chapitre, exercice, description } = getRandomHierarchy(index);
 
@@ -172,7 +168,6 @@ export const _folders = FOLDERS.map((name, index) => {
     modifiedAt: _mock.time(index),
     isFavorited: _mock.boolean(index + 1),
 
-    // Add hierarchical fields so folders have them, too
     description,
     niveau,
     matiere,

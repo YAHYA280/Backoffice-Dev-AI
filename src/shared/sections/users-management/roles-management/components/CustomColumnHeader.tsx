@@ -137,7 +137,7 @@ const CustomColumnHeader = ({
                   color: 'primary.main',
                 }}
               >
-                <FontAwesomeIcon icon={faCalendar} size="xs" />
+                <FontAwesomeIcon icon={faSearch} size="xs" />
               </IconButton>
             ): (
               <>
@@ -162,11 +162,13 @@ const CustomColumnHeader = ({
                 }}
                 InputProps={{
                   readOnly: true,
-                  endAdornment: dateValue && (
+                  endAdornment: dateValue ? (
                     <IconButton size="small" onClick={handleClearSearch}>
                       <FontAwesomeIcon icon={faTimes} size="xs" />
                     </IconButton>
-                  ),
+                  ) : (
+                    <></>
+                  )
                 }}
               />
             ) : (
@@ -191,11 +193,13 @@ const CustomColumnHeader = ({
                 },
               }}
               InputProps={{
-                endAdornment: searchValue && (
+                endAdornment: searchValue ? (
                   <IconButton size="small" onClick={handleClearSearch}>
                     <FontAwesomeIcon icon={faTimes} size="xs" />
                   </IconButton>
-                ),
+                ) : (
+                  <></>
+                )
               }}
             />
           ) : (

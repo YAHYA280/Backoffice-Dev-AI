@@ -4,16 +4,35 @@ import type { IUserTableFilters } from 'src/contexts/types/user';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import TableSortLabel from '@mui/material/TableSortLabel';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { formHelperTextClasses } from '@mui/material/FormHelperText';
-import {Box,Chip,Stack,Select,TableRow,MenuItem,Checkbox,TableHead,TableCell,TextField,FormControl,OutlinedInput,InputAdornment} from '@mui/material';
+import {
+  Box,
+  Chip,
+  Stack,
+  Select,
+  TableRow,
+  Checkbox,
+  MenuItem,
+  TableHead,
+  TableCell,
+  TextField,
+  FormControl,
+  OutlinedInput,
+  TableSortLabel,
+  InputAdornment,
+} from '@mui/material';
 
-import { chipProps, FiltersBlock,FiltersResult } from 'src/shared/components/filters-result';
+import { chipProps, FiltersBlock, FiltersResult } from 'src/shared/components/filters-result';
+
+const FILTER_ROLE_OPTIONS = [
+  { value: 'Admin', label: 'Admin' },
+  { value: 'Parent', label: 'Parent' },
+  { value: 'Enfant', label: 'Enfant' },
+];
 
 type Column = {
   id: string;
@@ -30,6 +49,9 @@ type Props = {
   orderBy: string;
   onSort: (columnId: string) => void;
   totalResults: number;
+  numSelected?: number;
+  rowCount?: number;
+  onSelectAllRows?: (checked: boolean) => void;
 };
 
 export function TableHeadWithFilters({
@@ -40,16 +62,29 @@ export function TableHeadWithFilters({
   orderBy,
   onSort,
   totalResults,
+  numSelected = 0,
+  rowCount = 0,
+  onSelectAllRows,
 }: Props) {
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [showRoleInput, setShowRoleInput] = useState(false);
+  const [showCreatedAtInput, setShowCreatedAtInput] = useState(false);
+  const [showLastLoginInput, setShowLastLoginInput] = useState(false);
+
   const filterChips = useMemo(() => {
     const chips: JSX.Element[] = [];
+
     if (filters.state.name) {
       chips.push(
         <Chip
           key="name"
           {...chipProps}
           label={`Nom: ${filters.state.name}`}
-          onDelete={() => filters.setState({ name: '' })}
+          onDelete={() => {
+            filters.setState({ name: '' });
+            setShowNameInput(false);
+          }}
         />
       );
     }
@@ -59,7 +94,10 @@ export function TableHeadWithFilters({
           key="email"
           {...chipProps}
           label={`Email: ${filters.state.email}`}
-          onDelete={() => filters.setState({ email: '' })}
+          onDelete={() => {
+            filters.setState({ email: '' });
+            setShowEmailInput(false);
+          }}
         />
       );
     }
@@ -69,7 +107,10 @@ export function TableHeadWithFilters({
           key="role"
           {...chipProps}
           label={`Rôle: ${filters.state.role[0]}`}
-          onDelete={() => filters.setState({ role: [] })}
+          onDelete={() => {
+            filters.setState({ role: [] });
+            setShowRoleInput(false);
+          }}
         />
       );
     }
@@ -84,22 +125,36 @@ export function TableHeadWithFilters({
       );
     }
     if (filters.state.createdAt) {
+      const parsedDate = dayjs(filters.state.createdAt, 'DD/MM/YYYY', true);
+      const displayDate = parsedDate.isValid()
+        ? parsedDate.format('DD/MM/YYYY')
+        : dayjs(filters.state.createdAt).format('DD/MM/YYYY');
       chips.push(
         <Chip
           key="createdAt"
           {...chipProps}
-          label={`Création: ${dayjs(filters.state.createdAt).format('DD/MM/YYYY')}`}
-          onDelete={() => filters.setState({ createdAt: null })}
+          label={`Date de création: ${displayDate}`}
+          onDelete={() => {
+            filters.setState({ createdAt: null });
+            setShowCreatedAtInput(false);
+          }}
         />
       );
     }
     if (filters.state.lastLogin) {
+      const parsedLastLogin = dayjs(filters.state.lastLogin, 'DD/MM/YYYY', true);
+      const displayDate = parsedLastLogin.isValid()
+        ? parsedLastLogin.format('DD/MM/YYYY')
+        : dayjs(filters.state.lastLogin).format('DD/MM/YYYY');
       chips.push(
         <Chip
           key="lastLogin"
           {...chipProps}
-          label={`Dernière: ${dayjs(filters.state.lastLogin).format('DD/MM/YYYY')}`}
-          onDelete={() => filters.setState({ lastLogin: null })}
+          label={`Date de dernière connexion: ${displayDate}`}
+          onDelete={() => {
+            filters.setState({ lastLogin: null });
+            setShowLastLoginInput(false);
+          }}
         />
       );
     }
@@ -107,229 +162,208 @@ export function TableHeadWithFilters({
   }, [filters]);
 
   return (
-    <TableHead>
-      <TableRow>
+    <TableHead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 2 }}>
+      <TableRow
+        sx={{
+          height: 50,
+          '& .MuiTableCell-root': { padding: '5px 10px' },
+        }}
+      >
         {columns.map((col) => {
-          if (col.id === 'statut' && filters.state.statut.length > 0) {
-            return null;
-          }
-          if (col.id === 'actions') {
+          if (col.id === 'select') {
             return (
-              <TableCell key={col.id} width={col.width} sx={col.sx}>
-                {col.label}
+              <TableCell key="select" width={col.width} padding="checkbox">
+                <Checkbox
+                  indeterminate={numSelected > 0 && numSelected < rowCount}
+                  checked={rowCount > 0 && numSelected === rowCount}
+                  onChange={(event) =>
+                    onSelectAllRows && onSelectAllRows(event.target.checked)
+                  }
+                />
+              </TableCell>
+            );
+          }
+          if (col.id === 'statut' || col.id === 'actions') {
+            return (
+              <TableCell key={col.id} width={col.width} sx={col.sx} sortDirection={orderBy === col.id ? order : false}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: -0.3 }}>
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center', p: 0 }}>
+                    <TableSortLabel
+                      active={orderBy === col.id}
+                      direction={orderBy === col.id ? order : 'asc'}
+                      onClick={() => onSort(col.id)}
+                      sx={{ lineHeight: 1, p: 0 }}
+                    >
+                      {col.label}
+                    </TableSortLabel>
+                  </Box>
+                  <Box sx={{ height: '36px' }} />
+                </Box>
               </TableCell>
             );
           }
           return (
-            <TableCell
-              key={col.id}
-              width={col.width}
-              sx={col.sx}
-              sortDirection={orderBy === col.id ? order : false}
-            >
-              <TableSortLabel
-                active={orderBy === col.id}
-                direction={orderBy === col.id ? order : 'asc'}
-                onClick={() => onSort(col.id)}
-              >
-                {col.label}
-              </TableSortLabel>
+            <TableCell key={col.id} width={col.width} sx={col.sx} sortDirection={orderBy === col.id ? order : false} align="left">
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: -0.3 }}>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', p: 0 }}>
+                  <TableSortLabel
+                    active={orderBy === col.id}
+                    direction={orderBy === col.id ? order : 'asc'}
+                    onClick={() => onSort(col.id)}
+                    sx={{ lineHeight: 1, p: 0 }}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+                {(() => {
+                  switch (col.id) {
+                    case 'name':
+                      return showNameInput ? (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          autoFocus
+                          value={filters.state.name}
+                          onChange={(e) => filters.setState({ name: e.target.value })}
+                          onBlur={() => {
+                            if (!filters.state.name) setShowNameInput(false);
+                          }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <FontAwesomeIcon icon={faSearch} />
+                              </InputAdornment>
+                            ),
+                            sx: { '& fieldset': { border: 'none' }, backgroundColor: 'background.neutral', borderRadius: 1 },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowNameInput(true)}
+                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case 'email':
+                      return showEmailInput ? (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          autoFocus
+                          value={filters.state.email}
+                          onChange={(e) => filters.setState({ email: e.target.value })}
+                          onBlur={() => {
+                            if (!filters.state.email) setShowEmailInput(false);
+                          }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <FontAwesomeIcon icon={faSearch} />
+                              </InputAdornment>
+                            ),
+                            sx: { '& fieldset': { border: 'none' }, backgroundColor: 'background.neutral', borderRadius: 1 },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowEmailInput(true)}
+                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case 'role':
+                      return showRoleInput ? (
+                        <FormControl fullWidth size="small">
+                          <Select
+                            autoFocus
+                            value={filters.state.role[0] || ''}
+                            onChange={(e) => {
+                              filters.setState({ role: e.target.value ? [e.target.value] : [] });
+                            }}
+                            onClose={() => {
+                              if (!filters.state.role[0]) setShowRoleInput(false);
+                            }}
+                            input={<OutlinedInput label="Rôle" />}
+                          >
+                            <MenuItem value="">
+                              <em>Tous</em>
+                            </MenuItem>
+                            {FILTER_ROLE_OPTIONS.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      ) : (
+                        <Box
+                          onClick={() => setShowRoleInput(true)}
+                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case 'createdAt':
+                      return showCreatedAtInput ? (
+                        <DatePicker
+                          autoFocus
+                          value={filters.state.createdAt ? dayjs(filters.state.createdAt, 'DD/MM/YYYY') : null}
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              filters.setState({ createdAt: newValue.format('DD/MM/YYYY') });
+                            } else {
+                              filters.setState({ createdAt: '' });
+                            }
+                          }}
+                          onClose={() => {
+                            if (!filters.state.createdAt) setShowCreatedAtInput(false);
+                          }}
+                          format="DD/MM/YYYY"
+                          slotProps={{ textField: { fullWidth: true, size: 'small', error: dateError } }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowCreatedAtInput(true)}
+                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case 'lastLogin':
+                      return showLastLoginInput ? (
+                        <DatePicker
+                          autoFocus
+                          value={filters.state.lastLogin ? dayjs(filters.state.lastLogin, 'DD/MM/YYYY') : null}
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              filters.setState({ lastLogin: newValue.format('DD/MM/YYYY') });
+                            } else {
+                              filters.setState({ lastLogin: '' });
+                            }
+                          }}
+                          onClose={() => {
+                            if (!filters.state.lastLogin) setShowLastLoginInput(false);
+                          }}
+                          format="DD/MM/YYYY"
+                          slotProps={{ textField: { fullWidth: true, size: 'small', error: dateError } }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowLastLoginInput(true)}
+                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    default:
+                      return null;
+                  }
+                })()}
+              </Box>
             </TableCell>
           );
-        })}
-      </TableRow>
-      <TableRow>
-        {columns.map((col) => {
-          if (col.id === 'statut' && filters.state.statut.length > 0) {
-            return null;
-          }
-          switch (col.id) {
-            case 'name':
-              return (
-                <TableCell key={col.id}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={filters.state.name}
-                    onChange={(e) => filters.setState({ name: e.target.value })}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box
-                            component={FontAwesomeIcon}
-                            icon={faSearch}
-                            sx={{
-                              cursor: 'text',
-                              '&:hover': { color: 'primary.main' },
-                            }}
-                            onClick={(e) => {
-                              const inputElement = e.currentTarget
-                                .closest('.MuiInputBase-root')
-                                ?.querySelector('input');
-                              if (inputElement) {
-                                inputElement.focus();
-                              }
-                            }}
-                          />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        '& fieldset': { border: 'none' },
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-                </TableCell>
-              );
-            case 'email':
-              return (
-                <TableCell key={col.id}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={filters.state.email}
-                    onChange={(e) => filters.setState({ email: e.target.value })}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box
-                            component={FontAwesomeIcon}
-                            icon={faSearch}
-                            sx={{
-                              cursor: 'text',
-                              '&:hover': { color: 'primary.main' },
-                            }}
-                            onClick={(e) => {
-                              const inputElement = e.currentTarget
-                                .closest('.MuiInputBase-root')
-                                ?.querySelector('input');
-                              if (inputElement) {
-                                inputElement.focus();
-                              }
-                            }}
-                          />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        '& fieldset': { border: 'none' },
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-                </TableCell>
-              );
-            case 'role':
-              return (
-                <TableCell key={col.id}>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={filters.state.role[0] || ''}
-                      onChange={(e) =>
-                        filters.setState({ role: e.target.value ? [e.target.value] : [] })
-                      }
-                      input={<OutlinedInput label="Rôle" />}
-                    >
-                      <MenuItem value="">
-                        <em>Tous</em>
-                      </MenuItem>
-                      <MenuItem value="Admin">Admin</MenuItem>
-                      <MenuItem value="Parent">Parent</MenuItem>
-                      <MenuItem value="Enfant">Enfant</MenuItem>
-                    </Select>
-                  </FormControl>
-                </TableCell>
-              );
-            case 'statut':
-              return (
-                <TableCell key={col.id}>
-                  <FormControl fullWidth size="small" sx={{ display: 'none' }}>
-                    <Select
-                      multiple
-                      value={filters.state.statut}
-                      onChange={(e) => {
-                        const value =
-                          typeof e.target.value === 'string'
-                            ? e.target.value.split(',')
-                            : e.target.value;
-                        filters.setState({ statut: value });
-                      }}
-                      input={<OutlinedInput label="Statut" />}
-                      renderValue={(selected) =>
-                        (selected as string[]).length
-                          ? (selected as string[]).join(', ')
-                          : 'Aucun'
-                      }
-                    >
-                      <MenuItem value="Actif">
-                        <Checkbox size="small" checked={filters.state.statut.includes('Actif')} />
-                        Actif
-                      </MenuItem>
-                      <MenuItem value="Bloqué">
-                        <Checkbox size="small" checked={filters.state.statut.includes('Bloqué')} />
-                        Bloqué
-                      </MenuItem>
-                      <MenuItem value="Suspendu">
-                        <Checkbox size="small" checked={filters.state.statut.includes('Suspendu')} />
-                        Suspendu
-                      </MenuItem>
-                      <MenuItem value="Supprimé">
-                        <Checkbox size="small" checked={filters.state.statut.includes('Supprimé')} />
-                        Supprimé
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </TableCell>
-              );
-            case 'createdAt':
-              return (
-                <TableCell key={col.id}>
-                  <DatePicker
-                    value={filters.state.createdAt}
-                    onChange={(newValue) => filters.setState({ createdAt: newValue })}
-                    format="DD/MM/YYYY"
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: dateError,
-                      },
-                    }}
-                  />
-                </TableCell>
-              );
-            case 'lastLogin':
-              return (
-                <TableCell key={col.id}>
-                  <DatePicker
-                    value={filters.state.lastLogin}
-                    onChange={(newValue) => filters.setState({ lastLogin: newValue })}
-                    format="DD/MM/YYYY"
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: dateError,
-                        helperText: dateError
-                          ? 'La date de fin doit être postérieure à la date de début'
-                          : null,
-                        sx: {
-                          [`& .${formHelperTextClasses.root}`]: {
-                            position: 'absolute',
-                            bottom: -24,
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </TableCell>
-              );
-            case 'actions':
-              return <TableCell key={col.id} />;
-            default:
-              return <TableCell key={col.id} />;
-          }
         })}
       </TableRow>
       {filterChips.length > 0 ? (
@@ -344,7 +378,7 @@ export function TableHeadWithFilters({
             </FiltersResult>
           </TableCell>
         </TableRow>
-      ) : (
+      ):(
         <>
         </>
       )}

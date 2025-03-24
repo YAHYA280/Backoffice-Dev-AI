@@ -1,137 +1,220 @@
-'use client';
+"use client";
 
-import type { MouseEvent } from 'react';
-import type { SelectChangeEvent } from '@mui/material';
-import type { IFile, IFileFilters, IFolderManager } from 'src/contexts/types/file';
+import type { MouseEvent } from "react";
+import type { SelectChangeEvent } from "@mui/material/Select";
+import type { IFile, IFileFilters, IFolderManager } from "src/contexts/types/file";
 
-import { useState, useCallback } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import dayjs from "dayjs";
+import { useState, useCallback } from "react";
+import { m, AnimatePresence } from "framer-motion";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faTimes,
   faTrash,
   faTable,
+  faTimes,
   faFilter,
-  faTableList,
-  faGripVertical,
+  faFileExport,
+  faArrowsRotate,
   faMagnifyingGlass,
-} from '@fortawesome/free-solid-svg-icons';
+} from "@fortawesome/free-solid-svg-icons";
 
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import { useTheme } from '@mui/material/styles';
-import TableContainer from '@mui/material/TableContainer';
-import { tableCellClasses } from '@mui/material/TableCell';
-import { tablePaginationClasses } from '@mui/material/TablePagination';
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableContainer from "@mui/material/TableContainer";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { tablePaginationClasses } from "@mui/material/TablePagination";
 import {
   Box,
+  Tab,
+  Card,
+  Tabs,
   Menu,
-  Stack,
   Button,
-  Select,
-  Divider,
   Tooltip,
+  Divider,
   MenuItem,
   Checkbox,
   TextField,
   IconButton,
-  Typography,
   FormControl,
   ListItemText,
-  ToggleButton,
   InputAdornment,
-  FormControlLabel,
-  ToggleButtonGroup,
-} from '@mui/material';
+} from "@mui/material";
 
-import { paths } from 'src/routes/paths';
+import { paths } from "src/routes/paths";
 
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSetState } from 'src/hooks/use-set-state';
+import { useBoolean } from "src/hooks/use-boolean";
+import { useSetState } from "src/hooks/use-set-state";
 
-import { fIsAfter, fIsBetween } from 'src/utils/format-time';
+import { fIsAfter } from "src/utils/format-time";
 
-import { _allFiles } from 'src/shared/_mock';
-import { DashboardContent } from 'src/shared/layouts/dashboard';
+import { _allFiles } from "src/shared/_mock";
+import { DashboardContent } from "src/shared/layouts/dashboard";
 
-import { toast } from 'src/shared/components/snackbar';
-import { fileFormat } from 'src/shared/components/file-thumbnail';
-import { ConfirmDialog } from 'src/shared/components/custom-dialog';
-import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
+import { toast } from "src/shared/components/snackbar";
+import { ConfirmDialog } from "src/shared/components/custom-dialog";
+import { fileFormat } from "src/shared/components/file-thumbnail/utils";
+import { CustomBreadcrumbs } from "src/shared/components/custom-breadcrumbs";
 import {
   useTable,
-  rowInPage,
   TableNoData,
   getComparator,
   TableSelectedAction,
   TablePaginationCustom,
-} from 'src/shared/components/table';
+} from "src/shared/components/table";
 
-import { FileManagerGridView } from '../components/file-manager-grid-view';
-import { FileManagerTableRow } from '../components/file-manager-table-row';
-import { TableFileHeadCustom } from '../components/file-table-head-custom';
-import { FileManagerNewFolderDialog } from '../components/file-manager-new-folder-dialog';
+import { FileManagerGridView } from "../components/file-manager-grid-view";
+import { FileManagerTableRow } from "../components/file-manager-table-row";
+import { TableFileHeadCustom } from "../components/file-table-head-custom";
+import { FileManagerNewFolderDialog } from "../components/file-manager-new-folder-dialog";
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 export const FILE_TYPE_OPTIONS = [
-  'txt',
-  'zip',
-  'audio',
-  'image',
-  'video',
-  'word',
-  'excel',
-  'powerpoint',
-  'pdf',
+  "txt",
+  "zip",
+  "audio",
+  "image",
+  "video",
+  "word",
+  "excel",
+  "powerpoint",
+  "pdf",
 ];
 
 function compareValue(fileValue: any, filterValue: string, operator: string): boolean {
+  if (operator === "avant" || operator === "apres" || operator === "egal") {
+    const dateValue = dayjs(fileValue);
+    const filterDate = dayjs(filterValue, "DD/MM/YYYY", true);
+    if (!dateValue.isValid() || !filterDate.isValid()) {
+      return false;
+    }
+    if (operator === "avant") {
+      return dateValue.isSameOrBefore(filterDate, "day");
+    }
+    if (operator === "apres") {
+      return dateValue.isSameOrAfter(filterDate, "day");
+    }
+    if (operator === "egal") {
+      return dateValue.isSame(filterDate, "day");
+    }
+  }
+  if (operator === "inferieur" || operator === "superieur" || operator === "equalsNumber") {
+    const fileSizeMB = Number(fileValue) / 1048576;
+    const filterSizeMB = Number(filterValue);
+    if (Number.isNaN(fileSizeMB) || Number.isNaN(filterSizeMB)) {
+      return false;
+    }
+    const roundedFileSize = Math.round(fileSizeMB * 100) / 100;
+    const roundedFilterSize = Math.round(filterSizeMB * 100) / 100;
+    if (operator === "inferieur") {
+      return roundedFileSize <= roundedFilterSize;
+    }
+    if (operator === "superieur") {
+      return roundedFileSize >= roundedFilterSize;
+    }
+    if (operator === "equalsNumber") {
+      return roundedFileSize === roundedFilterSize;
+    }
+  }
+  if (operator === "is") {
+    const formatted = fileFormat(fileValue);
+    return formatted.toLowerCase() === filterValue.toLowerCase();
+  }
+  if (operator === "is-not") {
+    const formatted = fileFormat(fileValue);
+    return formatted.toLowerCase() !== filterValue.toLowerCase();
+  }
   const fileStr = fileValue.toString().toLowerCase();
-  const filterStr = filterValue.toLowerCase();
+  const filterStr = filterValue.toString().toLowerCase();
   switch (operator) {
-    case 'contains':
+    case "contains":
       return fileStr.includes(filterStr);
-    case 'equals':
+    case "equals":
       return fileStr === filterStr;
-    case 'starts-with':
+    case "starts-with":
       return fileStr.startsWith(filterStr);
-    case 'ends-with':
+    case "ends-with":
       return fileStr.endsWith(filterStr);
-    case 'is-empty':
-      return fileStr === '';
-    case 'is-not-empty':
-      return fileStr !== '';
-    case 'is':
-      return fileStr === filterStr;
-    case 'is-not':
-      return fileStr !== filterStr;
+    case "is-empty":
+      return fileStr === "";
+    case "is-not-empty":
+      return fileStr !== "";
     default:
       return false;
   }
 }
 
 const COLUMN_OPTIONS = [
-  { value: 'name', label: 'Nom' },
-  { value: 'size', label: 'Taille' },
-  { value: 'type', label: 'Type' },
-  { value: 'createdAt', label: 'Créé le' },
-  { value: 'modifiedAt', label: 'Modifié le' },
+  { value: "name", label: "Nom" },
+  { value: "size", label: "Taille" },
+  { value: "type", label: "Type" },
+  { value: "createdAt", label: "Date de création" },
+  { value: "modifiedAt", label: "Dernière modification" },
 ];
 
 const OPERATOR_OPTIONS_TYPE = [
-  { value: 'is', label: 'est' },
-  { value: 'is-not', label: "n'est pas" },
+  { value: "is", label: "est" },
+  { value: "is-not", label: "n'est pas" },
+];
+
+const FILE_COLUMNS = [
+  { id: "select", label: "", width: 50 },
+  { id: "name", label: "Nom", width: 300 },
+  { id: "size", label: "Taille", width: 120 },
+  { id: "type", label: "Type", width: 120 },
+  { id: "startDate", label: "Date de création", width: 160 },
+  { id: "endDate", label: "Dernière modification", width: 180 },
+  { id: "actions", label: "Actions", width: 80 },
+];
+
+const OPERATOR_OPTIONS_DATE = [
+  { value: "avant", label: "avant" },
+  { value: "egal", label: "égal à" },
+  { value: "apres", label: "après" },
+];
+
+const OPERATOR_OPTIONS_NUMBER = [
+  { value: "inferieur", label: "inférieur à" },
+  { value: "equalsNumber", label: "égal à" },
+  { value: "superieur", label: "supérieur à" },
 ];
 
 const OPERATOR_OPTIONS_COMMON = [
-  { value: 'contains', label: 'contient' },
-  { value: 'equals', label: 'égal à' },
-  { value: 'starts-with', label: 'commence par' },
-  { value: 'ends-with', label: 'se termine par' },
-  { value: 'is-empty', label: 'est vide' },
-  { value: 'is-not-empty', label: "n'est pas vide" },
-  { value: 'is-any-of', label: "est l'un de" },
+  { value: "contains", label: "contient" },
+  { value: "equals", label: "égal à" },
+  { value: "starts-with", label: "commence par" },
+  { value: "ends-with", label: "se termine par" },
+  { value: "is-empty", label: "est vide" },
+  { value: "is-not-empty", label: "n'est pas vide" },
+  { value: "is-any-of", label: "est l'un de" },
 ];
+
+const DEFAULT_TABLE_COLUMNS = [
+  { id: "name", label: "Nom" },
+  { id: "size", label: "Taille" },
+  { id: "type", label: "Type" },
+  { id: "createdAt", label: "Date de création" },
+  { id: "modifiedAt", label: "Dernière modification" },
+  { id: "actions", label: "Actions", width: 88 },
+];
+
+const defaultFolder: IFolderManager = {
+  id: "default-folder-id",
+  name: "Default Folder",
+  size: 0,
+  type: "",
+  url: "",
+  tags: [],
+  isFavorited: false,
+  shared: null,
+  createdAt: null,
+  modifiedAt: null,
+};
 
 type ApplyFilterProps = {
   dateError: boolean;
@@ -141,204 +224,60 @@ type ApplyFilterProps = {
 };
 
 function applyFilter({ inputData, comparator, filters, dateError }: ApplyFilterProps) {
-  const { name, type, startDate, endDate } = filters;
+  let data = [...inputData];
+
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
     if (order !== 0) return order;
     return a[1] - b[1];
   });
-  inputData = stabilizedThis.map((el) => el[0]);
-  if (name) {
-    inputData = inputData.filter((file) =>
-      file.name.toLowerCase().includes(name.toLowerCase())
+  data = stabilizedThis.map((el) => el[0]);
+
+  if (filters.name) {
+    data = data.filter((file) =>
+      file.name.toLowerCase().includes(filters.name.toLowerCase())
     );
   }
-  if (type.length) {
-    inputData = inputData.filter((file) => type.includes(fileFormat(file.type)));
+  if (filters.size) {
+    const sizeInMB = Number(filters.size);
+    const sizeInBytes = sizeInMB * 1048576;
+    data = data.filter((file) => Number(file.size) >= sizeInBytes);
   }
-  if (!dateError && startDate && endDate) {
-    inputData = inputData.filter((file) => fIsBetween(file.createdAt, startDate, endDate));
+  if (filters.type.length) {
+    data = data.filter((file) =>
+      filters.type.includes(fileFormat(file.type))
+    );
   }
-  return inputData;
-}
-
-type FileManagerTableProps = {
-  table: ReturnType<typeof useTable>;
-  notFound: boolean;
-  dataFiltered: IFile[];
-  onOpenConfirm: () => void;
-  onDeleteRow: (id: string) => void;
-  columns?: string[];
-  onSearchColumnChange?: (columnId: string, value: string | Date | null) => void;
-  searchValues?: {
-    name: string;
-    type: string;
-    size?: string;
-    createdAt?: Date | null;
-    modifiedAt?: Date | null;
-  };
-};
-
-const defaultFolder: IFolderManager = {
-  id: 'default-folder-id',
-  name: 'Default Folder',
-  size: 0,
-  type: '',
-  url: '',
-  tags: [],
-  isFavorited: false,
-  shared: null,
-  createdAt: null,
-  modifiedAt: null,
-};
-
-
-function FileManagerTable({
-  table,
-  notFound,
-  onDeleteRow,
-  dataFiltered,
-  onOpenConfirm,
-  columns,
-  onSearchColumnChange,
-  searchValues,
-}: FileManagerTableProps) {
-  const theme = useTheme();
-  const {
-    page,
-    order,
-    orderBy,
-    rowsPerPage,
-    selected,
-    onSelectRow,
-    onSelectAllRows,
-    onSort,
-    onChangePage,
-    onChangeRowsPerPage,
-  } = table;
-  const TABLE_HEAD = [
-    { id: 'name', label: 'Nom' },
-    { id: 'size', label: 'Taille', width: 120 },
-    { id: 'type', label: 'Type', width: 120 },
-    { id: 'createdAt', label: 'Créé le', width: 140 },
-    { id: 'modifiedAt', label: 'Modifié le', width: 140 },
-    { id: 'actions', label: '', width: 88 },
-  ];
-  const filteredTableHead = columns
-    ? TABLE_HEAD.filter((col) => columns.includes(col.id))
-    : TABLE_HEAD;
-  return (
-    <>
-      <Box
-        sx={{
-          position: 'relative',
-          m: { md: theme.spacing(-2, -3, 0, -3) },
-        }}
-      >
-        <TableSelectedAction
-          numSelected={selected.length}
-          rowCount={dataFiltered.length}
-          onSelectAllRows={(checked) =>
-            onSelectAllRows(checked, dataFiltered.map((row) => row.id))
-          }
-          action={
-            <Tooltip title="Supprimer">
-              <IconButton color="primary" onClick={onOpenConfirm}>
-                <FontAwesomeIcon icon={faTrash} />
-              </IconButton>
-            </Tooltip>
-          }
-          sx={{
-            pl: 1,
-            pr: 2,
-            top: 16,
-            left: 24,
-            zIndex: theme.zIndex.appBar + 1,
-            right: 24,
-            width: 'auto',
-            borderRadius: 2.5,
-          }}
-        />
-        <TableContainer
-          sx={{
-            px: { md: 3 },
-            maxHeight: 600,
-          }}
-        >
-          <Table
-            stickyHeader
-            sx={{
-              minWidth: 960,
-              borderCollapse: 'separate',
-              borderSpacing: '0 16px',
-            }}
-          >
-            <TableFileHeadCustom
-              order={order}
-              orderBy={orderBy}
-              headLabel={filteredTableHead}
-              rowCount={dataFiltered.length}
-              numSelected={selected.length}
-              onSort={onSort}
-              onSelectAllRows={(checked) =>
-                onSelectAllRows(checked, dataFiltered.map((row) => row.id))
-              }
-              onSearchColumnChange={onSearchColumnChange}
-              searchValues={searchValues}
-              sx={{
-                position: 'sticky',
-                top: 0,
-                backgroundColor: theme.palette.background.paper,
-                zIndex: theme.zIndex.appBar,
-                [`& .${tableCellClasses.head}`]: {
-                  '&:first-of-type': {
-                    borderTopLeftRadius: 12,
-                    borderBottomLeftRadius: 12,
-                  },
-                  '&:last-of-type': {
-                    borderTopRightRadius: 12,
-                    borderBottomRightRadius: 12,
-                  },
-                },
-              }}
-            />
-            <TableBody>
-              {notFound ? (
-                <TableNoData notFound />
-              ) : (
-                dataFiltered
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <FileManagerTableRow
-                      key={row.id}
-                      row={row}
-                      folder={defaultFolder}
-                      selected={selected.includes(row.id)}
-                      onSelectRow={() => onSelectRow(row.id)}
-                      onDeleteRow={() => onDeleteRow(row.id)}
-                      columns={filteredTableHead}
-                    />
-                  ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-      <TablePaginationCustom
-        page={page}
-        rowsPerPage={rowsPerPage}
-        count={dataFiltered.length}
-        onPageChange={onChangePage}
-        onRowsPerPageChange={onChangeRowsPerPage}
-        sx={{
-          [`& .${tablePaginationClasses.toolbar}`]: {
-            borderTopColor: 'transparent',
-          },
-        }}
-      />
-    </>
-  );
+  data = data.filter((file) => {
+    const fileCreated = dayjs(file.createdAt);
+    const fileLogged = dayjs(file.modifiedAt);
+    const filterCreated = filters.startDate ? dayjs(filters.startDate, "DD/MM/YYYY", true) : null;
+    const filterLastModified = filters.endDate ? dayjs(filters.endDate, "DD/MM/YYYY", true) : null;
+    if (filterCreated && !filterLastModified) {
+      if (!fileCreated.isValid() || !filterCreated.isValid()) return false;
+      return fileCreated.isSameOrAfter(filterCreated, "day");
+    }
+    if (!filterCreated && filterLastModified) {
+      if (!fileLogged.isValid() || !filterLastModified.isValid()) return false;
+      return fileLogged.isSameOrBefore(filterLastModified, "day");
+    }
+    if (filterCreated && filterLastModified) {
+      if (
+        !fileCreated.isValid() ||
+        !fileLogged.isValid() ||
+        !filterCreated.isValid() ||
+        !filterLastModified.isValid()
+      )
+        return false;
+      return (
+        fileCreated.isSameOrAfter(filterCreated, "day") &&
+        fileLogged.isSameOrBefore(filterLastModified, "day")
+      );
+    }
+    return true;
+  });
+  return data;
 }
 
 export function FileManagerView() {
@@ -346,22 +285,30 @@ export function FileManagerView() {
   const [tableData, setTableData] = useState<IFile[]>(_allFiles);
   const confirm = useBoolean();
   const upload = useBoolean();
-  const [view, setView] = useState('list');
-  const defaultColumns = [
-    { id: 'name', label: 'Nom' },
-    { id: 'size', label: 'Taille' },
-    { id: 'type', label: 'Type' },
-    { id: 'createdAt', label: 'Créé le' },
-    { id: 'modifiedAt', label: 'Modifié le' },
-    { id: 'actions', label: 'Actions' },
-  ];
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(defaultColumns.map((col) => col.id));
+  const [view, setView] = useState("list");
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    DEFAULT_TABLE_COLUMNS.map((col) => col.id)
+  );
   const [anchorElColumns, setAnchorElColumns] = useState<null | HTMLElement>(null);
-  const [columnSearch, setColumnSearch] = useState('');
-  const defaultColumnIds = defaultColumns.map((col) => col.id);
-  const allColumnsSelected =
-    visibleColumns.length === defaultColumnIds.length &&
-    defaultColumnIds.every((id) => visibleColumns.includes(id));
+  const [columnSearch, setColumnSearch] = useState("");
+  const [anchorElFilter, setAnchorElFilter] = useState<null | HTMLElement>(null);
+  const [filterColumn, setFilterColumn] = useState("name");
+  const [filterOperator, setFilterOperator] = useState("contains");
+  const [filterValue, setFilterValue] = useState("");
+  const [customFilter, setCustomFilter] = useState({
+    column: "name",
+    operator: "contains",
+    value: "",
+  });
+  const filters = useSetState<IFileFilters>({
+    name: "",
+    size: "",
+    type: [],
+    startDate: null,
+    endDate: null,
+  });
+  const dateError = fIsAfter(filters.state.startDate, filters.state.endDate);
+
   const handleOpenColumnsMenu = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorElColumns(event.currentTarget);
   };
@@ -370,32 +317,21 @@ export function FileManagerView() {
   };
   const handleToggleColumn = (columnId: string) => {
     setVisibleColumns((prev) =>
-      prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]
+      prev.includes(columnId)
+        ? prev.filter((id) => id !== columnId)
+        : [...prev, columnId]
     );
   };
   const handleToggleAll = (checked: boolean) => {
     if (checked) {
-      setVisibleColumns(defaultColumns.map((col) => col.id));
+      setVisibleColumns(DEFAULT_TABLE_COLUMNS.map((col) => col.id));
     } else {
-      setVisibleColumns(['name']);
+      setVisibleColumns(["name"]);
     }
   };
-  const handleResetColumns = () => {
-    setVisibleColumns(defaultColumns.map((col) => col.id));
-    setColumnSearch('');
-  };
-  const filteredColumns = defaultColumns.filter((col) =>
+  const filteredColumns = DEFAULT_TABLE_COLUMNS.filter((col) =>
     col.label.toLowerCase().includes(columnSearch.toLowerCase())
   );
-  const [anchorElFilter, setAnchorElFilter] = useState<null | HTMLElement>(null);
-  const [filterColumn, setFilterColumn] = useState('name');
-  const [filterOperator, setFilterOperator] = useState('contains');
-  const [filterValue, setFilterValue] = useState('');
-  const [customFilter, setCustomFilter] = useState({
-    column: 'name',
-    operator: 'contains',
-    value: '',
-  });
   const handleOpenFilterMenu = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorElFilter(event.currentTarget);
   };
@@ -405,26 +341,38 @@ export function FileManagerView() {
   const handleChangeFilterColumn = (event: SelectChangeEvent) => {
     const newCol = event.target.value as string;
     setFilterColumn(newCol);
-    if (newCol === 'type') {
-      setFilterOperator('is');
-    } else {
-      setFilterOperator('contains');
+    switch (newCol) {
+      case "type":
+        setFilterOperator("is");
+        break;
+      case "size":
+        setFilterOperator("inferieur");
+        break;
+      case "createdAt":
+      case "modifiedAt":
+        setFilterOperator("avant");
+        break;
+      default:
+        setFilterOperator("contains");
+        break;
     }
+    setFilterValue("");
   };
   const handleChangeFilterOperator = (event: SelectChangeEvent) => {
     setFilterOperator(event.target.value as string);
   };
   const handleApplyFilter = () => {
     setCustomFilter({ column: filterColumn, operator: filterOperator, value: filterValue });
-    setAnchorElFilter(null);
+    handleCloseFilterMenu();
   };
-  const filters = useSetState<IFileFilters>({
-    name: '',
-    type: [],
-    startDate: null,
-    endDate: null,
-  });
-  const dateError = fIsAfter(filters.state.startDate, filters.state.endDate);
+  const handleRefresh = () => {
+    setFilterColumn("name");
+    setFilterOperator("contains");
+    setFilterValue("");
+    setCustomFilter({ column: "name", operator: "contains", value: "" });
+    filters.setState({ name: "", type: [], startDate: null, endDate: null, size: "" });
+    setVisibleColumns(DEFAULT_TABLE_COLUMNS.map((col) => col.id));
+  };
   let dataFiltered = applyFilter({
     inputData: tableData,
     comparator: getComparator(table.order, table.orderBy),
@@ -438,11 +386,14 @@ export function FileManagerView() {
       return compareValue(fileValue, customFilter.value, customFilter.operator);
     });
   }
-  const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
+  const dataInPage = dataFiltered.slice(
+    table.page * table.rowsPerPage,
+    table.page * table.rowsPerPage + table.rowsPerPage
+  );
   const notFound = dataFiltered.length === 0;
   const handleChangeView = useCallback(
-    (event: MouseEvent<HTMLElement>, newView: string | null) => {
-      if (newView !== null) {
+    (event: React.SyntheticEvent, newView: string) => {
+      if (newView) {
         setView(newView);
       }
     },
@@ -451,7 +402,7 @@ export function FileManagerView() {
   const handleDeleteItem = useCallback(
     (id: string) => {
       const deleteRow = tableData.filter((row) => row.id !== id);
-      toast.success('Suppression réussie !');
+      toast.success("Suppression réussie !");
       setTableData(deleteRow);
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
@@ -459,104 +410,53 @@ export function FileManagerView() {
   );
   const handleDeleteItems = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-    toast.success('Suppression réussie !');
+    toast.success("Suppression réussie !");
     setTableData(deleteRows);
     table.onUpdatePageDeleteRows({
       totalRowsInPage: dataInPage.length,
       totalRowsFiltered: dataFiltered.length,
     });
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
+  const computedTableHead = [
+    ...DEFAULT_TABLE_COLUMNS.filter(
+      (col) => col.id !== "actions" && visibleColumns.includes(col.id)
+    ),
+    DEFAULT_TABLE_COLUMNS.find((col) => col.id === "actions")!,
+  ];
+
   return (
-    <DashboardContent>
-      <Box sx={{ mb: { xs: 2, md: 3 } }}>
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'flex' },
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-          }}
-        >
+    <DashboardContent maxWidth="xl">
+      <Box sx={{ mb: { xs: 3, md: 5 } }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
           <CustomBreadcrumbs
             heading="Gestion des ressources"
             links={[
-              { name: 'Tableau de bord', href: paths.dashboard.root },
-              {
-                name: 'Contenu pédagogique',
-                href: paths.dashboard.contenu_pedagogique.ressourcesMultimedia,
-              },
-              { name: 'Ressources multimedias' },
+              { name: "Tableau de bord", href: paths.dashboard.root },
+              { name: "Contenu pédagogique", href: paths.dashboard.contenu_pedagogique.ressourcesMultimedia },
+              { name: "Ressources multimédias" },
             ]}
             sx={{ flex: 1 }}
           />
-        </Box>
-        <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-          <CustomBreadcrumbs
-            heading="Gestion des ressources"
-            links={[
-              { name: 'Tableau de bord', href: paths.dashboard.root },
-              { name: 'Contenu pédagogique', href: paths.dashboard.user.root },
-              { name: 'Ressources multimédias' },
-            ]}
-            sx={{ mb: 2 }}
-          />
+          <Button
+            onClick={upload.onTrue}
+            variant="contained"
+            color="primary"
+            startIcon={<FontAwesomeIcon icon={faPlus} style={{ width: 20 }} />}
+          >
+            Ajouter une ressource
+          </Button>
         </Box>
       </Box>
-      <Stack spacing={2.5} sx={{ my: { xs: 1, md: 2 } }}>
-        <Stack
-          spacing={2}
-          direction={{ xs: 'column', md: 'row' }}
-          alignItems={{ xs: 'flex-end', md: 'center' }}
-          justifyContent="flex-end"
-        >
-          <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-              variant="contained"
-              startIcon={<FontAwesomeIcon icon={faPlus} style={{ width: 20 }} />}
-              onClick={upload.onTrue}
-            >
-              Ajouter une ressource
-            </Button>
-            <Button
-              variant="outlined"
-              endIcon={<FontAwesomeIcon icon={faTable} />}
-              onClick={handleOpenColumnsMenu}
-            >
-              Colonnes
-            </Button>
-            <Tooltip title="Filtres">
-              <Button
-                variant="outlined"
-                onClick={handleOpenFilterMenu}
-                aria-label="Filtres"
-                sx={{
-                  width: 40,
-                  height: 40,
-                  minWidth: 0,
-                  padding: 0,
-                  borderRadius: '50%',
-                }}
-              >
-                <FontAwesomeIcon icon={faFilter} />
-              </Button>
-            </Tooltip>
-          </Box>
-          <ToggleButtonGroup value={view} exclusive onChange={handleChangeView}>
-            <ToggleButton value="list">
-              <FontAwesomeIcon icon={faTableList} />
-            </ToggleButton>
-            <ToggleButton value="grid">
-              <FontAwesomeIcon icon={faGripVertical} />
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
-      </Stack>
+
+      <FileManagerNewFolderDialog open={upload.value} onClose={upload.onFalse} />
+
       <Menu
         anchorEl={anchorElColumns}
         open={Boolean(anchorElColumns)}
         onClose={handleCloseColumnsMenu}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{ sx: { p: 1.5, width: 300 } }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { sx: { p: 1.5, width: 300 } } }}
       >
         <Box sx={{ mb: 1 }}>
           <TextField
@@ -576,13 +476,13 @@ export function FileManagerView() {
         </Box>
         <AnimatePresence>
           {filteredColumns.map((col) => {
-            const isNameColumn = col.id === 'name';
+            const isNameColumn = col.id === "name";
             const isChecked = visibleColumns.includes(col.id);
             return (
               <m.div
                 key={col.id}
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.25 }}
               >
@@ -601,209 +501,353 @@ export function FileManagerView() {
           })}
         </AnimatePresence>
         <Divider sx={{ my: 1 }} />
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1 }}>
-          <FormControlLabel
-            label="Afficher/Masquer tout"
-            control={
-              <Checkbox
-                checked={visibleColumns.length === defaultColumns.length}
-                onChange={(e) => handleToggleAll(e.target.checked)}
-              />
-            }
+        <MenuItem>
+          <Checkbox
+            checked={visibleColumns.length === DEFAULT_TABLE_COLUMNS.length}
+            onChange={(e) => handleToggleAll(e.target.checked)}
             sx={{ mr: 1 }}
           />
-          <Button
-            size="small"
-            onClick={handleResetColumns}
-            disabled={allColumnsSelected}
-            sx={{ textTransform: 'none' }}
-          >
-            Réinitialiser
-          </Button>
-        </Box>
+          <ListItemText primary="Afficher/Masquer tout" />
+        </MenuItem>
       </Menu>
+
       <Menu
         anchorEl={anchorElFilter}
         open={Boolean(anchorElFilter)}
         onClose={handleCloseFilterMenu}
-        PaperProps={{
-          sx: {
-            p: 1.5,
-            width: 600,
-            borderRadius: 2,
-          },
-        }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{ paper: { sx: { p: 2, width: 600, borderRadius: 2 } } }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <IconButton onClick={handleCloseFilterMenu} size="small" sx={{ ml: 'auto' }}>
-            <FontAwesomeIcon icon={faTimes} style={{ fontSize: 14 }} />
-          </IconButton>
+        <Box sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}>
+          <Box component="span" sx={{ fontWeight: 600 }}>
+            Filtres
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+            <IconButton onClick={handleCloseFilterMenu} size="small" sx={{ ml: "auto" }}>
+              <FontAwesomeIcon icon={faTimes} style={{ fontSize: 14 }} />
+            </IconButton>
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.25, color: 'text.secondary' }}>
-              Colonnes
-            </Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                displayEmpty
-                value={filterColumn}
-                onChange={handleChangeFilterColumn}
-                renderValue={(selected) => {
-                  if (!selected) return 'Colonnes';
-                  const item = COLUMN_OPTIONS.find((option) => option.value === selected);
-                  return item ? item.label : selected;
-                }}
-                sx={{ borderRadius: 1 }}
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 2 }}>
+          <FormControl fullWidth size="small">
+            <TextField
+              select
+              label="Colonne"
+              value={filterColumn}
+              onChange={(event) => handleChangeFilterColumn(event as SelectChangeEvent)}
+              SelectProps={{ native: false }}
+            >
+              {COLUMN_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <TextField
+              select
+              label="Opérateur"
+              value={filterOperator}
+              onChange={(event) => handleChangeFilterOperator(event as SelectChangeEvent)}
+              SelectProps={{ native: false }}
+            >
+              {(filterColumn === "type"
+                ? OPERATOR_OPTIONS_TYPE
+                : filterColumn === "createdAt" || filterColumn === "modifiedAt"
+                ? OPERATOR_OPTIONS_DATE
+                : filterColumn === "size"
+                ? OPERATOR_OPTIONS_NUMBER
+                : OPERATOR_OPTIONS_COMMON
+              ).map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            {filterColumn === "type" ? (
+              <TextField
+                select
+                label="Valeur"
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+                SelectProps={{ native: false }}
               >
-                {COLUMN_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
+                <MenuItem value="">Tous</MenuItem>
+                {FILE_TYPE_OPTIONS.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>
-              Opérateur
-            </Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                displayEmpty
-                value={filterOperator}
-                onChange={handleChangeFilterOperator}
-                renderValue={(selected) => {
-                  if (!selected) return 'Opérateur';
-                  const operators =
-                    filterColumn === 'type' ? OPERATOR_OPTIONS_TYPE : OPERATOR_OPTIONS_COMMON;
-                  const item = operators.find((option) => option.value === selected);
-                  return item ? item.label : selected;
+              </TextField>
+            ) : filterColumn === "createdAt" || filterColumn === "modifiedAt" ? (
+              <DatePicker
+                label="Valeur"
+                value={filterValue ? dayjs(filterValue, "DD/MM/YYYY") : null}
+                onChange={(newValue) => {
+                  if (newValue) {
+                    setFilterValue(newValue.format("DD/MM/YYYY"));
+                  } else {
+                    setFilterValue("");
+                  }
                 }}
-                sx={{ borderRadius: 1 }}
-              >
-                {filterColumn === 'type'
-                  ? OPERATOR_OPTIONS_TYPE.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))
-                  : OPERATOR_OPTIONS_COMMON.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 2 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>
-              Valeur
-            </Typography>
-            {filterColumn === 'type' ? (
-              <FormControl fullWidth size="small">
-                <Select
-                  displayEmpty
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                  renderValue={(selected) => selected || ''}
-                  sx={{ borderRadius: 1 }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        maxHeight: 200,
-                      },
+                format="DD/MM/YYYY"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    placeholder: "JJ/MM/AAAA",
+                    sx: { "& .MuiOutlinedInput-root": { borderRadius: 1 } },
+                    InputProps: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <FontAwesomeIcon icon={faFilter} />
+                        </InputAdornment>
+                      ),
                     },
-                  }}
-                >
-                  <MenuItem
-                    disabled
-                    sx={{
-                      bgcolor: '#1976d2',
-                      height: '36px',
-                      opacity: 1,
-                      p: 0,
-                      '&.Mui-disabled': {
-                        opacity: 1,
-                      },
-                    }}
-                  />
-                  <MenuItem value="txt">txt</MenuItem>
-                  <MenuItem value="zip">zip</MenuItem>
-                  <MenuItem value="audio">audio</MenuItem>
-                  <MenuItem value="image">image</MenuItem>
-                  <MenuItem value="video">video</MenuItem>
-                  <MenuItem value="word">word</MenuItem>
-                  <MenuItem value="excel">excel</MenuItem>
-                  <MenuItem value="powerpoint">powerpoint</MenuItem>
-                  <MenuItem value="pdf">pdf</MenuItem>
-                </Select>
-              </FormControl>
+                  },
+                }}
+              />
             ) : (
               <TextField
                 fullWidth
+                label="Valeur"
                 size="small"
-                placeholder="Valeur du filtre"
+                placeholder={filterColumn.includes("At") ? "JJ/MM/AAAA" : ""}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FontAwesomeIcon icon={faFilter} />
+                    </InputAdornment>
+                  ),
+                }}
               />
             )}
-          </Box>
+          </FormControl>
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
-          <Button
-            variant="contained"
-            onClick={handleApplyFilter}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 1,
-              bgcolor: '#1A2536',
-              '&:hover': { bgcolor: '#111927' },
-            }}
-          >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 1 }}>
+          <Button variant="contained" size="small" onClick={handleApplyFilter}>
             Appliquer
           </Button>
         </Box>
       </Menu>
-      {view === 'list' ? (
-        <FileManagerTable
-          table={table}
-          dataFiltered={dataFiltered}
-          notFound={notFound}
-          onOpenConfirm={confirm.onTrue}
-          onDeleteRow={handleDeleteItem}
-          columns={visibleColumns}
-          searchValues={{
-            name: filters.state.name,
-            type: filters.state.type.length ? filters.state.type[0] : '',
-            size: '',
-            createdAt: null,
-            modifiedAt: null,
+
+      <Card>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "nowrap",
+            width: "100%",
+            mt: 2,
           }}
-          onSearchColumnChange={(columnId, value) => {
-            if (columnId === 'name') {
-              filters.setState({ name: value as string });
-            } else if (columnId === 'type') {
-              if (value) {
-                filters.setState({ type: [value as string] });
-              } else {
-                filters.setState({ type: [] });
-              }
-            }
-          }}
-        />
-      ) : (
-        <FileManagerGridView
-          table={table}
-          dataFiltered={dataFiltered}
-          onDeleteItem={handleDeleteItem}
-          onOpenConfirm={confirm.onTrue}
-        />
-      )}
-      <FileManagerNewFolderDialog open={upload.value} onClose={upload.onFalse} />
+        >
+          <Tabs value={view} onChange={handleChangeView} sx={{ px: 2.5, maxWidth: "65%" }}>
+            <Tab label="Liste" value="list" />
+            <Tab label="Grid" value="grid" />
+          </Tabs>
+          <Box sx={{ gap: 2, flexShrink: 0 }}>
+            {view === "list" ? (
+              <Button
+                size="small"
+                variant="outlined"
+                endIcon={<FontAwesomeIcon icon={faTable} />}
+                onClick={handleOpenColumnsMenu}
+                color="primary"
+              >
+                Colonnes
+              </Button>
+            ):(
+              <>
+              </>
+            )}
+            <Tooltip
+              title="Filtres"
+              arrow
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontSize: 14,
+                    borderRadius: 1,
+                    boxShadow: 3,
+                    padding: "6px 12px",
+                  },
+                },
+                arrow: { sx: { color: "primary.main" } },
+              }}
+            >
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={handleOpenFilterMenu}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  minWidth: 0,
+                  padding: 0,
+                  borderRadius: "50%",
+                }}
+              >
+                <FontAwesomeIcon icon={faFilter} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title="Rafraîchir"
+              arrow
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontSize: 14,
+                    borderRadius: 1,
+                    boxShadow: 3,
+                    padding: "6px 12px",
+                  },
+                },
+                arrow: { sx: { color: "primary.main" } },
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={handleRefresh}
+                color="primary"
+                sx={{
+                  width: 50,
+                  height: 50,
+                  padding: 0,
+                  borderRadius: "50%",
+                }}
+              >
+                <FontAwesomeIcon icon={faArrowsRotate} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title="Exporter"
+              arrow
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontSize: 14,
+                    borderRadius: 1,
+                    boxShadow: 3,
+                    padding: "6px 12px",
+                  },
+                },
+                arrow: { sx: { color: "primary.main" } },
+              }}
+            >
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => {}}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  minWidth: 0,
+                  padding: 0,
+                  borderRadius: "50%",
+                }}
+              >
+                <FontAwesomeIcon icon={faFileExport} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        <TableContainer sx={{ maxHeight: 450, position: "relative" }}>
+          {view === "list" ? (
+            <Table size="medium" sx={{ width: "100%", minWidth: { xs: "auto", sm: 720 } }}>
+              <TableFileHeadCustom
+                columns={FILE_COLUMNS}
+                fileFilters={filters}
+                order={table.order}
+                orderBy={table.orderBy}
+                onSort={table.onSort}
+                totalResults={dataFiltered.length}
+                numSelected={table.selected.length}
+                rowCount={dataFiltered.length}
+                onSelectAllRows={(checked) =>
+                  table.onSelectAllRows(checked, dataFiltered.map((row) => row.id))
+                }
+              />
+              {table.selected.length > 0 ? (
+                <TableSelectedAction
+                  numSelected={table.selected.length}
+                  rowCount={dataFiltered.length}
+                  onSelectAllRows={(checked) =>
+                    table.onSelectAllRows(checked, dataFiltered.map((row) => row.id))
+                  }
+                  action={
+                    <Tooltip title="Supprimer">
+                      <IconButton color="primary" onClick={handleDeleteItems}>
+                        <FontAwesomeIcon icon={faTrash} />
+                      </IconButton>
+                    </Tooltip>
+                  }
+                  sx={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 2 }}
+                />
+              ):(
+                <>
+                </>
+              )}
+              <TableBody>
+                {notFound ? (
+                  <TableNoData notFound />
+                ) : (
+                  dataFiltered
+                    .slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage)
+                    .map((row) => (
+                      <FileManagerTableRow
+                        key={row.id}
+                        row={row}
+                        folder={defaultFolder}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
+                        onDeleteRow={() => handleDeleteItem(row.id)}
+                        columns={computedTableHead}
+                      />
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          ) : (
+            <FileManagerGridView
+              table={table}
+              dataFiltered={dataFiltered}
+              onDeleteItem={handleDeleteItem}
+              onOpenConfirm={confirm.onTrue}
+            />
+          )}
+        </TableContainer>
+
+        {dataFiltered.length > table.rowsPerPage ? (
+          <TablePaginationCustom
+            page={table.page}
+            rowsPerPage={table.rowsPerPage}
+            count={dataFiltered.length}
+            onPageChange={table.onChangePage}
+            onRowsPerPageChange={table.onChangeRowsPerPage}
+            sx={{
+              [`& .${tablePaginationClasses.toolbar}`]: { borderTopColor: "transparent" },
+            }}
+          />
+        ):(
+          <>
+          </>
+        )}
+      </Card>
+
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

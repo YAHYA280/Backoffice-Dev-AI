@@ -1,272 +1,521 @@
-'use client';
+"use client";
 
-import type { Dayjs } from 'dayjs';
-import type { Theme, SxProps } from '@mui/material/styles';
+import type { IFileFilters } from "src/contexts/types/file";
+import type { UseSetStateReturn } from "src/hooks/use-set-state";
 
-import dayjs from 'dayjs';
-import { useState } from 'react';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import dayjs from "dayjs";
+import React, { useMemo, useState } from "react";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import {
   Box,
-  TableRow,
+  Chip,
+  Stack,
+  Select,
   Checkbox,
+  TableRow,
+  MenuItem,
   TableHead,
   TableCell,
   TextField,
-  IconButton,
+  FormControl,
+  OutlinedInput,
   TableSortLabel,
-} from '@mui/material';
+  InputAdornment,
+} from "@mui/material";
 
-const visuallyHidden = {
-  border: 0,
-  margin: -1,
-  padding: 0,
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute' as const,
-  whiteSpace: 'nowrap' as const,
-  clip: 'rect(0 0 0 0)',
+import { chipProps, FiltersBlock, FiltersResult } from "src/shared/components/filters-result";
+
+const FILE_TYPE_OPTIONS = [
+  "txt",
+  "zip",
+  "audio",
+  "image",
+  "video",
+  "word",
+  "excel",
+  "powerpoint",
+  "pdf",
+];
+
+export type Column = {
+  id: string;
+  label: string;
+  width?: number;
+  sx?: any;
 };
 
-export type TableFileHeadCustomProps = {
-  orderBy?: string;
-  rowCount?: number;
-  sx?: SxProps<Theme>;
+type Props = {
+  columns: Column[];
+  fileFilters: UseSetStateReturn<IFileFilters>;
+  order: "asc" | "desc";
+  orderBy: string;
+  onSort: (columnId: string) => void;
+  totalResults: number;
   numSelected?: number;
-  order?: 'asc' | 'desc';
-  onSort?: (id: string) => void;
-  headLabel: Array<{ id: string; label: string; width?: number }>;
+  rowCount?: number;
   onSelectAllRows?: (checked: boolean) => void;
-  onSearchColumnChange?: (columnId: string, value: string | Date | null) => void;
-  searchValues?: {
-    name?: string;
-    size?: string;
-    type?: string;
-    createdAt?: Date | null;
-    modifiedAt?: Date | null;
-  };
 };
 
 export function TableFileHeadCustom({
-  sx,
+  columns,
+  fileFilters,
   order,
-  onSort,
   orderBy,
-  headLabel,
-  rowCount = 0,
+  onSort,
+  totalResults,
   numSelected = 0,
+  rowCount = 0,
   onSelectAllRows,
-  onSearchColumnChange,
-  searchValues: externalSearchValues,
-}: TableFileHeadCustomProps) {
-  const [expandedSearchFields, setExpandedSearchFields] = useState<{
-    name: boolean;
-    size: boolean;
-    type: boolean;
-    createdAt: boolean;
-    modifiedAt: boolean;
-  }>({
-    name: false,
-    size: false,
-    type: false,
-    createdAt: false,
-    modifiedAt: false,
-  });
+}: Props) {
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [showSizeInput, setShowSizeInput] = useState(false);
+  const [showTypeInput, setShowTypeInput] = useState(false);
+  const [showStartDateInput, setShowStartDateInput] = useState(false);
+  const [showEndDateInput, setShowEndDateInput] = useState(false);
 
-  const [localSearchValues, setLocalSearchValues] = useState<{
-    name: string;
-    size: string;
-    type: string;
-    createdAt: Date | null;
-    modifiedAt: Date | null;
-  }>({
-    name: externalSearchValues?.name || '',
-    size: externalSearchValues?.size || '',
-    type: externalSearchValues?.type || '',
-    createdAt: externalSearchValues?.createdAt || null,
-    modifiedAt: externalSearchValues?.modifiedAt || null,
-  });
+  const filterChips = useMemo(() => {
+    const chips: JSX.Element[] = [];
 
-  type FieldKey = 'name' | 'size' | 'type' | 'createdAt' | 'modifiedAt';
+    if (fileFilters.state.name) {
+      chips.push(
+        <Chip
+          key="name"
+          {...chipProps}
+          label={`Name: ${fileFilters.state.name}`}
+          onDelete={() => {
+            fileFilters.setState({ name: "" });
+            setShowNameInput(false);
+          }}
+        />
+      );
+    }
+    if (fileFilters.state.size) {
+      chips.push(
+        <Chip
+          key="size"
+          {...chipProps}
+          label={`Taille: ${fileFilters.state.size}`}
+          onDelete={() => {
+            fileFilters.setState({ size: "" });
+            setShowSizeInput(false);
+          }}
+        />
+      );
+    }
+    if (fileFilters.state.type && fileFilters.state.type.length) {
+      chips.push(
+        <Chip
+          key="type"
+          {...chipProps}
+          label={`Type: ${fileFilters.state.type.join(", ")}`}
+          onDelete={() => {
+            fileFilters.setState({ type: [] });
+            setShowTypeInput(false);
+          }}
+        />
+      );
+    }
+    if (fileFilters.state.startDate) {
+      const parsedStartDate = dayjs(fileFilters.state.startDate, "DD/MM/YYYY", true);
+      const displayStartDate = parsedStartDate.isValid()
+        ? parsedStartDate.format("DD/MM/YYYY")
+        : dayjs(fileFilters.state.startDate).format("DD/MM/YYYY");
 
-  const handleToggleSearchField = (field: FieldKey) => {
-    setExpandedSearchFields((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
+      chips.push(
+        <Chip
+          key="startDate"
+          {...chipProps}
+          label={`Date de création: ${displayStartDate}`}
+          onDelete={() => {
+            fileFilters.setState({ startDate: null });
+            setShowStartDateInput(false);
+          }}
+        />
+      );
+    }
+    if (fileFilters.state.endDate) {
+      const parsedEndDate = dayjs(fileFilters.state.endDate, "DD/MM/YYYY", true);
+      const displayEndDate = parsedEndDate.isValid()
+        ? parsedEndDate.format("DD/MM/YYYY")
+        : dayjs(fileFilters.state.endDate).format("DD/MM/YYYY");
 
-  const handleSelectAllRows = (checked: boolean) => {
-    setLocalSearchValues({
-      name: '',
-      size: '',
-      type: '',
-      createdAt: null,
-      modifiedAt: null,
-    });
-    setExpandedSearchFields({
-      name: false,
-      size: false,
-      type: false,
-      createdAt: false,
-      modifiedAt: false,
-    });
-    onSearchColumnChange?.('name', '');
-    onSearchColumnChange?.('size', '');
-    onSearchColumnChange?.('type', '');
-    onSearchColumnChange?.('createdAt', null);
-    onSearchColumnChange?.('modifiedAt', null);
-    onSelectAllRows?.(checked);
-  };
-
-  const handleTextChange = (columnId: 'name' | 'size' | 'type', value: string) => {
-    setLocalSearchValues((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }));
-    onSearchColumnChange?.(columnId, value);
-  };
-
-  const handleDateChange = (columnId: 'createdAt' | 'modifiedAt', dateValue: Date | null) => {
-    setLocalSearchValues((prev) => ({
-      ...prev,
-      [columnId]: dateValue,
-    }));
-    onSearchColumnChange?.(columnId, dateValue);
-  };
+      chips.push(
+        <Chip
+          key="endDate"
+          {...chipProps}
+          label={`Date de dernière modification: ${displayEndDate}`}
+          onDelete={() => {
+            fileFilters.setState({ endDate: null });
+            setShowEndDateInput(false);
+          }}
+        />
+      );
+    }
+    return chips;
+  }, [fileFilters]);
 
   return (
-    <TableHead sx={sx}>
-      <TableRow>
-        {onSelectAllRows ? (
-          <TableCell padding="checkbox">
-            <Checkbox
-              indeterminate={!!numSelected && numSelected < rowCount}
-              checked={!!rowCount && numSelected === rowCount}
-              onChange={(event) => handleSelectAllRows(event.target.checked)}
-              inputProps={{
-                name: 'select-all-rows',
-                'aria-label': 'select all rows',
-              }}
-            />
-          </TableCell>
-        ):(
-          <>
-          </>
-        )}
-        {headLabel.map((headCell) => {
-          const isActiveSort = orderBy === headCell.id;
-          const sortDirection = isActiveSort ? order : false;
-          return (
-            <TableCell key={headCell.id} align="left" sortDirection={sortDirection} sx={{ width: headCell.width }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <Box sx={{ textAlign: 'left', width: '100%' }}>
-                  {onSort ? (
+    <TableHead
+      sx={{
+        position: "sticky",
+        top: 0,
+        backgroundColor: "#fff",
+        zIndex: 2,
+      }}
+    >
+      <TableRow
+        sx={{
+          height: 50,
+          "& .MuiTableCell-root": { padding: "5px 10px" },
+        }}
+      >
+        {columns.map((col) => {
+          if (col.id === "select") {
+            return (
+              <TableCell key="select" width={col.width} padding="checkbox">
+                <Checkbox
+                  indeterminate={numSelected > 0 && numSelected < rowCount}
+                  checked={rowCount > 0 && numSelected === rowCount}
+                  onChange={(event) => onSelectAllRows?.(event.target.checked)}
+                />
+              </TableCell>
+            );
+          }
+          if (col.id === "actions") {
+            return (
+              <TableCell
+                key={col.id}
+                width={col.width}
+                sx={{ ...col.sx, textAlign: "right" }}
+                sortDirection={orderBy === col.id ? order : false}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: -0.3,
+                  }}
+                >
+                  <Box sx={{ display: "inline-flex", alignItems: "center", p: 0 }}>
                     <TableSortLabel
-                      hideSortIcon
-                      active={isActiveSort}
-                      direction={isActiveSort ? order : 'asc'}
-                      onClick={() => onSort(headCell.id)}
-                      sx={{ justifyContent: 'flex-start' }}
+                      active={orderBy === col.id}
+                      direction={orderBy === col.id ? order : "asc"}
+                      onClick={() => onSort(col.id)}
+                      sx={{ lineHeight: 1, p: 0 }}
                     >
-                      {headCell.label}
-                      {isActiveSort ? (
-                        <Box sx={{ ...visuallyHidden }}>
-                          {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                        </Box>
-                      ):(
-                        <>
-                        </>
-                      )}
+                      {col.label}
                     </TableSortLabel>
-                  ) : (
-                    headCell.label
-                  )}
+                  </Box>
+                  <Box sx={{ height: "36px" }} />
                 </Box>
-                {numSelected === 0 ?
-                  (['name', 'size', 'type', 'createdAt', 'modifiedAt'] as FieldKey[]).includes(headCell.id as FieldKey) ? (
-                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleToggleSearchField(headCell.id as FieldKey)}
-                        color={expandedSearchFields[headCell.id as FieldKey] ? 'primary' : 'default'}
-                      >
-                        <FontAwesomeIcon icon={faSearch} size="xs" />
-                      </IconButton>
-                      {expandedSearchFields[headCell.id as FieldKey] &&
-                        (['name', 'size', 'type'] as FieldKey[]).includes(headCell.id as FieldKey) ? (
-                          <TextField
-                            variant="outlined"
-                            size="small"
-                            value={localSearchValues[headCell.id as 'name' | 'size' | 'type']}
-                            onChange={(e) => handleTextChange(headCell.id as 'name' | 'size' | 'type', e.target.value)}
-                            placeholder={`Rechercher par ${headCell.label.toLowerCase()}...`}
-                            sx={{
-                              ml: 1,
-                              '& .MuiOutlinedInput-root': {
-                                padding: '2px 8px',
-                                height: '28px',
-                              },
-                              width: '100%',
-                            }}
+              </TableCell>
+            );
+          }
+          return (
+            <TableCell
+              key={col.id}
+              width={col.width}
+              sx={col.sx}
+              sortDirection={orderBy === col.id ? order : false}
+              align="left"
+            >
+              <Box sx={{ display: "flex", flexDirection: "column", gap: -0.3 }}>
+                <Box sx={{ display: "inline-flex", alignItems: "center", p: 0 }}>
+                  <TableSortLabel
+                    active={orderBy === col.id}
+                    direction={orderBy === col.id ? order : "asc"}
+                    onClick={() => onSort(col.id)}
+                    sx={{ lineHeight: 1, p: 0 }}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+                {(() => {
+                  switch (col.id) {
+                    case "name":
+                      return showNameInput ? (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          autoFocus
+                          value={fileFilters.state.name}
+                          onChange={(e) =>
+                            fileFilters.setState({ name: e.target.value })
+                          }
+                          onBlur={() => {
+                            if (!fileFilters.state.name) setShowNameInput(false);
+                          }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <FontAwesomeIcon icon={faSearch} />
+                              </InputAdornment>
+                            ),
+                            sx: {
+                              "& fieldset": { border: "none" },
+                              backgroundColor: "background.neutral",
+                              borderRadius: 1,
+                            },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowNameInput(true)}
+                          sx={{
+                            cursor: "pointer",
+                            backgroundColor: "background.neutral",
+                            borderRadius: 1,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case "size":
+                      return showSizeInput ? (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          autoFocus
+                          value={fileFilters.state.size}
+                          onChange={(e) =>
+                            fileFilters.setState({ size: e.target.value })
+                          }
+                          onBlur={() => {
+                            if (!fileFilters.state.size) setShowSizeInput(false);
+                          }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <FontAwesomeIcon icon={faSearch} />
+                              </InputAdornment>
+                            ),
+                            sx: {
+                              "& fieldset": { border: "none" },
+                              backgroundColor: "background.neutral",
+                              borderRadius: 1,
+                            },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowSizeInput(true)}
+                          sx={{
+                            cursor: "pointer",
+                            backgroundColor: "background.neutral",
+                            borderRadius: 1,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case "type":
+                      return showTypeInput ? (
+                        <FormControl fullWidth size="small">
+                          <Select
                             autoFocus
-                          />
-                        ) : (
-                          <>
-                          </>
-                        )}
-                      {expandedSearchFields[headCell.id as FieldKey] &&
-                        (['createdAt', 'modifiedAt'] as FieldKey[]).includes(headCell.id as FieldKey) ? (
-                          <Box sx={{ ml: 1 }}>
-                            <DatePicker
-                              label=""
-                              format="dd/MM/yyyy"
-                              value={
-                                headCell.id === 'createdAt'
-                                  ? localSearchValues.createdAt
-                                    ? dayjs(localSearchValues.createdAt)
-                                    : null
-                                  : localSearchValues.modifiedAt
-                                  ? dayjs(localSearchValues.modifiedAt)
-                                  : null
+                            value={fileFilters.state.type[0] || ""}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                fileFilters.setState({ type: [e.target.value] });
+                              } else {
+                                fileFilters.setState({ type: [] });
                               }
-                              onChange={(newValue: Dayjs | null) =>
-                                handleDateChange(headCell.id as 'createdAt' | 'modifiedAt', newValue ? newValue.toDate() : null)
-                              }
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  sx: {
-                                    '& .MuiOutlinedInput-root': {
-                                      padding: '2px 8px',
-                                      height: '28px',
-                                    },
-                                  },
-                                },
-                              }}
-                            />
-                          </Box>
-                        ) : (
-                          <>
-                          </>
-                        )}
-                    </Box>
-                  ) : (
-                    <>
-                    </>
-                  ) : (
-                    <>
-                    </>
-                  )}
+                            }}
+                            onClose={() => {
+                              if (!fileFilters.state.type.length)
+                                setShowTypeInput(false);
+                            }}
+                            input={<OutlinedInput label="Type" />}
+                            sx={{
+                              "& fieldset": { border: "none" },
+                              backgroundColor: "background.neutral",
+                              borderRadius: 1,
+                            }}
+                          >
+                            <MenuItem value="">
+                              <em>Tous</em>
+                            </MenuItem>
+                            {FILE_TYPE_OPTIONS.map((option) => (
+                              <MenuItem key={option} value={option}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      ) : (
+                        <Box
+                          onClick={() => setShowTypeInput(true)}
+                          sx={{
+                            cursor: "pointer",
+                            backgroundColor: "background.neutral",
+                            borderRadius: 1,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case "startDate":
+                      return showStartDateInput ? (
+                        <DatePicker
+                          autoFocus
+                          value={
+                            fileFilters.state.startDate
+                              ? dayjs(fileFilters.state.startDate, "DD/MM/YYYY")
+                              : null
+                          }
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              fileFilters.setState({
+                                startDate: newValue.format("DD/MM/YYYY"),
+                              });
+                            } else {
+                              fileFilters.setState({ startDate: "" });
+                            }
+                          }}
+                          onClose={() => {
+                            if (!fileFilters.state.startDate)
+                              setShowStartDateInput(false);
+                          }}
+                          format="DD/MM/YYYY"
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: "small",
+                              sx: {
+                                "& fieldset": { border: "none" },
+                                backgroundColor: "background.neutral",
+                                borderRadius: 1,
+                              },
+                              InputProps: {
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <FontAwesomeIcon icon={faSearch} />
+                                  </InputAdornment>
+                                ),
+                              },
+                            },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowStartDateInput(true)}
+                          sx={{
+                            cursor: "pointer",
+                            backgroundColor: "background.neutral",
+                            borderRadius: 1,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    case "endDate":
+                      return showEndDateInput ? (
+                        <DatePicker
+                          autoFocus
+                          value={
+                            fileFilters.state.endDate
+                              ? dayjs(fileFilters.state.endDate, "DD/MM/YYYY")
+                              : null
+                          }
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              fileFilters.setState({
+                                endDate: newValue.format("DD/MM/YYYY"),
+                              });
+                            } else {
+                              fileFilters.setState({ endDate: "" });
+                            }
+                          }}
+                          onClose={() => {
+                            if (!fileFilters.state.endDate)
+                              setShowEndDateInput(false);
+                          }}
+                          format="DD/MM/YYYY"
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: "small",
+                              sx: {
+                                "& fieldset": { border: "none" },
+                                backgroundColor: "background.neutral",
+                                borderRadius: 1,
+                              },
+                              InputProps: {
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <FontAwesomeIcon icon={faSearch} />
+                                  </InputAdornment>
+                                ),
+                              },
+                            },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          onClick={() => setShowEndDateInput(true)}
+                          sx={{
+                            cursor: "pointer",
+                            backgroundColor: "background.neutral",
+                            borderRadius: 1,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faSearch} />
+                        </Box>
+                      );
+                    default:
+                      return null;
+                  }
+                })()}
               </Box>
             </TableCell>
           );
         })}
       </TableRow>
+      {filterChips.length > 0 ? (
+        <TableRow>
+          <TableCell colSpan={columns.length}>
+            <FiltersResult
+              totalResults={totalResults}
+              onReset={() => {
+                fileFilters.onResetState();
+                setShowNameInput(false);
+                setShowSizeInput(false);
+                setShowTypeInput(false);
+                setShowStartDateInput(false);
+                setShowEndDateInput(false);
+              }}
+            >
+              <FiltersBlock label="" isShow>
+                <Stack direction="row" spacing={1}>
+                  {filterChips}
+                </Stack>
+              </FiltersBlock>
+            </FiltersResult>
+          </TableCell>
+        </TableRow>
+      ) : (
+        <>
+        </>
+      )}
     </TableHead>
   );
 }

@@ -78,7 +78,7 @@ const _abonnementItems = [...Array(12)].map((_, index) => {
 
   return {
     id: _mock.id(index),
-    title: `Abonnement ${planType}`,
+    title: `Abonnement ${planType} ${index}`,
     shortDescription: `Courte description du plan ${planType}.`,
     fullDescription: `Description complète du plan ${planType}, incluant toutes les fonctionnalités et avantages.`,
     type: planType,

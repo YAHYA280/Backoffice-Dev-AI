@@ -714,7 +714,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           <Typography variant="h4" sx={{ fontWeight: 'fontWeightBold' }}>
             Niveaux
           </Typography>
-          {onAddClick && (
+          {onAddClick ? (
             <Button
               variant="contained"
               color="primary"
@@ -733,6 +733,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
             >
               Ajouter un niveau
             </Button>
+          ) : (
+            <></>
           )}
         </Stack>
         {renderBreadcrumbs()}
@@ -809,7 +811,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                     {table.selected.length > 1 ? 's' : ''}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    {onDeleteRows && (
+                    {onDeleteRows ? (
                       <Button
                         variant="contained"
                         color="error"
@@ -819,6 +821,8 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                       >
                         Supprimer
                       </Button>
+                    ) : (
+                      <></>
                     )}
                   </Box>
                 </Box>

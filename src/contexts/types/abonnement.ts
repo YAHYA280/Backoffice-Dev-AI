@@ -1,5 +1,7 @@
 // ----------------------------------------------------------------------
 
+import type { IAbonnementSubscribers } from './common';
+
 export type IAbonnementFilters = {
   types: string[];
   publishOptions: string;
@@ -15,12 +17,7 @@ export type IPromoDetails = {
   discountPercentage?: number;
   validUntil?: string;
 };
-export type IAbonnementSubscribers = {
-  id: string;
-  name: string;
-  role: string;
-  avatarUrl: string;
-};
+
 export type IAbonnementItem = {
   id: string;
   title: string;

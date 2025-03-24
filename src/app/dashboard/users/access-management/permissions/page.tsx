@@ -3,9 +3,9 @@ import { UserPermissionListView } from "src/shared/sections/users-management/per
 // ----------------------------------------------------------------------
 
 export const metadata = {
-  title: 'Utilisateurs: Gestion des Rôles',
+  title: 'Utilisateurs: Gestion des permissions',
 };
 
-export default function RolesPage() {
+export default function PermissionsPage() {
   return <UserPermissionListView />;
 }

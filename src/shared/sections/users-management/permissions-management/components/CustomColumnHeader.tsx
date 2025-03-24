@@ -3,18 +3,37 @@ import type { IPermission } from 'src/shared/_mock/_permission';
 
 import { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faSearch, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import { DateField } from '@mui/x-date-pickers/DateField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Box, TextField, IconButton, Typography } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import {
+  Box,
+  Select,
+  MenuItem,
+  TextField,
+  IconButton,
+  Typography,
+  FormControl,
+} from '@mui/material';
+
+import { LocalizationProvider } from 'src/shared/locales';
+
+// Add the IRoleItem interface
+interface IRoleItem {
+  id: string;
+  name: string;
+  description: string;
+  permissionLevel: string[];
+  createdAt: Date;
+}
 
 interface CustomColumnHeaderProps {
   field: keyof IPermission;
   headerName: string;
   onSearch: (field: keyof IPermission, value: string | Date | null) => void;
   isDatePicker?: boolean;
+  isRoleSelect?: boolean;
+  roleData?: IRoleItem[];
 }
 
 const CustomColumnHeader = ({
@@ -22,20 +41,29 @@ const CustomColumnHeader = ({
   headerName,
   onSearch,
   isDatePicker = false,
+  isRoleSelect = false,
+  roleData = [],
 }: CustomColumnHeaderProps) => {
   const [searchValue, setSearchValue] = useState<string>('');
   const [dateValue, setDateValue] = useState<Dayjs | null>(null);
   const [isInputVisible, setIsInputVisible] = useState<boolean>(false);
+  const [selectedRole, setSelectedRole] = useState<string>('');
   const calendarButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleToggleInput = () => {
-    if (!isDatePicker) {
+    if (!isDatePicker && !isRoleSelect) {
       setIsInputVisible((prev) => !prev);
     }
   };
 
   const handleToggleDateField = () => {
     if (isDatePicker) {
+      setIsInputVisible((prev) => !prev);
+    }
+  };
+
+  const handleToggleRoleSelect = () => {
+    if (isRoleSelect) {
       setIsInputVisible((prev) => !prev);
     }
   };
@@ -48,11 +76,21 @@ const CustomColumnHeader = ({
     }
   };
 
+  const handleRoleChange = (event: any) => {
+    const newValue = event.target.value;
+    setSelectedRole(newValue);
+    onSearch(field, newValue);
+  };
+
   const handleClearSearch = () => {
     if (isDatePicker) {
       setDateValue(null);
       setIsInputVisible(false);
       onSearch(field, null);
+    } else if (isRoleSelect) {
+      setSelectedRole('');
+      setIsInputVisible(false);
+      onSearch(field, '');
     } else {
       setSearchValue('');
       setIsInputVisible(false);
@@ -62,12 +100,12 @@ const CustomColumnHeader = ({
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    setSearchValue(event.target.value);
-    onSearch(field, newValue); 
+    setSearchValue(newValue);
+    onSearch(field, newValue);
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider>
       <Box
         sx={{
           display: 'flex',
@@ -102,14 +140,13 @@ const CustomColumnHeader = ({
             gap: 1,
           }}
         >
-          {/* Search Icon for Regular Fields */}
+          {/* Search Icon for Regular Fields and Role Select */}
           {!isDatePicker ? (
             <IconButton
               size="small"
-              onClick={handleToggleInput}
+              onClick={isRoleSelect ? handleToggleRoleSelect : handleToggleInput}
               sx={{
                 color: 'primary.main',
-                
               }}
             >
               <FontAwesomeIcon icon={faSearch} size="xs" />
@@ -136,18 +173,18 @@ const CustomColumnHeader = ({
                   color: 'primary.main',
                 }}
               >
-                <FontAwesomeIcon icon={faCalendar} size="xs" />
+                <FontAwesomeIcon icon={faSearch} size="xs" />
               </IconButton>
             ) : (
               <></>
             )}
 
             {/* DateField (Only appears when clicking calendar) */}
-            {(isDatePicker && isInputVisible) ? (
+            {isDatePicker && isInputVisible ? (
               <DateField
                 value={dateValue}
                 onChange={handleDateChange}
-                format="DD/MM/YYYY" 
+                format="DD/MM/YYYY"
                 size="small"
                 fullWidth
                 sx={{
@@ -173,7 +210,7 @@ const CustomColumnHeader = ({
           </Box>
 
           {/* Regular Search Input (Only appears when clicking search icon) */}
-          {(!isDatePicker && isInputVisible) ? (
+          {!isDatePicker && !isRoleSelect && isInputVisible ? (
             <TextField
               autoFocus
               variant="outlined"
@@ -194,9 +231,50 @@ const CustomColumnHeader = ({
                   </IconButton>
                 ) : (
                   <></>
-                )
+                ),
               }}
             />
+          ) : (
+            <></>
+          )}
+
+          {/* Role Select Dropdown (Only appears when clicking search icon for roles) */}
+          {isRoleSelect && isInputVisible ? (
+            <FormControl
+              size="small"
+              sx={{
+                width: '120px',
+                '& .MuiOutlinedInput-root': {
+                  height: '25px',
+                },
+              }}
+            >
+              <Select
+                value={selectedRole}
+                onChange={handleRoleChange}
+                displayEmpty
+                autoFocus
+                endAdornment={
+                  selectedRole ? (
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      sx={{ position: 'absolute', right: '24px' }}
+                    >
+                      <FontAwesomeIcon icon={faTimes} size="xs" />
+                    </IconButton>
+                  ) : (
+                    <></>
+                  )
+                }
+              >
+                {roleData.map((role) => (
+                  <MenuItem key={role.id} value={role.name}>
+                    {role.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           ) : (
             <></>
           )}

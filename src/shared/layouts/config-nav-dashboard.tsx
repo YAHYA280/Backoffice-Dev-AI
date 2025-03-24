@@ -156,6 +156,11 @@ export const navData = [
           },
         ],
       },
+      {
+        title: 'Configuration',
+        path: paths.dashboard.configuration.root,
+        icon: ICONS.settings,
+      },
     ],
   },
   {

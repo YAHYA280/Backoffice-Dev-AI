@@ -1,5 +1,5 @@
-import type { IAbonnementFilters } from 'src/types/abonnement';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { IAbonnementFilters } from 'src/contexts/types/abonnement';
 
 import { useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

@@ -1,5 +1,5 @@
-import type { IAbonnementItem } from 'src/types/abonnement';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { IAbonnementItem } from 'src/contexts/types/abonnement';
 
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';

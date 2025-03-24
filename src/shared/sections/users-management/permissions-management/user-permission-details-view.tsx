@@ -1,405 +1,315 @@
 import type { IPermission } from 'src/shared/_mock/_permission';
 
 import React from 'react';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimes, faCog, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
+import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import { alpha } from '@mui/material/styles';
+import Drawer from '@mui/material/Drawer';
+import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import DialogTitle from '@mui/material/DialogTitle';
-import CardContent from '@mui/material/CardContent';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+import ListItemText from '@mui/material/ListItemText';
+import { alpha, useTheme } from '@mui/material/styles';
 
-type PermissionDetailsDialogProps = {
+import { varFade } from 'src/shared/components/animate/variants/fade';
+
+type PermissionDetailsDrawerProps = {
   open: boolean;
   onClose: () => void;
   permission: IPermission | null;
 };
 
-export function UserPermissionDetailsDialog({ open, onClose, permission }: PermissionDetailsDialogProps) {
+export function UserPermissionDetailsDrawer({ open, onClose, permission }: PermissionDetailsDrawerProps) {
+  const theme = useTheme();
+
   if (!permission) return null;
 
+  // Format date if available
+  const formattedDate = permission.createdAt
+    ? new Date(permission.createdAt).toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : 'Non définie';
+
   return (
-    <Dialog
+    <Drawer
+      anchor="right"
       open={open}
       onClose={onClose}
-      fullWidth
-      maxWidth="md"
       PaperProps={{
         sx: {
-          borderRadius: 2,
-          boxShadow: (theme) => `0 16px 32px 0 ${alpha(theme.palette.primary.dark, 0.12)}`,
+          width: { xs: '100%', sm: 450 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
         },
       }}
     >
-      <DialogTitle
+      {/* Header with background and icon */}
+      <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
         sx={{
-          m: 0,
           p: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          color: 'white',
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Détails sur le permission
-          </Typography>
-        </Stack>
         <IconButton
-          aria-label="close"
           onClick={onClose}
-          size="small"
+          edge="end"
           sx={{
-            bgcolor: 'background.paper',
-            boxShadow: (theme) => `0 2px 8px 0 ${alpha(theme.palette.common.black, 0.08)}`,
-            transition: 'all 0.2s',
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
             '&:hover': {
-              bgcolor: 'background.default',
-              transform: 'translateY(-2px)',
-              boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.common.black, 0.12)}`,
+              backgroundColor: alpha('#fff', 0.1),
             },
           }}
         >
           <FontAwesomeIcon icon={faTimes} />
         </IconButton>
-      </DialogTitle>
 
-      <DialogContent
-        sx={{ p: 3, bgcolor: (theme) => alpha(theme.palette.background.default, 0.4) }}
-      >
-        <Grid container spacing={3} sx={{ mt: 0 }}>
-          {/* Nom du permission  */}
-          <Grid item xs={12} md={6}>
-            <Card
-              elevation={0}
-              sx={{
-                height: '100%',
-                borderRadius: 2,
-                border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                transition: 'all 0.3s ease-in-out',
-                backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: (theme) => `0 12px 24px 0 ${alpha(theme.palette.primary.main, 0.1)}`,
-                },
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    color: 'text.secondary',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                    fontSize: '0.75rem',
-                    mb: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    '&::before': {
-                      content: '""',
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      mr: 1,
-                    },
-                  }}
-                >
-                  Nom de la permission
-                </Typography>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    color: 'text.primary',
-                    mb: 1,
-                    letterSpacing: 0.2,
-                  }}
-                >
-                  {permission.name}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              Détails sur la permission
+            </Typography>
 
-          {/* Description */}
-          <Grid item xs={12} md={6}>
-            <Card
-              elevation={0}
-              sx={{
-                height: '100%',
-                borderRadius: 2,
-                border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                transition: 'all 0.3s ease-in-out',
-                backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: (theme) => `0 12px 24px 0 ${alpha(theme.palette.primary.main, 0.1)}`,
-                },
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    color: 'text.secondary',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                    fontSize: '0.75rem',
-                    mb: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    '&::before': {
-                      content: '""',
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      mr: 1,
-                    },
-                  }}
-                >
-                  Description
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.primary',
-                    lineHeight: 1.6,
-                    minHeight: '80px',
-                  }}
-                >
-                  {permission.description || (
-                    <Box
-                      component="span"
-                      sx={{
-                        fontStyle: 'italic',
-                        color: 'text.disabled',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '80px',
-                        border: (theme) => `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-                        borderRadius: 1,
-                      }}
-                    >
-                      Aucune description disponible
-                    </Box>
-                  )}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                label={permission.name}
+                size="small"
+                sx={{
+                  bgcolor: alpha('#fff', 0.2),
+                  color: 'white',
+                  fontWeight: 'fontWeightMedium',
+                  backdropFilter: 'blur(6px)',
+                }}
+              />
+            </Stack>
+          </Box>
+        </Stack>
+      </Box>
 
-          {/* Rôles associés */}
-          <Grid item xs={12}>
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 2,
-                border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                transition: 'all 0.3s ease-in-out',
-                backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: (theme) => `0 12px 24px 0 ${alpha(theme.palette.primary.main, 0.1)}`,
-                },
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    color: 'text.secondary',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                    fontSize: '0.75rem',
-                    mb: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    '&::before': {
-                      content: '""',
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      mr: 1,
-                    },
-                  }}
-                >
-                  Rôles associés
-                </Typography>
-                {permission.roles && permission.roles.length > 0 ? (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {permission.roles.map((role, index) => (
-                      <Chip
-                        key={index}
-                        label={role}
-                        variant="filled"
-                        sx={{
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.dark',
-                          fontWeight: 600,
-                          borderRadius: 1.5,
-                          py: 0.5,
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
-                            transform: 'translateY(-2px)',
-                            boxShadow: (theme) =>
-                              `0 4px 8px 0 ${alpha(theme.palette.primary.main, 0.2)}`,
-                          },
-                        }}
-                      />
-                    ))}
-                  </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      color: 'text.secondary',
-                      fontStyle: 'italic',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      p: 3,
-                      border: (theme) => `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-                      borderRadius: 1,
-                    }}
-                  >
-                    Aucune rôle associé
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Date de création */}
-          <Grid item xs={12} md={6}>
-            <Card
-              elevation={0}
-              sx={{
-                height: '100%',
-                borderRadius: 2,
-                border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                transition: 'all 0.3s ease-in-out',
-                backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: (theme) => `0 12px 24px 0 ${alpha(theme.palette.primary.main, 0.1)}`,
-                },
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    color: 'text.secondary',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                    fontSize: '0.75rem',
-                    mb: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    '&::before': {
-                      content: '""',
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      mr: 1,
-                    },
-                  }}
-                >
-                  Date de création
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: 'text.primary',
-                    lineHeight: 1.6,
-                    minHeight: '80px',
-                  }}
-                >
-                  {permission.createdAt ? (
-                    new Date(permission.createdAt).toLocaleDateString('fr-FR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  ) : (
-                    <Box
-                      component="span"
-                      sx={{
-                        fontStyle: 'italic',
-                        color: 'text.disabled',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '80px',
-                        border: (theme) => `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-                        borderRadius: 1,
-                      }}
-                    >
-                      Aucune date de création disponible
-                    </Box>
-                  )}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </DialogContent>
-
-      <DialogActions
-        sx={{
-          p: 2.5,
-          px: 3,
-          bgcolor: (theme) => alpha(theme.palette.background.default, 0.8),
-          borderTop: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-        }}
-      >
-        <Button
-          onClick={onClose}
-          variant="contained"
+      {/* Main content */}
+      <Box sx={{ p: 3 }}>
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
           sx={{
-            px: 3,
-            py: 1,
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
             borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.3)}`,
-            transition: 'all 0.2s',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.4)}`,
-            },
           }}
         >
-          Fermer
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Description de la permission
+          </Typography>
+          <Typography variant="body2">
+            {permission.description || 'Aucune description disponible.'}
+          </Typography>
+        </Paper>
+
+        {/* Rôles associés */}
+        <Box
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Rôles associés
+          </Typography>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.5,
+              borderRadius: 2,
+              boxShadow: theme.customShadows?.z8,
+            }}
+          >
+            { ( permission.roles && permission.roles.length > 0 ) ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {permission.roles.map((role, index) => (
+                  <Chip
+                    key={index}
+                    label={role}
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.dark',
+                      fontWeight: 600,
+                      borderRadius: 1.5,
+                      py: 0.5,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
+                        transform: 'translateY(-2px)',
+                        boxShadow: `0 4px 8px 0 ${alpha(theme.palette.primary.main, 0.2)}`,
+                      },
+                    }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  p: 3,
+                  border: `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
+                  borderRadius: 1,
+                }}
+              >
+                Aucun rôle associé
+              </Box>
+            )}
+          </Paper>
+        </Box>
+
+        {/* Detailed Information List */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Informations détaillées
+          </Typography>
+
+          <List
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCog} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Nom de la permission
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {permission.name}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.warning.main, 0.1),
+                        color: 'warning.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCalendarAlt} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Date de création
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {formattedDate}
+                  </Typography>
+                }
+              />
+            </ListItem>
+          </List>
+        </Box>
+
+        {/* Action Button */}
+        <Box
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          sx={{ mt: 4, textAlign: 'center', display: 'flex', justifyContent: 'flex-end' }}
+        >
+          <Button
+            onClick={onClose}
+            variant="contained"
+            sx={{
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              color: 'primary.contrastText',
+              backgroundColor: 'primary.main',
+              boxShadow: theme.customShadows?.primary,
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+                transform: 'translateY(-2px)',
+              },
+            }}
+          >
+            Fermer
+          </Button>
+        </Box>
+      </Box>
+    </Drawer>
   );
 }

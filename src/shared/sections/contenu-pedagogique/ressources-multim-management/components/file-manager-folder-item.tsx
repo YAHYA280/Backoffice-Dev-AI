@@ -29,8 +29,6 @@ import { usePopover, CustomPopover } from 'src/shared/components/custom-popover'
 
 import { FileManagerNewFolderDialog } from './file-manager-new-folder-dialog';
 
-// ----------------------------------------------------------------------
-
 type Props = CardProps & {
   selected?: boolean;
   onDelete: () => void;
@@ -46,28 +44,22 @@ export function FileManagerFolderItem({
   onDelete,
   ...other
 }: Props) {
-
   const popover = usePopover();
-
   const confirm = useBoolean();
-
   const details = useBoolean();
-
   const checkbox = useBoolean();
-
   const editFolder = useBoolean();
-
-
   const [folderName, setFolderName] = useState(folder.name);
 
-  const handleChangeFolderName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setFolderName(event.target.value);
-  }, []);
-
+  const handleChangeFolderName = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setFolderName(event.target.value);
+    },
+    []
+  );
 
   const renderAction = (
     <Stack direction="row" alignItems="center" sx={{ top: 8, right: 8, position: 'absolute' }}>
-
       <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
         <FontAwesomeIcon icon={faEllipsisV} />
       </IconButton>
@@ -75,11 +67,7 @@ export function FileManagerFolderItem({
   );
 
   const renderIcon = (
-    <Box
-      onMouseEnter={checkbox.onTrue}
-      onMouseLeave={checkbox.onFalse}
-      sx={{ width: 36, height: 36 }}
-    >
+    <Box onMouseEnter={checkbox.onTrue} onMouseLeave={checkbox.onFalse} sx={{ width: 36, height: 36 }}>
       {(checkbox.value || selected) && onSelect ? (
         <Checkbox
           checked={selected}
@@ -97,6 +85,7 @@ export function FileManagerFolderItem({
       )}
     </Box>
   );
+
   const renderText = (
     <ListItemText
       onClick={details.onTrue}
@@ -104,16 +93,7 @@ export function FileManagerFolderItem({
       secondary={
         <>
           {fData(folder.size)}
-          <Box
-            component="span"
-            sx={{
-              mx: 0.75,
-              width: 2,
-              height: 2,
-              borderRadius: '50%',
-              bgcolor: 'currentColor',
-            }}
-          />
+          <Box component="span" sx={{ mx: 0.75, width: 2, height: 2, borderRadius: '50%', bgcolor: 'currentColor' }} />
           {folder.totalFiles} fichiers
         </>
       }
@@ -170,14 +150,10 @@ export function FileManagerFolderItem({
         {...other}
       >
         {renderIcon}
-
         {renderAction}
-
         {renderText}
-
         {!!folder?.shared?.length && renderAvatar}
       </Paper>
-
       <CustomPopover
         open={popover.open}
         anchorEl={popover.anchorEl}
@@ -185,19 +161,17 @@ export function FileManagerFolderItem({
         slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuList>
-
           <MenuItem
             onClick={() => {
               popover.onClose();
               editFolder.onTrue();
             }}
+            sx={{ color: 'error.main' }}
           >
             <FontAwesomeIcon icon={faPen} />
             Modifier
           </MenuItem>
-
           <Divider sx={{ borderStyle: 'dashed' }} />
-
           <MenuItem
             onClick={() => {
               confirm.onTrue();
@@ -210,7 +184,6 @@ export function FileManagerFolderItem({
           </MenuItem>
         </MenuList>
       </CustomPopover>
-
       <FileManagerNewFolderDialog
         open={editFolder.value}
         onClose={editFolder.onFalse}
@@ -222,7 +195,6 @@ export function FileManagerFolderItem({
         folderName={folderName}
         onChangeFolderName={handleChangeFolderName}
       />
-
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

@@ -24,8 +24,6 @@ import { _cin, _parents } from 'src/shared/_mock';
 import { Label } from 'src/shared/components/label';
 import { Form, Field, schemaHelper } from 'src/shared/components/hook-form';
 
-// ----------------------------------------------------------------------
-
 export type NewUserSchemaType = zod.infer<typeof NewUserSchema>;
 
 export const NewUserSchema = zod.object({
@@ -36,9 +34,7 @@ export const NewUserSchema = zod.object({
     .email({ message: 'Email must be a valid email address!' }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   birthDate: zod.string().min(1, { message: 'La date de naissance est requise.' }),
-  country: schemaHelper.objectOrNull<string | null>({
-    message: { required_error: 'Country is required!' },
-  }),
+  country: schemaHelper.objectOrNull<string | null>({ message: { required_error: 'Country is required!' } }),
   address: zod.string().min(1, { message: 'Address is required!' }),
   company: zod.string().min(1, { message: 'Company is required!' }),
   state: zod.string().min(1, { message: 'State is required!' }),
@@ -52,20 +48,14 @@ export const NewUserSchema = zod.object({
   cinVerso: schemaHelper.file().optional(),
 });
 
-// ----------------------------------------------------------------------
-
 type Props = {
   currentUser?: IUserItem;
 };
 
 export function UserConsulterForm({ currentUser }: Props) {
   const router = useRouter();
-
-  const filteredParents = _parents; // No search needed in visualisation
-
-  // Get existing CIN data (using first mock entry)
+  const filteredParents = _parents;
   const existingCIN = _cin.length > 0 ? _cin[0] : null;
-
   const defaultValues = useMemo(
     () => ({
       status: currentUser?.status || '',
@@ -75,7 +65,7 @@ export function UserConsulterForm({ currentUser }: Props) {
       lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       phoneNumber: currentUser?.phoneNumber || '',
-      birthDate: currentUser?.birthDate || '',
+      birthDate: currentUser?.birthDate != null ? String(currentUser.birthDate) : '',
       country: currentUser?.country || '',
       state: currentUser?.state || '',
       city: currentUser?.city || '',
@@ -95,20 +85,17 @@ export function UserConsulterForm({ currentUser }: Props) {
     defaultValues,
   });
 
-
   const { watch, control } = methods;
   const values = watch();
 
   const avatarSrc =
-  typeof values.avatarUrl === 'object' && values.avatarUrl
-    ? URL.createObjectURL(values.avatarUrl)
-    : values.avatarUrl || undefined;
-
+    typeof values.avatarUrl === 'object' && values.avatarUrl
+      ? URL.createObjectURL(values.avatarUrl)
+      : values.avatarUrl || undefined;
 
   return (
     <Form methods={methods} onSubmit={() => {}}>
       <Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
-        {/* LEFT COLUMN */}
         <Grid xs={12} md={4}>
           <Card
             sx={{
@@ -131,22 +118,19 @@ export function UserConsulterForm({ currentUser }: Props) {
             ) : (
               <>
               </>
-            )
-          }
-
+            )}
             <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
               {values.avatarUrl ? (
                 <Box
-                    component="img"
-                    src={avatarSrc}
-                    alt="Avatar"
-                    sx={{ width: 120, height: 120, borderRadius: '50%', mx: 'auto' }}
+                  component="img"
+                  src={avatarSrc}
+                  alt="Avatar"
+                  sx={{ width: 120, height: 120, borderRadius: '50%', mx: 'auto' }}
                 />
               ) : (
                 <Typography variant="caption">Aucun avatar</Typography>
               )}
             </Box>
-
             {values.role === 'Parent' ? (
               <>
                 <Card
@@ -206,19 +190,15 @@ export function UserConsulterForm({ currentUser }: Props) {
                   ) : (
                     <>
                     </>
-                  )
-                }
+                  )}
                 </Card>
               </>
             ) : (
               <>
               </>
-            )
-          }
+            )}
           </Card>
         </Grid>
-
-        {/* RIGHT COLUMN */}
         <Grid xs={12} md={8}>
           <Card
             sx={{
@@ -234,21 +214,9 @@ export function UserConsulterForm({ currentUser }: Props) {
               columnGap={2}
               gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
             >
-              <Field.Text
-                name="firstName"
-                label="Prénom"
-                InputProps={{ readOnly: true }}
-              />
-              <Field.Text
-                name="lastName"
-                label="Nom"
-                InputProps={{ readOnly: true }}
-              />
-              <Field.Text
-                name="email"
-                label="Adresse e-mail"
-                InputProps={{ readOnly: true }}
-              />
+              <Field.Text name="firstName" label="Prénom" InputProps={{ readOnly: true }} />
+              <Field.Text name="lastName" label="Nom" InputProps={{ readOnly: true }} />
+              <Field.Text name="email" label="Adresse e-mail" InputProps={{ readOnly: true }} />
               <Field.Phone name="phoneNumber" label="Numéro de téléphone" disabled />
               <Controller
                 name="birthDate"
@@ -256,7 +224,7 @@ export function UserConsulterForm({ currentUser }: Props) {
                 render={({ field, fieldState }) => (
                   <DatePicker
                     label="Date de naissance"
-                    value={field.value ? dayjs(field.value, 'DD/MM/YYYY') : null}
+                    value={field.value ? dayjs(field.value) : null}
                     onChange={() => {}}
                     disabled
                     format="DD/MM/YYYY"
@@ -270,41 +238,17 @@ export function UserConsulterForm({ currentUser }: Props) {
                   />
                 )}
               />
-              <Field.CountrySelect
-                name="country"
-                label="Pays"
-                placeholder="Choisissez un pays"
-                disabled
-              />
-              <Field.Text
-                name="state"
-                label="Région"
-                InputProps={{ readOnly: true }}
-              />
-              <Field.Text
-                name="city"
-                label="Ville"
-                InputProps={{ readOnly: true }}
-              />
-              <Field.Text
-                name="address"
-                label="Adresse"
-                InputProps={{ readOnly: true }}
-              />
-              <Field.Text
-                name="zipCode"
-                label="Code postal"
-                InputProps={{ readOnly: true }}
-              />
+              <Field.CountrySelect name="country" label="Pays" placeholder="Choisissez un pays" disabled />
+              <Field.Text name="state" label="Région" InputProps={{ readOnly: true }} />
+              <Field.Text name="city" label="Ville" InputProps={{ readOnly: true }} />
+              <Field.Text name="address" label="Adresse" InputProps={{ readOnly: true }} />
+              <Field.Text name="zipCode" label="Code postal" InputProps={{ readOnly: true }} />
               {values.role === 'Enfant' ? (
                 <Controller
                   name="parentId"
                   control={control}
                   render={({ field, fieldState }) => {
-                    const defaultSelection =
-                      field.value
-                        ? filteredParents.find((p) => p.id === field.value)
-                        : filteredParents[0] || null;
+                    const defaultSelection = field.value ? filteredParents.find((p) => p.id === field.value) : filteredParents[0] || null;
                     return (
                       <TextField
                         label="Parent"
@@ -323,12 +267,9 @@ export function UserConsulterForm({ currentUser }: Props) {
               ) : (
                 <>
                 </>
-              )
-            }
+              )}
             </Box>
-
             <Box sx={{ flexGrow: 1 }} />
-
             <Box sx={{ textAlign: 'right', mt: 3 }}>
               <Button variant="outlined" onClick={() => router.push(paths.dashboard.users.accounts)}>
                 Retour

@@ -54,7 +54,7 @@ export function Upload({
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           {onRemoveAll && (
             <Button color="inherit" variant="outlined" size="small" onClick={onRemoveAll}>
-              Remove all
+              Supprimer tout
             </Button>
           )}
 

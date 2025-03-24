@@ -1,3 +1,5 @@
+import { paramCase } from 'src/utils/change-case';
+
 import { _id } from 'src/shared/_mock/assets';
 
 // ----------------------------------------------------------------------
@@ -102,6 +104,12 @@ export const paths = {
       faqs: `${ROOTS.DASHBOARD}/support/faqs`,
       chatbot: `${ROOTS.DASHBOARD}/support/chatbot`,
       tickets: `${ROOTS.DASHBOARD}/support/tickets`,
+    },
+    configuration: {
+      root: `${ROOTS.DASHBOARD}/configuration`,
+      new: `${ROOTS.DASHBOARD}/configuration/new`,
+      edit: (title: string) => `${ROOTS.DASHBOARD}/configuration/${paramCase(title)}/edit`,
+      details: (title: string) => `${ROOTS.DASHBOARD}/configuration/${paramCase(title)}`,
     },
     abonnements: {
       root: `${ROOTS.DASHBOARD}/abonnements`,

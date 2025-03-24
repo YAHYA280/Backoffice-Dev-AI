@@ -20,6 +20,7 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import roleData from 'src/shared/_mock/_role';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 import { permissionData, type IPermission } from 'src/shared/_mock/_permission';
 
@@ -31,8 +32,8 @@ import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 import CustomToolbar from '../components/CustomToolbar';
 import CustomColumnHeader from '../components/CustomColumnHeader';
 import { UserPermissionAddDialog } from '../user-permission-add-form';
-import { UserPermissionEditDialog } from '../user-permission-edit-form';
-import { UserPermissionDetailsDialog } from '../user-permission-details-view';
+import { UserPermissionEditDrawer } from '../user-permission-edit-form';
+import { UserPermissionDetailsDrawer } from '../user-permission-details-view';
 import {
   RenderCellName,
   RenderCellRoles,
@@ -245,6 +246,8 @@ export function UserPermissionListView() {
           field="roles"
           headerName={TABLE_HEAD[2].label}
           onSearch={handleColumnSearch}
+          isRoleSelect
+          roleData = {roleData}
         />
       ),
       renderCell: (params) => <RenderCellRoles params={params} />,
@@ -262,7 +265,7 @@ export function UserPermissionListView() {
         <Box sx={{ display: 'flex', gap: 1, zIndex: 1, position: 'sticky' }}>
           <Tooltip title="Voir détails">
             <IconButton size="small" onClick={() => handleViewRow(params.row.id)} color="info">
-              <FontAwesomeIcon icon={faEye} size="xs" />
+              <FontAwesomeIcon icon={faEye} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Modifier">
@@ -274,12 +277,12 @@ export function UserPermissionListView() {
               }}
               color="primary"
             >
-              <FontAwesomeIcon icon={faPen} size="xs" />
+              <FontAwesomeIcon icon={faPen} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Supprimer">
             <IconButton size="small" onClick={() => handleDeleteRow(params.row.id)} color="error">
-              <FontAwesomeIcon icon={faTrash} size="xs" />
+              <FontAwesomeIcon icon={faTrash} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -307,6 +310,13 @@ export function UserPermissionListView() {
               variant="contained"
               startIcon={<FontAwesomeIcon icon={faPlus} />}
               onClick={addPermissionDialog.onTrue}
+              sx={{
+                color: 'primary.contrastText',
+                backgroundColor: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.dark',
+                },
+              }}
             >
               Ajouter une permission
             </Button>
@@ -413,14 +423,14 @@ export function UserPermissionListView() {
         }}
       />
 
-      <UserPermissionEditDialog
+      <UserPermissionEditDrawer
         open={openEditDialog}
         onClose={handleCloseDialog}
         currentPermission={selectedEditPermission}
         onUpdatePermission={handleSaveEdit}
       />
 
-      <UserPermissionDetailsDialog
+      <UserPermissionDetailsDrawer
         open={openDetailsDialog}
         onClose={() => setOpenDetailsDialog(false)}
         permission={selectedPermissionDetails}

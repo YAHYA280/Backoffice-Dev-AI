@@ -1,5 +1,6 @@
-import { IKanban } from '../sections/support/tickets-management/types/kanban';
 import { _mock } from './_mock';
+
+import type { IKanban } from '../sections/support/tickets-management/types/kanban';
 
 // ----------------------------------------------------------------------
 

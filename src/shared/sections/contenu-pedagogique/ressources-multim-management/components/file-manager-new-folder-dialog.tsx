@@ -14,7 +14,6 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import DialogTitle from '@mui/material/DialogTitle';
-// For Select fields
 import FormControl from '@mui/material/FormControl';
 import Autocomplete from '@mui/material/Autocomplete';
 import DialogActions from '@mui/material/DialogActions';
@@ -22,7 +21,6 @@ import DialogContent from '@mui/material/DialogContent';
 
 import { Upload } from 'src/shared/components/upload';
 
-// --- Mock hierarchical data ---
 const hierarchy = [
   {
     niveau: 'Niveau 1',
@@ -88,8 +86,6 @@ export function FileManagerNewFolderDialog({
   const [fileName, setFileName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
-
-  // Hierarchical selects states
   const [selectedNiveau, setSelectedNiveau] = useState<string>('');
   const [selectedMatiere, setSelectedMatiere] = useState<string>('');
   const [selectedChapitre, setSelectedChapitre] = useState<string>('');
@@ -116,16 +112,6 @@ export function FileManagerNewFolderDialog({
   );
 
   const handleUpload = () => {
-    console.info('Uploading with info:', {
-      fileName,
-      description,
-      selectedNiveau,
-      selectedMatiere,
-      selectedChapitre,
-      selectedExercice,
-      tags,
-      files,
-    });
     onClose();
   };
 
@@ -138,10 +124,8 @@ export function FileManagerNewFolderDialog({
     setFiles([]);
   };
 
-  // Disable "Téléverser" if "Nom du fichier" or "Description" is empty, or no files are selected.
   const isUploadDisabled = !fileName || !description || files.length === 0;
 
-  // Handle selection changes and reset lower level selections if needed.
   const handleNiveauChange = (event: SelectChangeEvent<string>) => {
     setSelectedNiveau(event.target.value);
     setSelectedMatiere('');
@@ -164,7 +148,6 @@ export function FileManagerNewFolderDialog({
     setSelectedExercice(event.target.value);
   };
 
-  // Derive options based on previous selections:
   const currentNiveau = hierarchy.find((h) => h.niveau === selectedNiveau);
   const matieresOptions = currentNiveau ? currentNiveau.matieres : [];
   const currentMatiere = matieresOptions.find((m) => m.matiere === selectedMatiere);
@@ -183,7 +166,6 @@ export function FileManagerNewFolderDialog({
       >
         {title}
       </DialogTitle>
-
       <DialogContent
         dividers
         sx={{
@@ -194,7 +176,6 @@ export function FileManagerNewFolderDialog({
           flexDirection: 'column',
           gap: 2,
           '& .MuiFormControl-root, & .MuiTextField-root': {
-            // Apply consistent styling to form controls
             variant: 'outlined',
             size: 'small',
             backgroundColor: (theme) => theme.palette.background.paper,
@@ -214,7 +195,6 @@ export function FileManagerNewFolderDialog({
           <>
           </>
         )}
-
         <Stack spacing={2}>
           <TextField
             fullWidth
@@ -223,7 +203,6 @@ export function FileManagerNewFolderDialog({
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
           />
-
           <TextField
             fullWidth
             required
@@ -233,8 +212,6 @@ export function FileManagerNewFolderDialog({
             multiline
             rows={3}
           />
-
-          {/* Hierarchical selects in specified order: Niveau -> Matière -> Chapitre -> Exercice */}
           <FormControl fullWidth>
             <InputLabel>Niveau</InputLabel>
             <Select value={selectedNiveau} label="Niveau" onChange={handleNiveauChange}>
@@ -245,7 +222,6 @@ export function FileManagerNewFolderDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedNiveau}>
             <InputLabel>Matière</InputLabel>
             <Select value={selectedMatiere} label="Matière" onChange={handleMatiereChange}>
@@ -256,7 +232,6 @@ export function FileManagerNewFolderDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedMatiere}>
             <InputLabel>Chapitre</InputLabel>
             <Select value={selectedChapitre} label="Chapitre" onChange={handleChapitreChange}>
@@ -267,7 +242,6 @@ export function FileManagerNewFolderDialog({
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth disabled={!selectedChapitre}>
             <InputLabel>Exercice</InputLabel>
             <Select value={selectedExercice} label="Exercice" onChange={handleExerciceChange}>
@@ -278,12 +252,10 @@ export function FileManagerNewFolderDialog({
               ))}
             </Select>
           </FormControl>
-
-          {/* Tags field is last and always visible */}
           <Autocomplete
             multiple
             freeSolo
-            options={[]} // Predefined tag options if needed
+            options={[]}
             value={tags}
             onChange={(event, newValue) => setTags(newValue)}
             renderOption={(props, option) => (
@@ -308,7 +280,6 @@ export function FileManagerNewFolderDialog({
             )}
           />
         </Stack>
-
         <Upload
           multiple
           value={files}
@@ -317,7 +288,6 @@ export function FileManagerNewFolderDialog({
           sx={{ mt: 2 }}
         />
       </DialogContent>
-
       <DialogActions sx={{ p: 2 }}>
         <Button
           variant="contained"
@@ -327,19 +297,20 @@ export function FileManagerNewFolderDialog({
         >
           Téléverser
         </Button>
-
         {!!files.length && (
           <Button variant="outlined" color="inherit" onClick={handleRemoveAllFiles}>
-            Remove all
+            Supprimer tout
           </Button>
         )}
-
-        {(onCreate || onUpdate) && (
+        {(onCreate || onUpdate) ? (
           <Stack direction="row" justifyContent="flex-end" flexGrow={1}>
             <Button variant="soft" onClick={onCreate || onUpdate}>
-              {onUpdate ? 'Save' : 'Create'}
+              {onUpdate ? 'Enregistrer' : 'Créer'}
             </Button>
           </Stack>
+        ) : (
+          <>
+          </>
         )}
       </DialogActions>
     </Dialog>

@@ -31,9 +31,9 @@ import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import CustomToolbar from '../components/CustomToolbar';
 import { AddRoleFormDialog } from '../user-role-add-form';
-import { UserRoleEditForm } from '../user-role-edit-form';
+import { UserRoleEditDrawer } from '../user-role-edit-form';
 import CustomColumnHeader from '../components/CustomColumnHeader';
-import { UserRoleDetailsDialog } from '../user-role-details-view';
+import { UserRoleDetailsDrawer } from '../user-role-details-view';
 import {
   RenderCellName,
   RenderCellCreatedAt,
@@ -243,7 +243,7 @@ export function UserRoleListView() {
         <Box sx={{ display: 'flex', gap: 1, zIndex: 1, position: 'sticky' }}>
           <Tooltip title="Voir détails">
             <IconButton size="small" onClick={() => handleViewRow(params.row.id)} color="info">
-              <FontAwesomeIcon icon={faEye} size="xs" />
+              <FontAwesomeIcon icon={faEye} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Modifier">
@@ -255,12 +255,12 @@ export function UserRoleListView() {
               }}
               color="primary"
             >
-              <FontAwesomeIcon icon={faPen} size="xs" />
+              <FontAwesomeIcon icon={faPen} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Supprimer">
             <IconButton size="small" onClick={() => handleDeleteRow(params.row.id)} color="error">
-              <FontAwesomeIcon icon={faTrash} size="xs" />
+              <FontAwesomeIcon icon={faTrash} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -288,6 +288,13 @@ export function UserRoleListView() {
               variant="contained"
               startIcon={<FontAwesomeIcon icon={faPlus} />}
               onClick={addRoleDialog.onTrue}
+              sx={{
+                color: 'primary.contrastText',
+                backgroundColor: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.dark',
+                },
+              }}
             >
               Ajouter un rôle
             </Button>
@@ -395,14 +402,14 @@ export function UserRoleListView() {
         }}
       />
 
-      <UserRoleEditForm
+      <UserRoleEditDrawer
         open={openEditDialog}
         onClose={handleCloseDialog}
         currentRole={selectedEditRole}
         onUpdateRole={handleSaveEdit}
       />
 
-      <UserRoleDetailsDialog
+      <UserRoleDetailsDrawer
         open={openDetailsDialog}
         onClose={() => setOpenDetailsDialog(false)}
         role={selectedRoleDetails}

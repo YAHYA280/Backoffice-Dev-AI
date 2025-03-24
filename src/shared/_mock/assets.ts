@@ -814,6 +814,13 @@ export const _STATUS_OPTIONS = [
   { value: 'Suspendu', label: 'Suspendu'},
   { value: 'Supprimé', label: 'Supprimé'},
 ]
+
+
+export const _STATUS_FAQs = [
+  { value: 'Publié', label: 'Publié'},
+  { value: 'Brouillion', label: 'Brouillion'},
+  { value: 'Archivé', label: 'Archivé'},
+]
 // ----------------------------------------------------------------------
 
 export const _ameliorationsTitles = [

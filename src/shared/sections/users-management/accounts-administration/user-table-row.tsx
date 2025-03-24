@@ -2,19 +2,34 @@
 
 import type { IUserItem } from 'src/contexts/types/user';
 
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faEye,faBan,faEdit,faUndo,faTrash,faPause,faUnlock,faEllipsisV,faUserCheck,} from '@fortawesome/free-solid-svg-icons';
+import {
+  faEye,
+  faBan,
+  faUndo,
+  faTrash,
+  faPause,
+  faUnlock,
+  faEllipsisV,
+  faUserCheck,
+  faPenToSquare,
+} from '@fortawesome/free-solid-svg-icons';
 
 import Menu from '@mui/material/Menu';
+import { Select } from '@mui/material';
 import Button from '@mui/material/Button';
-import TableRow from '@mui/material/TableRow';
 import MenuItem from '@mui/material/MenuItem';
+import TableRow from '@mui/material/TableRow';
+import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { Select, TextField, InputLabel, FormControl } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -33,12 +48,21 @@ type Props = {
   onSelectRow: () => void;
   onEditRow: () => void;
   statusFilter?: string;
+  columns: Array<{ id: string; label: string; width?: number }>;
 };
 
-export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilter = 'Tous' }: Props) {
+export function UserTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onEditRow,
+  statusFilter = 'Tous',
+  columns,
+}: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const router = useRouter();
+
   const confirmDelete = useBoolean();
   const confirmBlock = useBoolean();
   const confirmSuspend = useBoolean();
@@ -58,217 +82,240 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
     setAnchorEl(null);
   };
 
+  const renderCellContent = (colId: string) => {
+    switch (colId) {
+      case 'select':
+        return (
+          <Checkbox
+            checked={selected}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectRow();
+            }}
+            inputProps={{
+              id: `row-checkbox-${row.id}`,
+              'aria-label': 'row checkbox',
+            }}
+          />
+        );
+      case 'name':
+        return `${row.firstName} ${row.lastName}`;
+      case 'email': {
+        const maxLength = 20;
+        return row.email.length > maxLength
+          ? `${row.email.slice(0, maxLength)}...`
+          : row.email;
+      }
+      case 'role':
+        return row.role;
+      case 'statut':
+        return (
+          <Label
+            variant="soft"
+            sx={{
+              ...(row.status === 'Actif' && {
+                bgcolor: 'rgb(186, 248, 193)',
+                color: '#22bb33',
+              }),
+              ...(row.status === 'Supprimé' && {
+                bgcolor: 'rgba(244, 67, 54, 0.1)',
+                color: '#F44336',
+              }),
+              ...(row.status === 'Bloqué' && {
+                bgcolor: 'rgba(33, 33, 33, 0.1)',
+                color: '#212121',
+              }),
+              ...(row.status === 'Suspendu' && {
+                bgcolor: 'rgba(255, 152, 0, 0.1)',
+                color: '#FF9800',
+              }),
+              ...(!['Actif', 'Supprimé', 'Bloqué', 'Suspendu'].includes(row.status) && {
+                bgcolor: 'rgba(145, 158, 171, 0.16)',
+                color: 'text.secondary',
+              }),
+            }}
+          >
+            {row.status}
+          </Label>
+        );
+      case 'createdAt':
+        return dayjs(row.createdAt).format('DD/MM/YYYY');
+      case 'lastLogin':
+        return dayjs(row.lastLogin).format('DD/MM/YYYY');
+      case 'dureRestante':
+        return row.dureRestante ? `${row.dureRestante} jours` : '';
+      case 'actions':
+        return (
+          <>
+            <IconButton onClick={handleOpenMenu}>
+              <FontAwesomeIcon icon={faEllipsisV} />
+            </IconButton>
+            <Menu
+              open={menuOpen}
+              anchorEl={anchorEl}
+              onClose={handleCloseMenu}
+              PaperProps={{ sx: { width: 200 } }}
+            >
+              {row.status === 'Actif' ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      router.push(paths.dashboard.user.consulter(row.id));
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faEye} color="#2196F3" />
+                    </ListItemIcon>
+                    <ListItemText primary="Voir détails" sx={{ color: '#2196F3' }} />
+                  </MenuItem>
+                  <MenuItem onClick={onEditRow}>
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faPenToSquare} color="#F44336" />
+                    </ListItemIcon>
+                    <ListItemText primary="Modifier" sx={{ color: '#F44336' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmDelete.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faTrash} color="#F44336" />
+                    </ListItemIcon>
+                    <ListItemText primary="Supprimer" sx={{ color: '#F44336' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmBlock.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faBan} color="#212121" />
+                    </ListItemIcon>
+                    <ListItemText primary="Bloquer" sx={{ color: '#212121' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmSuspend.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faPause} color="#FF9800" />
+                    </ListItemIcon>
+                    <ListItemText primary="Suspendre" sx={{ color: '#FF9800' }} />
+                  </MenuItem>
+                </>
+              ) : row.status === 'Supprimé' ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      router.push(paths.dashboard.user.consulter(row.id));
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faEye} color="#2196F3" />
+                    </ListItemIcon>
+                    <ListItemText primary="Voir détails" sx={{ color: '#2196F3' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmRestore.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faUndo} color="#4CAF50" />
+                    </ListItemIcon>
+                    <ListItemText primary="Restaurer" sx={{ color: '#4CAF50' }} />
+                  </MenuItem>
+                </>
+              ) : row.status === 'Bloqué' ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      router.push(paths.dashboard.user.consulter(row.id));
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faEye} color="#2196F3" />
+                    </ListItemIcon>
+                    <ListItemText primary="Voir détails" sx={{ color: '#2196F3' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmUnblock.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faUnlock} color="#22bb33" />
+                    </ListItemIcon>
+                    <ListItemText primary="Débloquer" sx={{ color: '#22bb33' }} />
+                  </MenuItem>
+                </>
+              ) : row.status === 'Suspendu' ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      router.push(paths.dashboard.user.consulter(row.id));
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faEye} color="#2196F3" />
+                    </ListItemIcon>
+                    <ListItemText primary="Voir détails" sx={{ color: '#2196F3' }} />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleCloseMenu();
+                      confirmReactivate.onTrue();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={faUserCheck} color="#22bb33" />
+                    </ListItemIcon>
+                    <ListItemText primary="Réactiver" sx={{ color: '#22bb33' }} />
+                  </MenuItem>
+                </>
+              ) : null}
+            </Menu>
+          </>
+        );
+      default:
+        return (row as any)[colId];
+    }
+  };
+
   return (
     <>
       <TableRow hover selected={selected} tabIndex={-1}>
-        <TableCell onClick={onSelectRow}>{`${row.firstName  } ${  row.lastName}`}</TableCell>
-        <TableCell>{row.email}</TableCell>
-        <TableCell>{row.role}</TableCell>
-        {statusFilter === 'Tous' ? (
-          <TableCell>
-            <Label
-              variant="soft"
-              sx={{
-                ...(row.status === 'Actif' && { bgcolor: 'rgb(186, 248, 193)', color: '#22bb33' }),
-                ...(row.status === 'Supprimé' && { bgcolor: 'rgba(244, 67, 54, 0.1)', color: '#F44336' }),
-                ...(row.status === 'Bloqué' && { bgcolor: 'rgba(33, 33, 33, 0.1)', color: '#212121' }),
-                ...(row.status === 'Suspendu' && { bgcolor: 'rgba(255, 152, 0, 0.1)', color: '#FF9800' }),
-                ...(!['Actif', 'Supprimé', 'Bloqué', 'Suspendu'].includes(row.status) && {
-                  bgcolor: 'rgba(145, 158, 171, 0.16)',
-                  color: 'text.secondary',
-                }),
-              }}
-            >
-              {row.status}
-            </Label>
+        {columns.map((col) => (
+          <TableCell key={col.id} sx={{ width: col.width }}>
+            {renderCellContent(col.id)}
           </TableCell>
-        ) : (
-          <>
-          </>
-        )}
-
-        <TableCell>{row.createdAt}</TableCell>
-        <TableCell>{row.lastLogin}</TableCell>
-        {statusFilter === 'Suspendu' ? (
-          <TableCell>{row.dureRestante} jours</TableCell>
-        ) : (
-          <>
-          </>
-        )}
-        <TableCell>
-          <IconButton onClick={handleOpenMenu}>
-            <FontAwesomeIcon icon={faEllipsisV} />
-          </IconButton>
-          <Menu open={menuOpen} anchorEl={anchorEl} onClose={handleCloseMenu} PaperProps={{ sx: { width: 200 } }}>
-            {row.status === 'Actif' ? (
-              <>
-                <MenuItem
-              onClick={() => {
-                handleCloseMenu();
-                router.push(paths.dashboard.user.consulter(row.id));
-              }}
-              >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEye} color="#2196F3" />
-                  </ListItemIcon>
-                  <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
-                </MenuItem>
-                <MenuItem
-              onClick={() => {
-                onEditRow();
-              }}>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEdit} color="#4CAF50" />
-                  </ListItemIcon>
-                  <ListItemText primary="Modifier" sx={{ color: '#4CAF50' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmDelete.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faTrash} color="#F44336" />
-                  </ListItemIcon>
-                  <ListItemText primary="Supprimer" sx={{ color: '#F44336' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmBlock.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faBan} color="#212121" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bloquer" sx={{ color: '#212121' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmSuspend.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faPause} color="#FF9800" />
-                  </ListItemIcon>
-                  <ListItemText primary="Suspendre" sx={{ color: '#FF9800' }} />
-                </MenuItem>
-              </>
-            ): (
-              <>
-              </>
-            )}
-            {row.status === 'Supprimé' ? (
-              <>
-                <MenuItem
-              onClick={() => {
-                handleCloseMenu();
-                router.push(paths.dashboard.user.consulter(row.id));
-              }}>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEye} color="#2196F3" />
-                  </ListItemIcon>
-                  <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmRestore.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faUndo} color="#4CAF50" />
-                  </ListItemIcon>
-                  <ListItemText primary="Restaurer" sx={{ color: '#4CAF50' }} />
-                </MenuItem>
-              </>
-            ): (
-              <>
-              </>
-            )}
-            {row.status === 'Bloqué' ? (
-              <>
-                <MenuItem
-              onClick={() => {
-                handleCloseMenu();
-                router.push(paths.dashboard.user.consulter(row.id));
-              }}>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEye} color="#2196F3" />
-                  </ListItemIcon>
-                  <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmUnblock.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faUnlock} color="#22bb33" />
-                  </ListItemIcon>
-                  <ListItemText primary="Débloquer" sx={{ color: '#22bb33' }} />
-                </MenuItem>
-              </>
-            ): (
-              <>
-              </>
-            )}
-            {row.status === 'Suspendu' ? (
-              <>
-                <MenuItem
-              onClick={() => {
-                handleCloseMenu();
-                router.push(paths.dashboard.user.consulter(row.id));
-              }}>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEye} color="#2196F3" />
-                  </ListItemIcon>
-                  <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
-                </MenuItem>
-                <MenuItem
-                onClick={() => {
-                  handleCloseMenu();
-                  confirmReactivate.onTrue();
-                }}
-                >
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faUserCheck} color="#22bb33" />
-                  </ListItemIcon>
-                  <ListItemText primary="Réactivé" sx={{ color: '#22bb33' }} />
-                </MenuItem>
-              </>
-            ): (
-              <>
-              </>
-            )}
-            {!['Actif', 'Supprimé', 'Bloqué', 'Suspendu'].includes(row.status) ? (
-              <MenuItem>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={faEye} color="#2196F3" />
-                  </ListItemIcon>
-                  <ListItemText primary="Afficher" sx={{ color: '#2196F3' }} />
-                </MenuItem>
-            ): (
-              <>
-              </>
-            )}
-          </Menu>
-        </TableCell>
+        ))}
       </TableRow>
+
       <ConfirmDialog
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
-        title={`Supprimer l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
+        title={`Supprimer l'utilisateur : ${row.firstName} ${row.lastName}`}
         content="Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
         action={
           <Button
             variant="contained"
             color="error"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été supprimé avec succès.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été supprimé avec succès.`
+              );
               confirmDelete.onFalse();
             }}
           >
@@ -276,10 +323,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </Button>
         }
       />
+
       <ConfirmDialog
         open={confirmBlock.value}
         onClose={confirmBlock.onFalse}
-        title={`Bloquer l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
+        title={`Bloquer l'utilisateur : ${row.firstName} ${row.lastName}`}
         content={
           <TextField
             fullWidth
@@ -290,11 +338,13 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           />
         }
         action={
-          <Button 
+          <Button
             variant="contained"
             color="error"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été bloqué avec succès.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été bloqué avec succès.`
+              );
               confirmBlock.onFalse();
             }}
           >
@@ -302,10 +352,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </Button>
         }
       />
+
       <ConfirmDialog
         open={confirmSuspend.value}
         onClose={confirmSuspend.onFalse}
-        title={`Suspendre l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
+        title={`Suspendre l'utilisateur : ${row.firstName} ${row.lastName}`}
         content={
           <>
             <TextField
@@ -332,11 +383,13 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </>
         }
         action={
-          <Button 
+          <Button
             variant="contained"
             color="error"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été suspendu pour ${suspendDuration} jours.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été suspendu pour ${suspendDuration} jours.`
+              );
               confirmSuspend.onFalse();
             }}
             disabled={!suspendReason.trim() || !suspendDuration}
@@ -345,10 +398,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </Button>
         }
       />
+
       <ConfirmDialog
         open={confirmReactivate.value}
         onClose={confirmReactivate.onFalse}
-        title={`Réactiver l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
+        title={`Réactiver l'utilisateur : ${row.firstName} ${row.lastName}`}
         content={
           <>
             <TextField
@@ -375,11 +429,13 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </>
         }
         action={
-          <Button 
+          <Button
             variant="contained"
             color="success"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été réactivé avec succès.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été réactivé avec succès.`
+              );
               confirmReactivate.onFalse();
             }}
           >
@@ -387,10 +443,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </Button>
         }
       />
+
       <ConfirmDialog
         open={confirmUnblock.value}
         onClose={confirmUnblock.onFalse}
-        title={`Débloquer l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
+        title={`Débloquer l'utilisateur : ${row.firstName} ${row.lastName}`}
         content={
           <TextField
             fullWidth
@@ -401,11 +458,13 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           />
         }
         action={
-          <Button 
+          <Button
             variant="contained"
             color="success"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été débloqué avec succès.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été débloqué avec succès.`
+              );
               confirmUnblock.onFalse();
             }}
           >
@@ -413,17 +472,20 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, statusFilt
           </Button>
         }
       />
+
       <ConfirmDialog
         open={confirmRestore.value}
         onClose={confirmRestore.onFalse}
-        title={`Restaurer l'utilisateur : ${`${row.firstName  } ${  row.lastName}`}`}
-        content={`Êtes-vous sûr de vouloir restaurer l'utilisateur ${`${row.firstName  } ${  row.lastName}`} ?`}
+        title={`Restaurer l'utilisateur : ${row.firstName} ${row.lastName}`}
+        content="Êtes-vous sûr de vouloir restaurer cet utilisateur ?"
         action={
-          <Button 
+          <Button
             variant="contained"
             color="success"
             onClick={() => {
-              toast.success(`L'utilisateur ${row.firstName} ${row.lastName} a été restauré avec succès.`);
+              toast.success(
+                `L'utilisateur ${row.firstName} ${row.lastName} a été restauré avec succès.`
+              );
               confirmRestore.onFalse();
             }}
           >
