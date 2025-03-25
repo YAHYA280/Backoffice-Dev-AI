@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Box, Container, Typography } from '@mui/material';
 
@@ -31,6 +32,37 @@ import ExerciceDeleteDialog from './components/exercice/ExerciceDeleteDialog';
 import ExerciceDetailDrawer from './components/exercice/ExerciceDetailDrawer';
 
 export const ApprentissageView: React.FC = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    const niveauIdParam = searchParams.get('niveauId');
+    const niveauNomParam = searchParams.get('niveauNom');
+    const matiereIdParam = searchParams.get('matiereId');
+    const matiereNomParam = searchParams.get('matiereNom');
+    const chapitreIdParam = searchParams.get('chapitreId');
+    const chapitreNomParam = searchParams.get('chapitreNom');
+
+    if (viewParam && ['niveaux', 'matieres', 'chapitres', 'exercices'].includes(viewParam)) {
+      setCurrentView(viewParam as any);
+    }
+
+    if (niveauIdParam) {
+      setCurrentNiveauId(niveauIdParam);
+      setCurrentNiveauName(niveauNomParam || null);
+    }
+
+    if (matiereIdParam) {
+      setCurrentMatiereId(matiereIdParam);
+      setCurrentMatiereName(matiereNomParam || null);
+    }
+
+    if (chapitreIdParam) {
+      setCurrentChapitreId(chapitreIdParam);
+      setCurrentChapitreName(chapitreNomParam || null);
+    }
+  }, [searchParams]);
   // ---- State for view navigation ----
   const [currentView, setCurrentView] = useState<
     'niveaux' | 'matieres' | 'chapitres' | 'exercices'
@@ -411,12 +443,32 @@ export const ApprentissageView: React.FC = () => {
 
   // ---- Exercice handler functions ----
   const handleExerciceAddClick = () => {
-    setOpenExerciceAddDialog(true);
+    // Navigate to the new page with all necessary parameters
+    const params = new URLSearchParams({
+      chapitreId: currentChapitreId || '',
+      chapitreNom: currentChapitreName || '',
+      matiereId: currentMatiereId || '',
+      matiereNom: currentMatiereName || '',
+      niveauId: currentNiveauId || '',
+      niveauNom: currentNiveauName || '',
+    });
+
+    router.push(`/dashboard/contenu-pedagogique/apprentissage/exercices/new?${params.toString()}`);
   };
 
   const handleExerciceEditClick = (exercice: any) => {
-    setSelectedExercice(exercice);
-    setOpenExerciceEditDialog(true);
+    const params = new URLSearchParams({
+      chapitreId: currentChapitreId || '',
+      chapitreNom: currentChapitreName || '',
+      matiereId: currentMatiereId || '',
+      matiereNom: currentMatiereName || '',
+      niveauId: currentNiveauId || '',
+      niveauNom: currentNiveauName || '',
+    });
+
+    router.push(
+      `/dashboard/contenu-pedagogique/apprentissage/exercices/${exercice.id}/edit?${params.toString()}`
+    );
   };
 
   const handleExerciceDeleteClick = (exercice: any) => {
