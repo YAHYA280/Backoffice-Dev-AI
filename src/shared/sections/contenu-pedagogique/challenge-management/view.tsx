@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Container } from '@mui/material';
 
 import { useChallenges } from './hooks/useChallenge';
 import { ChallengeList } from './components/ChallengeList';
-import { ChallengeDialog } from './components/ChallengeDialog';
 import { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
 import { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
 import type { Challenge } from './types';
 
+// Keep the mock data for reference, might be needed in other components
 const MOCK_NIVEAUX = [
   { id: '1', nom: 'CP1 - Cours Préparatoire 1' },
   { id: '2', nom: 'CP2 - Cours Préparatoire 2' },
@@ -37,6 +38,8 @@ interface ChallengesManagementViewProps {
 export function ChallengesManagementView({
   title = 'Gestion des challenges',
 }: ChallengesManagementViewProps) {
+  const router = useRouter();
+
   const {
     challenges,
     loading,
@@ -49,25 +52,25 @@ export function ChallengesManagementView({
     handleSearch,
     handleColumnFilterChange,
     handleToggleActive,
-    handleAddChallenge,
-    handleUpdateChallenge,
     handleDeleteChallenge,
     handleDeleteMultipleChallenges,
     refetch,
   } = useChallenges();
 
-  const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
+  // Remove dialog states that we no longer need
+  // const [openAddDialog, setOpenAddDialog] = useState(false);
+  // const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openDetailDrawer, setOpenDetailDrawer] = useState(false);
 
   const handleAddClick = () => {
-    setOpenAddDialog(true);
+    // Navigate to the new challenge page instead of opening a dialog
+    router.push('/dashboard/contenu-pedagogique/challenges/new');
   };
 
   const handleEditClick = (challenge: Challenge) => {
-    setSelectedChallenge(challenge);
-    setOpenEditDialog(true);
+    // Navigate to the edit challenge page instead of opening a dialog
+    router.push(`/dashboard/contenu-pedagogique/challenges/${challenge.id}/edit`);
   };
 
   const handleDeleteClick = (challenge: Challenge) => {
@@ -80,14 +83,15 @@ export function ChallengesManagementView({
     setOpenDetailDrawer(true);
   };
 
-  const handleCloseAddDialog = () => {
-    setOpenAddDialog(false);
-  };
+  // Remove handlers for dialog states we no longer need
+  // const handleCloseAddDialog = () => {
+  //   setOpenAddDialog(false);
+  // };
 
-  const handleCloseEditDialog = () => {
-    setOpenEditDialog(false);
-    setSelectedChallenge(null);
-  };
+  // const handleCloseEditDialog = () => {
+  //   setOpenEditDialog(false);
+  //   setSelectedChallenge(null);
+  // };
 
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
@@ -99,21 +103,22 @@ export function ChallengesManagementView({
     setSelectedChallenge(null);
   };
 
-  const handleSubmitAdd = async (data: Partial<Challenge>) => {
-    console.log('Adding new challenge:', data);
-    await handleAddChallenge(data);
-    handleCloseAddDialog();
-    refetch();
-  };
+  // We no longer need these handlers as they're moved to their respective pages
+  // const handleSubmitAdd = async (data: Partial<Challenge>) => {
+  //   console.log('Adding new challenge:', data);
+  //   await handleAddChallenge(data);
+  //   handleCloseAddDialog();
+  //   refetch();
+  // };
 
-  const handleSubmitEdit = async (data: Partial<Challenge>) => {
-    console.log('Editing challenge:', data);
-    if (selectedChallenge) {
-      await handleUpdateChallenge(selectedChallenge.id, data);
-    }
-    handleCloseEditDialog();
-    refetch();
-  };
+  // const handleSubmitEdit = async (data: Partial<Challenge>) => {
+  //   console.log('Editing challenge:', data);
+  //   if (selectedChallenge) {
+  //     await handleUpdateChallenge(selectedChallenge.id, data);
+  //   }
+  //   handleCloseEditDialog();
+  //   refetch();
+  // };
 
   const handleSubmitDelete = async () => {
     if (selectedChallenge) {
@@ -147,24 +152,25 @@ export function ChallengesManagementView({
         onToggleActive={handleToggleActive}
       />
 
-      <ChallengeDialog
+      {/* Remove the ChallengeDialog components as we no longer need them */}
+      {/* <ChallengeDialog
         open={openAddDialog}
         onClose={handleCloseAddDialog}
         onSubmit={handleSubmitAdd}
         niveaux={MOCK_NIVEAUX}
         matieres={MOCK_MATIERES}
-      />
+      /> */}
 
       {selectedChallenge ? (
         <>
-          <ChallengeDialog
+          {/* <ChallengeDialog
             open={openEditDialog}
             onClose={handleCloseEditDialog}
             onSubmit={handleSubmitEdit}
             challenge={selectedChallenge}
             niveaux={MOCK_NIVEAUX}
             matieres={MOCK_MATIERES}
-          />
+          /> */}
 
           {/* Dialogue de suppression */}
           <ChallengeDeleteDialog

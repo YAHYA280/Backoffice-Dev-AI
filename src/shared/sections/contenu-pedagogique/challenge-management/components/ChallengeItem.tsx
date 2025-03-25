@@ -173,26 +173,32 @@ export const ChallengeItem = ({
                       ? alpha(theme.palette.grey[500], 0.2)
                       : alpha(theme.palette.primary.main, 0.08),
                   color: isDeleted ? 'text.disabled' : 'primary.main',
+                  flexShrink: 0, // Prevent avatar from shrinking
                 }}
               >
                 <FontAwesomeIcon icon={faTrophy} size="sm" />
               </Avatar>
-              <Box sx={{ ml: 1, flexGrow: 1 }}>
-                <Typography
-                  variant="subtitle2"
-                  color={isDeleted ? 'text.disabled' : 'text.primary'}
-                  noWrap
-                  sx={{
-                    fontWeight: 'medium',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  {challenge.nom}
-                </Typography>
+              <Box sx={{ ml: 1, flexGrow: 1, maxWidth: 'calc(100% - 40px)' }}>
+                <Tooltip title={challenge.nom} placement="top-start">
+                  <Typography
+                    variant="subtitle2"
+                    color={isDeleted ? 'text.disabled' : 'text.primary'}
+                    noWrap
+                    sx={{
+                      fontWeight: 'medium',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      '&:hover': {
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    {challenge.nom}
+                  </Typography>
+                </Tooltip>
                 {questionsCount > 0 && (
                   <Typography variant="caption" color="text.secondary" display="block">
                     {questionsCount} question{questionsCount > 1 ? 's' : ''}
@@ -216,7 +222,9 @@ export const ChallengeItem = ({
               color: 'text.secondary',
             }}
           >
-            {challenge.description}
+            <Tooltip title={challenge.description} placement="top-start">
+              <Box component="span">{challenge.description}</Box>
+            </Tooltip>
           </TableCell>
         ) : (
           <></>

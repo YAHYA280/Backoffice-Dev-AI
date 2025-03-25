@@ -149,7 +149,7 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
           >
             Niveaux
           </MuiLink>
-          {niveauId && (
+          {niveauId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -165,8 +165,10 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {niveauNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
-          {matiereId && (
+          {matiereId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -184,8 +186,10 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {matiereNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
-          {(chapitreId || exercice.chapitreId) && (
+          {chapitreId || exercice.chapitreId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -205,6 +209,8 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {chapitreNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
           <Typography color="text.primary">Modifier l&apos;exercice</Typography>
         </Breadcrumbs>

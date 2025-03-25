@@ -81,7 +81,7 @@ export const NewExerciceView: React.FC = () => {
           >
             Niveaux
           </MuiLink>
-          {niveauId && (
+          {niveauId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -97,8 +97,10 @@ export const NewExerciceView: React.FC = () => {
             >
               {niveauNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
-          {matiereId && (
+          {matiereId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -116,8 +118,10 @@ export const NewExerciceView: React.FC = () => {
             >
               {matiereNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
-          {chapitreId && (
+          {chapitreId ? (
             <MuiLink
               component="button"
               underline="hover"
@@ -137,6 +141,8 @@ export const NewExerciceView: React.FC = () => {
             >
               {chapitreNom}
             </MuiLink>
+          ) : (
+            <></>
           )}
           <Typography color="text.primary">Nouvel exercice</Typography>
         </Breadcrumbs>
