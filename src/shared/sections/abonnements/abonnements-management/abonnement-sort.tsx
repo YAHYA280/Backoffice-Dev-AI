@@ -23,7 +23,7 @@ export function AbonnementSort({ sort, onSort, sortOptions }: Props) {
     <>
       <Button
         disableRipple
-        color="inherit"
+        color="primary"
         onClick={popover.onOpen}
         endIcon={
           <FontAwesomeIcon

@@ -3,7 +3,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTimes, faUserPlus, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTimes, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -17,7 +17,6 @@ import IconButton from '@mui/material/IconButton';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Dialog,
-  Popper,
   Typography,
   DialogTitle,
   DialogActions,
@@ -30,7 +29,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { varAlpha } from 'src/shared/theme/styles';
 import { LocalizationProvider } from 'src/shared/locales';
 
-import { Field } from 'src/shared/components/hook-form';
 import { Scrollbar } from 'src/shared/components/scrollbar';
 import { CustomTabs } from 'src/shared/components/custom-tabs';
 

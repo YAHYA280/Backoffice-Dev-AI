@@ -3,14 +3,13 @@ import type { IAbonnementFilters } from 'src/contexts/types/abonnement';
 
 import { useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRedo, faTimes, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faFilter, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Radio from '@mui/material/Radio';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Drawer from '@mui/material/Drawer';
-import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Checkbox from '@mui/material/Checkbox';
@@ -75,7 +74,7 @@ export function AbonnementFilters({ open, canReset, onOpen, onClose, filters, op
         <Tooltip title="Reset">
           <IconButton onClick={filters.onResetState}>
             <Badge color="error" variant="dot" invisible={!canReset}>
-              <FontAwesomeIcon icon={faRedo} />
+              <FontAwesomeIcon icon={faSyncAlt} />
             </Badge>
           </IconButton>
         </Tooltip>
@@ -151,18 +150,13 @@ export function AbonnementFilters({ open, canReset, onOpen, onClose, filters, op
 
   return (
     <>
-      <Button
-        disableRipple
-        color="inherit"
-        endIcon={
-          <Badge color="error" variant="dot" invisible={!canReset}>
+      <Tooltip title="Filtres" arrow>
+        <IconButton color="primary" onClick={onOpen}>
+          <Badge color="primary" variant="dot" invisible={!canReset}>
             <FontAwesomeIcon icon={faFilter} />
           </Badge>
-        }
-        onClick={onOpen}
-      >
-        Filtres
-      </Button>
+        </IconButton>
+      </Tooltip>
 
       <Drawer
         anchor="right"

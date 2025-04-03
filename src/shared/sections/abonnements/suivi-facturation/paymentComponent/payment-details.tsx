@@ -1,36 +1,49 @@
 import type { IPaymentItem } from 'src/contexts/types/payment';
 
+import React from 'react';
 import Link from 'next/link';
+import { m } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faTimes,
+  faToggleOn,
+  faCreditCard,
+  faCalendarAlt,
+  faFileInvoice,
+  faMoneyBillWave,
+  faFileInvoiceDollar,
+} from '@fortawesome/free-solid-svg-icons';
 
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import { alpha, styled } from '@mui/material/styles';
-import { Chip, Stack, Paper, Avatar, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  List,
+  Chip,
+  Stack,
+  alpha,
+  Paper,
+  Drawer,
+  Avatar,
+  styled,
+  ListItem,
+  useTheme,
+  IconButton,
+  Typography,
+  ListItemText,
+} from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 
 import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 
-import { Scrollbar } from 'src/shared/components/scrollbar';
+import { varFade } from 'src/shared/components/animate/variants/fade';
 
-import { PaymentDetailsToolbar } from './payment-details-toolbar';
-
-// ----------------------------------------------------------------------
+// Status colors and labels similar to challenge detail approach
 const STATUS_COLORS = {
-  all: 'rgba(50, 50, 50, 0.6)',
-  success: '#28a745',
-  failed: '#424242',
-  pending: '#FFB300',
-  refunded: '#388E3C',
-};
-
-// Traductions des statuts
-const STATUS_LABELS = {
-  success: 'Réussi',
-  pending: 'En attente',
-  refunded: 'Remboursée',
-  failed: 'Échoué',
+  success: { bgColor: '#28a745', color: '#FFFFFF', label: 'Réussi' },
+  pending: { bgColor: '#FFB300', color: '#FFFFFF', label: 'En attente' },
+  failed: { bgColor: '#dc3545', color: '#FFFFFF', label: 'Échoué' },
+  refunded: { bgColor: '#17a2b8', color: '#FFFFFF', label: 'Remboursé' },
 };
 // Options de méthodes de paiement en français
 export const PAYMENT_METHOD_OPTIONS = [
@@ -43,14 +56,11 @@ const getPaymentMethodLabel = (value: string): string => {
   const method = PAYMENT_METHOD_OPTIONS.find((option) => option.value === value);
   return method ? method.label : value;
 };
-
-const StyledLabel = styled('span')(({ theme }) => ({
-  ...theme.typography.caption,
-  width: 120,
-  flexShrink: 0,
-  color: theme.vars.palette.text.secondary,
-  fontWeight: theme.typography.fontWeightSemiBold,
-}));
+interface PaymentDetailsProps {
+  open: boolean;
+  onClose: () => void;
+  payment: IPaymentItem;
+}
 
 // Création d'un style pour rendre les abonnements cliquables
 const SubscriptionCard = styled(Paper)(({ theme }) => ({
@@ -83,270 +93,425 @@ const SubscriptionCard = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: 18,
-  fontWeight: 600,
-  marginBottom: theme.spacing(2),
-  position: 'relative',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: -8,
-    left: 0,
-    width: 40,
-    height: 3,
-    backgroundColor: theme.palette.primary.main,
-  },
-}));
-const SubscriberCard = styled(Paper)(({ theme }) => ({
-  cursor: 'pointer',
-  transition: 'all 0.2s ease-in-out',
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.background.default, 0.8),
-  boxShadow: theme.shadows[2],
-  overflow: 'hidden',
-  padding: theme.spacing(2.5),
-  marginBottom: theme.spacing(2),
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: theme.shadows[4],
-  },
-}));
+export const PaymentDetails = ({ open, onClose, payment }: PaymentDetailsProps) => {
+  const theme = useTheme();
 
-const DetailContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.background.paper, 0.5),
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(2.5),
-  marginBottom: theme.spacing(3),
-}));
+  // Get status option
+  const statusOption = STATUS_COLORS[
+    payment.status.toLowerCase() as keyof typeof STATUS_COLORS
+  ] || { bgColor: 'rgba(50, 50, 50, 0.6)', color: '#FFFFFF', label: payment.status };
 
-// ----------------------------------------------------------------------
-
-type Props = {
-  payment: IPaymentItem;
-  openDetails: {
-    value: boolean;
-    onTrue: () => void;
-    onFalse: () => void;
+  // Helper to safely format dates
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return fDate(new Date(dateString));
+    } catch (error) {
+      return 'Date invalide';
+    }
   };
-  onDeleteInvoice: (id: string) => void;
-  onCloseDetails: () => void;
-};
 
-export function PaymentDetails({ payment, openDetails, onDeleteInvoice, onCloseDetails }: Props) {
-  const renderStatus = (status: string) => {
-    const lowerStatus = status.toLowerCase();
-    const backgroundColor =
-      STATUS_COLORS[lowerStatus as keyof typeof STATUS_COLORS] || STATUS_COLORS.all;
-
-    // Utiliser le label traduit ou le status original si aucune traduction n'est trouvée
-    const label = STATUS_LABELS[lowerStatus as keyof typeof STATUS_LABELS] || status;
-
-    return (
-      <Chip
-        label={label}
-        size="small"
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 480 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
+        },
+      }}
+    >
+      {/* Header with background and icon */}
+      <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
         sx={{
-          color: '#FFFFFF',
-          backgroundColor,
-          fontWeight: 'bold',
-          px: 1,
-          height: 28,
+          p: 3,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          color: 'white',
         }}
-      />
-    );
-  };
+      >
+        <IconButton
+          onClick={onClose}
+          edge="end"
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: alpha('#fff', 0.1),
+            },
+          }}
+        >
+          <FontAwesomeIcon icon={faTimes} />
+        </IconButton>
 
-  const renderToolbar = (
-    <PaymentDetailsToolbar
-      onDelete={onDeleteInvoice}
-      onCloseDetails={onCloseDetails}
-      payment={payment}
-    />
-  );
-
-  const renderTabOverview = (
-    <Stack spacing={4} sx={{ px: 1 }}>
-      <Box>
-        <SectionTitle variant="h6">Détails du paiment</SectionTitle>
-        <DetailContainer>
-          <Stack spacing={2.5}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <StyledLabel>N° transaction</StyledLabel>
-                <Typography variant="body1" fontWeight="medium">
-                  {payment.transactionId ? payment.transactionId : 'Non disponible'}
-                </Typography>
-              </Stack>
-              {renderStatus(payment.status)}
-            </Stack>
-
-            <Divider sx={{ borderStyle: 'dashed' }} />
-
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Date paiment</StyledLabel>
-              <Typography variant="body2">
-                {payment.paymentDate ? fDate(payment.paymentDate) : 'Non disponible'}
-              </Typography>
-            </Stack>
-
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Méthode de paiement</StyledLabel>
-              <Typography variant="body2">
-                {payment.paymentMethod
-                  ? getPaymentMethodLabel(payment.paymentMethod)
-                  : 'Non spécifié'}
-              </Typography>
-            </Stack>
-
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Dernière Mise à jour</StyledLabel>
-              <Typography variant="body2">
-                {payment.updatedAt ? fDate(payment.updatedAt) : fDate(payment.createdAt)}
-              </Typography>
-            </Stack>
-
-            {payment.invoiceGenerated && payment.invoice && (
-              <>
-                <Divider sx={{ borderStyle: 'dashed' }} />
-                <Stack direction="row" alignItems="center">
-                  <StyledLabel>Facture</StyledLabel>
-                  <Link href="#" passHref>
-                    <Typography variant="body2" color="primary.main" sx={{ cursor: 'pointer' }}>
-                      Voir la facture
-                    </Typography>
-                  </Link>
-                </Stack>
-              </>
-            )}
-
-            <Divider sx={{ borderStyle: 'dashed' }} />
-
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <StyledLabel>Montant Total</StyledLabel>
-              <Typography variant="h6" color="primary.main">
-                {payment.amount ? fCurrency(payment.amount) : 0}
-              </Typography>
-            </Stack>
-          </Stack>
-        </DetailContainer>
-      </Box>
-
-      <Box>
-        <SectionTitle variant="h6">Informations de l&apos;abonné</SectionTitle>
-        {payment.subscriber ? (
-          <Link
-            key={payment.subscriber.id}
-            href="#"
-            // href={paths.dashboard.abonnements.details(subscriber.id)}
-            passHref
-            style={{ textDecoration: 'none', color: 'inherit' }}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar
+            sx={{
+              width: 64,
+              height: 64,
+              bgcolor: alpha('#fff', 0.9),
+              color: 'primary.main',
+              boxShadow: theme.customShadows?.z8,
+            }}
           >
-            <SubscriberCard>
-              <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar
-                    src={payment.subscriber.avatarUrl}
-                    alt={payment.subscriber.name}
-                    sx={{ width: 48, height: 48, bgcolor: 'primary.main' }}
-                  >
-                    {payment.subscriber.name
-                      ? payment.subscriber.name.charAt(0).toUpperCase()
-                      : 'Non disponible'}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {payment.subscriber.name ? payment.subscriber.name : 'Non disponible'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {payment.subscriber.role}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Stack>
-            </SubscriberCard>
-          </Link>
-        ) : (
-          <Typography variant="body2" color="text.secondary" align="center" py={3}>
-            Aucune information sur l&apos;abonné
-          </Typography>
-        )}
+            <FontAwesomeIcon icon={faFileInvoiceDollar} size="lg" />
+          </Avatar>
+
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              Détails du Paiement
+            </Typography>
+
+            <Chip
+              label={statusOption.label}
+              size="small"
+              sx={{
+                bgcolor: alpha(statusOption.bgColor, 0.8),
+                color: statusOption.color,
+                fontWeight: 'fontWeightMedium',
+                backdropFilter: 'blur(6px)',
+              }}
+            />
+          </Box>
+        </Stack>
       </Box>
 
-      <Box>
-        <SectionTitle variant="h6">Abonnements associés</SectionTitle>
+      {/* Main content */}
+      <Box sx={{ p: 3 }}>
+        {/* Payment Summary */}
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Montant du Paiement
+          </Typography>
+          <Typography variant="h4" color="primary.main">
+            {fCurrency(payment.amount || 0)}
+          </Typography>
+        </Paper>
 
+        {/* Subscriber Information */}
+        {payment.subscriber && (
+          <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+              Informations de l&apos;Abonné
+            </Typography>
+
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                mb: 3,
+                borderRadius: 2,
+                boxShadow: theme.customShadows?.z8,
+                bgcolor: alpha(theme.palette.background.default, 0.5),
+              }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  src={payment.subscriber.avatarUrl}
+                  alt={payment.subscriber.name}
+                  sx={{ width: 56, height: 56 }}
+                >
+                  {payment.subscriber.name?.charAt(0).toUpperCase()}
+                </Avatar>
+                <Stack>
+                  <Typography variant="subtitle1">{payment.subscriber.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {payment.subscriber.role}
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Paper>
+          </Box>
+        )}
+
+        {/* Subscription Information */}
         {payment.subscriptions.length > 0 ? (
-          <Stack>
-            {payment.subscriptions.map((subscription) => (
-              <Link
-                key={subscription.id}
-                href={paths.dashboard.abonnements.details(subscription.id)}
-                passHref
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <SubscriptionCard>
-                  <Stack spacing={1}>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {subscription.title}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {subscription.fullDescription || 'Aucune description disponible'}
-                    </Typography>
-
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Chip
-                        label="Abonnement"
-                        size="small"
-                        sx={{
-                          bgcolor: 'background.neutral',
-                          fontWeight: 'medium',
-                          fontSize: 12,
-                        }}
-                      />
-                      <Typography variant="h6" color="primary.main">
-                        {fCurrency(subscription.price?.amount || 0)}
+          <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+              Abonnements associés
+            </Typography>
+            <Stack>
+              {payment.subscriptions.map((subscription) => (
+                <Link
+                  key={subscription.id}
+                  href={paths.dashboard.abonnements.details(subscription.id)}
+                  passHref
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <SubscriptionCard>
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {subscription.title}
                       </Typography>
+
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {subscription.fullDescription || 'Aucune description disponible'}
+                      </Typography>
+
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Chip
+                          label="Abonnement"
+                          size="small"
+                          sx={{
+                            bgcolor: 'background.neutral',
+                            fontWeight: 'medium',
+                            fontSize: 12,
+                          }}
+                        />
+                        <Typography variant="h6" color="primary.main">
+                          {fCurrency(subscription.price?.amount || 0)}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </SubscriptionCard>
-              </Link>
-            ))}
-          </Stack>
+                  </SubscriptionCard>
+                </Link>
+              ))}
+            </Stack>
+          </Box>
         ) : (
           <Paper
             variant="outlined"
             sx={{ p: 3, textAlign: 'center', bgcolor: 'background.neutral' }}
           >
             <Typography variant="body2" color="text.secondary">
-              Aucun abonnement trouvé pour cette facture
+              Aucun abonnement trouvé pour ce paiement
             </Typography>
           </Paper>
         )}
-      </Box>
-    </Stack>
-  );
 
-  return (
-    <Drawer
-      open={openDetails.value}
-      onClose={onCloseDetails}
-      anchor="right"
-      slotProps={{ backdrop: { invisible: true } }}
-      PaperProps={{
-        sx: {
-          width: { xs: 1, sm: 480 },
-          boxShadow: (theme) => theme.shadows[24],
-          bgcolor: (theme) => alpha(theme.palette.background.default, 0.95),
-        },
-      }}
-    >
-      {renderToolbar}
-      <Scrollbar fillContent sx={{ py: 3, px: 2.5 }}>
-        {renderTabOverview}
-      </Scrollbar>
+        {/* Detailed Information List */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Détails du Paiement
+          </Typography>
+
+          <List
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCalendarAlt} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Date de Paiement
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {safeFormatDate(payment.paymentDate)}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                        color: 'success.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCreditCard} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Méthode de Paiement
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {payment.paymentMethod
+                      ? getPaymentMethodLabel(payment.paymentMethod)
+                      : 'Non spécifié'}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.info.main, 0.1),
+                        color: 'info.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faMoneyBillWave} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Numéro de Transaction
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {payment.transactionId || 'Non disponible'}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                        color: 'success.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faToggleOn} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Statut
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      ml: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Typography variant="body1">{statusOption.label}</Typography>
+                  </Box>
+                }
+              />
+            </ListItem>
+            {payment.invoiceGenerated && payment.invoice && (
+              <ListItem
+                sx={{
+                  py: 1.5,
+                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          bgcolor: alpha(theme.palette.success.main, 0.1),
+                          color: 'success.main',
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faFileInvoice} size="sm" />
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Facture
+                      </Typography>
+                    </Stack>
+                  }
+                  secondary={
+                    <Link href="#" passHref>
+                      <Typography variant="body1" sx={{ mt: 0.5, ml: 6, cursor: 'pointer' }}>
+                        Voir la facture
+                      </Typography>
+                    </Link>
+                  }
+                />
+              </ListItem>
+            )}
+          </List>
+        </Box>
+      </Box>
     </Drawer>
   );
-}
+};
+
+export default PaymentDetails;

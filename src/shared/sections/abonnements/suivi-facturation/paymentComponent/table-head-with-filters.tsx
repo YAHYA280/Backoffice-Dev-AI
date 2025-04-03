@@ -3,8 +3,7 @@
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 import type { IPaymentFilters } from 'src/contexts/types/payment';
 
-import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -12,8 +11,6 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
-  Chip,
-  Stack,
   Button,
   TableRow,
   Checkbox,
@@ -25,10 +22,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { PAYMENT_STATUS_OPTIONS } from 'src/shared/_mock/_payment';
-
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
-import { chipProps, FiltersBlock, FiltersResult } from 'src/shared/components/filters-result';
 
 type Column = {
   id: string;
@@ -71,71 +65,6 @@ export function TableHeadWithFilters({
 }: Props) {
   const datePopover = usePopover();
   const amountPopover = usePopover();
-
-  const filterChips = useMemo(() => {
-    const chips: JSX.Element[] = [];
-    if (filters.state.subscriptions.length > 0) {
-      filters.state.subscriptions.forEach((item) => {
-        chips.push(
-          <Chip
-            key={item}
-            {...chipProps}
-            label={`Abonnements: ${item}`}
-            onDelete={() => filters.setState({ subscriptions: [] })}
-          />
-        );
-      });
-    }
-    if (filters.state.name) {
-      chips.push(
-        <Chip
-          key="name"
-          {...chipProps}
-          label={`Mot clé: ${filters.state.name}`}
-          onDelete={() => filters.setState({ name: '' })}
-        />
-      );
-    }
-    // Vérifier si d'autres filtres sont actifs avant d'ajouter "Status: all"
-    const hasOtherFilters = chips.length > 0;
-    const statusLabel =
-      PAYMENT_STATUS_OPTIONS.find((option) => option.value === filters.state.status)?.label ||
-      'Tous';
-
-    if (filters.state.status && (filters.state.status !== 'all' || hasOtherFilters)) {
-      chips.push(
-        <Chip
-          key="statut"
-          {...chipProps}
-          label={`Statut: ${statusLabel}`}
-          onDelete={() => filters.setState({ status: '' })}
-        />
-      );
-    }
-
-    if (filters.state.startDate) {
-      chips.push(
-        <Chip
-          key="startDate"
-          {...chipProps}
-          label={`Date de début: ${dayjs(filters.state.startDate).format('DD/MM/YYYY')}`}
-          onDelete={() => filters.setState({ startDate: null })}
-        />
-      );
-    }
-    if (filters.state.endDate) {
-      chips.push(
-        <Chip
-          key="endDate"
-          {...chipProps}
-          label={`Date de fin: ${dayjs(filters.state.endDate).format('DD/MM/YYYY')}`}
-          onDelete={() => filters.setState({ endDate: null })}
-        />
-      );
-    }
-
-    return chips;
-  }, [filters]);
 
   // Fonction helper pour le rendu du filtre par colonne
   const renderColumnFilter = (column: Column) => {
@@ -489,32 +418,7 @@ export function TableHeadWithFilters({
   return (
     <TableHead>
       <TableRow>{columns.map((col) => renderHeaderCell(col))}</TableRow>
-
       <TableRow>{columns.map((col) => renderSearchCell(col))}</TableRow>
-
-      {filterChips.length > 0 && (
-        <TableRow>
-          <TableCell colSpan={columns.length}>
-            <FiltersResult
-              totalResults={totalResults}
-              onReset={() => {
-                filters.onResetState();
-                if (onColumnFilter) {
-                  Object.keys(columnFilters).forEach((columnId) => {
-                    onColumnFilter(columnId, '');
-                  });
-                }
-              }}
-            >
-              <FiltersBlock label="" isShow>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {filterChips}
-                </Stack>
-              </FiltersBlock>
-            </FiltersResult>
-          </TableCell>
-        </TableRow>
-      )}
     </TableHead>
   );
 }

@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
 
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
-
-import { CONFIG } from 'src/config-global';
-
-import { SvgColor, svgColorClasses } from '../../svg-color';
+// Import des icônes Font Awesome
 
 // ----------------------------------------------------------------------
 
@@ -25,23 +24,21 @@ export function FullScreenButton() {
   }, []);
 
   return (
-    <Tooltip title={fullscreen ? 'Exit' : 'Full Screen'}>
+    <Tooltip title={fullscreen ? 'Quitter le plein écran' : 'Plein écran'}>
       <IconButton
         onClick={onToggleFullScreen}
         sx={{
-          [`& .${svgColorClasses.root}`]: {
-            background: (theme) =>
-              `linear-gradient(135deg, ${theme.vars.palette.grey[500]} 0%, ${theme.vars.palette.grey[600]} 100%)`,
-            ...(fullscreen && {
-              background: (theme) =>
-                `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.vars.palette.primary.main} 100%)`,
-            }),
+          color: (theme) => fullscreen 
+            ? theme.palette.primary.main 
+            : theme.palette.grey[600],
+          '&:hover': {
+            backgroundColor: (theme) => theme.palette.action.hover,
           },
         }}
       >
-        <SvgColor
-          src={`${CONFIG.site.basePath}/assets/icons/setting/${fullscreen ? 'ic-exit-full-screen' : 'ic-full-screen'}.svg`}
-          sx={{ width: 18, height: 18 }}
+        <FontAwesomeIcon 
+          icon={fullscreen ? faCompress : faExpand} 
+          size="sm" 
         />
       </IconButton>
     </Tooltip>

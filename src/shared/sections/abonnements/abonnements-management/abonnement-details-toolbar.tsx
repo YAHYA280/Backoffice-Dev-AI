@@ -79,7 +79,7 @@ export function AbonnementDetailsToolbar({
         </Tooltip>
 
         <LoadingButton
-          color="inherit"
+          color="primary"
           variant="contained"
           loading={!publish}
           loadingIndicator="Loading…"

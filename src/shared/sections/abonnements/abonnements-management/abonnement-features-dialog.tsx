@@ -76,6 +76,7 @@ export function AddFeatureDialog({ open, onClose }: Props) {
             </Button>
             <LoadingButton
               type="button"
+              color="primary"
               variant="contained"
               loading={isSubmitting}
               onClick={handleFormSubmit}

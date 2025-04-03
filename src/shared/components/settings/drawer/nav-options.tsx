@@ -1,9 +1,12 @@
-import type { ButtonBaseProps } from '@mui/material/ButtonBase';
+import React, { useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import Collapse from '@mui/material/Collapse';
 import { useTheme } from '@mui/material/styles';
 import ButtonBase from '@mui/material/ButtonBase';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha, stylesMode } from 'src/shared/theme/styles';
@@ -11,9 +14,11 @@ import { varAlpha, stylesMode } from 'src/shared/theme/styles';
 import { Block } from './styles';
 import { SvgColor, svgColorClasses } from '../../svg-color';
 
-import type { SettingsState } from '../types';
-
-// ----------------------------------------------------------------------
+// Types
+type SettingsState = {
+  navColor: string;
+  navLayout: string;
+};
 
 type Props = {
   value: {
@@ -34,6 +39,8 @@ type Props = {
 
 export function NavOptions({ options, value, onClickOption, hideNavColor, hideNavLayout }: Props) {
   const theme = useTheme();
+  const [showLayoutOptions, setShowLayoutOptions] = useState(!hideNavLayout);
+  const [showColorOptions, setShowColorOptions] = useState(!hideNavColor);
 
   const cssVars = {
     '--item-radius': '12px',
@@ -45,65 +52,90 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
   };
 
   const labelStyles: React.CSSProperties = {
-    display: 'block',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     lineHeight: '14px',
     color: 'text.secondary',
     fontWeight: 'fontWeightSemiBold',
     fontSize: theme.typography.pxToRem(11),
+    padding: '8px 0',
+    cursor: 'pointer',
   };
 
-  const renderLayout = (
-    <div>
-      <Box component="span" sx={labelStyles}>
-        Layout
-      </Box>
-      <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
-        {options.layouts.map((option) => (
-          <LayoutOption
-            key={option}
-            option={option}
-            selected={value.layout === option}
-            onClick={() => onClickOption.layout(option)}
-          />
-        ))}
-      </Box>
-    </div>
-  );
+  const toggleLayoutOptions = () => {
+    setShowLayoutOptions(!showLayoutOptions);
+  };
 
-  const renderColor = (
-    <div>
-      <Box component="span" sx={labelStyles}>
-        Color
-      </Box>
-      <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
-        {options.colors.map((option) => (
-          <ColorOption
-            key={option}
-            option={option}
-            selected={value.color === option}
-            onClick={() => onClickOption.color(option)}
-          />
-        ))}
-      </Box>
-    </div>
-  );
+  const toggleColorOptions = () => {
+    setShowColorOptions(!showColorOptions);
+  };
 
   return (
     <Block title="Nav" tooltip="Dashboard only" sx={{ ...cssVars, gap: 2.5 }}>
-      {!hideNavLayout && renderLayout}
-      {!hideNavColor && renderColor}
+      {!hideNavLayout && (
+        <div>
+          <Box 
+            component="div" 
+            sx={labelStyles}
+            onClick={toggleLayoutOptions}
+          >
+            <span>Layout</span>
+            {showLayoutOptions ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+          </Box>
+          <Collapse in={showLayoutOptions}>
+            <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
+              {options.layouts.map((option) => (
+                <LayoutOption
+                  key={option}
+                  option={option}
+                  selected={value.layout === option}
+                  onClick={() => onClickOption.layout(option)}
+                />
+              ))}
+            </Box>
+          </Collapse>
+        </div>
+      )}
+
+      {!hideNavColor && (
+        <div>
+          <Box 
+            component="div" 
+            sx={labelStyles}
+            onClick={toggleColorOptions}
+          >
+            <span>Color</span>
+            {showColorOptions ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+          </Box>
+          <Collapse in={showColorOptions}>
+            <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
+              {options.colors.map((option) => (
+                <ColorOption
+                  key={option}
+                  option={option}
+                  selected={value.color === option}
+                  onClick={() => onClickOption.color(option)}
+                />
+              ))}
+            </Box>
+          </Collapse>
+        </div>
+      )}
     </Block>
   );
 }
 
 // ----------------------------------------------------------------------
 
-type OptionProps = ButtonBaseProps & {
+type OptionProps = {
   option: string;
   selected: boolean;
+  onClick: () => void;
+  sx?: React.CSSProperties;
 };
 
-export function LayoutOption({ option, selected, sx, ...other }: OptionProps) {
+export function LayoutOption({ option, selected, sx, onClick }: OptionProps) {
   const renderNav = () => {
     const baseStyles = { flexShrink: 0, borderRadius: 1, bgcolor: 'var(--item-bg)' };
 
@@ -197,6 +229,7 @@ export function LayoutOption({ option, selected, sx, ...other }: OptionProps) {
   return (
     <ButtonBase
       disableRipple
+      onClick={onClick}
       sx={{
         width: 1,
         height: 64,
@@ -213,7 +246,6 @@ export function LayoutOption({ option, selected, sx, ...other }: OptionProps) {
         }),
         ...sx,
       }}
-      {...other}
     >
       {renderNav()}
       {renderContent}
@@ -223,10 +255,11 @@ export function LayoutOption({ option, selected, sx, ...other }: OptionProps) {
 
 // ----------------------------------------------------------------------
 
-export function ColorOption({ option, selected, sx, ...other }: OptionProps) {
+export function ColorOption({ option, selected, sx, onClick }: OptionProps) {
   return (
     <ButtonBase
       disableRipple
+      onClick={onClick}
       sx={{
         gap: 1.5,
         width: 1,
@@ -248,7 +281,6 @@ export function ColorOption({ option, selected, sx, ...other }: OptionProps) {
         }),
         ...sx,
       }}
-      {...other}
     >
       <SvgColor
         src={`${CONFIG.site.basePath}/assets/icons/setting/ic-sidebar-${option === 'integrate' ? 'outline' : 'filled'}.svg`}

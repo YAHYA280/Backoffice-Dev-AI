@@ -299,6 +299,7 @@ export function AbonnementNewEditForm({ currentAbonnement }: Props) {
         type="submit"
         variant="contained"
         size="large"
+        color="primary"
         loading={isSubmitting}
         sx={{ ml: 2 }}
       >

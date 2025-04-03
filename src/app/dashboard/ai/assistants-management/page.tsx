@@ -1,4 +1,4 @@
-import { AssistantsManagementView } from "src/shared/sections/ai/assistants-management/view";
+import { PersonalizationAiView } from "src/shared/sections/ai/assistants-management/view";
 // ----------------------------------------------------------------------
 
 
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function LogsPage() {
-  return <AssistantsManagementView />;
+  return <PersonalizationAiView />;
 }

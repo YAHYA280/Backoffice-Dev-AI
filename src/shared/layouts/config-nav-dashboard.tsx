@@ -158,7 +158,7 @@ export const navData = [
       },
       {
         title: 'Configuration',
-        path: paths.dashboard.configuration.root,
+        path: paths.dashboard.configuration.root, 
         icon: ICONS.settings,
       },
     ],
@@ -178,7 +178,7 @@ export const navData = [
       },
       {
         title: 'Moderation et signalement',
-        path: paths.dashboard.moderation.root,
+        path: paths.dashboard.moderation.root , 
         icon: ICONS.kanban,
       },
     ],

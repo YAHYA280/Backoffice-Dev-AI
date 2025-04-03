@@ -1,4 +1,4 @@
-import type { IKanbanTask } from 'src/contexts/types/kanban';
+import type { IKanbanTask } from "src/contexts/types/kanban";
 
 import useSWR from 'swr';
 import { useMemo } from 'react';

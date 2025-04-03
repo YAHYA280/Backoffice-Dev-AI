@@ -1,50 +1,48 @@
 import type { IInvoice } from 'src/contexts/types/invoice';
 
+import React from 'react';
 import Link from 'next/link';
+import { m } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faTimes,
+  faToggleOn,
+  faCreditCard,
+  faCalendarAlt,
+  faFileInvoice,
+  faFileInvoiceDollar,
+} from '@fortawesome/free-solid-svg-icons';
 
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import { alpha, styled } from '@mui/material/styles';
-import { Chip, Stack, Paper, Avatar, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  List,
+  Chip,
+  Stack,
+  alpha,
+  Paper,
+  Drawer,
+  Avatar,
+  styled,
+  ListItem,
+  useTheme,
+  IconButton,
+  Typography,
+  ListItemText,
+} from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 
 import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 
-import { Scrollbar } from 'src/shared/components/scrollbar';
+import { varFade } from 'src/shared/components/animate/variants/fade';
 
-import { InvoiceDetailsToolbar } from './invoice-details-toolbar';
-
-// ----------------------------------------------------------------------
-// Status color mapping
+// Status colors and labels
 const STATUS_COLORS = {
-  all: 'rgba(50, 50, 50, 0.6)',
-  success: '#28a745',
-  paid: '#28a745',
-  failed: '#424242',
-  cancelled: '#C62828',
-  pending: '#FFB300',
-  overdue: '#E53935',
-  partial: '#039BE5',
-  refunded: '#388E3C',
-};
-
-// Traductions des statuts
-const STATUS_LABELS = {
-  paid: 'Payée',
-  pending: 'En attente',
-  partial: 'Partiellement payée',
-  refunded: 'Remboursée',
-  failed: 'Échoué',
-};
-
-// Traductions des statuts
-const PAYMENT_STATUS_LABELS = {
-  success: 'Réussi',
-  pending: 'En attente',
-  refunded: 'Remboursée',
-  failed: 'Échoué',
+  success: { bgColor: '#28a745', color: '#FFFFFF', label: 'Payée' },
+  pending: { bgColor: '#FFB300', color: '#FFFFFF', label: 'En attente' },
+  failed: { bgColor: '#dc3545', color: '#FFFFFF', label: 'Échoué' },
+  refunded: { bgColor: '#17a2b8', color: '#FFFFFF', label: 'Remboursée' },
 };
 // Options de méthodes de paiement en français
 export const PAYMENT_METHOD_OPTIONS = [
@@ -55,13 +53,6 @@ const getPaymentMethodLabel = (value: string): string => {
   const method = PAYMENT_METHOD_OPTIONS.find((option) => option.value === value);
   return method ? method.label : value;
 };
-const StyledLabel = styled('span')(({ theme }) => ({
-  ...theme.typography.caption,
-  width: 120,
-  flexShrink: 0,
-  color: theme.vars.palette.text.secondary,
-  fontWeight: theme.typography.fontWeightSemiBold,
-}));
 
 // Création d'un style pour rendre les abonnements cliquables
 const SubscriptionCard = styled(Paper)(({ theme }) => ({
@@ -94,47 +85,6 @@ const SubscriptionCard = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: 18,
-  fontWeight: 600,
-  marginBottom: theme.spacing(2),
-  position: 'relative',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: -8,
-    left: 0,
-    width: 40,
-    height: 3,
-    backgroundColor: theme.palette.primary.main,
-  },
-}));
-
-const SubscriberCard = styled(Paper)(({ theme }) => ({
-  cursor: 'pointer',
-  transition: 'all 0.2s ease-in-out',
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.background.default, 0.8),
-  boxShadow: theme.shadows[2],
-  overflow: 'hidden',
-  padding: theme.spacing(2.5),
-  marginBottom: theme.spacing(2),
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: theme.shadows[4],
-  },
-}));
-
-const DetailContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.background.paper, 0.5),
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(2.5),
-  marginBottom: theme.spacing(3),
-}));
-
-// ----------------------------------------------------------------------
-
 type Props = {
   invoice: IInvoice;
   openDetails: {
@@ -142,239 +92,207 @@ type Props = {
     onTrue: () => void;
     onFalse: () => void;
   };
-  onDeleteInvoice: (id: string) => void;
   onCloseDetails: () => void;
 };
 
-export function InvoiceDetails({ invoice, openDetails, onDeleteInvoice, onCloseDetails }: Props) {
-  const renderStatus = (status: string) => {
-    const statusValue = status || 'pending';
-    const lowerStatus = statusValue.toLowerCase();
-    const backgroundColor =
-      STATUS_COLORS[lowerStatus as keyof typeof STATUS_COLORS] || STATUS_COLORS.all;
+export function InvoiceDetails({ invoice, openDetails, onCloseDetails }: Props) {
+  const theme = useTheme();
 
-    // Utiliser le label traduit ou le status original si aucune traduction n'est trouvée
-    const label = STATUS_LABELS[lowerStatus as keyof typeof STATUS_LABELS] || status;
+  // Get status option
+  const statusOption = STATUS_COLORS[
+    (invoice.status?.toLowerCase() || 'pending') as keyof typeof STATUS_COLORS
+  ] || { bgColor: 'rgba(50, 50, 50, 0.6)', color: '#FFFFFF', label: invoice.status || 'Inconnu' };
 
-    return (
-      <Chip
-        label={label}
-        size="small"
-        sx={{
-          color: '#FFFFFF',
-          backgroundColor,
-          fontWeight: 'bold',
-          px: 1,
-          height: 28,
-        }}
-      />
-    );
-  };
-  const renderPaymentStatus = (status: string) => {
-    const statusValue = status || 'pending';
-    const lowerStatus = statusValue.toLowerCase();
-    const backgroundColor =
-      STATUS_COLORS[lowerStatus as keyof typeof STATUS_COLORS] || STATUS_COLORS.all;
-    const label =
-      PAYMENT_STATUS_LABELS[lowerStatus as keyof typeof PAYMENT_STATUS_LABELS] || status;
-
-    return (
-      <Chip
-        label={label}
-        size="small"
-        sx={{
-          color: '#FFFFFF',
-          backgroundColor,
-          fontWeight: 'bold',
-          px: 1,
-          height: 28,
-        }}
-      />
-    );
+  // Helper to safely format dates
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return fDate(new Date(dateString));
+    } catch (error) {
+      return 'Date invalide';
+    }
   };
 
-  const renderToolbar = (
-    <InvoiceDetailsToolbar
-      onDelete={onDeleteInvoice}
-      onCloseDetails={onCloseDetails}
-      invoice={invoice}
-    />
-  );
+  return (
+    <Drawer
+      anchor="right"
+      open={openDetails.value}
+      onClose={onCloseDetails}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 480 },
+          p: 0,
+          boxShadow: theme.customShadows?.z16,
+          overflowY: 'auto',
+        },
+      }}
+    >
+      {/* Header with background and icon */}
+      <Box
+        component={m.div}
+        initial="initial"
+        animate="animate"
+        variants={varFade().in}
+        sx={{
+          p: 3,
+          pb: 5,
+          position: 'relative',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          color: 'white',
+        }}
+      >
+        <IconButton
+          onClick={onCloseDetails}
+          edge="end"
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: alpha('#fff', 0.1),
+            },
+          }}
+        >
+          <FontAwesomeIcon icon={faTimes} />
+        </IconButton>
 
-  const renderTabOverview = (
-    <Stack spacing={4} sx={{ px: 1 }}>
-      <Box>
-        <SectionTitle variant="h6">Détails de la facture</SectionTitle>
-        <DetailContainer>
-          <Stack spacing={2.5}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <StyledLabel>N° Facture</StyledLabel>
-                <Typography variant="body1" fontWeight="medium">
-                  {invoice.invoiceNumber || 'Non spécifié'}
-                </Typography>
-              </Stack>
-              {renderStatus(invoice.status)}
-            </Stack>
-
-            <Divider sx={{ borderStyle: 'dashed' }} />
-
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Date création</StyledLabel>
-              <Typography variant="body2">
-                {' '}
-                {invoice.createDate ? fDate(invoice.createDate) : 'Non spécifié'}
-              </Typography>
-            </Stack>
-
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Dernière Mise à jour</StyledLabel>
-              <Typography variant="body2">
-                {invoice.updatedDate ? fDate(invoice.updatedDate) : fDate(invoice.createDate)}
-              </Typography>
-            </Stack>
-
-            {/* Ajout de l'information de paiement */}
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Méthode de paiement</StyledLabel>
-              <Typography variant="body2">
-                {invoice.payment?.paymentMethod
-                  ? getPaymentMethodLabel(invoice.payment.paymentMethod)
-                  : 'Non spécifié'}
-              </Typography>
-            </Stack>
-
-            {/* Affichage des informations de remboursement si disponibles */}
-            {invoice.refundAmount && (
-              <>
-                <Divider sx={{ borderStyle: 'dashed' }} />
-                <Stack direction="row" alignItems="center">
-                  <StyledLabel>Montant remboursé</StyledLabel>
-                  <Typography variant="body2" color="error.main">
-                    {invoice.refundAmount ? fCurrency(invoice.refundAmount) : 0}
-                  </Typography>
-                </Stack>
-                {invoice.refundDate && (
-                  <Stack direction="row" alignItems="center">
-                    <StyledLabel>Date remboursement</StyledLabel>
-                    <Typography variant="body2">
-                      {invoice.refundDate ? fDate(invoice.refundDate) : 'Non disponible'}
-                    </Typography>
-                  </Stack>
-                )}
-                {invoice.refundReason && (
-                  <Stack direction="row" alignItems="flex-start">
-                    <StyledLabel>Raison</StyledLabel>
-                    <Typography variant="body2">{invoice.refundReason}</Typography>
-                  </Stack>
-                )}
-              </>
-            )}
-
-            <Divider sx={{ borderStyle: 'dashed' }} />
-
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <StyledLabel>Montant Total</StyledLabel>
-              <Typography variant="h6" color="primary.main">
-                {invoice.amount ? fCurrency(invoice.amount) : fCurrency(0)}
-              </Typography>
-            </Stack>
-
-            {/* Ajout des notes si disponibles */}
-            {invoice.notes && (
-              <>
-                <Divider sx={{ borderStyle: 'dashed' }} />
-                <Stack direction="row" alignItems="flex-start">
-                  <StyledLabel>Notes</StyledLabel>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {invoice.notes ? invoice.notes : 'Non disponible'}
-                  </Typography>
-                </Stack>
-              </>
-            )}
-          </Stack>
-        </DetailContainer>
-      </Box>
-
-      <Box>
-        <SectionTitle variant="h6">Informations de l&apos;abonné</SectionTitle>
-        {invoice.subscriber ? (
-          <Link
-            key={invoice.subscriber.id}
-            href={paths.dashboard.abonnements.details(invoice.subscriber.id)}
-            passHref
-            style={{ textDecoration: 'none', color: 'inherit' }}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar
+            sx={{
+              width: 64,
+              height: 64,
+              bgcolor: alpha('#fff', 0.9),
+              color: 'primary.main',
+              boxShadow: theme.customShadows?.z8,
+            }}
           >
-            <SubscriberCard>
-              <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar
-                    src={invoice.subscriber.avatarUrl}
-                    alt={invoice.subscriber.name}
-                    sx={{ width: 48, height: 48, bgcolor: 'primary.main' }}
-                  >
-                    {invoice.subscriber.name?.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {invoice.subscriber.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {invoice.subscriber.role}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Stack>
-            </SubscriberCard>
-          </Link>
-        ) : (
-          <Typography variant="body2" color="text.secondary" align="center" py={3}>
-            Aucune information sur l&apos;abonné
-          </Typography>
-        )}
+            <FontAwesomeIcon icon={faFileInvoiceDollar} size="lg" />
+          </Avatar>
+
+          <Box>
+            <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
+              Détails de la Facture
+            </Typography>
+
+            <Chip
+              label={statusOption.label}
+              size="small"
+              sx={{
+                bgcolor: alpha(statusOption.bgColor, 0.8),
+                color: statusOption.color,
+                fontWeight: 'fontWeightMedium',
+                backdropFilter: 'blur(6px)',
+              }}
+            />
+          </Box>
+        </Stack>
       </Box>
 
-      <Box>
-        <SectionTitle variant="h6">Abonnements associés</SectionTitle>
+      {/* Main content */}
+      <Box sx={{ p: 3 }}>
+        {/* Invoice Amount Summary */}
+        <Paper
+          component={m.div}
+          initial="initial"
+          animate="animate"
+          variants={varFade().inUp}
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            bgcolor: alpha(theme.palette.primary.lighter, 0.2),
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            Montant de la Facture
+          </Typography>
+          <Typography variant="h4" color="primary.main">
+            {fCurrency(invoice.amount || 0)}
+          </Typography>
+        </Paper>
 
+        {/* Subscriber Information */}
+        {invoice.subscriber && (
+          <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+              Informations de l&apos;Abonné
+            </Typography>
+
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                mb: 3,
+                borderRadius: 2,
+                boxShadow: theme.customShadows?.z8,
+                bgcolor: alpha(theme.palette.background.default, 0.5),
+              }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  src={invoice.subscriber.avatarUrl}
+                  alt={invoice.subscriber.name}
+                  sx={{ width: 56, height: 56 }}
+                >
+                  {invoice.subscriber.name?.charAt(0).toUpperCase()}
+                </Avatar>
+                <Stack>
+                  <Typography variant="subtitle1">{invoice.subscriber.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {invoice.subscriber.role}
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Paper>
+          </Box>
+        )}
+
+        {/* Subscriptions Information */}
         {invoice.subscriptions && invoice.subscriptions.length > 0 ? (
-          <Stack>
-            {invoice.subscriptions.map((subscription) => (
-              <Link
-                key={subscription.id}
-                href={paths.dashboard.abonnements.details(subscription.id)}
-                passHref
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <SubscriptionCard>
-                  <Stack spacing={1}>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {subscription.title}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {subscription.fullDescription || 'Aucune description disponible'}
-                    </Typography>
-
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Chip
-                        label="Abonnement"
-                        size="small"
-                        sx={{
-                          bgcolor: 'background.neutral',
-                          fontWeight: 'medium',
-                          fontSize: 12,
-                        }}
-                      />
-                      <Typography variant="h6" color="primary.main">
-                        {fCurrency(subscription.price?.amount || 0)}
+          <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+              Abonnements associés
+            </Typography>
+            <Stack>
+              {invoice.subscriptions.map((subscription) => (
+                <Link
+                  key={subscription.id}
+                  href={paths.dashboard.abonnements.details(subscription.id)}
+                  passHref
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <SubscriptionCard>
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {subscription.title}
                       </Typography>
+
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {subscription.fullDescription || 'Aucune description disponible'}
+                      </Typography>
+
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Chip
+                          label="Abonnement"
+                          size="small"
+                          sx={{
+                            bgcolor: 'background.neutral',
+                            fontWeight: 'medium',
+                            fontSize: 12,
+                          }}
+                        />
+                        <Typography variant="h6" color="primary.main">
+                          {fCurrency(subscription.price?.amount || 0)}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </SubscriptionCard>
-              </Link>
-            ))}
-          </Stack>
+                  </SubscriptionCard>
+                </Link>
+              ))}
+            </Stack>
+          </Box>
         ) : (
           <Paper
             variant="outlined"
@@ -385,70 +303,317 @@ export function InvoiceDetails({ invoice, openDetails, onDeleteInvoice, onCloseD
             </Typography>
           </Paper>
         )}
-      </Box>
 
-      {/* Ajout de la section pour les détails de paiement */}
-      <Box>
-        <SectionTitle variant="h6">Détails du paiement</SectionTitle>
-        <DetailContainer>
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>Méthode</StyledLabel>
-              <Typography variant="body2">
-                {invoice.payment?.paymentMethod
-                  ? getPaymentMethodLabel(invoice.payment.paymentMethod)
-                  : 'Non spécifié'}
-              </Typography>
-            </Stack>
+        {/* Detailed Information List */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Détails de la Facture
+          </Typography>
 
-            <Stack direction="row" alignItems="center">
-              <StyledLabel>État</StyledLabel>
-              <Typography variant="body2">
-                {invoice.payment?.status
-                  ? renderPaymentStatus(invoice.payment.status)
-                  : renderPaymentStatus('pending')}
-              </Typography>
-            </Stack>
+          <List
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: theme.customShadows?.z1,
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCalendarAlt} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Date de Création
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {safeFormatDate(invoice.createDate)}
+                  </Typography>
+                }
+              />
+            </ListItem>
 
-            {invoice.payment?.paymentDate && (
-              <Stack direction="row" alignItems="center">
-                <StyledLabel>Date</StyledLabel>
-                <Typography variant="body2">{fDate(invoice.payment?.paymentDate)}</Typography>
-              </Stack>
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                        color: 'success.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCreditCard} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Méthode de Paiement
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {invoice.payment?.paymentMethod
+                      ? getPaymentMethodLabel(invoice.payment.paymentMethod)
+                      : 'Non spécifié'}
+                  </Typography>
+                }
+              />
+            </ListItem>
+
+            <ListItem
+              sx={{
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.info.main, 0.1),
+                        color: 'info.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faFileInvoice} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Numéro de Facture
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
+                    {invoice.invoiceNumber || 'Non disponible'}
+                  </Typography>
+                }
+              />
+            </ListItem>
+            <ListItem
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                        color: 'success.main',
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faToggleOn} size="sm" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Statut
+                    </Typography>
+                  </Stack>
+                }
+                secondary={
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      ml: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Typography variant="body1">{statusOption.label}</Typography>
+                  </Box>
+                }
+              />
+            </ListItem>
+
+            {/* Affichage des informations de remboursement si disponibles */}
+            {invoice.refundAmount && (
+              <>
+                <ListItem
+                  sx={{
+                    py: 1.5,
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '50%',
+                            bgcolor: alpha(theme.palette.success.main, 0.1),
+                            color: 'success.main',
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faToggleOn} size="sm" />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Montant remboursé
+                        </Typography>
+                      </Stack>
+                    }
+                    secondary={
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          ml: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Typography variant="body1">
+                          {' '}
+                          {invoice.refundAmount ? fCurrency(invoice.refundAmount) : 0}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+                {invoice.refundDate && (
+                  <ListItem
+                    sx={{
+                      py: 1.5,
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              bgcolor: alpha(theme.palette.success.main, 0.1),
+                              color: 'success.main',
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faToggleOn} size="sm" />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Date remboursement
+                          </Typography>
+                        </Stack>
+                      }
+                      secondary={
+                        <Box
+                          sx={{
+                            mt: 0.5,
+                            ml: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Typography variant="body1">
+                            {invoice.refundDate ? fDate(invoice.refundDate) : 'Non disponible'}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                )}
+
+                {invoice.refundReason && (
+                  <ListItem
+                    sx={{
+                      py: 1.5,
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              bgcolor: alpha(theme.palette.success.main, 0.1),
+                              color: 'success.main',
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faToggleOn} size="sm" />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Raison
+                          </Typography>
+                        </Stack>
+                      }
+                      secondary={
+                        <Box
+                          sx={{
+                            mt: 0.5,
+                            ml: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Typography variant="body1">{invoice.refundReason}</Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                )}
+              </>
             )}
-
-            {invoice.payment?.transactionId && (
-              <Stack direction="row" alignItems="center">
-                <StyledLabel>ID Transaction</StyledLabel>
-                <Typography variant="body2">
-                  {invoice.payment?.transactionId || 'Non spécifié'}
-                </Typography>
-              </Stack>
-            )}
-          </Stack>
-        </DetailContainer>
+          </List>
+        </Box>
       </Box>
-    </Stack>
-  );
-
-  return (
-    <Drawer
-      open={openDetails.value}
-      onClose={onCloseDetails}
-      anchor="right"
-      slotProps={{ backdrop: { invisible: true } }}
-      PaperProps={{
-        sx: {
-          width: { xs: 1, sm: 480 },
-          boxShadow: (theme) => theme.shadows[24],
-          bgcolor: (theme) => alpha(theme.palette.background.default, 0.95),
-        },
-      }}
-    >
-      {renderToolbar}
-      <Scrollbar fillContent sx={{ py: 3, px: 2.5 }}>
-        {renderTabOverview}
-      </Scrollbar>
     </Drawer>
   );
 }

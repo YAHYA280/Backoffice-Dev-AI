@@ -1,6 +1,6 @@
 // src/shared/sections/contenu-pedagogique/challenge-management/constants.ts
 
-import { ChallengeStatus, Difficulty, ScoreMethod, QuestionType, MultimediaType } from './types';
+import { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from './types';
 
 // Updated to use new ChallengeStatus enum
 export const STATUT_OPTIONS = [

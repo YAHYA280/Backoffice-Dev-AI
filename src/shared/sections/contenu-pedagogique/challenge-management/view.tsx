@@ -12,25 +12,6 @@ import { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
 
 import type { Challenge } from './types';
 
-// Keep the mock data for reference, might be needed in other components
-const MOCK_NIVEAUX = [
-  { id: '1', nom: 'CP1 - Cours Préparatoire 1' },
-  { id: '2', nom: 'CP2 - Cours Préparatoire 2' },
-  { id: '3', nom: 'CE1 - Cours Élémentaire 1' },
-  { id: '4', nom: 'CE2 - Cours Élémentaire 2' },
-  { id: '5', nom: 'CM1 - Cours Moyen 1' },
-  { id: '6', nom: 'CM2 - Cours Moyen 2' },
-];
-
-const MOCK_MATIERES = [
-  { id: '1-1', nom: 'Mathématiques (CP1)' },
-  { id: '1-2', nom: 'Français (CP1)' },
-  { id: '2-1', nom: 'Mathématiques (CP2)' },
-  { id: '2-2', nom: 'Français (CP2)' },
-  { id: '3-1', nom: 'Mathématiques (CE1)' },
-  { id: '3-2', nom: 'Français (CE1)' },
-];
-
 interface ChallengesManagementViewProps {
   title?: string;
 }
@@ -57,9 +38,6 @@ export function ChallengesManagementView({
     refetch,
   } = useChallenges();
 
-  // Remove dialog states that we no longer need
-  // const [openAddDialog, setOpenAddDialog] = useState(false);
-  // const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openDetailDrawer, setOpenDetailDrawer] = useState(false);
 
@@ -83,16 +61,6 @@ export function ChallengesManagementView({
     setOpenDetailDrawer(true);
   };
 
-  // Remove handlers for dialog states we no longer need
-  // const handleCloseAddDialog = () => {
-  //   setOpenAddDialog(false);
-  // };
-
-  // const handleCloseEditDialog = () => {
-  //   setOpenEditDialog(false);
-  //   setSelectedChallenge(null);
-  // };
-
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setSelectedChallenge(null);
@@ -102,23 +70,6 @@ export function ChallengesManagementView({
     setOpenDetailDrawer(false);
     setSelectedChallenge(null);
   };
-
-  // We no longer need these handlers as they're moved to their respective pages
-  // const handleSubmitAdd = async (data: Partial<Challenge>) => {
-  //   console.log('Adding new challenge:', data);
-  //   await handleAddChallenge(data);
-  //   handleCloseAddDialog();
-  //   refetch();
-  // };
-
-  // const handleSubmitEdit = async (data: Partial<Challenge>) => {
-  //   console.log('Editing challenge:', data);
-  //   if (selectedChallenge) {
-  //     await handleUpdateChallenge(selectedChallenge.id, data);
-  //   }
-  //   handleCloseEditDialog();
-  //   refetch();
-  // };
 
   const handleSubmitDelete = async () => {
     if (selectedChallenge) {
@@ -152,26 +103,8 @@ export function ChallengesManagementView({
         onToggleActive={handleToggleActive}
       />
 
-      {/* Remove the ChallengeDialog components as we no longer need them */}
-      {/* <ChallengeDialog
-        open={openAddDialog}
-        onClose={handleCloseAddDialog}
-        onSubmit={handleSubmitAdd}
-        niveaux={MOCK_NIVEAUX}
-        matieres={MOCK_MATIERES}
-      /> */}
-
       {selectedChallenge ? (
         <>
-          {/* <ChallengeDialog
-            open={openEditDialog}
-            onClose={handleCloseEditDialog}
-            onSubmit={handleSubmitEdit}
-            challenge={selectedChallenge}
-            niveaux={MOCK_NIVEAUX}
-            matieres={MOCK_MATIERES}
-          /> */}
-
           {/* Dialogue de suppression */}
           <ChallengeDeleteDialog
             open={openDeleteDialog}

@@ -46,6 +46,9 @@ test:
       - merge_requests
     variables:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+
+
+ 
   
 
 build-and-publish:

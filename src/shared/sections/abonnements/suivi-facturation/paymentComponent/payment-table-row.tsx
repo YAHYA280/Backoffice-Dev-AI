@@ -186,12 +186,8 @@ export function PaymentTableRow({
         onClose={generateFacture.onFalse}
         payment={row}
       />
-      <PaymentDetails
-        payment={row}
-        openDetails={openDetails}
-        onDeleteInvoice={onDeleteRow}
-        onCloseDetails={openDetails.onFalse}
-      />
+
+      <PaymentDetails open={openDetails.value} onClose={openDetails.onFalse} payment={row} />
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

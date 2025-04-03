@@ -13,7 +13,7 @@ import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import { InvoicesContent } from '../InvoicesContent';
 import { PaymentsContent } from '../payments-list-content';
-import { SubscribersDetailsContent } from '../SubscribersDetailsContent';
+import { SubscribersContent } from '../SubscribersContent';
 
 // ----------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ export function SuiviFacturationView({ title = 'Suivi & Facturation' }: Props) {
       <CustomBreadcrumbs
         heading="Abonnements"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Abonnements', href: paths.dashboard.abonnements.suivi_facturation },
           { name: 'suivi & facturation' },
         ]}
@@ -62,7 +62,7 @@ export function SuiviFacturationView({ title = 'Suivi & Facturation' }: Props) {
 
       {tabs.value === 'paiements' && <PaymentsContent />}
       {tabs.value === 'factures' && <InvoicesContent />}
-      {tabs.value === 'abonnés' && <SubscribersDetailsContent />}
+      {tabs.value === 'abonnés' && <SubscribersContent />}
     </DashboardContent>
   );
 }

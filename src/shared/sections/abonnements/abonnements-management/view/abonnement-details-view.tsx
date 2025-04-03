@@ -47,7 +47,9 @@ export function AbonnementDetailsView({ abonnement }: Props) {
           label={tab.label}
           icon={
             tab.value === 'subscribers' ? (
-              <Label variant="filled">{abonnement?.totalSubscribers}</Label>
+              <Label variant="filled" color="primary">
+                {abonnement?.totalSubscribers}
+              </Label>
             ) : (
               <FontAwesomeIcon icon={faChevronUp} />
             )

@@ -10,8 +10,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   faBan,
-  faFilter,
   faUndoAlt,
+  faColumns,
+  faSyncAlt,
   faTrashAlt,
   faDollarSign,
   faFileExport,
@@ -35,6 +36,7 @@ import {
   Checkbox,
   TableBody,
   TextField,
+  IconButton,
   FormControlLabel,
 } from '@mui/material';
 
@@ -264,7 +266,39 @@ export function PaymentsContent() {
     setVisibleColumns(TABLE_HEAD);
     setSearch('');
   };
+  const handleResetAll = () => {
+    filters.setState({
+      name: '',
+      subscriptions: [],
+      status: '',
+      paymentMethod: '',
+      startDate: null,
+      endDate: null,
+      minAmount: undefined,
+      maxAmount: undefined,
+      hasInvoice: undefined,
+    });
 
+    // Réinitialisez également les filtres de colonnes et la recherche
+    setColumnFilters({});
+    setSearch('');
+
+    // Réinitialisez la pagination
+    table.onResetPage();
+  };
+
+  const canReset =
+    filters.state.name !== '' ||
+    filters.state.paymentMethod !== '' ||
+    (filters.state.startDate !== null && filters.state.startDate !== undefined) ||
+    (filters.state.endDate !== null && filters.state.endDate !== undefined) ||
+    filters.state.status !== '' ||
+    (filters.state.minAmount !== null && filters.state.minAmount !== undefined) ||
+    (filters.state.maxAmount !== null && filters.state.maxAmount !== undefined) ||
+    filters.state.hasInvoice !== undefined ||
+    filters.state.subscriptions.length > 0 ||
+    Object.keys(columnFilters).length > 0 ||
+    search !== '';
   const applyColumnFilters = useCallback(
     (data: IPaymentItem[]) =>
       data.filter((payment) =>
@@ -566,7 +600,7 @@ export function PaymentsContent() {
             }}
           />
 
-          <Box>
+          <Stack direction="row" alignContent="end" spacing={2}>
             {!!table.selected.length && (
               <Tooltip title="Supprimer" arrow>
                 <Button
@@ -591,19 +625,23 @@ export function PaymentsContent() {
                 </Button>
               </Tooltip>
             )}
-            <Tooltip title="Filtrer par colonne" arrow>
-              <Button
-                sx={{
-                  height: 36,
-                  width: 36,
-                  m: 0,
-                  padding: 0,
-                }}
-                onClick={popover.onOpen}
-              >
-                <FontAwesomeIcon icon={faFilter} />
-              </Button>
-            </Tooltip>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={popover.onOpen}
+              startIcon={<FontAwesomeIcon icon={faColumns} />}
+              sx={{
+                minWidth: 100,
+                borderRadius: 1,
+                transition: theme.transitions.create(['background-color']),
+                ...(popover.open && {
+                  bgcolor: 'primary.lighter',
+                }),
+              }}
+            >
+              Colonnes
+            </Button>
             <CustomPopover
               open={popover.open}
               anchorEl={popover.anchorEl}
@@ -690,14 +728,40 @@ export function PaymentsContent() {
                 </Box>
               </Box>
             </CustomPopover>
-
-            <Tooltip title="Exporter toutes les données" arrow>
-              <Button
+            <Tooltip title="Réinitialiser" arrow>
+              <IconButton
+                color="primary"
+                onClick={handleResetAll}
                 sx={{
-                  height: 36,
-                  width: 36,
-                  m: 0,
-                  padding: 0,
+                  p: 1,
+                  position: 'relative', // Add positioning for the indicator
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+              >
+                <FontAwesomeIcon icon={faSyncAlt} />
+                {canReset && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: theme.palette.primary.main,
+                    }}
+                  />
+                )}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Exporter toutes les données" arrow>
+              <IconButton
+                color="primary"
+                sx={{
+                  p: 1,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
                 }}
                 onClick={() => {
                   const exportAllData = () => {
@@ -779,9 +843,9 @@ export function PaymentsContent() {
                 }}
               >
                 <FontAwesomeIcon icon={faFileExport} />
-              </Button>
+              </IconButton>
             </Tooltip>
-          </Box>
+          </Stack>
         </Box>
 
         <Box

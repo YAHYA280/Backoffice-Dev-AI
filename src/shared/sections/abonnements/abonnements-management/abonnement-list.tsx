@@ -3,6 +3,7 @@ import type { IAbonnementItem } from 'src/contexts/types/abonnement';
 import { useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import Pagination, { paginationClasses } from '@mui/material/Pagination';
 
 import { paths } from 'src/routes/paths';
@@ -18,6 +19,7 @@ type Props = {
 
 export function AbonnementList({ abonnements }: Props) {
   const router = useRouter();
+  const theme = useTheme();
 
   const handleView = useCallback(
     (id: string) => {
@@ -57,10 +59,18 @@ export function AbonnementList({ abonnements }: Props) {
 
       {abonnements.length > 8 && (
         <Pagination
-          count={Math.ceil(abonnements.length / 8)} // Affichage dynamique du nombre de pages basé sur les abonnements
+          count={Math.ceil(abonnements.length / 8)}
           sx={{
             mt: { xs: 8, md: 8 },
-            [`& .${paginationClasses.ul}`]: { justifyContent: 'center' },
+            [`& .${paginationClasses.ul}`]: {
+              justifyContent: 'center',
+            },
+            '& .MuiPaginationItem-root': {
+              '&.Mui-selected': {
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+              },
+            },
           }}
         />
       )}

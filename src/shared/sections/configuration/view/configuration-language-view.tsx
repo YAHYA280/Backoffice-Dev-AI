@@ -3,8 +3,8 @@
 import type { SelectChangeEvent } from '@mui/material/Select';
 
 import { toast } from 'sonner';
-import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   faPlus,
   faEdit,
@@ -13,8 +13,8 @@ import {
   faTrash,
   faSearch,
   faFilter,
-  faTimesCircle,
   faSyncAlt,
+  faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';

@@ -3,7 +3,7 @@ import type { IPermission } from 'src/shared/_mock/_permission';
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faCog, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faTimes, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';

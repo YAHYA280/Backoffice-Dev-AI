@@ -173,7 +173,6 @@ export function InvoiceTableRow({
       <InvoiceDetails
         invoice={row}
         openDetails={openDetails}
-        onDeleteInvoice={onDeleteRow}
         onCloseDetails={openDetails.onFalse}
       />
       <ConfirmDialog

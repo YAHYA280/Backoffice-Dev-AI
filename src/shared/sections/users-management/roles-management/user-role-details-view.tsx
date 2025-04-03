@@ -3,7 +3,7 @@ import type { IRoleItem } from 'src/contexts/types/role';
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faCog, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faTimes, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -12,7 +12,6 @@ import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
-import Avatar from '@mui/material/Avatar';
 import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';

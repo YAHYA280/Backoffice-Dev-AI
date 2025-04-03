@@ -12,7 +12,7 @@ type Props = {
   title?: string;
 };
 
-export function ReglageView({ title = 'Reglage du niveau de detail des indices' }: Props) {
+export function TicketsView({ title = 'Gestion des tickets' }: Props) {
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4"> {title} </Typography>

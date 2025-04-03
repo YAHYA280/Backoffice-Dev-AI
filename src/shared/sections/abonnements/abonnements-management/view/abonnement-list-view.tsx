@@ -3,11 +3,13 @@
 import type { IAbonnementItem, IAbonnementFilters } from 'src/contexts/types/abonnement';
 
 import { useState, useCallback } from 'react';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { useTheme } from '@mui/material/styles';
+import { Tooltip, IconButton } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
@@ -33,12 +35,12 @@ import { AbonnementList } from '../abonnement-list';
 import { AbonnementSort } from '../abonnement-sort';
 import { AbonnementSearch } from '../abonnement-search';
 import { AbonnementFilters } from '../abonnement-filters';
-import { AbonnementFiltersResult } from '../abonnement-filters-result';
 
 // ----------------------------------------------------------------------
 
 export function AbonnementListView() {
   const openFilters = useBoolean();
+  const theme = useTheme();
 
   const [sortBy, setSortBy] = useState('Plus récent');
 
@@ -80,7 +82,13 @@ export function AbonnementListView() {
     },
     [search]
   );
-
+  const handleResetAll = () => {
+    filters.setState({
+      types: [],
+      publishOptions: 'Tous',
+      features: [],
+    });
+  };
   const renderFilters = (
     <Stack
       spacing={3}
@@ -103,28 +111,43 @@ export function AbonnementListView() {
             features: ABONNEMENT_FEATURES_OPTIONS.map((option) => option.label),
           }}
         />
+        <Tooltip title="Réinitialiser" arrow>
+          <IconButton
+            color="primary"
+            onClick={handleResetAll}
+            sx={{
+              p: 1,
+              position: 'relative', // Add positioning for the indicator
+              transition: theme.transitions.create(['transform', 'box-shadow']),
+              '&:hover': { transform: 'translateY(-2px)' },
+            }}
+          >
+            <FontAwesomeIcon icon={faSyncAlt} />
+          </IconButton>
+        </Tooltip>
 
         <AbonnementSort sort={sortBy} onSort={handleSortBy} sortOptions={ABONNEMENT_SORT_OPTIONS} />
       </Stack>
     </Stack>
   );
 
-  const renderResults = (
-    <AbonnementFiltersResult filters={filters} totalResults={dataFiltered.length} />
-  );
+  // const renderResults = (
+  //   <AbonnementFiltersResult filters={filters} totalResults={dataFiltered.length} />
+  // );
 
   return (
     <DashboardContent>
       <CustomBreadcrumbs
         heading="Liste des abonnements"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Abonnements', href: paths.dashboard.abonnements.gestion_abonnements },
           { name: 'Gestion des plans' },
         ]}
         action={
           <Button
             component={RouterLink}
+            color="primary"
             href={paths.dashboard.abonnements.new}
             variant="contained"
             startIcon={<FontAwesomeIcon icon={faPlus} />}
@@ -138,7 +161,7 @@ export function AbonnementListView() {
       <Stack spacing={2.5} sx={{ mb: { xs: 3, md: 5 } }}>
         {renderFilters}
 
-        {canReset && renderResults}
+        {/* {canReset && renderResults} */}
       </Stack>
 
       {notFound && <EmptyContent filled sx={{ py: 10 }} />}

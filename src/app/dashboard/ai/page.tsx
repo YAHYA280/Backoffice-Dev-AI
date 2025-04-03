@@ -1,6 +1,5 @@
-import { AIDashboardView } from "src/shared/sections/ai/view";
+import { AIDashboardView } from 'src/shared/sections/ai/view/view';
 // ----------------------------------------------------------------------
-
 
 export const metadata = {
   title: 'AI: Gestion des assistants',

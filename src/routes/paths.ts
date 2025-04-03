@@ -61,6 +61,21 @@ export const paths = {
   dashboard: {
     root: ROOTS.DASHBOARD,
     blank: `${ROOTS.DASHBOARD}/blank`,
+    profile: {
+      root: `${ROOTS.DASHBOARD}/profile`,
+      profile: `${ROOTS.DASHBOARD}/profile/profile`,
+      editProfile: `${ROOTS.DASHBOARD}/profile/profile/edit/`,
+      security: `${ROOTS.DASHBOARD}/profile/profile/security`,
+      language: `${ROOTS.DASHBOARD}/profile/profile/languages`,
+      notifications: `${ROOTS.DASHBOARD}/profile/notifications`,
+      notificationSystem: `${ROOTS.DASHBOARD}/profile/notifications/system`,
+      notificationFrequency: `${ROOTS.DASHBOARD}/profile/notifications/frequency`,
+      notificationProfile: `${ROOTS.DASHBOARD}/profile/notifications/profile_notification`,
+      notificationActivity: `${ROOTS.DASHBOARD}/profile/notifications/activity-tracking`,
+      notificationChannels: `${ROOTS.DASHBOARD}/profile/notifications/channels`,
+      notificationHistory: `${ROOTS.DASHBOARD}/profile/notifications/history`,
+      resetPassword: `${ROOTS.DASHBOARD}/profile/profile/security/reset-password`,
+    },
     users: {
       root: `${ROOTS.DASHBOARD}/users`,
       accounts: `${ROOTS.DASHBOARD}/users/accounts`,

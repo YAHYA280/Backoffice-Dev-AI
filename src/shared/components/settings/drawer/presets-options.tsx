@@ -1,11 +1,7 @@
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
-import { alpha as hexAlpha } from '@mui/material/styles';
-
-import { CONFIG } from 'src/config-global';
 
 import { Block } from './styles';
-import { SvgColor } from '../../svg-color';
 
 import type { SettingsState } from '../types';
 
@@ -25,30 +21,27 @@ export function PresetsOptions({ value, options, onClickOption }: Props) {
       <Box component="ul" gap={1.5} display="grid" gridTemplateColumns="repeat(3, 1fr)">
         {options.map((option) => {
           const selected = value === option.name;
-
+  
           return (
             <Box component="li" key={option.name} sx={{ display: 'flex' }}>
               <ButtonBase
                 onClick={() => onClickOption(option.name)}
                 sx={{
-                  width: 1,
-                  height: 64,
-                  borderRadius: 1.5,
-                  color: option.value,
-                  ...(selected && {
-                    bgcolor: hexAlpha(option.value, 0.08),
-                  }),
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',  // Boutons ronds
+                  backgroundColor: option.value, // Appliquer la couleur directement
+                  border: selected ? `2px solid black` : '2px solid transparent', // Bordure si sélectionné
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.1)', // Animation au survol
+                  },
                 }}
-              >
-                <SvgColor
-                  src={`${CONFIG.site.basePath}/assets/icons/setting/ic-siderbar-duotone.svg`}
-                  sx={{ width: 28, height: 28, color: 'currentColor' }}
-                />
-              </ButtonBase>
+              />
             </Box>
           );
         })}
       </Box>
     </Block>
   );
-}
+}  
