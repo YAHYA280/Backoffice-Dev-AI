@@ -1,7 +1,9 @@
 import {
   faUsers,
   faClock,
+  faComment,
   faChartLine,
+  faUserClock,
   faExclamationCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -13,22 +15,15 @@ import { alpha, useTheme } from '@mui/material/styles';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 
+import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
 // ----------------------------------------------------------------------
 
 // Define a type for color schema that matches the theme
 type ColorSchema = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
 
-// Helper function to replicate bgGradient from the challenge codebase
-const bgGradient = ({
-  direction,
-  startColor,
-  endColor,
-}: {
-  direction: string;
-  startColor: string;
-  endColor: string;
-}) => ({
-  background: `linear-gradient(${direction}, ${startColor}, ${endColor})`,
+const bgGradient = ({ direction, theme }: { direction: string; theme: any }) => ({
+  background: `linear-gradient(${direction}, ${theme.palette.background.neutral}, ${alpha(theme.palette.background.neutral, 0.8)})`,
 });
 
 type StatCardProps = {
@@ -59,14 +54,13 @@ function StatCard({
       sx={{
         ...bgGradient({
           direction: '135deg',
-          startColor: alpha(theme.palette[color].light, 0.2),
-          endColor: alpha(theme.palette[color].main, 0.2),
+          theme,
         }),
         py: 5,
         borderRadius: 2,
         textAlign: 'center',
-        color: `${color}.darker`,
-        backgroundColor: 'common.white',
+        color: 'text.primary',
+        boxShadow: theme.shadows[2],
       }}
     >
       <Box
@@ -107,39 +101,86 @@ function StatCard({
   );
 }
 
-export default function UsageOverview() {
-  const statsData = [
+type Props = {
+  view: 'children' | 'parents';
+  filters: {
+    level: string;
+    dateRange: string;
+    searchQuery: string;
+  };
+};
+
+export default function UsageOverview({ view, filters }: Props) {
+  const { childrenData, parentsData } = useAnalyticsApi(view, filters);
+
+  const childrenStats = [
     {
       title: 'Utilisateurs actifs',
-      total: 1892,
-      increment: 12.5,
+      total: childrenData?.activeUsers.total || 0,
+      increment: childrenData?.activeUsers.increment || 0,
       icon: faUsers,
       color: 'primary' as ColorSchema,
     },
     {
       title: 'Durée moyenne de session',
-      total: 28,
-      increment: 5.2,
+      total: childrenData?.averageSessionDuration.total || 0,
+      increment: childrenData?.averageSessionDuration.increment || 0,
       icon: faClock,
       color: 'info' as ColorSchema,
       suffix: 'min',
     },
     {
       title: "Taux d'engagement",
-      total: 78,
-      increment: -2.3,
+      total: childrenData?.engagementRate.total || 0,
+      increment: childrenData?.engagementRate.increment || 0,
       icon: faChartLine,
       color: 'warning' as ColorSchema,
       suffix: '%',
     },
     {
       title: 'Utilisateurs à risque',
-      total: 85,
-      increment: 18.7,
+      total: childrenData?.atRiskUsers.total || 0,
+      increment: childrenData?.atRiskUsers.increment || 0,
       icon: faExclamationCircle,
       color: 'error' as ColorSchema,
     },
   ];
+
+  const parentsStats = [
+    {
+      title: 'Parents actifs',
+      total: parentsData?.activeParents.total || 0,
+      increment: parentsData?.activeParents.increment || 0,
+      icon: faUsers,
+      color: 'primary' as ColorSchema,
+    },
+    {
+      title: 'Fréquence de connexion',
+      total: parentsData?.connectionFrequency.total || 0,
+      increment: parentsData?.connectionFrequency.increment || 0,
+      icon: faUserClock,
+      color: 'info' as ColorSchema,
+      suffix: '/sem',
+    },
+    {
+      title: 'Temps moyen de consultation',
+      total: parentsData?.averageViewTime.total || 0,
+      increment: parentsData?.averageViewTime.increment || 0,
+      icon: faClock,
+      color: 'warning' as ColorSchema,
+      suffix: 'min',
+    },
+    {
+      title: 'Notifications aux enfants',
+      total: parentsData?.parentFeedback.total || 0,
+      increment: parentsData?.parentFeedback.increment || 0,
+      icon: faComment,
+      color: 'success' as ColorSchema,
+      suffix: '%',
+    },
+  ];
+
+  const statsData = view === 'children' ? childrenStats : parentsStats;
 
   return (
     <Grid container spacing={3}>

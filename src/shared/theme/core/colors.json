@@ -1,13 +1,13 @@
 {
   "primary": {
-    "lighter": "#f9a99a", 
+    "lighter": "#f9a99a",
     "light": "#f28374",
     "main": "#fe7862",
     "dark": "#d75f4d",
     "darker": "#b34e3a",
     "contrastText": "#FFFFFF"
   },
-  
+
   "secondary": {
     "lighter": "#EFD6FF",
     "light": "#C684FF",

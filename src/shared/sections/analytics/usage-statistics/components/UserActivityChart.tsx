@@ -1,124 +1,58 @@
 import type { ApexOptions } from 'apexcharts';
+import type { FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
+import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { Chart, useChart } from 'src/shared/components/chart';
 
-// ----------------------------------------------------------------------
+import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-type FilterValues = {
-  level: string;
-  dateRange: string;
-  searchQuery: string;
-};
+// ----------------------------------------------------------------------
 
 type Props = {
   title: string;
   subheader?: string;
   filters: FilterValues;
+  view: 'children' | 'parents';
 };
 
-export default function UserActivityChart({ title, subheader, filters }: Props) {
+export default function UserActivityChart({ title, subheader, filters, view }: Props) {
   const theme = useTheme();
+  const { loading, childrenData, parentsData } = useAnalyticsApi(view, filters);
+  const [chartData, setChartData] = useState<{
+    labels: string[];
+    series: any[];
+  }>({ labels: [], series: [] });
 
-  // Mock data - would be fetched from an API based on filters in a real app
-  const getChartData = () => {
-    // Base dates for x-axis
-    const baseLabels = [
-      '01/03/2025',
-      '02/03/2025',
-      '03/03/2025',
-      '04/03/2025',
-      '05/03/2025',
-      '06/03/2025',
-      '07/03/2025',
-      '08/03/2025',
-      '09/03/2025',
-      '10/03/2025',
-      '11/03/2025',
-      '12/03/2025',
-    ];
-
-    if (filters.level === 'CP') {
-      return {
-        labels: baseLabels,
-        series: [
-          {
-            name: 'CP',
-            type: 'line',
-            fill: 'solid',
-            data: [20, 23, 22, 25, 24, 28, 30, 32, 30, 29, 30, 31],
-          },
-        ],
-      };
+  useEffect(() => {
+    if (view === 'children' && childrenData?.activityData) {
+      setChartData({
+        labels: childrenData.activityData.labels || [],
+        series: childrenData.activityData.series || [],
+      });
+    } else if (view === 'parents' && parentsData?.activityData) {
+      setChartData({
+        labels: parentsData.activityData.labels || [],
+        series: parentsData.activityData.series || [],
+      });
     }
-
-    if (filters.level === 'CM1') {
-      return {
-        labels: baseLabels,
-        series: [
-          {
-            name: 'CM1',
-            type: 'line',
-            fill: 'solid',
-            data: [32, 30, 33, 35, 37, 36, 38, 40, 42, 41, 39, 38],
-          },
-        ],
-      };
-    }
-
-    if (filters.level === 'CM2') {
-      return {
-        labels: baseLabels,
-        series: [
-          {
-            name: 'CM2',
-            type: 'line',
-            fill: 'solid',
-            data: [25, 26, 28, 30, 33, 35, 34, 32, 33, 35, 37, 36],
-          },
-        ],
-      };
-    }
-
-    // Default: All levels combined
-    return {
-      labels: baseLabels,
-      series: [
-        {
-          name: 'CP',
-          type: 'line',
-          fill: 'solid',
-          data: [20, 23, 22, 25, 24, 28, 30, 32, 30, 29, 30, 31],
-        },
-        {
-          name: 'CM1',
-          type: 'line',
-          fill: 'solid',
-          data: [32, 30, 33, 35, 37, 36, 38, 40, 42, 41, 39, 38],
-        },
-        {
-          name: 'CM2',
-          type: 'line',
-          fill: 'solid',
-          data: [25, 26, 28, 30, 33, 35, 34, 32, 33, 35, 37, 36],
-        },
-      ],
-    };
-  };
-
-  const { labels, series } = getChartData();
+  }, [view, childrenData, parentsData]);
 
   // Cast to ApexOptions to avoid the TS error
   const chartOptions = useChart({
     colors: [theme.palette.primary.main, theme.palette.info.main, theme.palette.warning.main],
     xaxis: {
-      type: 'datetime',
+      categories: chartData.labels,
+      type: 'category', // Changed from datetime to category
       labels: {
-        datetimeUTC: false,
+        formatter: (value) => value, // Simple formatter to display the value as is
       },
     },
     yaxis: {
@@ -148,17 +82,83 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
       curve: 'smooth',
       lineCap: 'round',
     },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'right',
+    },
   }) as ApexOptions;
+
+  if (loading) {
+    return (
+      <Card sx={{ height: '100%' }}>
+        <CardHeader
+          title={
+            title ||
+            (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
+          }
+          subheader="Chargement des données..."
+        />
+        <Box
+          sx={{
+            p: 3,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 364,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </Card>
+    );
+  }
+
+  if (!chartData.series || chartData.series.length === 0) {
+    return (
+      <Card sx={{ height: '100%' }}>
+        <CardHeader
+          title={
+            title ||
+            (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
+          }
+          subheader="Aucune donnée disponible"
+        />
+        <Box
+          sx={{
+            p: 3,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 364,
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            Aucune donnée n&apos;est disponible pour la période sélectionnée.
+          </Typography>
+        </Box>
+      </Card>
+    );
+  }
 
   return (
     <Card sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader
+        title={
+          title ||
+          (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
+        }
+        subheader={
+          subheader ||
+          (view === 'children' ? 'Par niveau et période' : "Par niveau d'enfant et période")
+        }
+      />
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart
           dir="ltr"
           type="line"
-          series={series}
+          series={chartData.series}
           options={chartOptions}
           width="100%"
           height={364}

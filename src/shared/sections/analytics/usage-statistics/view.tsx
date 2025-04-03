@@ -7,9 +7,8 @@ import Typography from '@mui/material/Typography';
 
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 
-import { useSettingsContext } from 'src/shared/components/settings';
-
 import SearchBar from './components/SearchBar';
+import ViewToggle from './components/ViewToggle';
 import FilterSection from './components/FilterSection';
 import UsageOverview from './components/UsageOverview';
 import ActivityHeatmap from './components/ActivityHeatmap';
@@ -24,11 +23,16 @@ type Props = {
 };
 
 export function UsageStatisticsView({ title = `Statistiques d'usage` }: Props) {
-  const settings = useSettingsContext();
+  // Add state for view toggle (children/parents)
+  const [view, setView] = useState<'children' | 'parents'>('children');
+
   const [filters, setFilters] = useState({
     level: 'all',
     dateRange: 'last30days',
     searchQuery: '',
+    engagementRate: 'all', // Pour la vue enfants
+    connectionFrequency: 'all', // Pour la vue parents
+    parentActivity: 'all', // Pour la vue parents
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
@@ -37,6 +41,17 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: Props) {
 
   const handleSearch = (query: string) => {
     setFilters({ ...filters, searchQuery: query });
+  };
+
+  const handleViewChange = (newView: 'children' | 'parents') => {
+    setView(newView);
+    setFilters((prev) => ({
+      ...prev,
+      searchQuery: '',
+      engagementRate: 'all',
+      connectionFrequency: 'all',
+      parentActivity: 'all',
+    }));
   };
 
   return (
@@ -50,47 +65,62 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: Props) {
         {title}
       </Typography>
 
+      <ViewToggle view={view} onViewChange={handleViewChange} />
+
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid xs={12} md={8}>
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} view={view} />
         </Grid>
         <Grid xs={12} md={4}>
-          <FilterSection filters={filters} onFilterChange={handleFilterChange} />
+          <FilterSection filters={filters} onFilterChange={handleFilterChange} view={view} />
         </Grid>
       </Grid>
 
       <Grid container spacing={3}>
-        {/* Usage Overview Section */}
         <Grid xs={12}>
-          <UsageOverview />
+          <UsageOverview view={view} filters={filters} />
         </Grid>
 
-        {/* Charts Section */}
         <Grid xs={12} md={8}>
           <UserActivityChart
-            title="Temps d'utilisation moyen"
-            subheader="Par niveau et période"
+            title={
+              view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen'
+            }
+            subheader={
+              view === 'children' ? 'Par niveau et période' : "Par niveau d'enfant et période"
+            }
             filters={filters}
+            view={view}
           />
         </Grid>
 
         <Grid xs={12} md={4}>
           <ActiveUsersChart
-            title="Utilisateurs actifs"
-            subheader="Activité quotidienne"
+            title={view === 'children' ? 'Utilisateurs actifs' : 'Parents actifs'}
+            subheader={view === 'children' ? 'Activité quotidienne' : 'Connexions quotidiennes'}
             filters={filters}
+            view={view}
           />
         </Grid>
 
         <Grid xs={12} md={5}>
-          <DisengagedUsersList title="Utilisateurs à risque" filters={filters} />
+          <DisengagedUsersList
+            title={view === 'children' ? 'Utilisateurs à risque' : 'Parents peu actifs'}
+            filters={filters}
+            view={view}
+          />
         </Grid>
 
         <Grid xs={12} md={7}>
           <ActivityHeatmap
-            title="Périodes d'activité"
+            title={
+              view === 'children'
+                ? "Périodes d'activité des élèves"
+                : "Périodes d'activité des parents"
+            }
             subheader="Vue hebdomadaire"
             filters={filters}
+            view={view}
           />
         </Grid>
       </Grid>

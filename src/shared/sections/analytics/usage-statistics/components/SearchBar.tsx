@@ -1,21 +1,32 @@
 import { useState } from 'react';
+import { faXmark, faSearch } from '@fortawesome/free-solid-svg-icons';
+
+import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import InputBase from '@mui/material/InputBase';
-import IconButton from '@mui/material/IconButton';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
-import Box from '@mui/material/Box';
+import InputBase from '@mui/material/InputBase';
+import IconButton from '@mui/material/IconButton';
+
 import { FontAwesome } from 'src/shared/components/fontawesome';
-import { faSearch, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 // ----------------------------------------------------------------------
 
 type Props = {
   onSearch: (query: string) => void;
+  view: 'children' | 'parents';
 };
 
-export default function SearchBar({ onSearch }: Props) {
+export default function SearchBar({ onSearch, view }: Props) {
   const [searchValue, setSearchValue] = useState('');
+
+  // Définir le placeholder en fonction de la vue
+  const getPlaceholder = () => {
+    if (view === 'children') {
+      return "Rechercher par nom d'élève, niveau (CP, CM1, CM2), ou statut";
+    }
+    return "Rechercher par nom de parent, niveau de l'enfant, ou fréquence de connexion";
+  };
 
   const handleSearch = () => {
     onSearch(searchValue);
@@ -49,7 +60,7 @@ export default function SearchBar({ onSearch }: Props) {
 
       <InputBase
         sx={{ ml: 1, flex: 1 }}
-        placeholder="Rechercher par nom d'utilisateur, niveau, ou statut"
+        placeholder={getPlaceholder()}
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onKeyDown={handleKeyDown}

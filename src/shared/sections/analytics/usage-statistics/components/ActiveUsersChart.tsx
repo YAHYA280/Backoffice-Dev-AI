@@ -1,4 +1,5 @@
 import type { ApexOptions } from 'apexcharts';
+import type { FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -9,55 +10,42 @@ import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart } from 'src/shared/components/chart';
 
-// ----------------------------------------------------------------------
+import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-type FilterValues = {
-  level: string;
-  dateRange: string;
-  searchQuery: string;
-};
+// ----------------------------------------------------------------------
 
 type Props = {
   title: string;
   subheader?: string;
   filters: FilterValues;
+  view: 'children' | 'parents';
 };
 
-export default function ActiveUsersChart({ title, subheader, filters }: Props) {
+export default function ActiveUsersChart({ title, subheader, filters, view }: Props) {
   const theme = useTheme();
+  const { childrenData, parentsData } = useAnalyticsApi(view, filters);
 
-  // Mock data - would be fetched from API based on filters in real app
-  const getChartData = () => {
-    // Different data for different filters
+  // Get the appropriate data based on the current view
+  const chartData = () => {
     let data: number[] = [];
     let categories: string[] = [];
 
-    // Sample weekday data
-    categories = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-
-    switch (filters.level) {
-      case 'CP':
-        data = [452, 428, 510, 450, 445, 348, 280];
-        break;
-      case 'CM1':
-        data = [620, 598, 615, 629, 618, 452, 389];
-        break;
-      case 'CM2':
-        data = [589, 595, 618, 609, 588, 420, 350];
-        break;
-      default:
-        // All levels combined
-        data = [1661, 1621, 1743, 1688, 1651, 1220, 1019];
+    if (view === 'children') {
+      categories = childrenData?.activeUsersData.categories || [];
+      data = childrenData?.activeUsersData.data || [];
+    } else {
+      categories = parentsData?.activeParentsData.categories || [];
+      data = parentsData?.activeParentsData.data || [];
     }
 
     return { data, categories };
   };
 
-  const { data, categories } = getChartData();
+  const { data, categories } = chartData();
 
   // Cast to ApexOptions to avoid the TS error
   const chartOptions = useChart({
-    colors: [theme.palette.info.main],
+    colors: [view === 'children' ? theme.palette.info.main : theme.palette.success.main],
     plotOptions: {
       bar: {
         columnWidth: '60%',
@@ -72,7 +60,7 @@ export default function ActiveUsersChart({ title, subheader, filters }: Props) {
       y: {
         formatter: (value: number) => fNumber(value),
         title: {
-          formatter: () => 'Utilisateurs actifs',
+          formatter: () => (view === 'children' ? 'Utilisateurs actifs' : 'Parents actifs'),
         },
       },
     },
@@ -97,7 +85,12 @@ export default function ActiveUsersChart({ title, subheader, filters }: Props) {
 
   return (
     <Card sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader
+        title={title || (view === 'children' ? 'Utilisateurs actifs' : 'Parents actifs')}
+        subheader={
+          subheader || (view === 'children' ? 'Activité quotidienne' : 'Connexions quotidiennes')
+        }
+      />
 
       <Box sx={{ mx: 3 }}>
         <Chart
