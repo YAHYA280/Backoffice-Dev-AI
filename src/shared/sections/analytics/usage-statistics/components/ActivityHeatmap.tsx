@@ -1,7 +1,6 @@
+import { useState } from 'react';
 import type { ApexOptions } from 'apexcharts';
 import type { SelectChangeEvent } from '@mui/material/Select';
-
-import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -37,7 +36,6 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
   };
 
   // Mock data for the heatmap
-  // In a real application, this would come from API based on filters
   const getChartData = () => {
     // Time periods of the day
     const periods = ['8h-10h', '10h-12h', '12h-14h', '14h-16h', '16h-18h', '18h-20h', '20h-22h'];
@@ -46,10 +44,8 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
     const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
     // Generate heatmap data - the values represent activity levels
-    // Higher values = darker color (more activity)
     let data = [];
 
-    // Different data based on selected week
     if (selectedWeek === 'previous') {
       data = [
         { name: periods[0], data: [45, 52, 68, 49, 40, 10, 5] },
@@ -61,7 +57,6 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
         { name: periods[6], data: [25, 28, 30, 27, 22, 15, 10] },
       ];
     } else if (selectedWeek === 'next') {
-      // Forecasted data for next week
       data = [
         { name: periods[0], data: [48, 55, 70, 52, 42, 12, 6] },
         { name: periods[1], data: [53, 58, 75, 58, 47, 10, 3] },
@@ -72,7 +67,6 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
         { name: periods[6], data: [28, 30, 32, 29, 25, 17, 12] },
       ];
     } else {
-      // Current week data
       data = [
         { name: periods[0], data: [42, 50, 65, 45, 38, 8, 3] },
         { name: periods[1], data: [48, 52, 70, 52, 42, 5, 1] },
@@ -89,7 +83,8 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
 
   const { data, days } = getChartData();
 
-  const chartOptions: ApexOptions = useChart({
+  // Cast the result to ApexOptions
+  const chartOptions = useChart({
     chart: {
       height: 350,
       type: 'heatmap',
@@ -147,7 +142,7 @@ export default function ActivityHeatmap({ title, subheader, filters }: Props) {
         formatter: (value: number) => `${value} utilisateurs`,
       },
     },
-  });
+  }) as ApexOptions;
 
   return (
     <Card sx={{ height: '100%' }}>

@@ -24,7 +24,7 @@ type Props = {
 export default function UserActivityChart({ title, subheader, filters }: Props) {
   const theme = useTheme();
 
-  // Mock data - would be fetched from API based on filters in real app
+  // Mock data - would be fetched from an API based on filters in a real app
   const getChartData = () => {
     // Base dates for x-axis
     const baseLabels = [
@@ -42,7 +42,6 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
       '12/03/2025',
     ];
 
-    // Data variations based on selected level
     if (filters.level === 'CP') {
       return {
         labels: baseLabels,
@@ -55,7 +54,9 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
           },
         ],
       };
-    } else if (filters.level === 'CM1') {
+    }
+
+    if (filters.level === 'CM1') {
       return {
         labels: baseLabels,
         series: [
@@ -67,35 +68,12 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
           },
         ],
       };
-    } else if (filters.level === 'CM2') {
+    }
+
+    if (filters.level === 'CM2') {
       return {
         labels: baseLabels,
         series: [
-          {
-            name: 'CM2',
-            type: 'line',
-            fill: 'solid',
-            data: [25, 26, 28, 30, 33, 35, 34, 32, 33, 35, 37, 36],
-          },
-        ],
-      };
-    } else {
-      // All levels
-      return {
-        labels: baseLabels,
-        series: [
-          {
-            name: 'CP',
-            type: 'line',
-            fill: 'solid',
-            data: [20, 23, 22, 25, 24, 28, 30, 32, 30, 29, 30, 31],
-          },
-          {
-            name: 'CM1',
-            type: 'line',
-            fill: 'solid',
-            data: [32, 30, 33, 35, 37, 36, 38, 40, 42, 41, 39, 38],
-          },
           {
             name: 'CM2',
             type: 'line',
@@ -105,11 +83,37 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
         ],
       };
     }
+
+    // Default: All levels combined
+    return {
+      labels: baseLabels,
+      series: [
+        {
+          name: 'CP',
+          type: 'line',
+          fill: 'solid',
+          data: [20, 23, 22, 25, 24, 28, 30, 32, 30, 29, 30, 31],
+        },
+        {
+          name: 'CM1',
+          type: 'line',
+          fill: 'solid',
+          data: [32, 30, 33, 35, 37, 36, 38, 40, 42, 41, 39, 38],
+        },
+        {
+          name: 'CM2',
+          type: 'line',
+          fill: 'solid',
+          data: [25, 26, 28, 30, 33, 35, 34, 32, 33, 35, 37, 36],
+        },
+      ],
+    };
   };
 
   const { labels, series } = getChartData();
 
-  const chartOptions: ApexOptions = useChart({
+  // Cast to ApexOptions to avoid the TS error
+  const chartOptions = useChart({
     colors: [theme.palette.primary.main, theme.palette.info.main, theme.palette.warning.main],
     xaxis: {
       type: 'datetime',
@@ -127,9 +131,7 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
       shared: true,
       intersect: false,
       y: {
-        formatter: (value: number) => {
-          return `${value} minutes`;
-        },
+        formatter: (value: number) => `${value} minutes`,
       },
     },
     markers: {
@@ -146,7 +148,7 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
       curve: 'smooth',
       lineCap: 'round',
     },
-  });
+  }) as ApexOptions;
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -158,7 +160,6 @@ export default function UserActivityChart({ title, subheader, filters }: Props) 
           type="line"
           series={series}
           options={chartOptions}
-          labels={labels}
           width="100%"
           height={364}
         />

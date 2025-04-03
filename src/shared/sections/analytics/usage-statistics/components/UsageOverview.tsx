@@ -1,23 +1,41 @@
-import type { ColorSchema } from 'src/shared/theme/color-scheme-script';
+import {
+  faUsers,
+  faClock,
+  faChartLine,
+  faExclamationCircle,
+} from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 
-import { bgGradient } from 'src/shared/theme/css';
-
 import { FontAwesome } from 'src/shared/components/fontawesome';
 
 // ----------------------------------------------------------------------
+
+// Define a type for color schema that matches the theme
+type ColorSchema = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
+
+// Helper function to replicate bgGradient from the challenge codebase
+const bgGradient = ({
+  direction,
+  startColor,
+  endColor,
+}: {
+  direction: string;
+  startColor: string;
+  endColor: string;
+}) => ({
+  background: `linear-gradient(${direction}, ${startColor}, ${endColor})`,
+});
 
 type StatCardProps = {
   title: string;
   total: number;
   increment: number;
-  icon: string;
+  icon: any;
   color?: ColorSchema;
   suffix?: string;
 };
@@ -95,14 +113,14 @@ export default function UsageOverview() {
       title: 'Utilisateurs actifs',
       total: 1892,
       increment: 12.5,
-      icon: 'mdi:account-group',
+      icon: faUsers,
       color: 'primary' as ColorSchema,
     },
     {
       title: 'Durée moyenne de session',
       total: 28,
       increment: 5.2,
-      icon: 'mdi:clock-time-four',
+      icon: faClock,
       color: 'info' as ColorSchema,
       suffix: 'min',
     },
@@ -110,7 +128,7 @@ export default function UsageOverview() {
       title: "Taux d'engagement",
       total: 78,
       increment: -2.3,
-      icon: 'mdi:chart-line',
+      icon: faChartLine,
       color: 'warning' as ColorSchema,
       suffix: '%',
     },
@@ -118,7 +136,7 @@ export default function UsageOverview() {
       title: 'Utilisateurs à risque',
       total: 85,
       increment: 18.7,
-      icon: 'mdi:alert-circle',
+      icon: faExclamationCircle,
       color: 'error' as ColorSchema,
     },
   ];

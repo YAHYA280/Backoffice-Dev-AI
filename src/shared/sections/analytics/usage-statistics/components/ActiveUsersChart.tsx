@@ -55,7 +55,8 @@ export default function ActiveUsersChart({ title, subheader, filters }: Props) {
 
   const { data, categories } = getChartData();
 
-  const chartOptions: ApexOptions = useChart({
+  // Cast to ApexOptions to avoid the TS error
+  const chartOptions = useChart({
     colors: [theme.palette.info.main],
     plotOptions: {
       bar: {
@@ -92,7 +93,7 @@ export default function ActiveUsersChart({ title, subheader, filters }: Props) {
         colors: [theme.palette.text.secondary],
       },
     },
-  });
+  }) as ApexOptions;
 
   return (
     <Card sx={{ height: '100%' }}>
