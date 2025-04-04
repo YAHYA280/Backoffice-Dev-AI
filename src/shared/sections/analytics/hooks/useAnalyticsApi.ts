@@ -161,7 +161,8 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
 
         if (view === 'children') {
           // Mocked data for "children" usage:
-          const mockChildrenData: ChildrenAnalyticsData = {
+          // Base data without filters
+          const baseChildrenData: ChildrenAnalyticsData = {
             activeUsers: {
               total: 1892,
               increment: 12.5,
@@ -288,6 +289,30 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
                 engagementDrop: 51,
                 avatarUrl: '/assets/avatars/avatar_5.jpg',
               },
+              {
+                id: 'u6',
+                name: 'Antoine Durand',
+                level: 'CM2',
+                lastLogin: new Date('2025-03-19T13:45:00'),
+                engagementDrop: 38,
+                avatarUrl: '/assets/avatars/avatar_6.jpg',
+              },
+              {
+                id: 'u7',
+                name: 'Sophie Leroy',
+                level: 'CP',
+                lastLogin: new Date('2025-03-18T10:30:00'),
+                engagementDrop: 44,
+                avatarUrl: '/assets/avatars/avatar_7.jpg',
+              },
+              {
+                id: 'u8',
+                name: 'Thomas Moreau',
+                level: 'CM1',
+                lastLogin: new Date('2025-03-17T14:15:00'),
+                engagementDrop: 33,
+                avatarUrl: '/assets/avatars/avatar_8.jpg',
+              },
             ],
             activityHeatmap: [
               {
@@ -328,10 +353,116 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
             ],
           };
 
-          setChildrenData(mockChildrenData);
+          // Process filters
+
+          // Apply level filter
+          const filteredChildrenData = { ...baseChildrenData };
+
+          // Level filter - filter series data if specific level selected
+          if (filters.level !== 'all') {
+            // Filter activity data series
+            filteredChildrenData.activityData.series = baseChildrenData.activityData.series.filter(
+              (series) => series.name === filters.level
+            );
+
+            if (baseChildrenData.activityData.comparisonSeries) {
+              filteredChildrenData.activityData.comparisonSeries =
+                baseChildrenData.activityData.comparisonSeries.filter((series) =>
+                  series.name.startsWith(filters.level)
+                );
+            }
+
+            // Filter disengaged users list
+            filteredChildrenData.disengagedUsers = baseChildrenData.disengagedUsers.filter(
+              (user) => user.level === filters.level
+            );
+
+            // Adjust overview stats based on level
+            if (filters.level === 'CP') {
+              filteredChildrenData.activeUsers.total = 642;
+              filteredChildrenData.averageSessionDuration.total = 24;
+              filteredChildrenData.engagementRate.total = 75;
+              filteredChildrenData.atRiskUsers.total = 35;
+            } else if (filters.level === 'CM1') {
+              filteredChildrenData.activeUsers.total = 723;
+              filteredChildrenData.averageSessionDuration.total = 32;
+              filteredChildrenData.engagementRate.total = 82;
+              filteredChildrenData.atRiskUsers.total = 28;
+            } else if (filters.level === 'CM2') {
+              filteredChildrenData.activeUsers.total = 527;
+              filteredChildrenData.averageSessionDuration.total = 30;
+              filteredChildrenData.engagementRate.total = 76;
+              filteredChildrenData.atRiskUsers.total = 22;
+            }
+
+            // Adjust active users data based on level
+            const levelMultiplier =
+              filters.level === 'CP' ? 0.34 : filters.level === 'CM1' ? 0.38 : 0.28;
+            filteredChildrenData.activeUsersData.data = baseChildrenData.activeUsersData.data.map(
+              (value) => Math.round(value * levelMultiplier)
+            );
+
+            if (baseChildrenData.activeUsersData.comparisonData) {
+              filteredChildrenData.activeUsersData.comparisonData =
+                baseChildrenData.activeUsersData.comparisonData.map((value) =>
+                  Math.round(value * levelMultiplier)
+                );
+            }
+          }
+
+          // Apply engagement rate filter
+          if (filters.engagementRate && filters.engagementRate !== 'all') {
+            // Filter disengaged users by engagement drop
+            if (filters.engagementRate === 'high') {
+              filteredChildrenData.disengagedUsers = filteredChildrenData.disengagedUsers.filter(
+                (user) => user.engagementDrop < 30
+              );
+            } else if (filters.engagementRate === 'medium') {
+              filteredChildrenData.disengagedUsers = filteredChildrenData.disengagedUsers.filter(
+                (user) => user.engagementDrop >= 30 && user.engagementDrop < 40
+              );
+            } else if (filters.engagementRate === 'low') {
+              filteredChildrenData.disengagedUsers = filteredChildrenData.disengagedUsers.filter(
+                (user) => user.engagementDrop >= 40 && user.engagementDrop < 50
+              );
+            } else if (filters.engagementRate === 'critical') {
+              filteredChildrenData.disengagedUsers = filteredChildrenData.disengagedUsers.filter(
+                (user) => user.engagementDrop >= 50
+              );
+            }
+
+            // Adjust overview stats based on engagement rate
+            if (filters.engagementRate === 'high') {
+              filteredChildrenData.engagementRate.total = 85;
+              filteredChildrenData.engagementRate.increment = 3.2;
+              filteredChildrenData.atRiskUsers.total = Math.round(
+                filteredChildrenData.atRiskUsers.total * 0.4
+              );
+            } else if (filters.engagementRate === 'medium') {
+              filteredChildrenData.engagementRate.total = 65;
+              filteredChildrenData.engagementRate.increment = -1.5;
+              filteredChildrenData.atRiskUsers.total = Math.round(
+                filteredChildrenData.atRiskUsers.total * 0.7
+              );
+            } else if (filters.engagementRate === 'low') {
+              filteredChildrenData.engagementRate.total = 45;
+              filteredChildrenData.engagementRate.increment = -5.8;
+              filteredChildrenData.atRiskUsers.total = Math.round(
+                filteredChildrenData.atRiskUsers.total * 1.2
+              );
+            } else if (filters.engagementRate === 'critical') {
+              filteredChildrenData.engagementRate.total = 22;
+              filteredChildrenData.engagementRate.increment = -12.3;
+              filteredChildrenData.atRiskUsers.total = Math.round(
+                filteredChildrenData.atRiskUsers.total * 1.8
+              );
+            }
+          }
+
+          setChildrenData(filteredChildrenData);
         } else {
           // Mocked data for "parents" usage:
-          const mockParentsData: ParentsAnalyticsData = {
+          const baseParentsData: ParentsAnalyticsData = {
             activeParents: {
               total: 1245,
               increment: 8.3,
@@ -458,6 +589,30 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
                 missedUpdates: 22,
                 avatarUrl: '/assets/avatars/avatar_10.jpg',
               },
+              {
+                id: 'p6',
+                name: 'Marie Lambert',
+                childLevel: 'CM2',
+                lastLogin: new Date('2025-03-01T09:25:00'),
+                missedUpdates: 10,
+                avatarUrl: '/assets/avatars/avatar_11.jpg',
+              },
+              {
+                id: 'p7',
+                name: 'Pierre Dubois',
+                childLevel: 'CP',
+                lastLogin: new Date('2025-02-25T14:45:00'),
+                missedUpdates: 25,
+                avatarUrl: '/assets/avatars/avatar_12.jpg',
+              },
+              {
+                id: 'p8',
+                name: 'Céline Rousseau',
+                childLevel: 'CM1',
+                lastLogin: new Date('2025-03-03T11:35:00'),
+                missedUpdates: 9,
+                avatarUrl: '/assets/avatars/avatar_13.jpg',
+              },
             ],
             parentActivityHeatmap: [
               {
@@ -498,7 +653,119 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
             ],
           };
 
-          setParentsData(mockParentsData);
+          // Apply filters
+          const filteredParentsData = { ...baseParentsData };
+
+          // Level filter - filter by child level
+          if (filters.level !== 'all') {
+            // Filter activity data series
+            filteredParentsData.activityData.series = baseParentsData.activityData.series.filter(
+              (series) => series.name === `Parents ${filters.level}`
+            );
+
+            if (baseParentsData.activityData.comparisonSeries) {
+              filteredParentsData.activityData.comparisonSeries =
+                baseParentsData.activityData.comparisonSeries.filter((series) =>
+                  series.name.startsWith(`Parents ${filters.level}`)
+                );
+            }
+
+            // Filter non-active parents list
+            filteredParentsData.nonActiveParents = baseParentsData.nonActiveParents.filter(
+              (parent) => parent.childLevel === filters.level
+            );
+
+            // Adjust overview stats based on child level
+            if (filters.level === 'CP') {
+              filteredParentsData.activeParents.total = 422;
+              filteredParentsData.connectionFrequency.total = 2.1;
+              filteredParentsData.averageViewTime.total = 10;
+              filteredParentsData.parentFeedback.total = 70;
+            } else if (filters.level === 'CM1') {
+              filteredParentsData.activeParents.total = 485;
+              filteredParentsData.connectionFrequency.total = 2.8;
+              filteredParentsData.averageViewTime.total = 14;
+              filteredParentsData.parentFeedback.total = 62;
+            } else if (filters.level === 'CM2') {
+              filteredParentsData.activeParents.total = 338;
+              filteredParentsData.connectionFrequency.total = 2.2;
+              filteredParentsData.averageViewTime.total = 11;
+              filteredParentsData.parentFeedback.total = 64;
+            }
+
+            // Adjust active parents data based on level
+            const levelMultiplier =
+              filters.level === 'CP' ? 0.34 : filters.level === 'CM1' ? 0.39 : 0.27;
+            filteredParentsData.activeParentsData.data = baseParentsData.activeParentsData.data.map(
+              (value) => Math.round(value * levelMultiplier)
+            );
+
+            if (baseParentsData.activeParentsData.comparisonData) {
+              filteredParentsData.activeParentsData.comparisonData =
+                baseParentsData.activeParentsData.comparisonData.map((value) =>
+                  Math.round(value * levelMultiplier)
+                );
+            }
+          }
+
+          // Apply connection frequency filter
+          if (filters.connectionFrequency && filters.connectionFrequency !== 'all') {
+            // Map connection frequency to missed updates range
+            let minMissed = 0;
+            let maxMissed = 30;
+
+            if (filters.connectionFrequency === 'daily') {
+              maxMissed = 5;
+            } else if (filters.connectionFrequency === 'weekly') {
+              minMissed = 6;
+              maxMissed = 10;
+            } else if (filters.connectionFrequency === 'monthly') {
+              minMissed = 11;
+              maxMissed = 20;
+            } else if (filters.connectionFrequency === 'rarely') {
+              minMissed = 20;
+            }
+
+            // Filter non-active parents by connection frequency
+            filteredParentsData.nonActiveParents = filteredParentsData.nonActiveParents.filter(
+              (parent) => parent.missedUpdates >= minMissed && parent.missedUpdates <= maxMissed
+            );
+
+            // Adjust overview stats based on connection frequency
+            if (filters.connectionFrequency === 'daily') {
+              filteredParentsData.connectionFrequency.total = 6.5;
+              filteredParentsData.parentFeedback.total = 82;
+            } else if (filters.connectionFrequency === 'weekly') {
+              filteredParentsData.connectionFrequency.total = 3.2;
+              filteredParentsData.parentFeedback.total = 70;
+            } else if (filters.connectionFrequency === 'monthly') {
+              filteredParentsData.connectionFrequency.total = 1.5;
+              filteredParentsData.parentFeedback.total = 45;
+            } else if (filters.connectionFrequency === 'rarely') {
+              filteredParentsData.connectionFrequency.total = 0.5;
+              filteredParentsData.parentFeedback.total = 22;
+            }
+          }
+
+          // Apply parent activity filter
+          if (filters.parentActivity && filters.parentActivity !== 'all') {
+            // Adjust overview stats based on parent activity
+            if (filters.parentActivity === 'high') {
+              filteredParentsData.averageViewTime.total = 18;
+              filteredParentsData.parentFeedback.total = 85;
+            } else if (filters.parentActivity === 'medium') {
+              filteredParentsData.averageViewTime.total = 12;
+              filteredParentsData.parentFeedback.total = 65;
+            } else if (filters.parentActivity === 'low') {
+              filteredParentsData.averageViewTime.total = 8;
+              filteredParentsData.parentFeedback.total = 45;
+            } else if (filters.parentActivity === 'inactive') {
+              filteredParentsData.averageViewTime.total = 3;
+              filteredParentsData.parentFeedback.total = 15;
+            }
+          }
+
+          setParentsData(filteredParentsData);
         }
 
         setLoading(false);
@@ -509,7 +776,7 @@ export function useAnalyticsApi(view: 'children' | 'parents', filters: LocalFilt
     };
 
     fetchData();
-  }, [view, filters]);
+  }, [view, filters]); // Note that we're depending on ALL filter properties
 
   return {
     loading,

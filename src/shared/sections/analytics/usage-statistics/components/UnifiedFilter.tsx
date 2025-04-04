@@ -1,8 +1,8 @@
 // /usagestatistics/components/UnifiedFilter.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import fr from 'date-fns/locale/fr';
 import { format, subDays, subMonths } from 'date-fns';
-import { faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faRedo } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,6 +17,9 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 
@@ -44,6 +47,13 @@ type Props = {
   view: 'children' | 'parents';
 };
 
+// Default date range - 30 days
+const getDefaultDateRange = (): DateRange => ({
+  startDate: subDays(new Date(), 30),
+  endDate: new Date(),
+  label: '30 derniers jours',
+});
+
 export default function UnifiedFilter({ filters, onFilterChange, view }: Props) {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
@@ -52,13 +62,23 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
   const [startDate, setStartDate] = useState<Date | null>(filters.dateRange.startDate);
   const [endDate, setEndDate] = useState<Date | null>(filters.dateRange.endDate);
 
-  // Local states for other filters
+  // Local states for other filters - initialize from props
   const [level, setLevel] = useState(filters.level);
   const [engagementRate, setEngagementRate] = useState(filters.engagementRate || 'all');
   const [connectionFrequency, setConnectionFrequency] = useState(
     filters.connectionFrequency || 'all'
   );
   const [parentActivity, setParentActivity] = useState(filters.parentActivity || 'all');
+
+  // Update local state when props change
+  useEffect(() => {
+    setStartDate(filters.dateRange.startDate);
+    setEndDate(filters.dateRange.endDate);
+    setLevel(filters.level);
+    setEngagementRate(filters.engagementRate || 'all');
+    setConnectionFrequency(filters.connectionFrequency || 'all');
+    setParentActivity(filters.parentActivity || 'all');
+  }, [filters]);
 
   // Predefined ranges
   const predefinedRanges = [
@@ -99,6 +119,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -109,24 +130,68 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
     setEndDate(range.endDate);
   };
 
-  // Final apply
+  // Handle level change
+  const handleLevelChange = (event: SelectChangeEvent) => {
+    setLevel(event.target.value);
+  };
+
+  // Handle engagement rate change
+  const handleEngagementRateChange = (event: SelectChangeEvent) => {
+    setEngagementRate(event.target.value);
+  };
+
+  // Handle connection frequency change
+  const handleConnectionFrequencyChange = (event: SelectChangeEvent) => {
+    setConnectionFrequency(event.target.value);
+  };
+
+  // Handle parent activity change
+  const handleParentActivityChange = (event: SelectChangeEvent) => {
+    setParentActivity(event.target.value);
+  };
+
+  // Final apply - send all filter changes back up to parent
   const handleApply = () => {
     if (startDate && endDate) {
-      onFilterChange({
+      const newFilters: Partial<FilterValues> = {
         dateRange: {
           startDate,
           endDate,
           label: 'Personnalisé',
         },
         level,
-        engagementRate,
-        connectionFrequency,
-        parentActivity,
-      });
+      };
+
+      // Add view-specific filters
+      if (view === 'children') {
+        newFilters.engagementRate = engagementRate;
+      } else {
+        newFilters.connectionFrequency = connectionFrequency;
+        newFilters.parentActivity = parentActivity;
+      }
+
+      onFilterChange(newFilters);
     }
     handleClose();
   };
 
+  // Handle refresh/reset filters
+  const handleResetFilters = () => {
+    // Reset to default values
+    const defaultFilters: Partial<FilterValues> = {
+      level: 'all',
+      dateRange: getDefaultDateRange(),
+      searchQuery: '',
+      engagementRate: 'all',
+      connectionFrequency: 'all',
+      parentActivity: 'all',
+    };
+
+    // Apply default filters
+    onFilterChange(defaultFilters);
+  };
+
+  // Format date range for display
   const formatDateRange = () => {
     if (startDate && endDate) {
       return `${format(startDate, 'dd/MM/yyyy', { locale: fr })} - ${format(endDate, 'dd/MM/yyyy', {
@@ -136,18 +201,70 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
     return 'Sélectionner une période';
   };
 
+  // Calculate active filter count for the button badge
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (level !== 'all') count += 1;
+    if (view === 'children' && engagementRate !== 'all') count += 1;
+    if (view === 'parents' && connectionFrequency !== 'all') count += 1;
+    if (view === 'parents' && parentActivity !== 'all') count += 1;
+    return count;
+  };
+
+  const activeFilterCount = getActiveFilterCount();
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-      {/* Filter button aligned to the right, usage is controlled by parent */}
-      <Button
-        variant="outlined"
-        color="inherit"
-        onClick={handleClick}
-        endIcon={<FontAwesome icon={faFilter} />}
-        sx={{ height: '100%', px: 2.5 }}
-      >
-        Filtres
-      </Button>
+      <Stack direction="row" spacing={1} alignItems="center">
+        {/* Refresh button to reset filters */}
+        <Tooltip title="Réinitialiser les filtres">
+          <IconButton
+            color="inherit"
+            onClick={handleResetFilters}
+            sx={{
+              height: 40,
+              width: 40,
+              bgcolor: 'background.paper',
+              '&:hover': { bgcolor: (theme) => theme.palette.grey[200] },
+              boxShadow: (theme) => `0 0 2px ${theme.palette.grey[400]}`,
+            }}
+          >
+            <FontAwesome icon={faRedo} width={16} />
+          </IconButton>
+        </Tooltip>
+
+        {/* Filter button with badge for active filters */}
+        <IconButton
+          color="inherit"
+          onClick={handleClick}
+          sx={{
+            height: 40,
+            width: 40,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            '&:hover': { bgcolor: (theme) => theme.palette.grey[200] },
+            position: 'relative',
+          }}
+        >
+          <FontAwesome icon={faFilter} width={16} />
+          {activeFilterCount > 0 && (
+            <Chip
+              label={activeFilterCount}
+              color="primary"
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: -8,
+                right: -8,
+                height: 20,
+                minWidth: 20,
+                fontSize: '0.625rem',
+              }}
+            />
+          )}
+        </IconButton>
+      </Stack>
 
       <Popover
         open={open}
@@ -162,7 +279,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
           horizontal: 'right',
         }}
         PaperProps={{
-          sx: { width: 400, p: 2 }, // Make it a bit bigger (400px)
+          sx: { width: 400, p: 2 },
         }}
       >
         <Typography variant="subtitle1" gutterBottom>
@@ -217,7 +334,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
             labelId="level-select-label"
             id="level-select"
             value={level}
-            onChange={(e) => setLevel(e.target.value)}
+            onChange={handleLevelChange}
             label={view === 'children' ? 'Niveau' : "Niveau de l'enfant"}
           >
             {view === 'children' ? (
@@ -230,9 +347,9 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
             ) : (
               <>
                 <MenuItem value="all">Tous les enfants</MenuItem>
-                <MenuItem value="CP">Parents d'élèves CP</MenuItem>
-                <MenuItem value="CM1">Parents d'élèves CM1</MenuItem>
-                <MenuItem value="CM2">Parents d'élèves CM2</MenuItem>
+                <MenuItem value="CP">Parents d&apos;élèves CP</MenuItem>
+                <MenuItem value="CM1">Parents d&apos;élèves CM1</MenuItem>
+                <MenuItem value="CM2">Parents d&apos;élèves CM2</MenuItem>
               </>
             )}
           </Select>
@@ -241,12 +358,12 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
         {/* Engagement for children, or connection freq + parentActivity for parents */}
         {view === 'children' ? (
           <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-            <InputLabel id="engagement-rate-label">Taux d'engagement</InputLabel>
+            <InputLabel id="engagement-rate-label">Taux d&apos;engagement</InputLabel>
             <Select
               labelId="engagement-rate-label"
               id="engagement-rate-select"
               value={engagementRate}
-              onChange={(e) => setEngagementRate(e.target.value)}
+              onChange={handleEngagementRateChange}
               label="Taux d'engagement"
             >
               <MenuItem value="all">Tous</MenuItem>
@@ -264,7 +381,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
                 labelId="connection-frequency-label"
                 id="connection-frequency-select"
                 value={connectionFrequency}
-                onChange={(e) => setConnectionFrequency(e.target.value)}
+                onChange={handleConnectionFrequencyChange}
                 label="Fréquence de connexion"
               >
                 <MenuItem value="all">Toutes fréquences</MenuItem>
@@ -281,7 +398,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
                 labelId="parent-activity-label"
                 id="parent-activity-select"
                 value={parentActivity}
-                onChange={(e) => setParentActivity(e.target.value)}
+                onChange={handleParentActivityChange}
                 label="Activité parentale"
               >
                 <MenuItem value="all">Toutes activités</MenuItem>
