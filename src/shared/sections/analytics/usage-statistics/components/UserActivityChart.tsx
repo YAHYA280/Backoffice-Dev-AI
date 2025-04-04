@@ -1,20 +1,25 @@
-import type { ApexOptions } from 'apexcharts';
-import type { FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+// /usagestatistics/components/UserActivityChart.tsx
 
-import { useState, useEffect } from 'react';
+import type { ApexOptions } from 'apexcharts';
+import type { FilterValues, DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
+import { useState, useEffect, useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { useTheme } from '@mui/material/styles';
+import Stack from '@mui/material/Stack';
+import { useTheme, alpha } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 import { Chart, useChart } from 'src/shared/components/chart';
-
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
-
-// ----------------------------------------------------------------------
+import ComparisonMenu from './ComparisonMenu';
 
 type Props = {
   title: string;
@@ -25,34 +30,41 @@ type Props = {
 
 export default function UserActivityChart({ title, subheader, filters, view }: Props) {
   const theme = useTheme();
-  const { loading, childrenData, parentsData } = useAnalyticsApi(view, filters);
+
+  // Local compare state
+  const [compareRange, setCompareRange] = useState<DateRange | null>(null);
+  const isComparing = Boolean(compareRange);
+
+  const [selectedWeek, setSelectedWeek] = useState('current');
+  const handleWeekChange = (event: SelectChangeEvent) => {
+    setSelectedWeek(event.target.value);
+  };
+
+  // useMemo for stable localFilters
+  const localFilters = useMemo(() => ({ ...filters, compareRange }), [filters, compareRange]);
+  const { loading, childrenData, parentsData } = useAnalyticsApi(view, localFilters);
+
   const [chartData, setChartData] = useState<{
     labels: string[];
     series: any[];
+    comparisonSeries?: any[];
   }>({ labels: [], series: [] });
 
-  useEffect(() => {
-    if (view === 'children' && childrenData?.activityData) {
-      setChartData({
-        labels: childrenData.activityData.labels || [],
-        series: childrenData.activityData.series || [],
-      });
-    } else if (view === 'parents' && parentsData?.activityData) {
-      setChartData({
-        labels: parentsData.activityData.labels || [],
-        series: parentsData.activityData.series || [],
-      });
-    }
-  }, [view, childrenData, parentsData]);
-
-  // Cast to ApexOptions to avoid the TS error
+  // 1) Always call your chart hook
   const chartOptions = useChart({
-    colors: [theme.palette.primary.main, theme.palette.info.main, theme.palette.warning.main],
+    colors: [
+      theme.palette.primary.main,
+      theme.palette.info.main,
+      theme.palette.warning.main,
+      alpha(theme.palette.primary.main, 0.7),
+      alpha(theme.palette.info.main, 0.7),
+      alpha(theme.palette.warning.main, 0.7),
+    ],
     xaxis: {
+      type: 'category',
       categories: chartData.labels,
-      type: 'category', // Changed from datetime to category
       labels: {
-        formatter: (value) => value, // Simple formatter to display the value as is
+        formatter: (value: string) => value,
       },
     },
     yaxis: {
@@ -89,16 +101,30 @@ export default function UserActivityChart({ title, subheader, filters, view }: P
     },
   }) as ApexOptions;
 
+  // 2) Then do effect to set chartData
+  useEffect(() => {
+    if (view === 'children' && childrenData?.activityData) {
+      setChartData({
+        labels: childrenData.activityData.labels || [],
+        series: childrenData.activityData.series || [],
+        comparisonSeries: childrenData.activityData.comparisonSeries,
+      });
+    } else if (view === 'parents' && parentsData?.activityData) {
+      setChartData({
+        labels: parentsData.activityData.labels || [],
+        series: parentsData.activityData.series || [],
+        comparisonSeries: parentsData.activityData.comparisonSeries,
+      });
+    } else {
+      setChartData({ labels: [], series: [] });
+    }
+  }, [view, childrenData, parentsData]);
+
+  // 3) If loading => show spinner
   if (loading) {
     return (
       <Card sx={{ height: '100%' }}>
-        <CardHeader
-          title={
-            title ||
-            (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
-          }
-          subheader="Chargement des données..."
-        />
+        <CardHeader title={title} subheader="Chargement des données..." />
         <Box
           sx={{
             p: 3,
@@ -114,16 +140,11 @@ export default function UserActivityChart({ title, subheader, filters, view }: P
     );
   }
 
+  // 4) If no data => fallback
   if (!chartData.series || chartData.series.length === 0) {
     return (
       <Card sx={{ height: '100%' }}>
-        <CardHeader
-          title={
-            title ||
-            (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
-          }
-          subheader="Aucune donnée disponible"
-        />
+        <CardHeader title={title} subheader="Aucune donnée disponible" />
         <Box
           sx={{
             p: 3,
@@ -141,24 +162,38 @@ export default function UserActivityChart({ title, subheader, filters, view }: P
     );
   }
 
+  // 5) If comparing => show old data only
+  const actualSeries = isComparing ? chartData.comparisonSeries ?? [] : chartData.series;
+
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
-        title={
-          title ||
-          (view === 'children' ? "Temps d'utilisation moyen" : 'Temps de consultation moyen')
-        }
-        subheader={
-          subheader ||
-          (view === 'children' ? 'Par niveau et période' : "Par niveau d'enfant et période")
+        title={title}
+        subheader={subheader}
+        action={
+          <Stack direction="row" spacing={1} alignItems="center">
+            <ComparisonMenu
+              isComparing={isComparing}
+              currentDateRange={filters.dateRange}
+              onCompareToggle={(range: DateRange | null) => setCompareRange(range)}
+            />
+          </Stack>
         }
       />
+
+      {isComparing && compareRange && (
+        <Box sx={{ px: 3, pt: 1 }}>
+          <Typography variant="caption">
+            Période comparative: {compareRange.label || 'Période précédente'}
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart
           dir="ltr"
           type="line"
-          series={chartData.series}
+          series={actualSeries}
           options={chartOptions}
           width="100%"
           height={364}

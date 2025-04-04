@@ -1,3 +1,5 @@
+// /usagestatistics/components/ViewToggle.tsx
+
 import { faUser, faChild } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
@@ -7,8 +9,6 @@ import Typography from '@mui/material/Typography';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
-
-// ----------------------------------------------------------------------
 
 type Props = {
   view: 'children' | 'parents';

@@ -1,23 +1,26 @@
+// /usagestatistics/components/ActivityHeatmap.tsx
+
 import type { ApexOptions } from 'apexcharts';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+import type { FilterValues, DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import Grid from '@mui/material/Grid';
 
 import { Chart, useChart } from 'src/shared/components/chart';
-
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
-
-// ----------------------------------------------------------------------
+import ComparisonMenu from './ComparisonMenu';
 
 type Props = {
   title: string;
@@ -29,31 +32,34 @@ type Props = {
 export default function ActivityHeatmap({ title, subheader, filters, view }: Props) {
   const theme = useTheme();
   const [selectedWeek, setSelectedWeek] = useState('current');
-  const { childrenData, parentsData } = useAnalyticsApi(view, filters);
+
+  // Local comparison
+  const [compareRange, setCompareRange] = useState<DateRange | null>(null);
+  const isComparing = Boolean(compareRange);
+
+  // useMemo to prevent re-fetch loops
+  const localFilters = useMemo(() => ({ ...filters, compareRange }), [filters, compareRange]);
+
+  const { childrenData, parentsData } = useAnalyticsApi(view, localFilters);
 
   const handleWeekChange = (event: SelectChangeEvent) => {
     setSelectedWeek(event.target.value);
   };
 
-  const getChartData = () => {
-    const periods = ['8h-10h', '10h-12h', '12h-14h', '14h-16h', '16h-18h', '18h-20h', '20h-22h'];
+  // Decide which data to use
+  const data =
+    view === 'children'
+      ? childrenData?.activityHeatmap || []
+      : parentsData?.parentActivityHeatmap || [];
 
-    // Days of the week
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  // Build series (either old or current)
+  const getSeries = () =>
+    data.map((seriesItem) => ({
+      name: seriesItem.name,
+      data: isComparing ? seriesItem.comparisonData || [] : seriesItem.data,
+    }));
 
-    // Use data from API
-    const data =
-      view === 'children'
-        ? childrenData?.activityHeatmap || []
-        : parentsData?.parentActivityHeatmap || [];
-
-    return { data, days };
-  };
-
-  const { data, days } = getChartData();
-
-  // Cast the result to ApexOptions
-  const chartOptions = useChart({
+  const mainOptions = useChart({
     chart: {
       height: 350,
       type: 'heatmap',
@@ -63,7 +69,7 @@ export default function ActivityHeatmap({ title, subheader, filters, view }: Pro
     },
     colors: [view === 'children' ? theme.palette.primary.main : theme.palette.success.main],
     xaxis: {
-      categories: days,
+      categories: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
       labels: {
         rotate: 0,
       },
@@ -127,29 +133,28 @@ export default function ActivityHeatmap({ title, subheader, filters, view }: Pro
         }
         subheader={subheader || 'Vue hebdomadaire'}
         action={
-          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-            <InputLabel id="week-select-label">Semaine</InputLabel>
-            <Select
-              labelId="week-select-label"
-              id="week-select"
-              value={selectedWeek}
-              label="Semaine"
-              onChange={handleWeekChange}
-            >
-              <MenuItem value="previous">Précédente</MenuItem>
-              <MenuItem value="current">Actuelle</MenuItem>
-              <MenuItem value="next">Prochaine</MenuItem>
-            </Select>
-          </FormControl>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <ComparisonMenu
+              isComparing={isComparing}
+              currentDateRange={filters.dateRange}
+              onCompareToggle={setCompareRange}
+            />
+          </Stack>
         }
       />
+
+      {isComparing && compareRange && (
+        <Typography variant="caption" sx={{ pl: 3, pt: 1 }}>
+          Période comparative: {compareRange.label || 'Période précédente'}
+        </Typography>
+      )}
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart
           dir="ltr"
           type="heatmap"
-          series={data}
-          options={chartOptions}
+          series={getSeries()}
+          options={mainOptions}
           width="100%"
           height={336}
         />

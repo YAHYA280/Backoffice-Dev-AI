@@ -1,3 +1,5 @@
+// /usagestatistics/components/DisengagedUsersList.tsx
+
 import type { CardProps } from '@mui/material/Card';
 import type { FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
@@ -31,7 +33,6 @@ import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalytic
 
 // ----------------------------------------------------------------------
 
-// Définir les types pour les utilisateurs et les parents
 export type ChildUser = {
   id: string;
   name: string;
@@ -61,25 +62,20 @@ export default function DisengagedUsersList({ title, subheader, filters, view, .
   const { childrenData, parentsData } = useAnalyticsApi(view, filters);
   const [openDialog, setOpenDialog] = useState(false);
 
-  // Ne pas créer une liste unifiée, traiter les deux listes séparément
   const childrenList = childrenData?.disengagedUsers || [];
   const parentsList = parentsData?.nonActiveParents || [];
 
-  // Display only first 5 items in the card
   const displayedChildren = childrenList.slice(0, 5);
   const displayedParents = parentsList.slice(0, 5);
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
   };
-
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
 
   const handleNotifyAll = () => {
-    // Cette fonction serait utilisée pour notifier tous les utilisateurs
-    // Implémentation d'API à ajouter ici
     alert(
       `${view === 'children' ? 'Notification envoyée à tous les enfants' : 'Message envoyé à tous les parents'}`
     );
@@ -125,7 +121,6 @@ export default function DisengagedUsersList({ title, subheader, filters, view, .
         </Box>
       </Card>
 
-      {/* Dialog pour "Voir tous" */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -175,17 +170,11 @@ export default function DisengagedUsersList({ title, subheader, filters, view, .
   );
 }
 
-// ----------------------------------------------------------------------
-
-type ChildItemProps = {
-  user: ChildUser;
-};
-
+type ChildItemProps = { user: ChildUser };
 function ChildItem({ user }: ChildItemProps) {
   const { name, level, lastLogin, engagementDrop, avatarUrl } = user;
 
   const handleNotify = () => {
-    // Implémentation à ajouter pour notifier un utilisateur spécifique
     alert(`Notification envoyée à ${name}`);
   };
 
@@ -210,7 +199,6 @@ function ChildItem({ user }: ChildItemProps) {
         <Typography variant="subtitle2" noWrap>
           {name}
         </Typography>
-
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
           <Chip
             label={level}
@@ -235,8 +223,8 @@ function ChildItem({ user }: ChildItemProps) {
           size="small"
           variant="outlined"
           color="primary"
-          startIcon={<FontAwesome icon={faBell} />}
           onClick={handleNotify}
+          startIcon={<FontAwesome icon={faBell} />}
         >
           Notifier
         </Button>
@@ -245,17 +233,11 @@ function ChildItem({ user }: ChildItemProps) {
   );
 }
 
-// ----------------------------------------------------------------------
-
-type ParentItemProps = {
-  parent: ParentUser;
-};
-
+type ParentItemProps = { parent: ParentUser };
 function ParentItem({ parent }: ParentItemProps) {
   const { name, childLevel, lastLogin, missedUpdates, avatarUrl } = parent;
 
   const handleContact = () => {
-    // Implémentation à ajouter pour contacter un parent spécifique
     alert(`Message envoyé à ${name}`);
   };
 
@@ -280,7 +262,6 @@ function ParentItem({ parent }: ParentItemProps) {
         <Typography variant="subtitle2" noWrap>
           {name}
         </Typography>
-
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
           <Chip
             label={`Parent ${childLevel}`}
