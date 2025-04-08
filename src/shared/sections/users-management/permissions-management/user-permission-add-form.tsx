@@ -1,5 +1,4 @@
 import type { Dayjs } from 'dayjs';
-import type { SelectChangeEvent } from '@mui/material';
 import type { IPermission } from 'src/shared/_mock/_permission';
 
 import dayjs from 'dayjs';
@@ -13,18 +12,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import {
-  Box,
-  Chip,
-  alpha,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  OutlinedInput,
-} from '@mui/material';
 
-import roleData from 'src/shared/_mock/_role';
 import { LocalizationProvider } from 'src/shared/locales';
 
 // ----------------------------------------------------------------------
@@ -45,28 +33,11 @@ export function UserPermissionAddDialog({
   const [roles, setRoles] = useState<string[]>([]);
   const [createdAt, setCreatedAt] = useState<Dayjs | null>(null);
 
-  const allRoles = roleData.map((role) => ({
-    label: role.name,
-    value: role.name,
-  }));
-
   useEffect(() => {
     if (open) {
       setCreatedAt(dayjs());
     }
   }, [open]);
-
-  const handleRoleChange = (event: SelectChangeEvent<typeof roles>) => {
-    const {
-      target: { value },
-    } = event;
-
-    setRoles(typeof value === 'string' ? value.split(',') : value);
-  };
-
-  const handleDeleteChip = (roleToDelete: string) => {
-    setRoles((currentRoles) => currentRoles.filter((role) => role !== roleToDelete));
-  };
 
   // Handle form submit
   const handleSubmit = () => {
@@ -133,89 +104,6 @@ export function UserPermissionAddDialog({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-
-          {/* Roles as Select with Tags */}
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel id="permissions-select-label">Rôles</InputLabel>
-            <Select
-              labelId="roles-select-label"
-              id="roles-select"
-              multiple
-              value={roles}
-              onChange={handleRoleChange}
-              input={<OutlinedInput label="Rôles" />}
-              MenuProps={{
-                anchorOrigin: {
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                },
-                transformOrigin: {
-                  vertical: 'top',
-                  horizontal: 'left',
-                },
-                PaperProps: {
-                  style: {
-                    maxHeight: 210,
-                  },
-                },
-              }}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip
-                      key={value}
-                      label={allRoles.find((r) => r.value === value)?.label || value}
-                      size="small"
-                      onDelete={() => handleDeleteChip(value)}
-                      onMouseDown={(event) => {
-                        event.stopPropagation();
-                      }}
-                      sx={{
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                        color: 'primary.main',
-                        fontWeight: 600,
-                        borderRadius: 1,
-                        '&:hover': {
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
-                        },
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-              sx={{
-                minHeight: 'auto',
-                '& .MuiOutlinedInput-input': {
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 0.5,
-                  padding: '14px',
-                  height: 'auto',
-                },
-              }}
-            >
-              {allRoles.map((role) => (
-                <MenuItem
-                  key={role.value}
-                  value={role.value}
-                  sx={{
-                    borderRadius: 1,
-                    '&:hover': {
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                    },
-                    '&.Mui-selected': {
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                      '&:hover': {
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
-                      },
-                    },
-                  }}
-                >
-                  {role.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
 
           {/* Created At Date Picker */}
           <LocalizationProvider>

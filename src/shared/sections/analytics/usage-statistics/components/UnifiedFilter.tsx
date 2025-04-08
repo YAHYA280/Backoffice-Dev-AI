@@ -130,11 +130,6 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
     setEndDate(range.endDate);
   };
 
-  // Handle level change
-  const handleLevelChange = (event: SelectChangeEvent) => {
-    setLevel(event.target.value);
-  };
-
   // Handle engagement rate change
   const handleEngagementRateChange = (event: SelectChangeEvent) => {
     setEngagementRate(event.target.value);
@@ -148,6 +143,13 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
   // Handle parent activity change
   const handleParentActivityChange = (event: SelectChangeEvent) => {
     setParentActivity(event.target.value);
+  };
+
+  // Apply a single filter change directly
+  const applyFilterDirectly = (filterName: string, value: any) => {
+    const newFilter: Partial<FilterValues> = {};
+    newFilter[filterName as keyof FilterValues] = value;
+    onFilterChange(newFilter);
   };
 
   // Final apply - send all filter changes back up to parent
@@ -170,6 +172,9 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
         newFilters.parentActivity = parentActivity;
       }
 
+      // Debug log
+      console.log('Applying filters:', newFilters);
+
       onFilterChange(newFilters);
     }
     handleClose();
@@ -186,6 +191,9 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
       connectionFrequency: 'all',
       parentActivity: 'all',
     };
+
+    // Debug log
+    console.log('Resetting filters to:', defaultFilters);
 
     // Apply default filters
     onFilterChange(defaultFilters);
@@ -324,36 +332,6 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
         </Typography>
 
         <Divider sx={{ mb: 2 }} />
-
-        {/* Level */}
-        <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-          <InputLabel id="level-select-label">
-            {view === 'children' ? 'Niveau' : "Niveau de l'enfant"}
-          </InputLabel>
-          <Select
-            labelId="level-select-label"
-            id="level-select"
-            value={level}
-            onChange={handleLevelChange}
-            label={view === 'children' ? 'Niveau' : "Niveau de l'enfant"}
-          >
-            {view === 'children' ? (
-              <>
-                <MenuItem value="all">Tous les niveaux</MenuItem>
-                <MenuItem value="CP">CP</MenuItem>
-                <MenuItem value="CM1">CM1</MenuItem>
-                <MenuItem value="CM2">CM2</MenuItem>
-              </>
-            ) : (
-              <>
-                <MenuItem value="all">Tous les enfants</MenuItem>
-                <MenuItem value="CP">Parents d&apos;élèves CP</MenuItem>
-                <MenuItem value="CM1">Parents d&apos;élèves CM1</MenuItem>
-                <MenuItem value="CM2">Parents d&apos;élèves CM2</MenuItem>
-              </>
-            )}
-          </Select>
-        </FormControl>
 
         {/* Engagement for children, or connection freq + parentActivity for parents */}
         {view === 'children' ? (

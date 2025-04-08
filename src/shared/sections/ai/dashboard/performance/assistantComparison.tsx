@@ -43,7 +43,16 @@ export function AssistantComparison({ title, subheader, chart, ...other }: Props
     colors: chartColors,
     stroke: { width: 2, colors: ['transparent'] },
     xaxis: { categories: currentSeries?.categories },
-    tooltip: { y: { formatter: (value: number) => `${value}` } },
+    tooltip: {
+      theme: 'light',
+      x: {
+        show: true,
+        formatter: (value) => `<div style="text-align: center; width: 100%;">${value}</div>`,
+      },
+      y: {
+        formatter: (value: number) => value.toString(),
+      },
+    },
     chart: {
       toolbar: {
         show: true,

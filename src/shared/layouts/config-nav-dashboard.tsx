@@ -59,7 +59,7 @@ export const navData = [
             path: paths.dashboard.analytics.suivi_erreurs,
           },
           {
-            title: "Logs",
+            title: "Logs et Traçabilité",
             path: paths.dashboard.analytics.logs,
           },
         ],
@@ -170,6 +170,20 @@ export const navData = [
         title: 'Tableau de bord',
         path: paths.dashboard.ai.root,
         icon: ICONS.aiBoard,
+        children: [
+          {
+            title: "Correction",
+            path: paths.dashboard.ai.correction,
+          },
+          {
+            title: "Taux",
+            path: paths.dashboard.ai.taux,
+          },
+          {
+            title: "Performance",
+            path: paths.dashboard.ai.performance,
+          },
+        ],
       },
       {
         title: 'Gestion des assistants',
@@ -184,4 +198,3 @@ export const navData = [
     ],
   },
 ];
-

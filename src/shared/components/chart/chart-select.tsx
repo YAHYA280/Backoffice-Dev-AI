@@ -1,12 +1,13 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import ButtonBase from '@mui/material/ButtonBase';
 
 import { varAlpha } from 'src/shared/theme/styles';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 import { usePopover, CustomPopover } from '../custom-popover';
 

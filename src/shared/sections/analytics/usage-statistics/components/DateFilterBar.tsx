@@ -1,5 +1,3 @@
-// /usagestatistics/components/DateFilterBar.tsx
-
 import { useState } from 'react';
 import fr from 'date-fns/locale/fr';
 import { format, subDays, subMonths } from 'date-fns';

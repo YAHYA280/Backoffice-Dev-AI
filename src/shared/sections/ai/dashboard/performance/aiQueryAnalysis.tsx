@@ -77,6 +77,7 @@ export function AiQueryAnalysis({
   // Options du graphique
   const chartOptions = useChart({
     colors: chartColors,
+    tooltip: { theme: 'light' },
     xaxis: { categories: chart.categories },
     chart: {
       toolbar: {

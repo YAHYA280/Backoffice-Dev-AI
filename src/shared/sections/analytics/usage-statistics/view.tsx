@@ -3,7 +3,7 @@
 'use client';
 
 import type { DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { subDays } from 'date-fns';
 
 import Grid from '@mui/material/Unstable_Grid2';
@@ -11,7 +11,6 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Box from '@mui/material/Box';
-import Skeleton from '@mui/material/Skeleton';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { DashboardContent } from 'src/shared/layouts/dashboard';
@@ -46,13 +45,20 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
     parentActivity: 'all',
   });
 
-  // Called any time the user picks new date range or other filters
-  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+  // Memoize the filter change handler to prevent unnecessary re-renders
+  const handleFilterChange = useCallback((newFilters: Partial<typeof filters>) => {
     // Show loading indicator briefly
     setIsLoading(true);
 
-    // Update filters
-    setFilters({ ...filters, ...newFilters });
+    // Log the filter change for debugging
+    console.log('Filter change:', newFilters);
+
+    // Ensure we're working with a fresh copy of the current filters
+    setFilters((currentFilters) => {
+      const updatedFilters = { ...currentFilters, ...newFilters };
+      console.log('Updated filters:', updatedFilters);
+      return updatedFilters;
+    });
 
     // Show filter applied notification
     setFilterApplied(true);
@@ -61,7 +67,7 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
     setTimeout(() => {
       setIsLoading(false);
     }, 600);
-  };
+  }, []);
 
   // Handle filter notification close
   const handleCloseNotification = () => {
@@ -69,26 +75,34 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
   };
 
   // Switch between children/parents
-  const handleViewChange = (newView: 'children' | 'parents') => {
+  const handleViewChange = useCallback((newView: 'children' | 'parents') => {
     // Show loading indicator briefly
     setIsLoading(true);
 
     setView(newView);
+
     // Reset some filters if needed
-    setFilters((prev) => ({
-      ...prev,
-      level: 'all',
-      searchQuery: '',
-      engagementRate: 'all',
-      connectionFrequency: 'all',
-      parentActivity: 'all',
-    }));
+    setFilters((prev) => {
+      const resetFilters = {
+        ...prev,
+        level: 'all',
+        searchQuery: '',
+        engagementRate: 'all',
+        connectionFrequency: 'all',
+        parentActivity: 'all',
+      };
+      console.log('Reset filters on view change:', resetFilters);
+      return resetFilters;
+    });
 
     // Simulate a brief loading period for better UX
     setTimeout(() => {
       setIsLoading(false);
     }, 600);
-  };
+  }, []);
+
+  // For debugging - log the current filters whenever they change
+  console.log('Current filters in view component:', filters);
 
   return (
     <DashboardContent maxWidth="xl">

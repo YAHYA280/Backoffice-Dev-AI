@@ -3,7 +3,7 @@ import type { SelectChangeEvent } from '@mui/material';
 import type { IRoleItem } from 'src/contexts/types/role';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -20,12 +20,22 @@ import {
   Chip,
   Stack,
   alpha,
+  Table,
+  Paper,
   Select,
+  Checkbox,
+  TableRow,
   MenuItem,
-  InputLabel,
+  FormGroup,
+  TableBody,
+  TableCell,
+  TableHead,
   IconButton,
+  InputLabel,
   FormControl,
   OutlinedInput,
+  TableContainer,
+  FormControlLabel,
 } from '@mui/material';
 
 import { LocalizationProvider } from 'src/shared/locales';
@@ -43,9 +53,38 @@ interface AddRoleFormDialogProps {
 export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [permissions, setPermissions] = useState<string[]>([]);
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedModulesForPermission, setSelectedModulesForPermission] = useState<string[]>([]);
+  const [modulePermissions, setModulePermissions] = useState<{ [key: string]: string[] }>({});
   const [createdAt, setCreatedAt] = useState<Dayjs | null>(dayjs());
+  const [tempPermissions, setTempPermissions] = useState<string[]>([]);
   const ITEM_HEIGHT = 48;
+
+  const allModules = [
+    { label: 'Acceuil', value: 'Acceuil' },
+    { label: "Statistiques d'usage ", value: "Statistiques d'usage " },
+    { label: 'Performances ', value: 'Performances ' },
+    { label: 'Suivi des erreurs ', value: 'Suivi des erreurs ' },
+    { label: 'Logs', value: 'Logs' },
+    { label: 'Utilisateurs', value: 'Utilisateurs' },
+    { label: 'Comptes', value: 'Comptes' },
+    { label: 'Rôles', value: 'Rôles' },
+    { label: 'Permissions', value: 'Permissions' },
+    { label: "Gestion d'apprentissage ", value: "Gestion d'apprentissage " },
+    { label: 'Gestion des challenges ', value: 'Gestion des challenges ' },
+    { label: 'Ressources multimedias ', value: 'Ressources multimedias ' },
+    { label: 'Gestion des ameliorations', value: 'Gestion des ameliorations' },
+    { label: 'Gestion des plans ', value: 'Gestion des plans ' },
+    { label: 'Suivi & Facturation', value: 'Suivi & Facturation' },
+    { label: 'Notifications', value: 'Notifications' },
+    { label: 'Gestion des FAQs ', value: 'Gestion des FAQs ' },
+    { label: 'Gestion des tickets ', value: 'Gestion des tickets ' },
+    { label: 'Configuration du chatbot', value: 'Configuration du chatbot' },
+    { label: 'Configurations', value: 'Configurations' },
+    { label: 'Tableau de bord', value: 'Tableau de bord' },
+    { label: 'Gestion des assistants', value: 'Gestion des assistants' },
+    { label: 'Moderation et signalement', value: 'Moderation et signalement' },
+  ];
   const allPermissions = [
     { label: 'Administration', value: 'Administration' },
     { label: 'Lecture', value: 'Lecture' },
@@ -55,31 +94,101 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
     { label: 'Import', value: 'Import' },
   ];
 
-  const handlePermissionChange = (event: SelectChangeEvent<typeof permissions>) => {
+  // Réinitialiser les modules sélectionnés pour les permissions quand la liste des modules change
+  useEffect(() => {
+    // Supprimer les modules qui ne sont plus dans selectedModules de selectedModulesForPermission
+    setSelectedModulesForPermission((prev) =>
+      prev.filter((module) => selectedModules.includes(module))
+    );
+  }, [selectedModules]);
+
+  const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
     } = event;
+    const newSelectedModules = typeof value === 'string' ? value.split(',') : value;
 
-    setPermissions(typeof value === 'string' ? value.split(',') : value);
+    setSelectedModules(newSelectedModules);
+
+    // Identifier les modules supprimés
+    const removedModules = selectedModules.filter((module) => !newSelectedModules.includes(module));
+
+    // Mettre à jour modulePermissions en supprimant les modules qui ont été retirés
+    if (removedModules.length > 0) {
+      setModulePermissions((prevPermissions) => {
+        const updatedPermissions = { ...prevPermissions };
+        removedModules.forEach((module) => {
+          delete updatedPermissions[module];
+        });
+        return updatedPermissions;
+      });
+    }
   };
 
-  // Handle chip deletion
-  const handleDeleteChip = (permissionToDelete: string) => {
-    setPermissions((currentPermissions) =>
-      currentPermissions.filter((permission) => permission !== permissionToDelete)
+  // Fonction pour supprimer un module spécifique du chip
+  const handleDeleteModule = (moduleToDelete: string) => {
+    // Supprimer de selectedModules
+    setSelectedModules(selectedModules.filter((module) => module !== moduleToDelete));
+
+    // Supprimer de selectedModulesForPermission
+    setSelectedModulesForPermission((prev) => prev.filter((module) => module !== moduleToDelete));
+
+    // Supprimer de modulePermissions
+    setModulePermissions((prevPermissions) => {
+      const updatedPermissions = { ...prevPermissions };
+      delete updatedPermissions[moduleToDelete];
+      return updatedPermissions;
+    });
+  };
+
+  const handleModuleSelectionForPermission = (module: string) => {
+    setSelectedModulesForPermission((prev) =>
+      prev.includes(module) ? prev.filter((m) => m !== module) : [...prev, module]
     );
   };
 
-  // Handle form submit
+  const handleTempPermissionChange = (permission: string) => {
+    setTempPermissions((prevPermissions) =>
+      prevPermissions.includes(permission)
+        ? prevPermissions.filter((p) => p !== permission)
+        : [...prevPermissions, permission]
+    );
+  };
+
+  const handleApplyPermissions = () => {
+    if (selectedModulesForPermission.length === 0 || tempPermissions.length === 0) {
+      return;
+    }
+
+    const updatedPermissions = { ...modulePermissions };
+    selectedModulesForPermission.forEach((module) => {
+      updatedPermissions[module] = [...tempPermissions];
+    });
+    setModulePermissions(updatedPermissions);
+
+    // Réinitialiser les sélections temporaires
+    setSelectedModulesForPermission([]);
+    setTempPermissions([]);
+  };
+
   const handleSubmit = () => {
-    if (name && description && permissions.length > 0 && createdAt) {
+    if (name && description && Object.keys(modulePermissions).length > 0 && createdAt) {
+      const flatPermissions: string[] = [];
+
+      Object.entries(modulePermissions).forEach(([module, permissions]) => {
+        permissions.forEach((permission) => {
+          flatPermissions.push(`${module}:${permission}`);
+        });
+      });
+
       const newRole: IRoleItem = {
         id: String(Math.floor(Math.random() * 1000000)),
         name,
         description,
-        permissionLevel: permissions,
+        permissionLevel: flatPermissions,
         createdAt: createdAt.toDate(),
       };
+
       const promise = new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast.promise(promise, {
@@ -89,30 +198,44 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
       });
 
       addRole(newRole);
-      setName('');
-      setDescription('');
-      setPermissions([]);
-      setCreatedAt(dayjs());
+      resetForm();
       onClose();
     }
   };
 
-  // Handle form close
-  const handleClose = () => {
+  const resetForm = () => {
     setName('');
     setDescription('');
-    setPermissions([]);
+    setSelectedModules([]);
+    setSelectedModulesForPermission([]);
+    setModulePermissions({});
+    setTempPermissions([]);
     setCreatedAt(dayjs());
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
-  const isFormValid = name && description && permissions.length > 0 && createdAt;
+  const isFormValid = name && description && Object.keys(modulePermissions).length > 0 && createdAt;
+
+  // Rendre les permissions actuelles pour un module
+  const renderCurrentPermissions = (module: string) => {
+    const permissions = modulePermissions[module] || [];
+    if (permissions.length === 0) {
+      return 'Aucune permission';
+    }
+    return permissions
+      .map((p) => allPermissions.find((item) => item.value === p)?.label || p)
+      .join(', ');
+  };
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
@@ -224,7 +347,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        {/* Permissions as Select with Tags */}
+        {/* Module Selection */}
         <FormControl
           fullWidth
           sx={{
@@ -246,14 +369,14 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
             },
           }}
         >
-          <InputLabel id="permissions-select-label">Permissions</InputLabel>
+          <InputLabel id="modules-select-label">Modules</InputLabel>
           <Select
-            labelId="permissions-select-label"
-            id="permissions-select"
+            labelId="modules-select-label"
+            id="modules-select"
             multiple
-            value={permissions}
-            onChange={handlePermissionChange}
-            input={<OutlinedInput label="Permissions" sx={{ borderRadius: 1.5 }} />}
+            value={selectedModules}
+            onChange={handleModuleChange}
+            input={<OutlinedInput label="Modules" sx={{ borderRadius: 1.5 }} />}
             MenuProps={{
               anchorOrigin: {
                 vertical: 'bottom',
@@ -276,9 +399,9 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
                 {selected.map((value) => (
                   <Chip
                     key={value}
-                    label={allPermissions.find((p) => p.value === value)?.label || value}
+                    label={allModules.find((m) => m.value === value)?.label || value}
                     size="small"
-                    onDelete={() => handleDeleteChip(value)}
+                    onDelete={() => handleDeleteModule(value)}
                     onMouseDown={(event) => {
                       event.stopPropagation();
                     }}
@@ -296,7 +419,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
               </Box>
             )}
             sx={{
-              minHeight: '56p',
+              minHeight: '56px',
               '& .MuiOutlinedInput-input': {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -306,10 +429,10 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
               },
             }}
           >
-            {allPermissions.map((permission) => (
+            {allModules.map((module) => (
               <MenuItem
-                key={permission.value}
-                value={permission.value}
+                key={module.value}
+                value={module.value}
                 sx={{
                   borderRadius: 1,
                   mx: 0.5,
@@ -325,11 +448,103 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
                   },
                 }}
               >
-                {permission.label}
+                <Checkbox checked={selectedModules.includes(module.value)} />
+                {module.label}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
+
+        {/* Configuration des permissions */}
+        <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
+          Configuration des permissions
+        </Typography>
+
+        {/* Tableau des permissions existantes */}
+        {Object.keys(modulePermissions).length > 0 && (
+          <TableContainer component={Paper} sx={{ mt: 2, mb: 3 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Module</TableCell>
+                  <TableCell>Permissions attribuées</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(modulePermissions).map((module) => (
+                  <TableRow key={module}>
+                    <TableCell>
+                      {allModules.find((m) => m.value === module)?.label || module}
+                    </TableCell>
+                    <TableCell>{renderCurrentPermissions(module)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {/* Sélection de modules et permissions */}
+        {selectedModules.length > 0 && (
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Modules Disponibles</TableCell>
+                  <TableCell>Permissions à Attribuer</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell style={{ verticalAlign: 'top' }}>
+                    <FormGroup>
+                      {selectedModules.map((module) => (
+                        <FormControlLabel
+                          key={module}
+                          control={
+                            <Checkbox
+                              checked={selectedModulesForPermission.includes(module)}
+                              onChange={() => handleModuleSelectionForPermission(module)}
+                            />
+                          }
+                          label={allModules.find((m) => m.value === module)?.label || module}
+                        />
+                      ))}
+                    </FormGroup>
+                  </TableCell>
+                  <TableCell style={{ verticalAlign: 'top' }}>
+                    <FormGroup>
+                      {allPermissions.map((permission) => (
+                        <FormControlLabel
+                          key={permission.value}
+                          control={
+                            <Checkbox
+                              checked={tempPermissions.includes(permission.value)}
+                              onChange={() => handleTempPermissionChange(permission.value)}
+                            />
+                          }
+                          label={permission.label}
+                        />
+                      ))}
+                    </FormGroup>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {/* Apply Permissions Button */}
+        {selectedModules.length > 0 && (
+          <Button
+            onClick={handleApplyPermissions}
+            variant="contained"
+            sx={{ mt: 2, mb: 2 }}
+            disabled={selectedModulesForPermission.length === 0 || tempPermissions.length === 0}
+          >
+            Appliquer les permissions
+          </Button>
+        )}
 
         {/* Created At Date Picker */}
         <LocalizationProvider>
@@ -415,7 +630,7 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
             },
           }}
         >
-          Enregister
+          Enregistrer
         </Button>
       </DialogActions>
     </Dialog>

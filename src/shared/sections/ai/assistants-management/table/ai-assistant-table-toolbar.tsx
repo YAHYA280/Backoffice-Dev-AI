@@ -1,7 +1,11 @@
-"use client";
+'use client';
 
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
-import type { IAIAssistantItem, IAIAssistantTableFilters, IAIAssistantTableColumns } from 'src/types/ai-assistant';
+import type {
+  IAIAssistantItem,
+  IAIAssistantTableFilters,
+  IAIAssistantTableColumns,
+} from 'src/types/ai-assistant';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -10,7 +14,7 @@ import {
   faFilter,
   faColumns,
   faSyncAlt,
-  faFileExport
+  faFileExport,
 } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
@@ -47,7 +51,13 @@ interface IAdvancedFilter {
 }
 
 export type AIAssistantTableHeadProps = {
-  TABLE_HEAD: { id: string; label: string; align?: 'left' | 'center' | 'right'; width?: string; flexGrow?: number }[];
+  TABLE_HEAD: {
+    id: string;
+    label: string;
+    align?: 'left' | 'center' | 'right';
+    width?: string;
+    flexGrow?: number;
+  }[];
   selectedRows: string[];
   assistants: IAIAssistantItem[];
   setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
@@ -182,7 +192,7 @@ export function AIAssistantTableToolbar({
   onAddAssistant,
   onExportData,
   clearAllColumnFilters,
-  hasActiveFilters
+  hasActiveFilters,
 }: ToolbarProps) {
   const popover = usePopover();
   const theme = useTheme();
@@ -195,13 +205,15 @@ export function AIAssistantTableToolbar({
   const [, setIsAdvancedFilterActive] = useState(false);
   const [popoverPreviouslyOpened, setPopoverPreviouslyOpened] = useState(false);
 
-  const [tempColumnState, setTempColumnState] = useState<IAIAssistantTableColumns>({...initialCheckedColumns});
+  const [tempColumnState, setTempColumnState] = useState<IAIAssistantTableColumns>({
+    ...initialCheckedColumns,
+  });
 
   useEffect(() => {
     if (columnsPopoverState.open) {
       if (!popoverPreviouslyOpened) {
         // Première ouverture - toutes les colonnes sont décochées
-        setTempColumnState({...initialCheckedColumns}); // Tout est décoché
+        setTempColumnState({ ...initialCheckedColumns }); // Tout est décoché
         setPopoverPreviouslyOpened(true);
       } else {
         // Ouvertures suivantes - on conserve l'état précédent du popover
@@ -216,9 +228,9 @@ export function AIAssistantTableToolbar({
       event.stopPropagation();
     }
 
-    setTempColumnState(prevState => ({
+    setTempColumnState((prevState) => ({
       ...prevState,
-      [column]: !prevState[column]
+      [column]: !prevState[column],
     }));
   };
 
@@ -230,7 +242,7 @@ export function AIAssistantTableToolbar({
     }, {} as IAIAssistantTableColumns);
 
     // Rendre visible seulement les colonnes cochées
-    Object.keys(tempColumnState).forEach(key => {
+    Object.keys(tempColumnState).forEach((key) => {
       const column = key as keyof IAIAssistantTableColumns;
       if (tempColumnState[column]) {
         newVisibleColumns[column] = true;
@@ -241,7 +253,7 @@ export function AIAssistantTableToolbar({
     if (onUpdateAllColumns) {
       onUpdateAllColumns(newVisibleColumns);
     } else {
-      Object.keys(newVisibleColumns).forEach(key => {
+      Object.keys(newVisibleColumns).forEach((key) => {
         const column = key as keyof IAIAssistantTableColumns;
         onColumnVisibilityChange(column, newVisibleColumns[column]);
       });
@@ -258,7 +270,9 @@ export function AIAssistantTableToolbar({
     if (filterColumn) {
       const advancedFilter: IAdvancedFilter = {
         column: filterColumn,
-        ...(filterColumn === 'dateAjoute' ? { startDate, endDate } : { operator: filterOperator, value: filterValue })
+        ...(filterColumn === 'dateAjoute'
+          ? { startDate, endDate }
+          : { operator: filterOperator, value: filterValue }),
       };
       onFilterChange('advancedFilter', advancedFilter);
       setIsAdvancedFilterActive(true);
@@ -291,10 +305,10 @@ export function AIAssistantTableToolbar({
 
   const resetColumns = () => {
     // Décocher toutes les colonnes dans le popover
-    setTempColumnState({...initialCheckedColumns});
+    setTempColumnState({ ...initialCheckedColumns });
 
     // Mais rendre toutes les colonnes visibles dans le tableau
-    const resetState = {...initialTableColumns};
+    const resetState = { ...initialTableColumns };
 
     if (onUpdateAllColumns) {
       onUpdateAllColumns(resetState);
@@ -308,7 +322,7 @@ export function AIAssistantTableToolbar({
       return;
     }
 
-    Object.keys(resetState).forEach(column => {
+    Object.keys(resetState).forEach((column) => {
       const key = column as keyof IAIAssistantTableColumns;
       onColumnVisibilityChange(key, true);
     });
@@ -317,278 +331,268 @@ export function AIAssistantTableToolbar({
   };
 
   return (
-    <Card>
-      {/* Métriques en haut de la page */}
-      <MetricsCardContent />
-      {/* Nouveau assistant button on the top right */}
-      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          startIcon={<FontAwesomeIcon icon={faPlus} />}
-          onClick={onAddAssistant}
-          sx={{ backgroundColor: 'primary.main', color: 'white' }}
-          size="small"
-        >
-          Nouveau assistant
-        </Button>
-      </Box>
-
- {/* Columns selection row below */}
-<Stack
-  direction="row"
-  spacing={2}
-  justifyContent="flex-end"
-  alignItems="center"
-  sx={{ mb: 1 }}
->
-  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
-    <Button
-      variant="outlined"
-      color="primary"
-      onClick={columnsPopoverState.onOpen}
-      startIcon={<FontAwesomeIcon icon={faColumns} />}
-      sx={{
-        minWidth: 100,
-        borderRadius: 1,
-        transition: theme.transitions.create(['background-color']),
-        ...(columnsPopoverState.open && {
-          bgcolor: 'primary.lighter',
-        }),
-      }}
-    >
-      colonnes
-    </Button>
-          <Tooltip title="Filtres avancés">
-            <IconButton
-              aria-label="filtre"
-              onClick={filterPopoverState.onOpen}
-              sx={{
-                p: 1,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': { transform: 'translateY(-2px)' },
-              }}
-              size="small"
-            >
-              <FontAwesomeIcon icon={faFilter}  />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Réinitialiser les filtres et colonnes">
-            <IconButton
-              aria-label="effacer les filtres"
-              onClick={() => {
-                onClearFilters();
-                clearAdvancedFilter();
-                resetColumns();
-                clearAllColumnFilters();
-              }}
-              sx={{
-                p: 1,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': { transform: 'translateY(-2px)' },
-              }}
-              size="small"
-            >
-              <FontAwesomeIcon icon={faSyncAlt}  />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Exporter les données">
-            <IconButton
-              aria-label="exporter"
-              onClick={onExportData}
-              sx={{
-                p: 1,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': { transform: 'translateY(-2px)' },
-              }}
-              size="small"
-            >
-              <FontAwesomeIcon icon={faFileExport}  />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      </Stack>
-
-      <Popover
-        anchorEl={columnsPopoverState.anchorEl}
-        open={columnsPopoverState.open}
-        onClose={cancelColumnChanges}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: { p: 1, width: '250px' }
-        }}
-      >
-        <Typography variant="subtitle1" sx={{ p: 1 }}>
-          Sélectionner les colonnes
-        </Typography>
-        <MenuList>
-          {Object.keys(visibleColumns).map((column) => {
-            const columnKey = column as keyof IAIAssistantTableColumns;
-            return (
-              <MenuItem
-                key={column}
-                dense
-                disableRipple
-                disableTouchRipple
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  height: '40px'
-                }}
-              >
-                <Box
-                  onClick={() => handleToggleColumn(columnKey)}
-                  sx={{
-                    display: 'flex',
-                    flexGrow: 1,
-                    alignItems: 'center',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Typography variant="body2">
-                    {COLUMN_LABELS[columnKey] || column}
-                  </Typography>
-                </Box>
-                <Checkbox
-                  checked={tempColumnState[columnKey]}
-                  size="small"
-                  sx={{ p: 0 }}
-                  onChange={() => handleToggleColumn(columnKey)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </MenuItem>
-            );
-          })}
-        </MenuList>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={cancelColumnChanges}
-          >
-            Annuler
-          </Button>
+    <Box maxWidth="xl">
+      <Card sx={{ mb: { xs: 3, md: 5 } }}>
+        {/* Métriques en haut de la page */}
+        <MetricsCardContent />
+      </Card>
+      <Card>
+        {/* Nouveau assistant button on the top right */}
+        <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             variant="contained"
+            startIcon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={onAddAssistant}
+            sx={{ backgroundColor: 'primary.main', color: 'white' }}
             size="small"
-            onClick={saveColumnChanges}
           >
-            Enregistrer
+            Nouveau assistant
           </Button>
         </Box>
-      </Popover>
 
-      <Popover
-        anchorEl={filterPopoverState.anchorEl}
-        open={filterPopoverState.open}
-        onClose={filterPopoverState.onClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: { p: 2, width: '700px', maxWidth: '95vw' }
-        }}
-      >
-        <Box sx={{ width: '100%' }}>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            Filtrage avancé
-          </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <FormControl size="small" sx={{ minWidth: '30%' }}>
-              <InputLabel>Colonne</InputLabel>
-              <Select
-                value={filterColumn}
-                onChange={(e) => setFilterColumn(e.target.value)}
-                input={<OutlinedInput label="Colonne" />}
-              >
-                {Object.keys(COLUMN_LABELS).map((column) => (
-                  <MenuItem key={column} value={column}>
-                    {COLUMN_LABELS[column as keyof IAIAssistantTableColumns]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {filterColumn === 'dateAjoute' ? (
-              <>
-                <TextField
-                  size="small"
-                  label="Date début"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  sx={{ minWidth: '30%' }}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-                <TextField
-                  size="small"
-                  label="Date fin"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  sx={{ minWidth: '30%' }}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <FormControl size="small" sx={{ minWidth: '30%' }}>
-                  <InputLabel>Opérateur</InputLabel>
-                  <Select
-                    value={filterOperator}
-                    onChange={(e) => setFilterOperator(e.target.value)}
-                    input={<OutlinedInput label="Opérateur" />}
-                  >
-                    <MenuItem value="equals">égal à</MenuItem>
-                    <MenuItem value="notequals">différent de</MenuItem>
-                    <MenuItem value="contains">contient</MenuItem>
-                    <MenuItem value="startswith">commence par</MenuItem>
-                    <MenuItem value="endswith">termine par</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  size="small"
-                  label="Valeur"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                  sx={{ minWidth: '30%' }}
-                />
-              </>
-            )}
-          </Stack>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
+        {/* Columns selection row below */}
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ mb: 1 }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
             <Button
               variant="outlined"
-              size="small"
-              onClick={filterPopoverState.onClose}
+              color="primary"
+              onClick={columnsPopoverState.onOpen}
+              startIcon={<FontAwesomeIcon icon={faColumns} />}
+              sx={{
+                minWidth: 100,
+                borderRadius: 1,
+                transition: theme.transitions.create(['background-color']),
+                ...(columnsPopoverState.open && {
+                  bgcolor: 'primary.lighter',
+                }),
+              }}
             >
+              colonnes
+            </Button>
+            <Tooltip title="Filtres avancés">
+              <IconButton
+                aria-label="filtre"
+                onClick={filterPopoverState.onOpen}
+                sx={{
+                  p: 1,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+                size="small"
+              >
+                <FontAwesomeIcon icon={faFilter} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Réinitialiser les filtres et colonnes">
+              <IconButton
+                aria-label="effacer les filtres"
+                onClick={() => {
+                  onClearFilters();
+                  clearAdvancedFilter();
+                  resetColumns();
+                  clearAllColumnFilters();
+                }}
+                sx={{
+                  p: 1,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+                size="small"
+              >
+                <FontAwesomeIcon icon={faSyncAlt} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Exporter les données">
+              <IconButton
+                aria-label="exporter"
+                onClick={onExportData}
+                sx={{
+                  p: 1,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+                size="small"
+              >
+                <FontAwesomeIcon icon={faFileExport} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Stack>
+
+        <Popover
+          anchorEl={columnsPopoverState.anchorEl}
+          open={columnsPopoverState.open}
+          onClose={cancelColumnChanges}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          PaperProps={{
+            sx: { p: 1, width: '250px' },
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ p: 1 }}>
+            Sélectionner les colonnes
+          </Typography>
+          <MenuList>
+            {Object.keys(visibleColumns).map((column) => {
+              const columnKey = column as keyof IAIAssistantTableColumns;
+              return (
+                <MenuItem
+                  key={column}
+                  dense
+                  disableRipple
+                  disableTouchRipple
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    height: '40px',
+                  }}
+                >
+                  <Box
+                    onClick={() => handleToggleColumn(columnKey)}
+                    sx={{
+                      display: 'flex',
+                      flexGrow: 1,
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Typography variant="body2">{COLUMN_LABELS[columnKey] || column}</Typography>
+                  </Box>
+                  <Checkbox
+                    checked={tempColumnState[columnKey]}
+                    size="small"
+                    sx={{ p: 0 }}
+                    onChange={() => handleToggleColumn(columnKey)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </MenuItem>
+              );
+            })}
+          </MenuList>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, gap: 1 }}>
+            <Button variant="outlined" size="small" onClick={cancelColumnChanges}>
               Annuler
             </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={applyCustomFilter}
-              disabled={!filterColumn || (!startDate && !filterValue)}
-            >
-              Appliquer
+            <Button variant="contained" size="small" onClick={saveColumnChanges}>
+              Enregistrer
             </Button>
-          </Stack>
-        </Box>
-      </Popover>
-    </Card>
+          </Box>
+        </Popover>
+
+        <Popover
+          anchorEl={filterPopoverState.anchorEl}
+          open={filterPopoverState.open}
+          onClose={filterPopoverState.onClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          PaperProps={{
+            sx: { p: 2, width: '700px', maxWidth: '95vw' },
+          }}
+        >
+          <Box sx={{ width: '100%' }}>
+            <Typography variant="subtitle1" sx={{ mb: 2 }}>
+              Filtrage avancé
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+              <FormControl size="small" sx={{ minWidth: '30%' }}>
+                <InputLabel>Colonne</InputLabel>
+                <Select
+                  value={filterColumn}
+                  onChange={(e) => setFilterColumn(e.target.value)}
+                  input={<OutlinedInput label="Colonne" />}
+                >
+                  {Object.keys(COLUMN_LABELS).map((column) => (
+                    <MenuItem key={column} value={column}>
+                      {COLUMN_LABELS[column as keyof IAIAssistantTableColumns]}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {filterColumn === 'dateAjoute' ? (
+                <>
+                  <TextField
+                    size="small"
+                    label="Date début"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    sx={{ minWidth: '30%' }}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                  <TextField
+                    size="small"
+                    label="Date fin"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    sx={{ minWidth: '30%' }}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <FormControl size="small" sx={{ minWidth: '30%' }}>
+                    <InputLabel>Opérateur</InputLabel>
+                    <Select
+                      value={filterOperator}
+                      onChange={(e) => setFilterOperator(e.target.value)}
+                      input={<OutlinedInput label="Opérateur" />}
+                    >
+                      <MenuItem value="equals">égal à</MenuItem>
+                      <MenuItem value="notequals">différent de</MenuItem>
+                      <MenuItem value="contains">contient</MenuItem>
+                      <MenuItem value="startswith">commence par</MenuItem>
+                      <MenuItem value="endswith">termine par</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    size="small"
+                    label="Valeur"
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                    sx={{ minWidth: '30%' }}
+                  />
+                </>
+              )}
+            </Stack>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" size="small" onClick={filterPopoverState.onClose}>
+                Annuler
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={applyCustomFilter}
+                disabled={!filterColumn || (!startDate && !filterValue)}
+              >
+                Appliquer
+              </Button>
+            </Stack>
+          </Box>
+        </Popover>
+      </Card>
+    </Box>
   );
 }

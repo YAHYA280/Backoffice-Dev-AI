@@ -137,6 +137,9 @@ export const paths = {
     ai: {
       root: `${ROOTS.DASHBOARD}/ai`,
       assistants_management: `${ROOTS.DASHBOARD}/ai/assistants-management`,
+      correction: `${ROOTS.DASHBOARD}/ai/correction`,
+      taux: `${ROOTS.DASHBOARD}/ai/taux`,
+      performance: `${ROOTS.DASHBOARD}/ai/performance`,
     },
     moderation : {
       root: `${ROOTS.DASHBOARD}/moderation`,
