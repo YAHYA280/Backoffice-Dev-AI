@@ -80,7 +80,7 @@ export function PersonalizationAiView() {
     visibleColumns: defaultVisibleColumns,
   });
 
-  const isJapprendsSelected = filters.type.includes('japprends');
+  const isApprentissgeSelected = filters.type.includes('Apprentissge');
 
   // Fonctions pour les popovers de colonnes
   const handleOpenColumnsMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -308,7 +308,7 @@ export function PersonalizationAiView() {
           onEditRow={handleEditRow}
           onSettingsRow={handleSettingsRow}
           filters={filters}
-          isJapprendsSelected={isJapprendsSelected}
+          isApprentissgeSelected={isApprentissgeSelected}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
           selectedRows={selectedRows}
@@ -380,7 +380,7 @@ function applyFilter({
     ) {
       return false;
     }
-    if (type && type.includes('japprends')) {
+    if (type && type.includes('Apprentissge')) {
       if (subject && (!item.subject || item.subject !== subject)) {
         return false;
       }

@@ -70,7 +70,7 @@ export const contentStructure: Record<string, Record<string, string[]>> = {
   export const allLevels = ['cp', 'ce1', 'ce2', 'cm1', 'cm2'];
   
   // Tous les types d'assistants disponibles
-  export const allAssistantTypes = ['accueil', 'recherche', 'japprends'];
+  export const allAssistantTypes = ['accueil', 'recherche', 'Apprentissge'];
   
   // Mapping des statistiques de satisfaction par matière
   export const subjectSatisfactionStats: Record<string, {satisfactionRate: number, totalResponses: number}> = {

@@ -8,6 +8,6 @@ export interface IAIAssistantCustomizationSettings {
   audioFormat: "mp3" | "wav" | "aac"; // Format audio préféré
   voiceTranscription: boolean; // Activation/désactivation de la transcription vocale
   imageSupport: boolean; // Activation/désactivation du support d'images
-  imageFormat: ("jpg" | "png"  | "svg")[]; // Formats d'image pris en charge
+  imageFormat: ("jpg" | "png" | "svg" | "pdf")[];
   deletionHistory: { phrase: string; date: string; type: "motivation" | "aide" }[]; // Historique des suppressions
 }

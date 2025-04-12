@@ -126,14 +126,14 @@ export const chartColors = [
 
 // Mapping de noms d'assistants aux types
 export const assistantTypeMapping: Record<string, string> = {
-  'Assistant Mathématiques': 'japprends',
-  'Assistant Français': 'japprends',
-  'Assistant Sciences': 'japprends',
-  'Assistant Histoire-Géographie': 'japprends',
-  'Assistant Anglais': 'japprends',
-  'Assistant SVT': 'japprends',
-  'Assistant Arts Plastiques': 'japprends',
-  'Assistant Musique': 'japprends',
+  'Assistant Mathématiques': 'Apprentissge',
+  'Assistant Français': 'Apprentissge',
+  'Assistant Sciences': 'Apprentissge',
+  'Assistant Histoire-Géographie': 'Apprentissge',
+  'Assistant Anglais': 'Apprentissge',
+  'Assistant SVT': 'Apprentissge',
+  'Assistant Arts Plastiques': 'Apprentissge',
+  'Assistant Musique': 'Apprentissge',
   'Assistant Recherche': 'recherche',
   'Assistant Principal': 'accueil'
 };
@@ -181,7 +181,7 @@ export const assistantFilters = {
  */
 const generateCorrectionMeta = (assistant: string, index: number): CorrectionMeta => {
   const subject = assistantSubjectMapping[assistant];
-  if (!subject || !['japprends'].includes(assistantTypeMapping[assistant])) {
+  if (!subject || !['Apprentissge'].includes(assistantTypeMapping[assistant])) {
     return {};
   }
 
@@ -373,7 +373,7 @@ export const performanceEvolutionByLevel: Record<string, PerformanceEvolutionDat
 
 // Données pour l'évolution des performances par type d'assistant
 export const performanceEvolutionByType: Record<string, PerformanceEvolutionData> = {
-  japprends: {
+  Apprentissge: {
     labels: ['18 Fév', '19 Fév', '20 Fév', '21 Fév', '22 Fév', '23 Fév', '24 Fév'],
     beforeCorrection: [69, 67, 71, 73, 68, 70, 72],
     afterCorrection: [69, 80, 84, 87, 89, 88, 90]

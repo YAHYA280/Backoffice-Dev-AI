@@ -26,16 +26,16 @@ export interface IAdvancedFilter {
 }
 
 export interface IAIAssistantCustomizationSettings {
-  responseType: ("text" | "audio" | "image")[]; // Tableau des types de réponse autorisés
-  inputType: "text" | "audio" | "image"; // Entrées utilisateur possibles
-  welcomeMessage: string; // Message d'accueil personnalisé
-  motivationalPhrases: string[]; // Liste de phrases de motivation
-  helpPhrases: string[]; // Liste de phrases d'aide
-  audioFormat: "mp3" | "wav" | "aac"; // Format audio préféré
-  voiceTranscription: boolean; // Activation/désactivation de la transcription vocale
-  imageSupport: boolean; // Activation/désactivation du support d'images
-  imageFormat: ("jpg" | "png" | "svg")[]; // Formats d'image pris en charge
-  deletionHistory: { phrase: string; date: string; type: "motivation" | "aide" }[]; // Historique des suppressions
+  responseType: ("text" | "audio" | "image")[];
+  inputType: "text" | "audio" | "image";
+  welcomeMessage: string;
+  motivationalPhrases: string[];
+  helpPhrases: string[];
+  audioFormat: "mp3" | "wav" | "aac";
+  voiceTranscription: boolean;
+  imageSupport: boolean;
+  imageFormat: ("jpg" | "png" | "svg" | "pdf")[]; // Assurez-vous que "pdf" est inclus ici
+  deletionHistory: { phrase: string; date: string; type: "motivation" | "aide" }[];
 }
 
 export interface IAIAssistantTableColumns {

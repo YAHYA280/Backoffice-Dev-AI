@@ -105,7 +105,7 @@ export function ConfigurationSearch({ query, results, onSearch, hrefItem, loadin
                     style={{ marginRight: '-16px', color: 'text.secondary' }}
                   />
                 ) : (
-                  <></>
+                  <> </>
                 )}
                 {params.InputProps.endAdornment}
               </>

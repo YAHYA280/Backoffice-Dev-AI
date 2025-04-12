@@ -1,11 +1,9 @@
-import type { IAIAssistantCustomizationSettings } from "src/types/ai-assistant";
-
 import { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
+import {
   faRedo,
-  faUndo, 
-  faTrash, 
+  faUndo,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
 import Box from "@mui/material/Box";
@@ -25,11 +23,23 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { AIAssistantHistoryService } from "../AIAssistantHistoryService";
 import { AIAssistantCustomizationService } from "./AIAssistantCustomizationService";
 
+export interface IAIAssistantCustomizationSettings {
+  responseType: ("text" | "audio" | "image")[];
+  inputType: "text" | "audio" | "image";
+  welcomeMessage: string;
+  motivationalPhrases: string[];
+  helpPhrases: string[];
+  audioFormat: "mp3" | "wav" | "aac";
+  voiceTranscription: boolean;
+  imageSupport: boolean;
+  imageFormat: ("jpg" | "png" | "svg" | "pdf")[];
+  deletionHistory: { phrase: string; date: string; type: "motivation" | "aide" }[];
+}
+
 export default function AIAssistantCustomization() {
   const [settings, setSettings] = useState<IAIAssistantCustomizationSettings>(
     AIAssistantCustomizationService.getCustomizationSettings()
   );
-  // État pour gérer l'affichage du message de confirmation
   const [showSaveMessage, setShowSaveMessage] = useState(false);
 
   useEffect(() => {
@@ -41,40 +51,35 @@ export default function AIAssistantCustomization() {
     setSettings((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  // Updated to handle multiple response types
-  const handleResponseTypeChange = useCallback((type: "text" | "audio" | "image") => 
+  const handleResponseTypeChange = useCallback((type: "text" | "audio" | "image") =>
     setSettings((prev) => {
       const currentTypes = Array.isArray(prev.responseType) ? prev.responseType : [];
-      
-      // If type is already selected, remove it
+
       if (currentTypes.includes(type)) {
         return {
           ...prev,
           responseType: currentTypes.filter(t => t !== type)
         };
       }
-      
-      // Otherwise add it
+
       return {
         ...prev,
         responseType: [...currentTypes, type]
       };
-    }), 
+    }),
   []);
 
-  const handleImageFormatChange = useCallback((format: "jpg" | "png"  | "svg") => {
+  const handleImageFormatChange = useCallback((format: "jpg" | "png" | "svg" | "pdf") => {
     setSettings((prev) => {
       const currentFormats = Array.isArray(prev.imageFormat) ? prev.imageFormat : [];
-      
-      // Si le format est déjà sélectionné, on le retire
+
       if (currentFormats.includes(format)) {
         return {
           ...prev,
           imageFormat: currentFormats.filter(f => f !== format)
         };
       }
-      
-      // Sinon, on l'ajoute
+
       return {
         ...prev,
         imageFormat: [...currentFormats, format]
@@ -85,39 +90,38 @@ export default function AIAssistantCustomization() {
   const handleAudioFormatChange = useCallback((format: "mp3" | "wav" | "aac") => {
     setSettings((prev) => ({ ...prev, audioFormat: format }));
   }, []);
-  
-  const [newPhrase, setNewPhrase] = useState(""); // État pour stocker la phrase en cours d'écriture
+
+  const [newPhrase, setNewPhrase] = useState("");
 
   const handleAddPhrase = () => {
     if (newPhrase.trim() !== "") {
       setSettings((prev) => ({
         ...prev,
-        motivationalPhrases: [...prev.motivationalPhrases, newPhrase.trim()], // Ajout de la phrase
+        motivationalPhrases: [...prev.motivationalPhrases, newPhrase.trim()],
       }));
-      setNewPhrase(""); // Réinitialisation du champ de texte
+      setNewPhrase("");
     }
   };
 
   const handleDeletePhrase = (index: number) => {
     const phraseToDelete = settings.motivationalPhrases[index];
-    
-    // Ajouter à l'historique des suppressions
+
     const newDeletionHistoryItem = {
       phrase: phraseToDelete,
       date: new Date().toLocaleString(),
       type: "motivation" as const
     };
-    
+
     setSettings((prev) => ({
       ...prev,
       motivationalPhrases: prev.motivationalPhrases.filter((_, i) => i !== index),
       deletionHistory: [...prev.deletionHistory, newDeletionHistoryItem]
     }));
   };
-  
+
   const handleRestorePhrase = (index: number) => {
     const itemToRestore = settings.deletionHistory[index];
-    
+
     if (itemToRestore.type === "motivation") {
       setSettings((prev) => ({
         ...prev,
@@ -127,7 +131,6 @@ export default function AIAssistantCustomization() {
     }
   };
 
-  // Nouvelle fonction pour supprimer définitivement un élément de l'historique
   const handleDeleteHistoryItem = (index: number) => {
     setSettings((prev) => ({
       ...prev,
@@ -135,7 +138,6 @@ export default function AIAssistantCustomization() {
     }));
   };
 
-  // Fonction pour vider complètement l'historique
   const handleClearAllHistory = () => {
     setSettings((prev) => ({
       ...prev,
@@ -144,31 +146,27 @@ export default function AIAssistantCustomization() {
   };
 
   const handleSaveCustomization = () => {
-    // Ajouter à l'historique des modifications
     AIAssistantHistoryService.addEntry({
       id: `hist-${Date.now()}`,
       date: new Date().toLocaleString(),
-      user: "Admin", // Modifier si nécessaire
+      user: "Admin",
       section: "Gestion des Réponses IA",
       action: "modify",
       comment: "Mise à jour des réponses autorisées et des phrases de motivation",
     });
-    
-    // Enregistrer les paramètres
+
     AIAssistantCustomizationService.saveCustomizationSettings(settings);
-    
-    // Afficher le message de confirmation
+
     setShowSaveMessage(true);
   };
 
-  // Fonction pour fermer le message de confirmation
   const handleCloseSnackbar = () => {
     setShowSaveMessage(false);
   };
 
   const handleReset = () => {
     const defaultSettings: IAIAssistantCustomizationSettings = {
-      responseType: ["text"], // Changed to array with default "text"
+      responseType: ["text"],
       inputType: "text",
       welcomeMessage: "Bonjour ! Comment puis-je vous aider ?",
       motivationalPhrases: ["Excellent travail !", "Continue comme ça !", "Tu progresses bien !"],
@@ -179,13 +177,11 @@ export default function AIAssistantCustomization() {
       imageFormat: [],
       deletionHistory: [],
     };
-    
+
     setSettings(defaultSettings);
-    
-    // Enregistrer les paramètres par défaut
+
     AIAssistantCustomizationService.saveCustomizationSettings(defaultSettings);
-    
-    // Ajouter à l'historique des modifications
+
     AIAssistantHistoryService.addEntry({
       id: `hist-${Date.now()}`,
       date: new Date().toLocaleString(),
@@ -198,7 +194,6 @@ export default function AIAssistantCustomization() {
 
   return (
     <Box sx={{ width: "100%", maxWidth: 800, mx: "auto", p: 3 }}>
-      {/* Types de Contenu */}
       <Typography variant="h6">Types de réponse</Typography>
       <FormControlLabel
         control={
@@ -220,8 +215,7 @@ export default function AIAssistantCustomization() {
       />
       <Divider sx={{ my: 2 }} />
 
-       {/* Messages et Phrases */}
-       <Typography variant="h6">Messages et Phrases</Typography>
+      <Typography variant="h6">Messages et Phrases</Typography>
       <TextField
         label="Message d'accueil"
         fullWidth
@@ -230,12 +224,10 @@ export default function AIAssistantCustomization() {
         sx={{ mt: 2 }}
       />
 
-      {/* Phrases de motivation */}
       <Typography variant="h6" sx={{ mt: 2 }}>
         Phrases de motivation
       </Typography>
 
-      {/* Ajout d'une nouvelle phrase */}
       <TextField
         label="Ajouter une phrase"
         fullWidth
@@ -243,7 +235,7 @@ export default function AIAssistantCustomization() {
         onChange={(e) => setNewPhrase(e.target.value)}
         sx={{ mt: 2 }}
       />
- 
+
       <Button
         variant="contained"
         color="primary"
@@ -252,7 +244,7 @@ export default function AIAssistantCustomization() {
       >
         Ajouter
       </Button>
- 
+
       <List>
         {Array.isArray(settings.motivationalPhrases) &&
           settings.motivationalPhrases.map((phrase, index) => (
@@ -270,8 +262,7 @@ export default function AIAssistantCustomization() {
             </ListItem>
           ))}
       </List>
-       
-      {/* Paramètres Audio */}
+
       <Divider sx={{ my: 2 }} />
       <Typography variant="h6">Paramètres Audio</Typography>
       <FormControlLabel
@@ -305,15 +296,14 @@ export default function AIAssistantCustomization() {
       <Typography sx={{ mt: 2 }}>Transcription Vocale</Typography>
       <Switch checked={!!settings.voiceTranscription} onChange={(e) => handleChange("voiceTranscription", e.target.checked)} />
 
-      {/* Nouveaux Paramètres Image */}
       <Divider sx={{ my: 2 }} />
       <Typography variant="h6">Paramètres Image</Typography>
       <Typography sx={{ mt: 2 }}>Support d&apos;Images</Typography>
-      <Switch 
-        checked={!!settings.imageSupport} 
-        onChange={(e) => handleChange("imageSupport", e.target.checked)} 
+      <Switch
+        checked={!!settings.imageSupport}
+        onChange={(e) => handleChange("imageSupport", e.target.checked)}
       />
-      
+
       <Typography sx={{ mt: 2 }}>Formats d&apos;Image</Typography>
       <FormControlLabel
         control={
@@ -345,15 +335,24 @@ export default function AIAssistantCustomization() {
         }
         label="SVG"
       />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={Array.isArray(settings.imageFormat) && settings.imageFormat.includes("pdf")}
+            onChange={() => handleImageFormatChange("pdf")}
+            disabled={!settings.imageSupport}
+          />
+        }
+        label="PDF"
+      />
 
-      {/* Historique des Suppressions */}
       <Divider sx={{ my: 2 }} />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">Historique des Suppressions</Typography>
         {settings.deletionHistory.length > 0 && (
-          <Button 
-            variant="outlined" 
-            color="error" 
+          <Button
+            variant="outlined"
+            color="error"
             size="small"
             onClick={handleClearAllHistory}
           >
@@ -390,30 +389,28 @@ export default function AIAssistantCustomization() {
           ))}
       </List>
 
-      {/* Boutons d'action */}
       <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-        <Button 
-          variant="contained" 
-          color="primary" 
+        <Button
+          variant="contained"
+          color="primary"
           onClick={handleSaveCustomization}
         >
           Enregistrer les modifications
         </Button>
 
-        <Button 
-          variant="contained" 
-          color="warning" 
-          startIcon={<FontAwesomeIcon icon={faRedo} />} 
+        <Button
+          variant="contained"
+          color="warning"
+          startIcon={<FontAwesomeIcon icon={faRedo} />}
           onClick={handleReset}
         >
           Réinitialiser les paramètres
         </Button>
       </Box>
 
-      {/* Message de confirmation après enregistrement */}
-      <Snackbar 
-        open={showSaveMessage} 
-        autoHideDuration={4000} 
+      <Snackbar
+        open={showSaveMessage}
+        autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

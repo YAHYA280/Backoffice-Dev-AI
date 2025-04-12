@@ -22,6 +22,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 // ----------------------------------------------
 // Types
@@ -173,7 +174,6 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
       }
 
       // Debug log
-      console.log('Applying filters:', newFilters);
 
       onFilterChange(newFilters);
     }
@@ -191,9 +191,6 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
       connectionFrequency: 'all',
       parentActivity: 'all',
     };
-
-    // Debug log
-    console.log('Resetting filters to:', defaultFilters);
 
     // Apply default filters
     onFilterChange(defaultFilters);
@@ -256,7 +253,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
           }}
         >
           <FontAwesome icon={faFilter} width={16} />
-          {activeFilterCount > 0 && (
+          <ConditionalComponent isValid={activeFilterCount > 0}>
             <Chip
               label={activeFilterCount}
               color="primary"
@@ -270,7 +267,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
                 fontSize: '0.625rem',
               }}
             />
-          )}
+          </ConditionalComponent>
         </IconButton>
       </Stack>
 

@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 
+
 // ----------------------------------------------------------------------
 
 export const StyledLegend = styled(Box)(({ theme }) => ({
@@ -63,11 +64,10 @@ export function ChartLegends({
 
             <Box component="span" sx={{ flexShrink: 0 }}>
               {series}
-              {sublabels && <> {` (${sublabels[index]})`}</>}
+              {sublabels ? <> {` (${sublabels[index]})`}</> : <> </>}
             </Box>
           </StyledLegend>
-
-          {values && <Box sx={{ typography: 'h6' }}>{values[index]}</Box>}
+          {values ? <Box sx={{ typography: 'h6' }}>{values[index]}</Box> : <> </>}
         </Stack>
       ))}
     </Stack>

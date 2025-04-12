@@ -23,8 +23,8 @@ export function AIAssistantTableFiltersResult({
   options,
   sx,
 }: IAIAssistantTableFiltersResultProps) {
-  // Vérification si le type "J'apprends" est sélectionné
-  const isJapprendsSelected = useMemo(() => filters.type.includes('japprends'), [filters.type]);
+  // Vérification si le type "Apprentissge" est sélectionné
+  const isApprentissgeSelected = useMemo(() => filters.type.includes('Apprentissge'), [filters.type]);
 
   const handleRemoveType = (value: string) => {
     const newValue = filters.type.filter((item) => item !== value);
@@ -88,8 +88,8 @@ export function AIAssistantTableFiltersResult({
       });
     }
 
-    // Ajouter les filtres spécifiques à "J'apprends" seulement si ce type est sélectionné
-    if (isJapprendsSelected) {
+    // Ajouter les filtres spécifiques à "Apprentissge" seulement si ce type est sélectionné
+    if (isApprentissgeSelected) {
       // Ajouter la matière si elle est définie
       if (filters.subject) {
         const subjectOption = options.subjects.find((option) => option.value === filters.subject);
@@ -121,7 +121,7 @@ export function AIAssistantTableFiltersResult({
     }
 
     return baseFilters;
-  }, [filters, options, isJapprendsSelected]);
+  }, [filters, options, isApprentissgeSelected]);
 
   // Ne rien afficher s'il n'y a pas de filtres actifs
   if (!activeFilters.length) {

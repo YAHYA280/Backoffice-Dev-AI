@@ -1,7 +1,7 @@
 // Types pour la section de correction et réentraînement des modèles IA
 
 // Type d'assistant (correspond à AI_ASSISTANT_TYPE_OPTIONS)
-export type AssistantType = 'accueil' | 'recherche' | 'japprends' | 'all';
+export type AssistantType = 'accueil' | 'recherche' | 'Apprentissge' | 'all';
 
 // Niveau d'enseignement (correspond à AI_ASSISTANT_EDUCATION_LEVELS)
 export type EducationLevel = 'CP' | 'CE1' | 'CE2' | 'CM1' | 'CM2' | 'all';

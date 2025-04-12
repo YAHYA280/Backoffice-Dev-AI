@@ -49,7 +49,7 @@ export function ConfigurationItemSkeleton({
             <Skeleton sx={{ width: 170, height: 240, flexShrink: 0 }} />
           </Stack>
         ) : (
-          <></>
+          <> </>
         )}
       </Stack>
     ));

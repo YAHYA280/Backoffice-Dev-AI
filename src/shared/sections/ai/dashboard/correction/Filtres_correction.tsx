@@ -192,7 +192,7 @@ const FiltresHistorique: React.FC<FiltresHistoriqueProps> = ({
                     onChange={(e) => handleChange('type', e.target.value)}
                   >
                     <MenuItem value="all">Tous les types</MenuItem>
-                    <MenuItem value="japprends">J&apos;apprends</MenuItem>
+                    <MenuItem value="Apprentissge">J&apos;apprends</MenuItem>
                     <MenuItem value="accueil">Accueil</MenuItem>
                     <MenuItem value="recherche">Recherche</MenuItem>
                   </Select>

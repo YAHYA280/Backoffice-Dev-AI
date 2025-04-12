@@ -50,13 +50,9 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
     // Show loading indicator briefly
     setIsLoading(true);
 
-    // Log the filter change for debugging
-    console.log('Filter change:', newFilters);
-
     // Ensure we're working with a fresh copy of the current filters
     setFilters((currentFilters) => {
       const updatedFilters = { ...currentFilters, ...newFilters };
-      console.log('Updated filters:', updatedFilters);
       return updatedFilters;
     });
 
@@ -91,7 +87,6 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
         connectionFrequency: 'all',
         parentActivity: 'all',
       };
-      console.log('Reset filters on view change:', resetFilters);
       return resetFilters;
     });
 
@@ -100,9 +95,6 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
       setIsLoading(false);
     }, 600);
   }, []);
-
-  // For debugging - log the current filters whenever they change
-  console.log('Current filters in view component:', filters);
 
   return (
     <DashboardContent maxWidth="xl">

@@ -18,6 +18,7 @@ import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
@@ -130,11 +131,11 @@ export default function UsageOverview({ view, filters }: Props) {
           />
         </Stack>
 
-        {isComparing && compareRange && (
+        <ConditionalComponent isValid={Boolean(isComparing && compareRange)}>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-            Comparaison : {compareRange.label || 'Période précédente'}
+            Comparaison : {compareRange?.label || 'Période précédente'}
           </Typography>
-        )}
+        </ConditionalComponent>
 
         <Grid container spacing={3}>
           {stats.map((s, index) => (
@@ -188,11 +189,11 @@ export default function UsageOverview({ view, filters }: Props) {
         />
       </Stack>
 
-      {isComparing && compareRange && (
+      <ConditionalComponent isValid={Boolean(isComparing && compareRange)}>
         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-          Comparaison : {compareRange.label || 'Période précédente'}
+          Comparaison : {compareRange?.label || 'Période précédente'}
         </Typography>
-      )}
+      </ConditionalComponent>
 
       <Grid container spacing={3}>
         {stats.map((s, index) => (

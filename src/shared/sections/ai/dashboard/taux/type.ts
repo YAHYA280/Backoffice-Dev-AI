@@ -7,7 +7,7 @@ export type TimePeriod = 'today' | 'yesterday' | 'last7days' | 'last30days' | 'c
 export type EducationLevel = 'cp' | 'ce1' | 'ce2' | 'cm1' | 'cm2' | 'all';
 
 // Type d'assistant
-export type AssistantType = 'accueil' | 'recherche' | 'japprends' | 'all';
+export type AssistantType = 'accueil' | 'recherche' | 'Apprentissge' | 'all';
 
 // Interface pour les filtres avec sélections multiples et compatibilité
 export interface FilterOptions {

@@ -89,7 +89,7 @@ export function AIAssistantForm({
     }
   }, [initialData, open, isEdit]);
 
-  const isJapprends = formData.type === 'japprends';
+  const isApprentissge = formData.type === 'Apprentissge';
 
   // Updated to use SelectChangeEvent from Material UI
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
@@ -171,7 +171,7 @@ export function AIAssistantForm({
             </Select>
           </FormControl>
 
-          {isJapprends && (
+          {isApprentissge && (
             <>
               <FormControl fullWidth>
                 <InputLabel>Matière</InputLabel>

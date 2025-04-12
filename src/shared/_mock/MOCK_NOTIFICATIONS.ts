@@ -1,7 +1,7 @@
-// Combine the imports from date-fns
+// Import des fonctions nécessaires de date-fns
 import { sub, formatDistanceToNow } from 'date-fns';
 
-// Types pour les notifications
+// Définition du type pour les notifications
 export interface Notification {
   id: string;
   title: string;
@@ -9,6 +9,7 @@ export interface Notification {
   createdAt: Date;
   isRead: boolean;
   isArchived: boolean;
+  isFavorite: boolean; // Ajout de la propriété isFavorite
   type: 'alert' | 'info' | 'warning' | 'success';
 }
 
@@ -27,6 +28,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { minutes: 35 }),
     isRead: false,
     isArchived: false,
+    isFavorite: false, // Ajout de la propriété isFavorite
     type: 'alert'
   },
   {
@@ -36,6 +38,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { hours: 2 }),
     isRead: true,
     isArchived: false,
+    isFavorite: true,
     type: 'info'
   },
   {
@@ -45,6 +48,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { days: 1 }),
     isRead: false,
     isArchived: false,
+    isFavorite: false,
     type: 'success'
   },
   {
@@ -54,6 +58,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { days: 2 }),
     isRead: true,
     isArchived: false,
+    isFavorite: false,
     type: 'warning'
   },
   {
@@ -63,6 +68,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { days: 5 }),
     isRead: true,
     isArchived: true,
+    isFavorite: false,
     type: 'info'
   },
   {
@@ -72,6 +78,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { days: 3 }),
     isRead: false,
     isArchived: false,
+    isFavorite: true,
     type: 'info'
   },
   {
@@ -81,6 +88,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { days: 4 }),
     isRead: true,
     isArchived: false,
+    isFavorite: false,
     type: 'warning'
   },
   {
@@ -90,6 +98,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { weeks: 1 }),
     isRead: true,
     isArchived: false,
+    isFavorite: false,
     type: 'alert'
   },
   {
@@ -99,6 +108,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { weeks: 1, days: 2 }),
     isRead: true,
     isArchived: true,
+    isFavorite: true,
     type: 'success'
   },
   {
@@ -108,6 +118,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: sub(new Date(), { weeks: 2 }),
     isRead: false,
     isArchived: false,
+    isFavorite: false,
     type: 'alert'
   }
 ];

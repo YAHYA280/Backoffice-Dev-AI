@@ -2,24 +2,22 @@
 
 import type { ApexOptions } from 'apexcharts';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { FilterValues, DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+import type { DateRange, FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import Grid from '@mui/material/Grid';
 
 import { Chart, useChart } from 'src/shared/components/chart';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
+
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
 import ComparisonMenu from './ComparisonMenu';
 
 type Props = {
@@ -31,6 +29,7 @@ type Props = {
 
 export default function ActivityHeatmap({ title, subheader, filters, view }: Props) {
   const theme = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedWeek, setSelectedWeek] = useState('current');
 
   // Local comparison
@@ -41,10 +40,6 @@ export default function ActivityHeatmap({ title, subheader, filters, view }: Pro
   const localFilters = useMemo(() => ({ ...filters, compareRange }), [filters, compareRange]);
 
   const { childrenData, parentsData } = useAnalyticsApi(view, localFilters);
-
-  const handleWeekChange = (event: SelectChangeEvent) => {
-    setSelectedWeek(event.target.value);
-  };
 
   // Decide which data to use
   const data =
@@ -143,11 +138,11 @@ export default function ActivityHeatmap({ title, subheader, filters, view }: Pro
         }
       />
 
-      {isComparing && compareRange && (
+      <ConditionalComponent isValid={Boolean(isComparing && compareRange)}>
         <Typography variant="caption" sx={{ pl: 3, pt: 1 }}>
-          Période comparative: {compareRange.label || 'Période précédente'}
+          Période comparative: {compareRange?.label || 'Période précédente'}
         </Typography>
-      )}
+      </ConditionalComponent>
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart

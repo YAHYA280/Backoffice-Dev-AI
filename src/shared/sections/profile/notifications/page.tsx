@@ -142,7 +142,7 @@ const Notifications = () => {
       detailsLink: paths.dashboard.profile.notificationChannels
     },
     {
-      title: "Historique des notifications",
+      title: "Liste des notifications",
       description: "Consultez l'historique complet de vos notifications reçues.",
       indicator: "3 non lues",
       icon: <HistoryIcon fontSize="medium"   sx={{ color: 'white' }} />,

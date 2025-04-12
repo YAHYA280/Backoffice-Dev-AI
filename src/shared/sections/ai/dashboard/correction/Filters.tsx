@@ -64,7 +64,7 @@ import type {
 interface FiltersProps {
   filters: FilterOptions;
   handleFilterChange: (name: keyof FilterOptions, value: any) => void;
-  showJapprendsFilters?: boolean;
+  showApprentissgeFilters?: boolean;
   onFilterApplied?: () => void;
   onSaveFilters?: (filters: FilterOptions) => void;
   onResetFilters?: () => void;
@@ -89,7 +89,7 @@ const drawerWidth = 450;
 const Filters: React.FC<FiltersProps> = ({ 
   filters, 
   handleFilterChange, 
-  showJapprendsFilters = true,
+  showApprentissgeFilters = true,
   onFilterApplied,
   onSaveFilters,
   onResetFilters
@@ -491,10 +491,10 @@ const Filters: React.FC<FiltersProps> = ({
     handleClose();
   };
 
-  // Vérifier si le type japprends est actif
-  const showJapprendsContent = () => 
+  // Vérifier si le type Apprentissge est actif
+  const showApprentissgeContent = () => 
      localFilters.type === 'all' || 
-      (Array.isArray(localFilters.type) && (localFilters.type.includes('all') || localFilters.type.includes('japprends')));
+      (Array.isArray(localFilters.type) && (localFilters.type.includes('all') || localFilters.type.includes('Apprentissge')));
   ;
 
   return (
@@ -769,8 +769,8 @@ const Filters: React.FC<FiltersProps> = ({
             </FormGroup>
             <Divider sx={{ my: 2 }} />
 
-            {/* Afficher les filtres spécifiques à J'apprends si nécessaire */}
-            {showJapprendsContent() && showJapprendsFilters && (
+            {/* Afficher les filtres spécifiques à Apprentissge si nécessaire */}
+            {showApprentissgeContent() && showApprentissgeFilters && (
               <>
                 {/* Matières */}
                 <SectionTitle variant="subtitle2">

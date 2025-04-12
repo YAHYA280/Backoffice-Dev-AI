@@ -1,24 +1,24 @@
 // /usagestatistics/components/UserActivityChart.tsx
 
 import type { ApexOptions } from 'apexcharts';
-import type { FilterValues, DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { DateRange, FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import { useTheme, alpha } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
+import { alpha, useTheme } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 
 import { Chart, useChart } from 'src/shared/components/chart';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
+
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
 import ComparisonMenu from './ComparisonMenu';
 
 type Props = {
@@ -181,13 +181,13 @@ export default function UserActivityChart({ title, subheader, filters, view }: P
         }
       />
 
-      {isComparing && compareRange && (
+      <ConditionalComponent isValid={Boolean(isComparing && compareRange)}>
         <Box sx={{ px: 3, pt: 1 }}>
           <Typography variant="caption">
-            Période comparative: {compareRange.label || 'Période précédente'}
+            Période comparative: {compareRange?.label || 'Période précédente'}
           </Typography>
         </Box>
-      )}
+      </ConditionalComponent>
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart

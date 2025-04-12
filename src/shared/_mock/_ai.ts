@@ -1,9 +1,9 @@
 export const CATEGORIES_AI_ASSISTANT = [
   'Accueil',
   'Recherche',
-  "J'apprends - Maths",
-  "J'apprends - Français",
-  "J'apprends - Sciences",
+  "Apprentissge - Maths",
+  "Apprentissge - Français",
+  "Apprentissge - Sciences",
 ];
 export const DATA_AI_COMPARISON = {
   'Nombre de requêtes': { name: 'Nombre de requêtes', data: [44, 61, 55, 151, 59] },

@@ -68,13 +68,13 @@ export function CustomDateRangePicker({
               {startDate ? (
                 <DateCalendar value={startDate} onChange={onChangeStartDate} />
               ) : (
-                <></>
+                <> </>
               )}
 
               {endDate ? (
                 <DateCalendar value={endDate} onChange={onChangeEndDate} />
               ) : (
-                <></>
+                <> </>
               )}
             </>
           )}

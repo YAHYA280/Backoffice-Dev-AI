@@ -37,7 +37,7 @@ export function ConfigurationListHorizontal({ cgus, loading }: Props) {
           }}
         />
       ) : (
-        <></>
+        <> </>
       )}
     </>
   );

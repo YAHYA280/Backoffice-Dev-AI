@@ -105,7 +105,7 @@ export function AIAssistantTableRow({
           </TableCell>
         )}
 
-        {visibleColumns.type && <TableCell sx={appliedStyle}>{row.type === "japprends" ? "J'apprends" : row.type || '-'}</TableCell>}
+        {visibleColumns.type && <TableCell sx={appliedStyle}>{row.type === "Apprentissge" ? "Apprentissge" : row.type || '-'}</TableCell>}
         {visibleColumns.dateAjoute && <TableCell sx={appliedStyle}>{formatDate(row.dateAjoute)}</TableCell>}
         {visibleColumns.educationLevel && <TableCell sx={appliedStyle}>{row.educationLevel || '-'}</TableCell>}
         {visibleColumns.subject && <TableCell sx={appliedStyle}>{row.subject || '-'}</TableCell>}

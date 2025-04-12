@@ -26,7 +26,7 @@ const fetchAssistantById = async (id: string): Promise<IAIAssistantItem> => ({
   id,
   name: 'Assistant exemple',
   educationLevel: 'college',
-  type: 'japprends',
+  type: 'Apprentissge',
   subject: 'math',
   chapter: 'Chapitre 1',
   exercise: 'Exercice 2',
@@ -100,7 +100,7 @@ export default function AIAssistantEdit({ assistantId }: AIAssistantEditProps) {
             <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
           ))}
         </TextField>
-        {formData.type === 'japprends' && (
+        {formData.type === 'Apprentissge' && (
           <>
             <TextField select label="Matière" name="subject" value={formData.subject || ''} onChange={handleChange} fullWidth>
               {AI_ASSISTANT_SUBJECTS.map((option) => (

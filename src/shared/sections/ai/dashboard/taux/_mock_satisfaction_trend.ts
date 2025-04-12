@@ -89,7 +89,7 @@ const levelVariations: Record<EducationLevel, number> = {
 const typeVariations: Record<AssistantType, number> = {
   'accueil': 1.2,
   'recherche': -0.5,
-  'japprends': 2.0,
+  'Apprentissge': 2.0,
   'all': 0
 };
 
@@ -127,7 +127,7 @@ export const applyCustomFilters = (
     filteredData = filteredData.map(item => ({
       ...item,
       value: Math.min(100, Math.max(0, item.value + variation + (Math.random() * 2 - 1))),
-      totalResponses: Math.round(item.totalResponses * (type === 'japprends' ? 1.5 : type === 'recherche' ? 1.2 : 1.0))
+      totalResponses: Math.round(item.totalResponses * (type === 'Apprentissge' ? 1.5 : type === 'recherche' ? 1.2 : 1.0))
     }));
   }
   

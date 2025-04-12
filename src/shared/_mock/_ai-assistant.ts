@@ -8,7 +8,7 @@ export const AI_ASSISTANT_STATUS_OPTIONS = [
 ];  
 
 export const AI_ASSISTANT_TYPE_OPTIONS = [   
-  { value: 'japprends', label: "J'apprends" },   
+  { value: 'Apprentissge', label: "Apprentissge" },   
   { value: 'accueil', label: 'Accueil' },   
   { value: 'recherche', label: 'Recherche' }, 
 ];  
@@ -129,7 +129,7 @@ export const AI_ASSISTANT_EXERCISES = [
 
 // Create sample descriptions based on the assistant type and subject
 const getAssistantDescription = (type: string, subject: string | null, educationLevel: string): string => {
-  if (type === 'japprends') {
+  if (type === 'Apprentissge') {
     const subjectName = AI_ASSISTANT_SUBJECTS.find(s => s.value === subject)?.label || '';
     const levelName = AI_ASSISTANT_EDUCATION_LEVELS.find(l => l.value === educationLevel)?.label || '';
     return `Assistant pédagogique pour l'apprentissage de ${subjectName} au niveau ${levelName}. Aide les élèves à comprendre les concepts, résoudre des exercices et progresser dans leur apprentissage.`;
@@ -151,9 +151,9 @@ const getAssistantDescription = (type: string, subject: string | null, education
 export const _mockAIAssistants: IAIAssistantItem[] = [...Array(10)].map((_, index) => {   
   const type = AI_ASSISTANT_TYPE_OPTIONS[index % AI_ASSISTANT_TYPE_OPTIONS.length].value;   
   const educationLevel = AI_ASSISTANT_EDUCATION_LEVELS[index % AI_ASSISTANT_EDUCATION_LEVELS.length].value;
-  const subject = type === 'japprends' ? AI_ASSISTANT_SUBJECTS[index % AI_ASSISTANT_SUBJECTS.length].value : null;   
-  const chapter = type === 'japprends' ? AI_ASSISTANT_CHAPTERS[index % AI_ASSISTANT_CHAPTERS.length].value : null;   
-  const exercise = type === 'japprends' ? AI_ASSISTANT_EXERCISES[index % AI_ASSISTANT_EXERCISES.length].value : null;      
+  const subject = type === 'Apprentissge' ? AI_ASSISTANT_SUBJECTS[index % AI_ASSISTANT_SUBJECTS.length].value : null;   
+  const chapter = type === 'Apprentissge' ? AI_ASSISTANT_CHAPTERS[index % AI_ASSISTANT_CHAPTERS.length].value : null;   
+  const exercise = type === 'Apprentissge' ? AI_ASSISTANT_EXERCISES[index % AI_ASSISTANT_EXERCISES.length].value : null;      
   
   return {     
     id: `ai-assistant-${index + 1}`,     
@@ -170,16 +170,16 @@ export const _mockAIAssistants: IAIAssistantItem[] = [...Array(10)].map((_, inde
   }; 
 });  
 
-// Ajouter au moins 5 assistants de type "J'apprends" pour garantir leur présence 
+// Ajouter au moins 5 assistants de type "Apprentissge" pour garantir leur présence 
 for (let i = 0; i < 5; i += 1) {   
   const educationLevel = AI_ASSISTANT_EDUCATION_LEVELS[i % AI_ASSISTANT_EDUCATION_LEVELS.length].value;
   const subject = AI_ASSISTANT_SUBJECTS[i % AI_ASSISTANT_SUBJECTS.length].value;
   
   _mockAIAssistants[i] = {     
-    id: `ai-assistant-japprends-${i + 1}`,     
-    name: `J'apprends ${i + 1}`,     
-    description: getAssistantDescription('japprends', subject, educationLevel),
-    type: 'japprends',     
+    id: `ai-assistant-Apprentissge-${i + 1}`,     
+    name: `Apprentissge ${i + 1}`,     
+    description: getAssistantDescription('Apprentissge', subject, educationLevel),
+    type: 'Apprentissge',     
     status: 'active',     
     educationLevel,     
     subject,     

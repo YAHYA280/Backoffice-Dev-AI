@@ -190,9 +190,17 @@ export function useChart(options?: ChartOptions): ChartOptions {
      * Tooltip
      *************************************** */
     tooltip: {
-      theme: 'false',
+      theme: 'light',
       fillSeriesColor: false,
       x: {
+        show: true,
+        formatter: (value) => 
+           `<div style="text-align: center; width: 100%;">${value}</div>`
+      },
+      y: {
+        formatter: (value: number) => value.toString(),
+      },
+      marker: {
         show: true,
       },
       ...options?.tooltip,
@@ -207,7 +215,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
       fontWeight: 500,
       fontSize: '13px',
       horizontalAlign: 'right',
-      markers: { radius: 12 } as any,
+      markers: { radius: 12, strokeWidth: 2 } as any,
       labels: {
         colors: theme.vars.palette.text.primary,
       },

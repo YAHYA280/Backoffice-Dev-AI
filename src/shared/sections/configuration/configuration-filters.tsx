@@ -464,7 +464,7 @@ export function ConfigurationFilterInputs({
               </Box>
             </Box>
           ) : (
-            <></>
+            <> </>
           )}
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
@@ -520,7 +520,7 @@ export function ConfigurationFilterInputs({
           </Button>
         </Box>
       ) : (
-        <></>
+        <> </>
       )}
     </>
   );

@@ -64,7 +64,7 @@ type Props = {
   onEditRow: (id: string) => void;
   onSettingsRow: (id: string) => void;
   filters?: IAIAssistantTableFilters;
-  isJapprendsSelected?: boolean;
+  isApprentissgeSelected?: boolean;
   onFilterChange?: (filterName: string, value: any) => void;
   onClearFilters?: () => void;
   selectedRows: string[];
@@ -94,7 +94,7 @@ export function AIAssistantTable({
   onSettingsRow,
   dataFiltered,
   filters = {} as IAIAssistantTableFilters,
-  isJapprendsSelected = false,
+  isApprentissgeSelected = false,
   onFilterChange = () => {},
   onClearFilters = () => {},
   selectedRows,

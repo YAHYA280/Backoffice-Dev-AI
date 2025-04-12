@@ -51,7 +51,7 @@ export const navData = [
             path: paths.dashboard.analytics.usage_statistics,
           },
           {
-            title: "Performances",
+            title: "Performances des utilisateurs",
             path: paths.dashboard.analytics.users_performances,
           },
           {

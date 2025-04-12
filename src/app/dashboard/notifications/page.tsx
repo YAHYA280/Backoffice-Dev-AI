@@ -1,4 +1,4 @@
-import { NotificationsView } from "src/shared/sections/notification-management/view";
+import { NotificationsView } from "src/shared/sections/notification-management/view/view";
 // ----------------------------------------------------------------------
 
 

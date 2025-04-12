@@ -15,3 +15,5 @@ export * from './_invoice';
 export * from './_payment';
 
 export * from './_abonnements';
+
+export * from './_users-performances';

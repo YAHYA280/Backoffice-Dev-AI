@@ -291,7 +291,7 @@ const HistoryCorrection: React.FC<HistoryCorrectionProps> = ({
   // Fonction pour obtenir le type d'assistant à partir de son nom
   const getAssistantType = (assistantName: string): string => {
     const type = assistantTypeMapping[assistantName] || 'unknown';
-    if (type === 'japprends') return "J'apprends";
+    if (type === 'Apprentissge') return "Apprentissge";
     if (type === 'accueil') return "Accueil";
     if (type === 'recherche') return "Recherche";
     return "Inconnu";

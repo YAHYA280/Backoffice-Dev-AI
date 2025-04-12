@@ -13,6 +13,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 type DateRange = {
   startDate: Date;
@@ -127,7 +128,7 @@ export default function DateFilterBar({ onDateRangeChange }: Props) {
           Filtrer
         </Button>
 
-        {isPickerOpen && (
+        <ConditionalComponent isValid={Boolean(isPickerOpen)}>
           <Paper
             elevation={5}
             sx={{
@@ -188,7 +189,7 @@ export default function DateFilterBar({ onDateRangeChange }: Props) {
               </Button>
             </Box>
           </Paper>
-        )}
+        </ConditionalComponent>
       </Paper>
     </LocalizationProvider>
   );

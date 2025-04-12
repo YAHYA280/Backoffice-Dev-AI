@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faEdit, 
-  faSync, 
-  faSave, 
-  faTrash, 
+import {
+  faEdit,
+  faSync,
+  faSave,
+  faTrash,
   faHistory,
-  faPlusCircle,  
+  faPlusCircle,
   faChevronLeft,
-  faChevronRight, 
+  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -45,9 +45,6 @@ import {
   FormControlLabel,
 } from "@mui/material";
 
-
-// États à ajouter dans la section des états (près des autres états de dialog)
-
 import { AIAssistantHistoryService } from "../AIAssistantHistoryService";
 
 type SupervisionRule = {
@@ -64,7 +61,6 @@ type SupervisionRule = {
   lastModificationComment?: string;
 };
 
-
 type AIAssistantFilteringProps = {
   assistantId: string;
 };
@@ -77,8 +73,6 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   const [updatingKnowledgeBase, setUpdatingKnowledgeBase] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  // État de dialogue supprimé car non utilisé dans ce fichier
-  // Règles combinées (système et personnalisées ensemble)
   const [rules, setRules] = useState<SupervisionRule[]>([
     {
         id: "rule-1",
@@ -128,17 +122,15 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
 
   // Dialog states
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  // Variables non utilisées, commentées pour éviter les avertissements
-  // const [editingRule, setEditingRule] = useState<SupervisionRule | null>(null);
-  // const [newRuleComment, setNewRuleComment] = useState("");
-
-  // Form fields for new/edit rule
-  // const [ruleFormData, setRuleFormData] = useState({
-  //   name: "",
-  //   description: "",
-  //   enabled: true,
-  //   parameters: {}
-  // });
+  const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<SupervisionRule | null>(null);
+  const [newRuleComment, setNewRuleComment] = useState("");
+  const [ruleFormData, setRuleFormData] = useState({
+    name: "",
+    description: "",
+    enabled: true,
+    parameters: {}
+  });
 
   // Terms blocking
   const [newBlockedTermStudent, setNewBlockedTermStudent] = useState("");
@@ -229,34 +221,30 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   };
 
   const handleOpenRuleDialog = (rule?: SupervisionRule) => {
-    // Fonction simplifiée car les variables d'état associées ne sont pas utilisées
-    console.log("Ouverture du dialogue pour la règle:", rule?.name || "Nouvelle règle");
-    // Ancienne implémentation commentée
-    // if (rule) {
-    //   setEditingRule(rule);
-    //   setRuleFormData({
-    //     name: rule.name,
-    //     description: rule.description,
-    //     enabled: rule.enabled,
-    //     parameters: rule.parameters || {}
-    //   });
-    // } else {
-    //   setEditingRule(null);
-    //   setRuleFormData({
-    //     name: "",
-    //     description: "",
-    //     enabled: true,
-    //     parameters: {}
-    //   });
-    // }
-    // setNewRuleComment("");
-    // setRuleDialogOpen(true);
+    if (rule) {
+      setEditingRule(rule);
+      setRuleFormData({
+        name: rule.name,
+        description: rule.description,
+        enabled: rule.enabled,
+        parameters: rule.parameters || {}
+      });
+    } else {
+      setEditingRule(null);
+      setRuleFormData({
+        name: "",
+        description: "",
+        enabled: true,
+        parameters: {}
+      });
+    }
+    setNewRuleComment("");
+    setRuleDialogOpen(true);
   };
 
-  // Fonctions non utilisées dans ce fichier, supprimées pour éviter les avertissements
-  // const handleCloseRuleDialog = () => {
-  //   setRuleDialogOpen(false);
-  // };
+  const handleCloseRuleDialog = () => {
+    setRuleDialogOpen(false);
+  };
 
   const handleOpenHistoryDialog = () => {
     setHistoryDialogOpen(true);
@@ -266,74 +254,73 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
     setHistoryDialogOpen(false);
   };
 
-  // Fonctions non utilisées dans ce fichier, supprimées pour éviter les avertissements  
-  // const handleRuleFormChange = (field: string, value: any) => {
-  //   setRuleFormData(prev => ({
-  //     ...prev,
-  //     [field]: value
-  //   }));
-  // };
+  const handleRuleFormChange = (field: string, value: any) => {
+    setRuleFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-  // const handleSaveRule = () => {
-  //   const now = new Date().toISOString();
-  //   const user = "Utilisateur Actuel"; // In a real app, get from authentication
+  const handleSaveRule = () => {
+    const now = new Date().toISOString();
+    const user = "Utilisateur Actuel"; // Dans une vraie application, récupérer de l'authentification
 
-  //   if (editingRule) {
-  //     // Editing existing rule
-  //     const updatedRule: SupervisionRule = {
-  //       ...editingRule,
-  //       name: ruleFormData.name,
-  //       description: ruleFormData.description,
-  //       enabled: ruleFormData.enabled,
-  //       parameters: ruleFormData.parameters,
-  //       lastModified: now,
-  //       lastModifiedBy: user,
-  //       lastModificationComment: newRuleComment
-  //     };
+    if (editingRule) {
+      // Édition d'une règle existante
+      const updatedRule: SupervisionRule = {
+        ...editingRule,
+        name: ruleFormData.name,
+        description: ruleFormData.description,
+        enabled: ruleFormData.enabled,
+        parameters: ruleFormData.parameters,
+        lastModified: now,
+        lastModifiedBy: user,
+        lastModificationComment: newRuleComment
+      };
 
-  //     setRules(prev =>
-  //       prev.map(rule => rule.id === editingRule.id ? updatedRule : rule)
-  //     );
+      setRules(prev =>
+        prev.map(rule => rule.id === editingRule.id ? updatedRule : rule)
+      );
 
-  //     // Add to history service
-  //     AIAssistantHistoryService.addEntry({
-  //       id: `hist-${Date.now()}`,
-  //       date: new Date().toLocaleString(),
-  //       user,
-  //       section: "Réglementation de l'Assistant IA",
-  //       action: "modify",
-  //       comment: `Modification de la règle "${updatedRule.name}": ${newRuleComment}`
-  //     });
+      // Ajouter à l'historique
+      AIAssistantHistoryService.addEntry({
+        id: `hist-${Date.now()}`,
+        date: new Date().toLocaleString(),
+        user,
+        section: "Réglementation de l'Assistant IA",
+        action: "modify",
+        comment: `Modification de la règle "${updatedRule.name}": ${newRuleComment}`
+      });
 
-  //   } else {
-  //     // Adding new rule
-  //     const newRule: SupervisionRule = {
-  //       id: `custom-${Date.now()}`,
-  //       name: ruleFormData.name,
-  //       description: ruleFormData.description,
-  //       enabled: ruleFormData.enabled,
-  //       parameters: ruleFormData.parameters,
-  //       isSystemRule: false,
-  //       lastModified: now,
-  //       lastModifiedBy: user,
-  //       lastModificationComment: newRuleComment
-  //     };
+    } else {
+      // Ajout d'une nouvelle règle
+      const newRule: SupervisionRule = {
+        id: `custom-${Date.now()}`,
+        name: ruleFormData.name,
+        description: ruleFormData.description,
+        enabled: ruleFormData.enabled,
+        parameters: ruleFormData.parameters,
+        isSystemRule: false,
+        lastModified: now,
+        lastModifiedBy: user,
+        lastModificationComment: newRuleComment
+      };
 
-  //     setRules(prev => [...prev, newRule]);
+      setRules(prev => [...prev, newRule]);
 
-  //     // Add to history service
-  //     AIAssistantHistoryService.addEntry({
-  //       id: `hist-${Date.now()}`,
-  //       date: new Date().toLocaleString(),
-  //       user,
-  //       section: "Réglementation de l'Assistant IA",
-  //       action: "add",
-  //       comment: `Ajout de la règle "${newRule.name}": ${newRuleComment}`
-  //     });
-  //   }
+      // Ajouter à l'historique
+      AIAssistantHistoryService.addEntry({
+        id: `hist-${Date.now()}`,
+        date: new Date().toLocaleString(),
+        user,
+        section: "Réglementation de l'Assistant IA",
+        action: "add",
+        comment: `Ajout de la règle "${newRule.name}": ${newRuleComment}`
+      });
+    }
 
-  //   setRuleDialogOpen(false);
-  // };
+    setRuleDialogOpen(false);
+  };
 
   const handleDeleteRule = (ruleId: string) => {
     const ruleToDelete = rules.find(r => r.id === ruleId);
@@ -1029,7 +1016,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
               </TableBody>
             </Table>
           </TableContainer>
-          
+
           {/* Pagination */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -1046,28 +1033,28 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 <MenuItem value={25}>25</MenuItem>
               </Select>
             </Box>
-            
+
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-                {filteredHistory.length > 0 ? 
-                  `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, filteredHistory.length)} sur ${filteredHistory.length}` : 
+                {filteredHistory.length > 0 ?
+                  `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, filteredHistory.length)} sur ${filteredHistory.length}` :
                   "0-0 sur 0"}
               </Typography>
-              <IconButton 
-                onClick={() => setPage(page - 1)} 
+              <IconButton
+                onClick={() => setPage(page - 1)}
                 disabled={page === 0}
               >
                 <FontAwesomeIcon icon={faChevronLeft} />
               </IconButton>
-              <IconButton 
-                onClick={() => setPage(page + 1)} 
+              <IconButton
+                onClick={() => setPage(page + 1)}
                 disabled={page >= Math.ceil(filteredHistory.length / rowsPerPage) - 1}
               >
                 <FontAwesomeIcon icon={faChevronRight} />
               </IconButton>
             </Box>
           </Box>
-          
+
           {/* Filtres de dates déplacés en bas */}
           <Divider sx={{ my: 2 }} />
           <Grid container spacing={2} alignItems="center">
@@ -1100,9 +1087,9 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
               />
             </Grid>
             <Grid item xs={12} sm={2}>
-              <Button 
-                variant="outlined" 
-                size="small" 
+              <Button
+                variant="outlined"
+                size="small"
                 fullWidth
                 onClick={() => {
                   setStartDate('');
@@ -1118,6 +1105,80 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         <DialogActions>
           <Button onClick={handleCloseHistoryDialog} color="primary">
             Fermer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog for adding/editing a rule */}
+      <Dialog
+        open={ruleDialogOpen}
+        onClose={handleCloseRuleDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingRule ? "Modifier la règle" : "Ajouter une nouvelle règle"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                label="Nom de la règle"
+                fullWidth
+                required
+                value={ruleFormData.name}
+                onChange={(e) => handleRuleFormChange("name", e.target.value)}
+                margin="normal"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Description"
+                fullWidth
+                multiline
+                rows={3}
+                value={ruleFormData.description}
+                onChange={(e) => handleRuleFormChange("description", e.target.value)}
+                margin="normal"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={ruleFormData.enabled}
+                    onChange={(e) => handleRuleFormChange("enabled", e.target.checked)}
+                  />
+                }
+                label="Règle active"
+              />
+            </Grid>
+            {/* Commentaire de modification */}
+            <Grid item xs={12} sx={{ mt: 2 }}>
+              <TextField
+                label="Commentaire de modification"
+                fullWidth
+                multiline
+                rows={2}
+                value={newRuleComment}
+                onChange={(e) => setNewRuleComment(e.target.value)}
+                helperText="Ajoutez un commentaire pour expliquer cette modification (visible dans l'historique)"
+                margin="normal"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRuleDialog} color="inherit">
+            Annuler
+          </Button>
+          <Button
+            onClick={handleSaveRule}
+            color="primary"
+            variant="contained"
+            disabled={!ruleFormData.name.trim()}
+          >
+            {editingRule ? "Enregistrer les modifications" : "Ajouter la règle"}
           </Button>
         </DialogActions>
       </Dialog>

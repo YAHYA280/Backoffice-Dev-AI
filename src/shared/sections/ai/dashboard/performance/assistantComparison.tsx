@@ -1,57 +1,128 @@
-import type { CardProps } from '@mui/material/Card';
-import type { ChartOptions } from 'src/shared/components/chart';
+// src/components/ai-performance/AssistantComparison.tsx
 
-import { useState, useCallback } from 'react';
+import type { CardProps } from '@mui/material/Card';
+import type { SelectChangeEvent } from '@mui/material';
+import type { ComparisonType, ComparisonChartData } from 'src/contexts/types/ai-performance';
+
+import { useMemo, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
+import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
+import { Stack, Select, MenuItem, Skeleton, FormControl } from '@mui/material';
 
-import { fShortenNumber } from 'src/utils/format-number';
-
-import { Chart, useChart, ChartSelect, ChartLegends } from 'src/shared/components/chart';
+import { Chart, useChart, ChartSelect } from 'src/shared/components/chart';
 
 // ----------------------------------------------------------------------
 
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      name: string;
-      categories: string[];
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
-    options?: ChartOptions;
-  };
+  isLoading?: boolean;
+  chart: ComparisonChartData;
+  comparisonType?: ComparisonType;
+  onComparisonTypeChange?: (type: ComparisonType) => void;
 };
 
-export function AssistantComparison({ title, subheader, chart, ...other }: Props) {
+export function AssistantComparison({
+  title,
+  subheader,
+  isLoading = false,
+  chart,
+  comparisonType = 'Sans comparaison',
+  onComparisonTypeChange,
+  ...other
+}: Props) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState('Nombre de requêtes');
+  // Options pour les sélecteurs
+  const metricOptions = useMemo(() => chart.series.map((series) => series.name), [chart.series]);
 
-  const currentSeries = chart.series.find((i) => i.name === selectedSeries);
+  const comparisonOptions: ComparisonType[] = useMemo(
+    () => ['Sans comparaison', 'Période précédente', 'Mois précédent', 'Année précédente'],
+    []
+  );
 
-  const chartColors = [theme.palette.primary.dark, hexAlpha(theme.palette.error.main, 0.48)];
+  // États locaux
+  const [selectedMetric, setSelectedMetric] = useState(() =>
+    metricOptions.length > 0 ? metricOptions[0] : ''
+  );
 
+  // Mettre à jour la métrique sélectionnée si les options changent
+  useMemo(() => {
+    if (metricOptions.length > 0 && !metricOptions.includes(selectedMetric)) {
+      setSelectedMetric(metricOptions[0]);
+    }
+  }, [metricOptions, selectedMetric]);
+
+  // Gestionnaires d'événements optimisés
+  const handleChangeMetric = useCallback((newValue: string) => {
+    setSelectedMetric(newValue);
+  }, []);
+
+  const handleChangeComparison = useCallback(
+    (event: SelectChangeEvent<ComparisonType>) => {
+      const newValue = event.target.value as ComparisonType;
+      if (onComparisonTypeChange) {
+        onComparisonTypeChange(newValue);
+      }
+    },
+    [onComparisonTypeChange]
+  );
+
+  // Trouver la série actuellement sélectionnée
+  const currentSeries = useMemo(
+    () => chart.series.find((series) => series.name === selectedMetric),
+    [chart.series, selectedMetric]
+  );
+
+  // Préparer les données pour le graphique
+  const seriesData = useMemo(() => {
+    if (!currentSeries || !Array.isArray(currentSeries.data?.[0])) {
+      return [];
+    }
+
+    // Données de la série principale
+    const result = [
+      {
+        name: currentSeries.name,
+        data: [...currentSeries.data[0]],
+      },
+    ];
+
+    // Ajouter les données de comparaison si disponibles
+    if (
+      comparisonType !== 'Sans comparaison' &&
+      currentSeries.comparisonData &&
+      Array.isArray(currentSeries.comparisonData[0])
+    ) {
+      result.push({
+        name: `${currentSeries.name} (${comparisonType})`,
+        data: [...currentSeries.comparisonData[0]],
+      });
+    }
+
+    return result;
+  }, [currentSeries, comparisonType]);
+
+  // Couleurs du graphique
+  const chartColors = useMemo(
+    () =>
+      chart.colors ?? [
+        theme.palette.primary.main,
+        theme.palette.warning.main,
+        theme.palette.info.main,
+      ],
+    [chart.colors, theme.palette]
+  );
+
+  // Options du graphique
   const chartOptions = useChart({
     colors: chartColors,
-    stroke: { width: 2, colors: ['transparent'] },
-    xaxis: { categories: currentSeries?.categories },
-    tooltip: {
-      theme: 'light',
-      x: {
-        show: true,
-        formatter: (value) => `<div style="text-align: center; width: 100%;">${value}</div>`,
-      },
-      y: {
-        formatter: (value: number) => value.toString(),
-      },
+    tooltip: { theme: 'light' },
+    legend: { position: 'top', horizontalAlign: 'right' },
+    xaxis: {
+      categories: currentSeries?.categories || [],
     },
     chart: {
       toolbar: {
@@ -59,14 +130,36 @@ export function AssistantComparison({ title, subheader, chart, ...other }: Props
         tools: {
           download: true,
         },
+        export: {
+          csv: {
+            filename: `${title || 'Analyse'}_${selectedMetric}_${comparisonType}`,
+            columnDelimiter: ',',
+          },
+          svg: {
+            filename: `${title || 'Analyse'}_${selectedMetric}_${comparisonType}`,
+          },
+          png: {
+            filename: `${title || 'Analyse'}_${selectedMetric}_${comparisonType}`,
+          },
+        },
       },
     },
     ...chart.options,
   });
 
-  const handleChangeSeries = useCallback((newValue: string) => {
-    setSelectedSeries(newValue);
-  }, []);
+  // Rendu du squelette pendant le chargement
+  if (isLoading) {
+    return (
+      <Card {...other}>
+        <CardHeader
+          title={<Skeleton width={200} />}
+          subheader={<Skeleton width={120} />}
+          action={<Skeleton width={300} height={40} />}
+        />
+        <Skeleton variant="rectangular" width="100%" height={320} sx={{ p: 3 }} />
+      </Card>
+    );
+  }
 
   return (
     <Card {...other}>
@@ -74,30 +167,31 @@ export function AssistantComparison({ title, subheader, chart, ...other }: Props
         title={title}
         subheader={subheader}
         action={
-          <ChartSelect
-            options={chart.series.map((item) => item.name)}
-            value={selectedSeries}
-            onChange={handleChangeSeries}
-          />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <ChartSelect
+              options={metricOptions}
+              value={selectedMetric}
+              onChange={handleChangeMetric}
+            />
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <Select
+                value={comparisonType}
+                onChange={handleChangeComparison}
+                size="small"
+                displayEmpty
+              >
+                {comparisonOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
         }
-        sx={{ mb: 3 }}
       />
 
-      <ChartLegends
-        colors={chartOptions?.colors}
-        labels={chart.series[0].data.map((item) => item.name)}
-        values={[fShortenNumber(6789), fShortenNumber(1234)]}
-        sx={{ px: 3, gap: 3 }}
-      />
-
-      <Chart
-        type="bar"
-        series={currentSeries?.data}
-        options={chartOptions}
-        height={320}
-        loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
-      />
+      <Chart type="bar" series={seriesData} options={chartOptions} height={320} sx={{ p: 3 }} />
     </Card>
   );
 }

@@ -126,7 +126,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   });
 
   // Déterminer si les sections suivantes doivent être affichées
-  const showSubjects = localFilters.types?.includes('japprends');
+  const showSubjects = localFilters.types?.includes('Apprentissge');
   const showChapters = showSubjects && localFilters.subjects && localFilters.subjects.length > 0;
   const showExercises = showChapters && localFilters.chapters && localFilters.chapters.length > 0;
   // Mise à jour des filtres locaux - Solution corrigée sans dépendances circulaires
@@ -145,8 +145,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         updatedFilters.types = value as AssistantType[];
         updatedFilters.type = value.includes('all') ? 'all' : value[0] as AssistantType;
         
-        // Réinitialiser les filtres associés si "japprends" est retiré
-        if (!value.includes('japprends') && prevFilters.types?.includes('japprends')) {
+        // Réinitialiser les filtres associés si "Apprentissge" est retiré
+        if (!value.includes('Apprentissge') && prevFilters.types?.includes('Apprentissge')) {
           updatedFilters.subjects = [];
           updatedFilters.chapters = [];
           updatedFilters.exercises = [];
@@ -596,7 +596,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   ))}
 </FormGroup>
 
-{/* Matières - Seulement si "japprends" est sélectionné */}
+{/* Matières - Seulement si "Apprentissge" est sélectionné */}
 {showSubjects && (
   <>
     <SectionTitle variant="subtitle2">
