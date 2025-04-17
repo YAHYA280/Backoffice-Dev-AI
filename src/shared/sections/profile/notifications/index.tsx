@@ -88,11 +88,12 @@ const NotificationsPage: React.FC = () => {
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         {/* Home button */}
         <Button
-          variant="outlined"
+          variant="contained"
+          color="primary"
           startIcon={<HomeIcon />}
           component={RouterLink}
           href={paths.dashboard.root}
-          size="small"
+          sx={{ mt: 2 }}
         >
           Retour à l&apos;accueil
         </Button>
@@ -129,7 +130,7 @@ const NotificationsPage: React.FC = () => {
         onClose={closeSidebar}
         sx={{
           '& .MuiDrawer-paper': {
-            width: isMobile ? '100%' : 380,
+            width: isMobile ? '100%' : 500,
             height: isMobile ? '80%' : '100%',
             borderTopLeftRadius: isMobile ? 16 : 0,
             borderTopRightRadius: isMobile ? 16 : 0,
