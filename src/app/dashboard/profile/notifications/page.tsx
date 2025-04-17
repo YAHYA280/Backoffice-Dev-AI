@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Notifications from "src/shared/sections/profile/notifications/page";
+import Notifications from 'src/shared/sections/profile/notifications';
 
 // ----------------------------------------------------------------------
 
