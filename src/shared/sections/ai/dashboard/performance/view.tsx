@@ -21,7 +21,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { CATEGORIES_AI_ASSISTANT } from 'src/shared/_mock/_ai';
+import { AI_ASSISTANT_TYPE_OPTIONS } from 'src/shared/_mock/_ai';
 
 import { AiQueryAnalysis } from './aiQueryAnalysis';
 import { AssistantComparison } from './assistantComparison';
@@ -93,7 +93,7 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
   // Generate chart data for both normal and comparison periods
   const chartData = {
     categories: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-    series: CATEGORIES_AI_ASSISTANT.map((category) => ({
+    series: AI_ASSISTANT_TYPE_OPTIONS.map((category) => ({
       name: category,
       data: [
         {
@@ -124,9 +124,9 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
   const generateComparisonChartData = () => {
     // Generate base comparison data
     const baseData = {
-      'Nombre de requêtes': generateRandomData(CATEGORIES_AI_ASSISTANT.length, 10, 100),
-      'Temps de réponse': generateRandomData(CATEGORIES_AI_ASSISTANT.length, 1, 10),
-      "Taux d'utilisation": generateRandomData(CATEGORIES_AI_ASSISTANT.length, 20, 80),
+      'Nombre de requêtes': generateRandomData(AI_ASSISTANT_TYPE_OPTIONS.length, 10, 100),
+      'Temps de réponse': generateRandomData(AI_ASSISTANT_TYPE_OPTIONS.length, 1, 10),
+      "Taux d'utilisation": generateRandomData(AI_ASSISTANT_TYPE_OPTIONS.length, 20, 80),
     };
 
     // Generate comparison data
@@ -147,7 +147,7 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
       series: [
         {
           name: 'Nombre de requêtes',
-          categories: CATEGORIES_AI_ASSISTANT,
+          categories: AI_ASSISTANT_TYPE_OPTIONS,
           data: [baseData['Nombre de requêtes']],
           comparisonData: comparisonData
             ? [
@@ -160,7 +160,7 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
         },
         {
           name: 'Temps de réponse',
-          categories: CATEGORIES_AI_ASSISTANT,
+          categories: AI_ASSISTANT_TYPE_OPTIONS,
           data: [baseData['Temps de réponse']],
           comparisonData: comparisonData
             ? [
@@ -173,7 +173,7 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
         },
         {
           name: "Taux d'utilisation",
-          categories: CATEGORIES_AI_ASSISTANT,
+          categories: AI_ASSISTANT_TYPE_OPTIONS,
           data: [baseData["Taux d'utilisation"]],
           comparisonData: comparisonData
             ? [

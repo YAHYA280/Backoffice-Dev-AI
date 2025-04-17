@@ -1,5 +1,5 @@
 import { _mock } from './_mock';
-import { abonnementItems } from './_abonnements';
+import { _purchasedSubscriptions } from './_abonnements';
 
 export const PAYMENT_METHOD_OPTIONS = [
   { label: 'Carte de crédit', value: 'credit_card' },
@@ -27,7 +27,7 @@ export const _payments = [...Array(15)].map((_, index) => {
     id: _mock.id(index),
     transactionId: `TXN-${_mock.id(index).slice(0, 7) + index}`,
     subscriber: SUBSCRIBERS[index % SUBSCRIBERS.length],
-    subscriptions: [abonnementItems[index % abonnementItems.length]],
+    subscriptions: [_purchasedSubscriptions[index % _purchasedSubscriptions.length]],
     amount: _mock.number.price(index),
     paymentMethod: PAYMENT_METHOD_OPTIONS[index % PAYMENT_METHOD_OPTIONS.length].value,
     paymentDate: _mock.time(index),

@@ -1,7 +1,9 @@
+import type { ChildUser, ParentUser } from 'src/contexts/types/user';
+
 import dayjs from 'dayjs';
 
 import { _mock, _mockListUsers } from './_mock';
-
+import { _purchasedSubscriptions } from './_abonnements';
 
 export const USER_STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -143,8 +145,6 @@ export const _userList = [...Array(20)].map((_, index) => ({
     (index % 2 && 'pending') || (index % 3 && 'banned') || (index % 4 && 'rejected') || 'active',
 }));
 
-
-
 export const USER_STATUS = [
   { value: 'Actif', label: 'Actif' },
   { value: 'Suspendu', label: 'Suspendu' },
@@ -156,32 +156,80 @@ export const ROLE_OPTIONS = [
   { value: 'Tous', label: 'Tous' },
   { value: 'Admin', label: 'Admins' },
   { value: 'Parent', label: 'Parents' },
-  { value: 'Enfant', label: 'Enfants'},
-];
+  { value: 'Enfant', label: 'Enfants' },
+]; // adapte le chemin si besoin
 
-export const _listUsers = [...Array(20)].map((_, index) => ({
-  id: _mockListUsers.id(index),
-  zipCode: '85807',
-  state: 'Virginia',
-  city: 'Rancho Cordova',
-  role: _mockListUsers.role(index),
-  email: _mockListUsers.email(index),
-  address: '908 Jack Locks',
-  name: _mockListUsers.fullName(index),
-  firstName: _mockListUsers.firstName(index),
-  lastName: _mockListUsers.lastName(index),
-  isVerified: _mockListUsers.boolean(index),
-  company: _mockListUsers.companyNames(index),
-  country: _mockListUsers.countryNames(index),
-  avatarUrl: _mockListUsers.image.avatar(index),
-  phoneNumber: _mockListUsers.phoneNumber(index),
-  status : _mockListUsers.status(index),
-  createdAt: _mock.time(index),
-  lastLogin: dayjs(_mock.time(index)).add(5, 'day').toISOString(),
-  birthDate: dayjs(_mock.time(index)).subtract(20, 'year').toISOString(),
-  dureRestante: Math.floor(Math.random() * 7) + 1,
-  motif : "Violation des conditions d'utilisation",
-  duree : 14,
-  reason : "Activité suspecte détectée sur le compte",
-  parentId : "1",
-}));
+const numberOfParents = 6;
+const numberOfChildrenPerParent = 2;
+
+const children: ChildUser[] = [];
+
+const parents: ParentUser[] = [...Array(numberOfParents)].map((__, parentIndex) => {
+  const id = _mockListUsers.id(parentIndex);
+
+  const parentChildren: ChildUser[] = [...Array(numberOfChildrenPerParent)].map(
+    (___, childIndex) => {
+      const index = numberOfParents + parentIndex * numberOfChildrenPerParent + childIndex;
+      const child: ChildUser = {
+        id: _mockListUsers.id(index),
+        zipCode: '85807',
+        state: 'Virginia',
+        city: 'Rancho Cordova',
+        role: 'Enfant',
+        email: _mockListUsers.email(index),
+        address: '908 Jack Locks',
+        firstName: _mockListUsers.firstName(index),
+        lastName: _mockListUsers.lastName(index),
+        isVerified: _mockListUsers.boolean(index),
+        company: _mockListUsers.companyNames(index),
+        country: _mockListUsers.countryNames(index),
+        avatarUrl: _mockListUsers.image.avatar(index),
+        phoneNumber: _mockListUsers.phoneNumber(index),
+        status: _mockListUsers.status(index),
+        createdAt: _mock.time(index),
+        lastLogin: dayjs(_mock.time(index)).add(5, 'day').toISOString(),
+        birthDate: dayjs(_mock.time(index)).subtract(12, 'year').toISOString(),
+        dureRestante: Math.floor(Math.random() * 7) + 1,
+        motif: 'Non-respect du règlement',
+        duree: 7,
+        reason: 'Comportement inapproprié',
+        parentId: id,
+        subjects: _mockListUsers.subjects(),
+        daily_question_limit: Math.floor(Math.random() * 5) + 1,
+      };
+      children.push(child);
+      return child;
+    }
+  );
+
+  const parent: ParentUser = {
+    id,
+    zipCode: '85807',
+    state: 'Virginia',
+    city: 'Rancho Cordova',
+    role: 'Parent',
+    email: _mockListUsers.email(parentIndex),
+    address: '908 Jack Locks',
+    firstName: _mockListUsers.firstName(parentIndex),
+    lastName: _mockListUsers.lastName(parentIndex),
+    isVerified: _mockListUsers.boolean(parentIndex),
+    company: _mockListUsers.companyNames(parentIndex),
+    country: _mockListUsers.countryNames(parentIndex),
+    avatarUrl: _mockListUsers.image.avatar(parentIndex),
+    phoneNumber: _mockListUsers.phoneNumber(parentIndex),
+    status: _mockListUsers.status(parentIndex),
+    createdAt: _mock.time(parentIndex),
+    lastLogin: dayjs(_mock.time(parentIndex)).add(5, 'day').toISOString(),
+    birthDate: dayjs(_mock.time(parentIndex)).subtract(35, 'year').toISOString(),
+    dureRestante: Math.floor(Math.random() * 7) + 1,
+    motif: "Violation des conditions d'utilisation",
+    duree: 14,
+    reason: 'Activité suspecte détectée sur le compte',
+    subscription: _purchasedSubscriptions[parentIndex],
+    children: parentChildren,
+  };
+
+  return parent;
+});
+
+export const _listUsers = [...parents, ...children];

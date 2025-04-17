@@ -36,3 +36,32 @@ export type IAbonnementSubscribers = {
   role: string;
   avatarUrl: string;
 };
+
+export type ISubject = {
+  id: string;
+  name: string;
+  isSelected: boolean;
+};
+
+export type UpgradeType = 'subjects' | 'questions';
+
+export interface UpgradeBase {
+  id: string;
+  type: UpgradeType;
+  cost: number;
+  date: string;
+}
+
+export interface ChildSpecificUpgrade extends UpgradeBase {
+  type: 'questions';
+  childId: string;
+  additional_questions: number;
+}
+
+export interface GlobalUpgrade extends UpgradeBase {
+  type: 'subjects';
+  additional_subjects: number;
+  interval: string;
+}
+
+export type Upgrade = UpgradeBase | ChildSpecificUpgrade | GlobalUpgrade;

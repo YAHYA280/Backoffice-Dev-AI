@@ -1,4 +1,41 @@
+import { 
+  faBell, 
+  faInfoCircle, 
+  faCheckCircle,
+  faExclamationTriangle
+} from '@fortawesome/free-solid-svg-icons';
+
 import { _mock } from './_mock';
+
+const getIconForNotificationType = (type: string) => {
+  switch(type) {
+    case 'information':
+      return faInfoCircle;
+    case 'promotional':
+      return faBell;
+    case 'reminder':
+      return faCheckCircle;
+    case 'alert':
+      return faExclamationTriangle;
+    default:
+      return faBell;
+  }
+};
+
+const getColorForNotificationType = (type: string) => {
+  switch(type) {
+    case 'information':
+      return 'info.main';
+    case 'promotional':
+      return 'primary.main';
+    case 'reminder':
+      return 'success.main';
+    case 'alert':
+      return 'error.main';
+    default:
+      return 'primary.main';
+  }
+};
 
 export const NOTIFICATION_TYPE_OPTIONS = [
   { label: 'Information', value: 'information' },
@@ -26,11 +63,32 @@ const SUBSCRIBER_GROUPS = [
   { id: _mock.id(4), name: 'Jean Dupont', count: 1 },
 ];
 
+// Lien par default
+const DEFAULT_LINK = '/dashboard/profile/notifications/';
+
 export const _notifications = [...Array(15)].map((_, index) => {
   const type = NOTIFICATION_TYPE_OPTIONS[index % NOTIFICATION_TYPE_OPTIONS.length].value;
   const status = NOTIFICATION_STATUS_OPTIONS[index % NOTIFICATION_STATUS_OPTIONS.length].value;
   
-  // Generate title based on type
+  let icon;
+  switch(type) {
+    case 'information':
+      icon = faInfoCircle;
+      break;
+    case 'promotional':
+      icon = faBell;
+      break;
+    case 'reminder':
+      icon = faCheckCircle;
+      break;
+    case 'alert':
+      icon = faExclamationTriangle;
+      break;
+    default:
+      icon = faBell;
+      break;
+  }
+
   let title = '';
   switch(type) {
     case 'information':
@@ -50,7 +108,6 @@ export const _notifications = [...Array(15)].map((_, index) => {
       break;
   }
   
-  // Generate channels array based on index
   let channel = [];
   if (index % 3 === 0) {
     channel = ['email', 'push'];
@@ -60,16 +117,24 @@ export const _notifications = [...Array(15)].map((_, index) => {
     channel = ['sms'];
   }
 
+  const content = `Ceci est le contenu détaillé de la notification "${title}". Cette notification a été envoyée via ${channel.join(' et ')}.`;
+  
+  const hasLink = index % 3 === 0;
+  const link = hasLink ? DEFAULT_LINK : undefined;
+
   return {
     id: _mock.id(index),
     title,
     type,
     status,
     recipients: SUBSCRIBER_GROUPS[index % SUBSCRIBER_GROUPS.length],
-    content: `Notification contenu ${index + 1}`,
+    content,
     sentDate: _mock.time(index),
     channel,
     createdAt: _mock.time(index - 2),
     updatedAt: _mock.time(index),
+    link,
+    viewed: index % 4 !== 0, 
+    icon,
   };
 });

@@ -1,4 +1,5 @@
 import type { NavSectionProps } from 'src/shared/components/nav-section';
+import type { INotificationType } from 'src/contexts/types/notification';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -17,13 +18,12 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
-import { NotificationsDrawer } from '../components/notifications-drawer';
+import { NotificationPopup } from '../components/notifications-popup';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
 import type { ContactsPopoverProps } from '../components/contacts-popover';
 import type { LanguagePopoverProps } from '../components/language-popover';
-import type { NotificationsDrawerProps } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ export type HeaderBaseProps = HeaderSectionProps & {
     account?: AccountDrawerProps['data'];
     langs?: LanguagePopoverProps['data'];
     contacts?: ContactsPopoverProps['data'];
-    notifications?: NotificationsDrawerProps['data'];
+    notifications?: INotificationType[];
   };
   slots?: {
     navMobile?: {
@@ -168,7 +168,7 @@ export function HeaderBase({
 
               {/* -- Notifications popover -- */}
               {notifications && (
-                <NotificationsDrawer data-slot="notifications" data={data?.notifications} />
+                <NotificationPopup data-slot="notifications" data={data?.notifications} />
               )}
 
               {/* -- Contacts popover -- */}

@@ -27,6 +27,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { fCurrency } from 'src/utils/format-number';
 
+import { getIntervalLabel } from 'src/shared/_mock';
+
 import { toast } from 'src/shared/components/snackbar';
 import { Field } from 'src/shared/components/hook-form';
 
@@ -307,10 +309,15 @@ export function GenerateInvoiceDialog({ open, onClose, payment }: Props) {
                             </Typography>
                           </Box>
                           <Typography variant="body2" align="right">
-                            {subscription.price.interval || 'Mensuel'}
+                            {getIntervalLabel(subscription.interval) || 'Mensuel'}
                           </Typography>
                           <Typography variant="body2" align="right">
-                            {fCurrency(subscription.price.amount) || 0} €
+                            {fCurrency(
+                              subscription.price[
+                                subscription.interval as keyof typeof subscription.price
+                              ] || subscription.price.monthly
+                            ) || 0}{' '}
+                            €
                           </Typography>
                         </Box>
                       ))}
@@ -530,10 +537,15 @@ export function GenerateInvoiceDialog({ open, onClose, payment }: Props) {
                         </Typography>
                       </Box>
                       <Typography variant="body2" align="right">
-                        {subscription.price.interval || 'Mensuel'}
+                        {getIntervalLabel(subscription.interval) || 'Mensuel'}
                       </Typography>
                       <Typography variant="body2" align="right">
-                        {fCurrency(subscription.price.amount) || 0} €
+                        {fCurrency(
+                          subscription.price[
+                            subscription.interval as keyof typeof subscription.price
+                          ] || subscription.price.monthly
+                        ) || 0}{' '}
+                        €
                       </Typography>
                     </Box>
                   ))}

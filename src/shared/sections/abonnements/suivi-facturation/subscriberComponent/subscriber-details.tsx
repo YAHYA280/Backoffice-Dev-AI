@@ -18,15 +18,15 @@ import {
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import { alpha, useTheme } from '@mui/material/styles';
-import { 
-  Chip, 
-  List, 
-  Stack, 
-  Paper, 
-  Avatar, 
+import {
+  Chip,
+  List,
+  Stack,
+  Paper,
+  Avatar,
   ListItem,
   Typography,
-  ListItemText
+  ListItemText,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -80,20 +80,18 @@ type Props = {
   onCloseDetails: () => void;
 };
 
-export function SubscriberDetails({ 
-  subscriber, 
-  openDetails, 
-  onDeleteSubscriber, 
-  onCloseDetails 
+export function SubscriberDetails({
+  subscriber,
+  openDetails,
+  onDeleteSubscriber,
+  onCloseDetails,
 }: Props) {
   const theme = useTheme();
-  
+
   // Generate initials from subscriber name
   const getInitials = (name: string) => {
     const parts = name.split(' ');
-    return parts.length > 1 
-      ? `${parts[0][0]}${parts[1][0]}` 
-      : parts[0].substring(0, 2);
+    return parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0].substring(0, 2);
   };
 
   return (
@@ -158,15 +156,21 @@ export function SubscriberDetails({
               />
 
               <Chip
-                label={subscriber.status === 'active' ? 'Actif' : subscriber.status === 'pending' ? 'En attente' : 'Inactif'}
+                label={
+                  subscriber.status === 'active'
+                    ? 'Actif'
+                    : subscriber.status === 'pending'
+                      ? 'En attente'
+                      : 'Inactif'
+                }
                 size="small"
                 sx={{
                   bgcolor: alpha(
-                    subscriber.status === 'active' 
-                      ? theme.palette.success.main 
+                    subscriber.status === 'active'
+                      ? theme.palette.success.main
                       : subscriber.status === 'pending'
                         ? theme.palette.warning.main
-                        : theme.palette.error.main, 
+                        : theme.palette.error.main,
                     0.7
                   ),
                   color: 'white',
@@ -413,7 +417,8 @@ export function SubscriberDetails({
                   }
                   secondary={
                     <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                      Du {fDate(subscriber.subscriptionStartDate)} au {fDate(subscriber.subscriptionEndDate)}
+                      Du {fDate(subscriber.subscriptionStartDate)} au{' '}
+                      {fDate(subscriber.subscriptionEndDate)}
                     </Typography>
                   }
                 />
@@ -557,15 +562,22 @@ export function SubscriberDetails({
                   secondary={
                     <Box sx={{ mt: 0.5, ml: 6, display: 'flex', alignItems: 'center' }}>
                       <Chip
-                        label={subscriber.status === 'active' ? 'Actif' : subscriber.status === 'pending' ? 'En attente' : 'Inactif'}
+                        label={
+                          subscriber.status === 'active'
+                            ? 'Actif'
+                            : subscriber.status === 'pending'
+                              ? 'En attente'
+                              : 'Inactif'
+                        }
                         size="small"
                         sx={{
                           color: 'white',
-                          bgcolor: subscriber.status === 'active' 
-                            ? 'success.main' 
-                            : subscriber.status === 'pending'
-                              ? 'warning.main'
-                              : 'error.main',
+                          bgcolor:
+                            subscriber.status === 'active'
+                              ? 'success.main'
+                              : subscriber.status === 'pending'
+                                ? 'warning.main'
+                                : 'error.main',
                           fontWeight: 'bold',
                         }}
                       />
@@ -624,12 +636,12 @@ export function SubscriberDetails({
                           {subscription.title}
                         </Typography>
 
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary" 
-                          sx={{ 
-                            maxHeight: 80, 
-                            overflow: 'hidden', 
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            maxHeight: 80,
+                            overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
                             WebkitLineClamp: 3,
@@ -640,17 +652,8 @@ export function SubscriberDetails({
                         </Typography>
 
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Chip
-                            label={subscription.type}
-                            size="small"
-                            sx={{
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              color: 'primary.main',
-                              fontWeight: 'medium',
-                            }}
-                          />
                           <Typography variant="subtitle1" color="primary.main" fontWeight="bold">
-                            {`${subscription.price?.amount || 0} €`}
+                            {`${subscription.price?.monthly || 0} €`}
                           </Typography>
                         </Stack>
                       </Stack>
@@ -681,7 +684,7 @@ export function SubscriberDetails({
           </Box>
         </Box>
       </Scrollbar>
-      
+
       {/* Toolbar (overlay with toolbar) */}
       <SubscriberDetailsToolbar
         onDelete={onDeleteSubscriber}

@@ -18,9 +18,9 @@ export const _subscribers = [...Array(20)].map((_, index) => {
   const status = SUBSCRIBER_STATUS_OPTIONS[index % SUBSCRIBER_STATUS_OPTIONS.length].value;
   const subscriptionCount = (index % 3) + 1; // 1-3 subscriptions per subscriber
   const subscriptions = [];
-  
+
   // Assign 1-3 subscriptions to each subscriber
-  for (let i = 0; i < subscriptionCount; i+=1) {
+  for (let i = 0; i < subscriptionCount; i += 1) {
     const subIndex = (index + i) % abonnementItems.length;
     subscriptions.push(abonnementItems[subIndex]);
   }
@@ -28,11 +28,9 @@ export const _subscribers = [...Array(20)].map((_, index) => {
   // Calculate dates based on mock times
   const createdAt = _mock.time(index - 5);
   const subscriptionStartDate = _mock.time(index);
-  
-  // Calculate end date based on subscription duration (assuming 12 months default)
-  const endDateOffset = subscriptions[0].duration || 12;
-  const subscriptionEndDate = _mock.time(index + endDateOffset);
-  
+
+  const subscriptionEndDate = _mock.time(index + 2);
+
   const lastPaymentDate = _mock.time(index - 1);
   const updatedAt = _mock.time(index);
 

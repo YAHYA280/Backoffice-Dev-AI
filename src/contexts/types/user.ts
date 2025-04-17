@@ -1,41 +1,57 @@
-import type { IDateValue, ISocialLink } from './common';
+import type { IAbonnementItem } from './abonnement';
+import type { ISubject, IDateValue, ISocialLink } from './common';
 
-export type IUserItem = {
-    id: string;
-    firstName: string;
-    lastName: string;
-    city: string;
-    role: string;
-    email: string;
-    state: string;
-    status: string;
-    address: string;
-    country: string;
-    zipCode: string;
-    company: string;
-    avatarUrl: string;
-    phoneNumber: string;
-    dureRestante:number;
-    isVerified: boolean;
-    createdAt: IDateValue;
-    lastLogin: IDateValue;
-    birthDate: IDateValue;
-    parentId : string;
-    motif : string;
-    duree : number;
-    reason : string;
-};
+export type Role = string;
 
+export interface BaseUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  city: string;
+  email: string;
+  role: Role;
+  state: string;
+  status: string;
+  address: string;
+  country: string;
+  zipCode: string;
+  company: string;
+  avatarUrl: string;
+  phoneNumber: string;
+  dureRestante: number;
+  isVerified: boolean;
+  createdAt: IDateValue;
+  lastLogin: IDateValue;
+  birthDate: IDateValue;
+  motif: string;
+  duree: number;
+  reason: string;
+}
+export interface PurchasedSubscription extends IAbonnementItem {
+  interval: string;
+}
+export interface ParentUser extends BaseUser {
+  role: 'Parent';
+  subscription: PurchasedSubscription;
+  children: ChildUser[];
+}
+
+export interface ChildUser extends BaseUser {
+  role: 'Enfant';
+  parentId: string;
+  subjects: ISubject[];
+  daily_question_limit?: number;
+}
+export type IUserItem = ParentUser | ChildUser;
 
 export type IUserTableFilters = {
-name: string;
-email:string;
-role: string[];
-statut : string[];
-createdAt: IDateValue;
-lastLogin: IDateValue;
+  name: string;
+  email: string;
+  role: string[];
+  statut: string[];
+  createdAt: IDateValue;
+  lastLogin: IDateValue;
 };
-
 
 export type IUserProfileCover = {
   name: string;

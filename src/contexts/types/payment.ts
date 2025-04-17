@@ -1,5 +1,5 @@
 import type { IInvoice } from './invoice';
-import type { IAbonnementItem } from './abonnement';
+import type { PurchasedSubscription } from './abonnement';
 import type { IDatePickerControl, IAbonnementSubscribers } from './common';
 
 export type IPaymentFilters = {
@@ -18,7 +18,7 @@ export interface IPaymentItem {
   id: string;
   transactionId: string;
   subscriber: IAbonnementSubscribers;
-  subscriptions: IAbonnementItem[];
+  subscriptions: PurchasedSubscription[];
   amount: number;
   paymentMethod: string;
   paymentDate: string;

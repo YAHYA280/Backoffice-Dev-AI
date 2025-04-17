@@ -33,7 +33,6 @@ export function AbonnementSort({ sort, onSort, sortOptions }: Props) {
         }
         sx={{ fontWeight: 'fontWeightSemiBold' }}
       >
-        Trier par:
         <Box
           component="span"
           sx={{ ml: 0.5, fontWeight: 'fontWeightBold', textTransform: 'capitalize' }}

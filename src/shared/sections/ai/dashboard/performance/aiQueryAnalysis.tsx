@@ -16,7 +16,7 @@ import { Box, Tab, Tabs, Stack } from '@mui/material';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
-import { CATEGORIES_AI_ASSISTANT } from 'src/shared/_mock/_ai';
+import { AI_ASSISTANT_TYPE_OPTIONS } from 'src/shared/_mock/_ai';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/shared/components/chart';
 
@@ -56,7 +56,7 @@ export function AiQueryAnalysis({
   const theme = useTheme();
 
   // Extraire les options pour chaque sélecteur
-  const categoryOptions = CATEGORIES_AI_ASSISTANT;
+  const categoryOptions = AI_ASSISTANT_TYPE_OPTIONS;
   const comparisonOptions: ComparisonType[] = [
     'Sans comparaison',
     'Période précédente',

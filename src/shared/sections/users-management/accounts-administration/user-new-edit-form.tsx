@@ -92,7 +92,7 @@ export function UserNewEditForm({ currentUser }: Props) {
       address: currentUser?.address || '',
       zipCode: currentUser?.zipCode || '',
       role: currentUser?.role || '',
-      parentId: currentUser?.parentId || '',
+      parentId: currentUser && 'parentId' in currentUser ? currentUser.parentId : '',
       cinRecto: null,
       cinVerso: null,
     }),
@@ -152,9 +152,8 @@ export function UserNewEditForm({ currentUser }: Props) {
                   {values.status}
                 </Label>
               </>
-            ):(
-              <>
-              </>
+            ) : (
+              <></>
             )}
 
             <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
@@ -256,9 +255,8 @@ export function UserNewEditForm({ currentUser }: Props) {
                   ) : null}
                 </Box>
               </>
-            ):(
-              <>
-              </>
+            ) : (
+              <></>
             )}
             <Box sx={{ flexGrow: 1 }} />
           </Card>
@@ -356,9 +354,8 @@ export function UserNewEditForm({ currentUser }: Props) {
                     );
                   }}
                 />
-              ):(
-                <>
-                </>
+              ) : (
+                <></>
               )}
             </Box>
 
@@ -389,9 +386,8 @@ export function UserNewEditForm({ currentUser }: Props) {
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         Fichier sélectionné : {cinRectoFile.name}
                       </Typography>
-                    ):(
-                      <>
-                      </>
+                    ) : (
+                      <></>
                     )}
                   </Box>
 
@@ -416,16 +412,14 @@ export function UserNewEditForm({ currentUser }: Props) {
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         Fichier sélectionné : {cinVersoFile.name}
                       </Typography>
-                    ):(
-                      <>
-                      </>
+                    ) : (
+                      <></>
                     )}
                   </Box>
                 </Stack>
               </Box>
-            ):(
-              <>
-              </>
+            ) : (
+              <></>
             )}
             <Box sx={{ flexGrow: 1 }} />
             <Box sx={{ textAlign: 'right', mt: 3 }}>

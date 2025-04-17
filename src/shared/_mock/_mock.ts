@@ -1,3 +1,5 @@
+import type { ISubject } from 'src/contexts/types/common';
+
 import { fSub } from 'src/utils/format-time';
 
 import { CONFIG } from 'src/config-global';
@@ -88,8 +90,25 @@ export const _mock = {
   },
 };
 
-
 const statuses = ['Actif', 'Suspendu', 'Bloqué', 'Supprimé'];
+
+const allSubjects = [
+  { id: 'subj1', name: 'Mathématiques', isSelected: false },
+  { id: 'subj2', name: 'Français', isSelected: false },
+  { id: 'subj3', name: 'Physique-Chimie', isSelected: false },
+  { id: 'subj4', name: 'SVT', isSelected: false },
+  { id: 'subj5', name: 'Histoire-Géographie', isSelected: false },
+  { id: 'subj6', name: 'Anglais', isSelected: false },
+  { id: 'subj7', name: 'Informatique', isSelected: false },
+  { id: 'subj8', name: 'Français B1', isSelected: false },
+];
+
+// Fonction utilitaire pour générer un sous-ensemble aléatoire
+function getRandomSubjects(): ISubject[] {
+  const shuffled = [...allSubjects].sort(() => 0.5 - Math.random());
+  const count = Math.floor(Math.random() * 3) + 2; // entre 2 et 4
+  return shuffled.slice(0, count);
+}
 
 export const _mockListUsers = {
   id: (index: number) => _id[index],
@@ -100,11 +119,10 @@ export const _mockListUsers = {
     const random = Math.random();
     if (random < 0.7) {
       return statuses[0];
-    } 
-    
-      const otherIndex = 1 + Math.floor(Math.random() * (statuses.length - 1));
-      return statuses[otherIndex];
-    
+    }
+
+    const otherIndex = 1 + Math.floor(Math.random() * (statuses.length - 1));
+    return statuses[otherIndex];
   },
   // Text
   courseNames: (index: number) => _courseNames[index],
@@ -147,4 +165,5 @@ export const _mockListUsers = {
     product: (index: number) => `${assetURL}/assets/images/m-product/product-${index + 1}.webp`,
     portrait: (index: number) => `${assetURL}/assets/images/portrait/portrait-${index + 1}.webp`,
   },
+  subjects: () => getRandomSubjects(),
 };

@@ -282,7 +282,7 @@ export const PaymentDetails = ({ open, onClose, payment }: PaymentDetailsProps) 
                           }}
                         />
                         <Typography variant="h6" color="primary.main">
-                          {fCurrency(subscription.price?.amount || 0)}
+                          {fCurrency(subscription.price?.monthly || 0)}
                         </Typography>
                       </Stack>
                     </Stack>

@@ -1,23 +1,43 @@
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+
 import type { IAbonnementSubscribers } from './common';
 
 export type INotificationFilters = {
   title: string;
   type: string;
-  startDate?: any; // Using same date picker control as in payment
+  startDate?: any;
   endDate?: any;
   status: string;
   channel: string;
 };
+
 
 export interface INotificationType {
   id: string;
   title: string;
   type: string; // Information, Promotionnel, Rappel, Alerte
   status: string; // Envoyée, En attente, Échouée
-  recipients: IAbonnementSubscribers[] | { name: string; count: number }; // For user groups with count
+  recipients: IAbonnementSubscribers[] | { name: string; count: number };
   content: string;
   sentDate: string;
-  channel: string[]; // Email, SMS, Push as array to support multiple channels
+  channel: string[]; // Email, SMS, Push 
   createdAt: string;
   updatedAt: string;
+  link?: string; // lien optionnel
+  viewed: boolean; // Read or Not
+  icon?: IconDefinition;
+  
+
+  scheduledDate?: Date | null; 
+  scheduledTime?: Date | null; 
+  frequency?: string; // immediate, daily, weekly
+  retrySettings?: {
+    retryCount: number;
+    alertRecipients: {
+      administrators: boolean;
+      supportTeam: boolean;
+      affectedUser: boolean;
+    };
+  };
+  attachments?: File[];
 }
