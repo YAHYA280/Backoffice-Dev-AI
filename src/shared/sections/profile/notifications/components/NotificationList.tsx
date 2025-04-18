@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
@@ -16,6 +16,8 @@ import {
   IconButton,
   Pagination,
 } from '@mui/material';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { MOCK_NOTIFICATIONS } from '../data';
 import { NotificationItem } from './NotificationItem';
@@ -133,11 +135,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({
             value={searchQuery}
             onChange={handleSearchChange}
           />
-          {searchQuery && (
+
+          <ConditionalComponent isValid={Boolean(searchQuery)}>
             <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={handleClearSearch}>
               <CloseIcon fontSize="small" />
             </IconButton>
-          )}
+          </ConditionalComponent>
         </Paper>
       </Box>
 
@@ -221,7 +224,8 @@ export const NotificationList: React.FC<NotificationListProps> = ({
       </Box>
 
       {/* Pagination */}
-      {filteredNotifications.length > 0 && (
+
+      <ConditionalComponent isValid={filteredNotifications.length > 0}>
         <Box
           sx={{
             p: 2,
@@ -240,7 +244,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
             siblingCount={1}
           />
         </Box>
-      )}
+      </ConditionalComponent>
     </Paper>
   );
 };

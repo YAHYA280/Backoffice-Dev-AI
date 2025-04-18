@@ -1,7 +1,9 @@
+import type { Theme, SxProps } from '@mui/material/styles';
+
 import React from 'react';
-import { Box, Paper, Grid, Switch, Typography } from '@mui/material';
+
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { SxProps, Theme } from '@mui/material/styles';
+import { Box, Grid, Paper, Switch, Typography } from '@mui/material';
 
 interface ActivityTabProps {
   settings: { pendingRequests: boolean };

@@ -1,10 +1,12 @@
+import type { Theme, SxProps } from '@mui/material/styles';
+
 import React from 'react';
-import { Box, Paper, Grid, Stack, Switch, Typography, Alert } from '@mui/material';
-import EmailIcon from '@mui/icons-material/Email';
+
 import SmsIcon from '@mui/icons-material/Sms';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import EmailIcon from '@mui/icons-material/Email';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { SxProps, Theme } from '@mui/material/styles';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Box, Grid, Paper, Stack, Alert, Switch, Typography } from '@mui/material';
 
 /* -------- types -------- */
 interface ChannelsTabProps {

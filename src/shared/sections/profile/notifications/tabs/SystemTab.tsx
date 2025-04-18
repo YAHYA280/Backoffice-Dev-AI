@@ -1,9 +1,10 @@
-import React from 'react';
-import { Box, Paper, Grid, Switch, Typography } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { SxProps, Theme } from '@mui/material/styles';
+import type { Theme, SxProps } from '@mui/material/styles';
 
-/* ---------- types ---------- */
+import React from 'react';
+
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, Grid, Paper, Switch, Typography } from '@mui/material';
+
 interface SystemTabProps {
   settings: {
     systemUpdates: boolean;
@@ -19,7 +20,6 @@ interface StatusTextProps {
   sx?: SxProps<Theme>;
 }
 
-/* ---------- helper ---------- */
 const StatusText: React.FC<StatusTextProps> = ({ active, children, sx }) => (
   <Typography
     variant="subtitle2"
@@ -33,7 +33,6 @@ const StatusText: React.FC<StatusTextProps> = ({ active, children, sx }) => (
   </Typography>
 );
 
-/* ---------- main component ---------- */
 export const SystemTab: React.FC<SystemTabProps> = ({ settings, onChange }) => (
   <Box>
     <Typography variant="h6" gutterBottom>
@@ -46,7 +45,6 @@ export const SystemTab: React.FC<SystemTabProps> = ({ settings, onChange }) => (
       critiques.
     </Typography>
 
-    {/* ----- Mises à jour du système ----- */}
     <Paper sx={{ p: 3, mb: 3 }} elevation={1}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} md={8}>

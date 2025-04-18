@@ -1,5 +1,10 @@
 import React from 'react';
 import { fr } from 'date-fns/locale';
+
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
   Box,
   Paper,
@@ -12,10 +17,9 @@ import {
   FormControl,
   FormControlLabel,
 } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
+
 import { WEEK_DAYS } from '../data';
 
 interface FrequencyTabProps {
@@ -47,7 +51,6 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
           value={settings.type}
           onChange={(e) => onChange('type', e.target.value)}
         >
-          {/* -------- Temps réel -------- */}
           <Paper
             elevation={settings.type === 'realtime' ? 3 : 1}
             sx={{
@@ -90,7 +93,6 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
             />
           </Paper>
 
-          {/* -------- Résumé quotidien -------- */}
           <Paper
             elevation={settings.type === 'daily' ? 3 : 1}
             sx={{
@@ -124,7 +126,7 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
               sx={{ width: '100%', m: 0 }}
             />
 
-            {settings.type === 'daily' && (
+            <ConditionalComponent isValid={settings.type === 'daily'}>
               <Box sx={{ pl: 4, pt: 2 }}>
                 <Typography variant="body2" component="label" display="block" gutterBottom>
                   Heure d&apos;envoi:
@@ -144,7 +146,7 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
                   Idéal pour rester informé sans être dérangé trop souvent
                 </Typography>
               </Box>
-            )}
+            </ConditionalComponent>
           </Paper>
 
           {/* -------- Résumé hebdomadaire -------- */}
@@ -180,7 +182,7 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
               sx={{ width: '100%', m: 0 }}
             />
 
-            {settings.type === 'weekly' && (
+            <ConditionalComponent isValid={settings.type === 'weekly'}>
               <Box sx={{ pl: 4, pt: 2 }}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
                   <Box>
@@ -224,7 +226,7 @@ export const FrequencyTab: React.FC<FrequencyTabProps> = ({ settings, onChange }
                   Parfait pour les informations non urgentes
                 </Typography>
               </Box>
-            )}
+            </ConditionalComponent>
           </Paper>
         </RadioGroup>
       </FormControl>

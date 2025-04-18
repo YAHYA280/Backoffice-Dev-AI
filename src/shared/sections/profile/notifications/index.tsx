@@ -1,151 +1,156 @@
 'use client';
 
 import React, { useState } from 'react';
+
+import HomeIcon from '@mui/icons-material/Home';
 import {
   Box,
-  Container,
+  Slide,
+  Button,
   Drawer,
   Divider,
-  IconButton,
-  useMediaQuery,
   useTheme,
-  Button,
-  Badge,
+  Container,
+  GlobalStyles,
+  useMediaQuery,
 } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import HomeIcon from '@mui/icons-material/Home';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
+
+import { MOCK_NOTIFICATIONS } from './data';
 import { SettingsPanel } from './components/SettingsPanel';
 import { NotificationSidebar } from './components/NotificationSidebar';
-import { MOCK_NOTIFICATIONS } from './data';
+
+const SIDEBAR_WIDTH = 500;
 
 const NotificationsPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Count of unread notifications for badge
   const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.isRead && !n.isArchived).length;
 
-  // Handlers for notification actions (these would typically modify state or call API)
-  const handleMarkAsRead = (id: string) => {
-    console.log('Mark as read:', id);
-    // Here you would typically update your notifications state or call an API
-  };
+  // we well handle the read here
+  const handleMarkAsRead = (id: string) => {};
 
-  const handleToggleFavorite = (id: string) => {
-    console.log('Toggle favorite:', id);
-  };
+  // handle mark favorite here
+  const handleToggleFavorite = (id: string) => {};
 
-  const handleArchive = (id: string) => {
-    console.log('Archive:', id);
-  };
+  // handle Archive function here
+  const handleArchive = (id: string) => {};
 
-  const handleDelete = (id: string) => {
-    console.log('Delete:', id);
-  };
+  // handle delete here api
+  const handleDelete = (id: string) => {};
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Small screen notification toggle button (fixed position) */}
-      {isMobile && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            right: 16,
-            zIndex: 100,
-          }}
-        >
-          <IconButton
-            color="primary"
-            size="large"
-            onClick={toggleSidebar}
-            sx={{
-              bgcolor: 'background.paper',
-              boxShadow: 4,
-              '&:hover': { bgcolor: 'background.paper' },
-            }}
-          >
-            <Badge badgeContent={unreadCount} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        </Box>
-      )}
+    <>
+      {/* Hide horizontal scroll globally */}
+      <GlobalStyles styles={{ body: { overflowX: 'hidden' } }} />
 
-      {/* Desktop layout */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-        {/* Home button */}
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<HomeIcon />}
-          component={RouterLink}
-          href={paths.dashboard.root}
-          sx={{ mt: 2 }}
-        >
-          Retour à l&apos;accueil
-        </Button>
-
-        {/* Notification button (desktop only) */}
-        {!isMobile && (
-          <IconButton
-            color="primary"
-            onClick={toggleSidebar}
-            sx={{
-              bgcolor: 'background.paper',
-              boxShadow: 1,
-              '&:hover': { bgcolor: 'background.paper' },
-            }}
-          >
-            <Badge badgeContent={unreadCount} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        )}
-      </Box>
-
-      <Divider sx={{ mb: 4 }} />
-
-      {/* Main content */}
-      <Box>
-        <SettingsPanel openSidebar={toggleSidebar} />
-      </Box>
-
-      {/* Notification sidebar as drawer */}
-      <Drawer
-        anchor={isMobile ? 'bottom' : 'right'}
-        open={sidebarOpen}
-        onClose={closeSidebar}
+      <Box
         sx={{
-          '& .MuiDrawer-paper': {
-            width: isMobile ? '100%' : 500,
-            height: isMobile ? '80%' : '100%',
-            borderTopLeftRadius: isMobile ? 16 : 0,
-            borderTopRightRadius: isMobile ? 16 : 0,
-          },
+          position: 'relative',
+          minHeight: '100vh',
+          overflowX: 'hidden',
         }}
       >
-        <NotificationSidebar
-          onClose={closeSidebar}
-          onMarkAsRead={handleMarkAsRead}
-          onToggleFavorite={handleToggleFavorite}
-          onArchive={handleArchive}
-          onDelete={handleDelete}
-        />
-      </Drawer>
-    </Container>
+        <Box
+          sx={{
+            transition: 'margin 0.3s ease',
+            ...(sidebarOpen &&
+              !isMobile && {
+                marginRight: `${SIDEBAR_WIDTH}px`,
+              }),
+          }}
+        >
+          <Container maxWidth="lg" sx={{ py: 4 }}>
+            {/* Top bar */}
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<HomeIcon />}
+                component={RouterLink}
+                href={paths.dashboard.root}
+                sx={{ mt: 2 }}
+              >
+                Retour à l&apos;accueil
+              </Button>
+            </Box>
+
+            <Divider sx={{ mb: 4 }} />
+
+            {/* Settings content */}
+            <SettingsPanel openSidebar={toggleSidebar} />
+          </Container>
+        </Box>
+
+        <ConditionalComponent isValid={!isMobile}>
+          <Slide
+            direction="left"
+            in={sidebarOpen}
+            mountOnEnter
+            unmountOnExit
+            timeout={{ enter: 300, exit: 200 }}
+          >
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: '100%',
+                width: { xs: '100%', md: `${SIDEBAR_WIDTH}px` },
+                zIndex: 1100,
+                boxShadow: 5,
+                overflowY: 'auto', // vertical scroll only inside sidebar
+                overflowX: 'hidden',
+                bgcolor: 'background.paper', // match theme
+              }}
+            >
+              <NotificationSidebar
+                onClose={closeSidebar}
+                onMarkAsRead={handleMarkAsRead}
+                onToggleFavorite={handleToggleFavorite}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
+            </Box>
+          </Slide>
+        </ConditionalComponent>
+
+        <ConditionalComponent isValid={isMobile}>
+          <Drawer
+            anchor="bottom"
+            open={sidebarOpen}
+            onClose={closeSidebar}
+            sx={{
+              '& .MuiDrawer-paper': {
+                width: '100%',
+                height: '80%',
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+              },
+            }}
+          >
+            <NotificationSidebar
+              onClose={closeSidebar}
+              onMarkAsRead={handleMarkAsRead}
+              onToggleFavorite={handleToggleFavorite}
+              onArchive={handleArchive}
+              onDelete={handleDelete}
+            />
+          </Drawer>
+        </ConditionalComponent>
+      </Box>
+    </>
   );
 };
 

@@ -1,19 +1,22 @@
 import React from 'react';
-import { Box, Tab, Tabs, Card, Stack, Button, Divider, Typography } from '@mui/material';
-import SecurityIcon from '@mui/icons-material/Security';
+
+import SendIcon from '@mui/icons-material/Send';
 import PersonIcon from '@mui/icons-material/Person';
+import SecurityIcon from '@mui/icons-material/Security';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import SendIcon from '@mui/icons-material/Send';
+import { Box, Tab, Tabs, Card, Button } from '@mui/material';
 
-import { TabType, SettingsState } from '../type';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 // Import all tab components
 import { SystemTab } from '../tabs/SystemTab';
 import { ProfileTab } from '../tabs/ProfileTab';
 import { ActivityTab } from '../tabs/ActivityTab';
-import { FrequencyTab } from '../tabs/FrequencyTab';
 import { ChannelsTab } from '../tabs/ChannelsTab';
+import { FrequencyTab } from '../tabs/FrequencyTab';
+
+import type { TabType, SettingsState } from '../type';
 
 interface SettingsTabsProps {
   activeTab: TabType;
@@ -54,9 +57,28 @@ export const SettingsTabs: React.FC<SettingsTabsProps> = ({
             borderBottom: 1,
             borderColor: 'divider',
             bgcolor: 'background.neutral',
+            '& .MuiTab-root': {
+              px: 1.5,
+              py: 0.5,
+              minHeight: 56,
+              '& .MuiTab-iconWrapper': {
+                mr: 1.5,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderTopLeftRadius: 3,
+              borderTopRightRadius: 3,
+            },
           }}
         >
-          <Tab label="Système" value="system" icon={<SecurityIcon />} iconPosition="start" />
+          <Tab
+            label="Système"
+            value="system"
+            icon={<SecurityIcon />}
+            iconPosition="start"
+            sx={{ pl: 2 }}
+          />
           <Tab label="Profil" value="profile" icon={<PersonIcon />} iconPosition="start" />
           <Tab label="Activité" value="activity" icon={<AssignmentIcon />} iconPosition="start" />
           <Tab label="Fréquence" value="frequency" icon={<AccessTimeIcon />} iconPosition="start" />
@@ -64,36 +86,38 @@ export const SettingsTabs: React.FC<SettingsTabsProps> = ({
         </Tabs>
 
         <Box p={3}>
-          {activeTab === 'system' && (
+          <ConditionalComponent isValid={activeTab === 'system'}>
             <SystemTab
               settings={settings.system}
               onChange={(field, value) => onSettingChange('system', field, value)}
             />
-          )}
-          {activeTab === 'profile' && (
+          </ConditionalComponent>
+
+          <ConditionalComponent isValid={activeTab === 'profile'}>
             <ProfileTab
               settings={settings.profile}
               onChange={(field, value) => onSettingChange('profile', field, value)}
             />
-          )}
-          {activeTab === 'activity' && (
+          </ConditionalComponent>
+          <ConditionalComponent isValid={activeTab === 'activity'}>
             <ActivityTab
               settings={settings.activity}
               onChange={(field, value) => onSettingChange('activity', field, value)}
             />
-          )}
-          {activeTab === 'frequency' && (
+          </ConditionalComponent>
+
+          <ConditionalComponent isValid={activeTab === 'frequency'}>
             <FrequencyTab
               settings={settings.frequency}
               onChange={(field, value) => onSettingChange('frequency', field, value)}
             />
-          )}
-          {activeTab === 'channels' && (
+          </ConditionalComponent>
+          <ConditionalComponent isValid={activeTab === 'channels'}>
             <ChannelsTab
               settings={settings.channels}
               onChange={(field, value) => onSettingChange('channels', field, value)}
             />
-          )}
+          </ConditionalComponent>
         </Box>
       </Card>
 

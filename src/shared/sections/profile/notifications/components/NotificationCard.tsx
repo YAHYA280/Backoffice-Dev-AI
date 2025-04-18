@@ -1,9 +1,11 @@
 import React from 'react';
 
 import { useTheme } from '@mui/material/styles';
-import { Box, Grid, Paper, Chip, Stack, Typography, Link } from '@mui/material';
+import { Box, Grid, Chip, Link, Paper, Typography } from '@mui/material';
 
 import { RouterLink } from 'src/routes/components';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 interface NotificationCardProps {
   title: string;
@@ -62,10 +64,10 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           </Typography>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Chip label={indicator} size="small" color="success" sx={{ fontWeight: 500 }} />
-            {detailsLink && (
+            <ConditionalComponent isValid={!!detailsLink}>
               <Link
                 component={RouterLink}
-                href={detailsLink}
+                href={detailsLink as string}
                 color="primary"
                 underline="hover"
                 sx={{
@@ -76,7 +78,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
               >
                 Voir les détails
               </Link>
-            )}
+            </ConditionalComponent>
           </Box>
         </Grid>
       </Grid>

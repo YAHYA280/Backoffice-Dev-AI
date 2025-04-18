@@ -1,31 +1,34 @@
 import React, { useState } from 'react';
+
+import StarIcon from '@mui/icons-material/Star';
+import InfoIcon from '@mui/icons-material/Info';
+import ErrorIcon from '@mui/icons-material/Error';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import WarningIcon from '@mui/icons-material/Warning';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import {
   Box,
   Menu,
   alpha,
   MenuItem,
+  ListItem,
   IconButton,
   Typography,
   ListItemText,
   ListItemIcon,
-  ListItem,
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import UnarchiveIcon from '@mui/icons-material/Unarchive';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import InfoIcon from '@mui/icons-material/Info';
-import WarningIcon from '@mui/icons-material/Warning';
-import ErrorIcon from '@mui/icons-material/Error';
 
-import { Notification } from '../type';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
+
 import { fToNow } from '../data';
+
+import type { Notification } from '../type';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -136,9 +139,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             {notification.title}
           </Typography>
 
-          {notification.isFavorite && (
+          <ConditionalComponent isValid={notification.isFavorite}>
             <StarIcon fontSize="small" color="warning" sx={{ ml: 1, fontSize: 18 }} />
-          )}
+          </ConditionalComponent>
         </Box>
 
         <Typography

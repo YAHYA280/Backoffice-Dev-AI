@@ -1,27 +1,20 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Card, Paper, Alert, Button, Snackbar, Typography } from '@mui/material';
+
 import SettingsIcon from '@mui/icons-material/Settings';
-import SecurityIcon from '@mui/icons-material/Security';
-import PersonIcon from '@mui/icons-material/Person';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import SendIcon from '@mui/icons-material/Send';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { Box, Alert, Paper, Button, Snackbar, useTheme, Typography } from '@mui/material';
 
-import { SettingsState, TabType } from '../type';
 import { DEFAULT_SETTINGS } from '../data';
+import { SettingsTabs } from './SettingsTabs';
 
-// Import all tab components
-import { SystemTab } from '../tabs/SystemTab';
-import { ProfileTab } from '../tabs/ProfileTab';
-import { ActivityTab } from '../tabs/ActivityTab';
-import { FrequencyTab } from '../tabs/FrequencyTab';
-import { ChannelsTab } from '../tabs/ChannelsTab';
+import type { TabType, SettingsState } from '../type';
 
 interface SettingsPanelProps {
   openSidebar: () => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ openSidebar }) => {
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [settings, setSettings] = useState<SettingsState>({ ...DEFAULT_SETTINGS });
   const [initialSettings] = useState<SettingsState>({ ...DEFAULT_SETTINGS });
@@ -33,8 +26,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ openSidebar }) => 
     severity: 'success' as 'success' | 'error' | 'info' | 'warning',
   });
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: TabType) => {
-    setActiveTab(newValue);
+  const handleTabChange = (newTab: TabType) => {
+    setActiveTab(newTab);
   };
 
   const handleSettingChange = <T extends keyof SettingsState>(
@@ -52,9 +45,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ openSidebar }) => 
   };
 
   const handleSave = () => {
-    // Here you would typically save to your backend
-    console.log('Saving settings:', settings);
-
     setAlert({
       open: true,
       message: 'Vos préférences de notifications ont été enregistrées avec succès',
@@ -82,79 +72,71 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ openSidebar }) => 
 
   return (
     <Box>
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Box display="flex" alignItems="center">
-          <SettingsIcon fontSize="large" color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            Paramètres des notifications
-          </Typography>
-        </Box>
-        <Button variant="outlined" color="primary" onClick={openSidebar}>
-          Voir les notifications
-        </Button>
-      </Box>
-
-      <Card elevation={1} sx={{ mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.neutral',
-          }}
+      <Paper
+        elevation={2}
+        sx={{
+          p: { xs: 2, md: 3 },
+          mb: 3,
+          borderRadius: 2,
+          background: `linear-gradient(45deg, ${theme.palette.primary.lighter} 0%, ${theme.palette.background.paper} 100%)`,
+        }}
+      >
+        <Box
+          display="flex"
+          flexDirection={{ xs: 'column', sm: 'row' }} // stack on xs
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          gap={2} // nice breathing space
         >
-          <Tab label="Système" value="system" icon={<SecurityIcon />} iconPosition="start" />
-          <Tab label="Profil" value="profile" icon={<PersonIcon />} iconPosition="start" />
-          <Tab label="Activité" value="activity" icon={<AssignmentIcon />} iconPosition="start" />
-          <Tab label="Fréquence" value="frequency" icon={<AccessTimeIcon />} iconPosition="start" />
-          <Tab label="Canaux" value="channels" icon={<SendIcon />} iconPosition="start" />
-        </Tabs>
-
-        <Box p={3}>
-          {activeTab === 'system' && (
-            <SystemTab
-              settings={settings.system}
-              onChange={(field, value) => handleSettingChange('system', field, value)}
+          <Box display="flex" alignItems="center">
+            <SettingsIcon
+              fontSize="large"
+              color="inherit"
+              sx={{
+                mr: 2,
+                p: 1,
+                bgcolor: 'primary.lighter',
+                borderRadius: '50%',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              }}
             />
-          )}
-          {activeTab === 'profile' && (
-            <ProfileTab
-              settings={settings.profile}
-              onChange={(field, value) => handleSettingChange('profile', field, value)}
-            />
-          )}
-          {activeTab === 'activity' && (
-            <ActivityTab
-              settings={settings.activity}
-              onChange={(field, value) => handleSettingChange('activity', field, value)}
-            />
-          )}
-          {activeTab === 'frequency' && (
-            <FrequencyTab
-              settings={settings.frequency}
-              onChange={(field, value) => handleSettingChange('frequency', field, value)}
-            />
-          )}
-          {activeTab === 'channels' && (
-            <ChannelsTab
-              settings={settings.channels}
-              onChange={(field, value) => handleSettingChange('channels', field, value)}
-            />
-          )}
+            <Typography
+              component="h1"
+              sx={{
+                typography: { xs: 'h5', sm: 'h4' }, // ← responsive style
+                fontWeight: 'bold',
+              }}
+            >
+              Paramètres des notifications
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={openSidebar}
+            startIcon={<NotificationsActiveIcon />}
+            sx={{
+              width: { xs: '100%', sm: 'auto' }, // full‑width CTA on mobile
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              '&:hover': {
+                boxShadow: '0 6px 12px rgba(0,0,0,0.2)',
+              },
+            }}
+          >
+            Voir les notifications
+          </Button>
         </Box>
-      </Card>
+      </Paper>
 
-      <Box display="flex" justifyContent="flex-end" gap={2} mb={4}>
-        <Button variant="outlined" onClick={handleCancel} disabled={!hasChanges}>
-          Annuler
-        </Button>
-        <Button variant="contained" color="primary" onClick={handleSave} disabled={!hasChanges}>
-          Enregistrer les modifications
-        </Button>
-      </Box>
+      <SettingsTabs
+        activeTab={activeTab}
+        settings={settings}
+        hasChanges={hasChanges}
+        onTabChange={handleTabChange}
+        onSettingChange={handleSettingChange}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
 
       <Snackbar
         open={alert.open}

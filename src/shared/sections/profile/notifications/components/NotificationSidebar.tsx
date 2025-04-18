@@ -5,17 +5,19 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import {
   Box,
-  Tabs,
   Tab,
+  Tabs,
   List,
   Badge,
   Paper,
+  Divider,
   InputBase,
   IconButton,
   Pagination,
   Typography,
-  Divider,
 } from '@mui/material';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { MOCK_NOTIFICATIONS } from '../data';
 import { NotificationItem } from './NotificationItem';
@@ -83,7 +85,6 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
   }, [filteredNotifications, page]);
 
   // Count by category
-  // Count by category  ✅ ESLint‑clean
   const counts = useMemo(
     () => ({
       all: MOCK_NOTIFICATIONS.filter((n) => !n.isArchived).length,
@@ -116,11 +117,16 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
     setPage(value);
   };
 
+  const badgeProps = {
+    overlap: 'rectangular' as const,
+    anchorOrigin: { vertical: 'top', horizontal: 'right' } as const,
+  };
+
   return (
     <Paper
       elevation={5}
       sx={{
-        width: 380,
+        width: { xs: '100%', md: 500 },
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -175,30 +181,26 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
         sx={{
           borderBottom: 1,
           borderColor: 'divider',
-          '& .MuiTab-root': { minWidth: 'auto' },
+          '& .MuiTab-root': { minWidth: 120 }, // give each tab more room
           px: 1,
         }}
       >
         <Tab
           label={
-            <Badge
-              badgeContent={counts.all}
-              color="primary"
-              sx={{ '& .MuiBadge-badge': { right: -8, top: -2 } }}
-            >
-              <Box sx={{ pr: 0.5 }}>Tout</Box>
+            <Badge badgeContent={counts.all} color="primary" {...badgeProps}>
+              <Box component="span" sx={{ pr: 0.5 }}>
+                Tout
+              </Box>
             </Badge>
           }
           value="all"
         />
         <Tab
           label={
-            <Badge
-              badgeContent={counts.unread}
-              color="error"
-              sx={{ '& .MuiBadge-badge': { right: -8, top: -2 } }}
-            >
-              <Box sx={{ pr: 0.5 }}>Non lu</Box>
+            <Badge badgeContent={counts.unread} color="error" {...badgeProps}>
+              <Box component="span" sx={{ pr: 0.5 }}>
+                Non lu
+              </Box>
             </Badge>
           }
           value="unread"
@@ -206,12 +208,10 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
         <Tab label="Lu" value="read" />
         <Tab
           label={
-            <Badge
-              badgeContent={counts.favorites}
-              color="warning"
-              sx={{ '& .MuiBadge-badge': { right: -8, top: -2 } }}
-            >
-              <Box sx={{ pr: 0.5 }}>Favoris</Box>
+            <Badge badgeContent={counts.favorites} color="warning" {...badgeProps}>
+              <Box component="span" sx={{ pr: 0.5 }}>
+                Favoris
+              </Box>
             </Badge>
           }
           value="favorites"
@@ -244,7 +244,8 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
       </Box>
 
       {/* Pagination */}
-      {filteredNotifications.length > 0 && (
+
+      <ConditionalComponent isValid={filteredNotifications.length > 0}>
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
           <Pagination
             count={Math.ceil(filteredNotifications.length / itemsPerPage)}
@@ -254,7 +255,7 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({
             color="primary"
           />
         </Box>
-      )}
+      </ConditionalComponent>
     </Paper>
   );
 };
