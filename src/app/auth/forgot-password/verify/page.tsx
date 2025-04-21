@@ -75,7 +75,7 @@ export default function JwtVerifyView() {
       <Link
         component={RouterLink}
         href={paths.auth.jwt.signIn}
-        color="inherit"
+        color="primary"
         variant="subtitle2"
         sx={{
           alignItems: 'center',

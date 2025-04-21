@@ -841,7 +841,7 @@ export const ChapitreList = ({
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterDropdownChange}
                 buttonText="Filtres"
-                icon={<FontAwesomeIcon icon={faFilter} />}
+                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
               />
 
               <Tooltip title="Réinitialiser" arrow>
@@ -854,7 +854,7 @@ export const ChapitreList = ({
                     '&:hover': { transform: 'translateY(-2px)' },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown

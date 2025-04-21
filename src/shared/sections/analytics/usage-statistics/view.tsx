@@ -3,17 +3,22 @@
 'use client';
 
 import type { DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
-import { useState, useCallback } from 'react';
-import { subDays } from 'date-fns';
 
-import Grid from '@mui/material/Unstable_Grid2';
-import Typography from '@mui/material/Typography';
+import { subDays } from 'date-fns';
+import { useState, useCallback } from 'react';
+
+import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
-import Box from '@mui/material/Box';
+import Grid from '@mui/material/Unstable_Grid2';
+import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { paths } from 'src/routes/paths';
+
 import { DashboardContent } from 'src/shared/layouts/dashboard';
+
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import ViewToggle from './components/ViewToggle';
 import UnifiedFilter from './components/UnifiedFilter';
@@ -98,6 +103,15 @@ export function UsageStatisticsView({ title = `Statistiques d'usage` }: { title?
 
   return (
     <DashboardContent maxWidth="xl">
+      <CustomBreadcrumbs
+              heading="Statistiques d'usage"
+              links={[
+                { name: 'Tableau de bord', href: paths.dashboard.root },
+                { name: 'Analytiques', href: paths.dashboard.root },
+                { name: "Statistiques d'usage" },
+              ]}
+              sx={{ mb: { xs: 3, md: 5 } }}
+            />
       <Typography variant="h4" sx={{ mb: { xs: 2, md: 3 } }}>
         {title}
       </Typography>

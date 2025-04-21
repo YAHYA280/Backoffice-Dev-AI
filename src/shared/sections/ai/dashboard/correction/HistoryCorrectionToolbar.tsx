@@ -133,7 +133,7 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
   const [endDate, setEndDate] = useState('');
 
   // État pour la sélection des colonnes
-  const [tempColumnState, setTempColumnState] = useState<CorrectionTableColumns>({...initialCheckedColumns});
+  const [tempColumnState, setTempColumnState] = useState<CorrectionTableColumns>({ ...initialCheckedColumns });
   const [popoverPreviouslyOpened, setPopoverPreviouslyOpened] = useState(false);
 
   // Initialiser l'état du popover des colonnes
@@ -141,7 +141,7 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
     if (columnsPopoverState.open) {
       if (!popoverPreviouslyOpened) {
         // Première ouverture - toutes les colonnes sont décochées
-        setTempColumnState({...initialCheckedColumns});
+        setTempColumnState({ ...initialCheckedColumns });
         setPopoverPreviouslyOpened(true);
       }
     }
@@ -188,7 +188,7 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
 
   // Fonction pour réinitialiser toutes les colonnes
   const resetColumns = () => {
-    onUpdateAllColumns({...initialTableColumns});
+    onUpdateAllColumns({ ...initialTableColumns });
     columnsPopoverState.onClose();
   };
 
@@ -224,10 +224,10 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
     }
 
     // Réinitialiser les colonnes
-    onUpdateAllColumns({...initialTableColumns});
+    onUpdateAllColumns({ ...initialTableColumns });
 
     // Également réinitialiser l'état temporaire des colonnes
-    setTempColumnState({...initialCheckedColumns});
+    setTempColumnState({ ...initialCheckedColumns });
     setPopoverPreviouslyOpened(false);
 
     // Appeler la fonction de réinitialisation externe
@@ -311,6 +311,7 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
           {/* Bouton pour réinitialiser */}
           <Tooltip title="Réinitialiser les filtres">
             <IconButton
+              color="primary"
               aria-label="effacer les filtres"
               onClick={handleResetAll}
               sx={{
@@ -327,6 +328,7 @@ const HistoryCorrectionToolbar: React.FC<HistoryCorrectionToolbarProps> = ({
           {/* Bouton pour exporter */}
           <Tooltip title="Exporter les données">
             <IconButton
+              color="primary"
               aria-label="exporter"
               onClick={onExport}
               sx={{

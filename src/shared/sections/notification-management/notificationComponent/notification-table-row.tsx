@@ -1,7 +1,7 @@
 import type { INotificationType } from 'src/contexts/types/notification';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faTrashAlt, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faPen, faTrashAlt, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import Link from '@mui/material/Link';
 import Chip from '@mui/material/Chip';
@@ -23,6 +23,7 @@ import { NOTIFICATION_TYPE_OPTIONS, NOTIFICATION_STATUS_OPTIONS } from 'src/shar
 import { Label } from 'src/shared/components/label';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 
+import { EditNotification } from './notification-edit';
 import {NotificationDetails} from './notification-details';
 
 
@@ -41,6 +42,7 @@ type Props = {
   onDeleteRow: () => void;
   hideStatus: boolean;
   visibleColumns: Column[];
+  onUpdateNotification: (updatedNotification: INotificationType) => void;
 };
 
 export function NotificationTableRow({
@@ -50,10 +52,12 @@ export function NotificationTableRow({
   onDeleteRow,
   hideStatus = false,
   visibleColumns,
+  onUpdateNotification,
 }: Props) {
   const confirm = useBoolean();
   const resendNotification = useBoolean();
   const openDetails = useBoolean();
+  const openEdit = useBoolean();
 
   const isColumnVisible = (columnId: string) => visibleColumns.some((col) => col.id === columnId);
   
@@ -81,6 +85,11 @@ export function NotificationTableRow({
       default:
         return 'default';
     }
+  };
+
+  const handleUpdateNotification = (updatedNotification: INotificationType) => {
+    onUpdateNotification(updatedNotification);
+    openEdit.onFalse();
   };
   
   return (
@@ -193,11 +202,23 @@ export function NotificationTableRow({
           </TableCell>
         )}
         
-        <TableCell>
-          <Box sx={{ display: 'flex', gap: 1, zIndex: 1, position: 'sticky' }}>
+        <TableCell align="center"> 
+          <Box sx={{ display: 'flex', gap: 1, zIndex: 1, position: 'sticky', justifyContent: 'center' }}>
             <Tooltip title="Voir détails">
               <IconButton size="small" onClick={openDetails.onTrue} color="info">
                 <FontAwesomeIcon icon={faEye} size="xs" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="modifier">
+              <IconButton size="small" onClick={openEdit.onTrue} color="error">
+                <FontAwesomeIcon icon={faPen} size="xs" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Supprimer">
+              <IconButton size="small" onClick={confirm.onTrue} color="error">
+                <FontAwesomeIcon icon={faTrashAlt} size="xs" />
               </IconButton>
             </Tooltip>
 
@@ -211,12 +232,6 @@ export function NotificationTableRow({
                 <FontAwesomeIcon icon={faPaperPlane} size="xs" />
               </IconButton>
             </Tooltip>
-
-            <Tooltip title="Supprimer">
-              <IconButton size="small" onClick={confirm.onTrue} color="error">
-                <FontAwesomeIcon icon={faTrashAlt} size="xs" />
-              </IconButton>
-            </Tooltip>
           </Box>
         </TableCell>
       </TableRow>
@@ -224,6 +239,14 @@ export function NotificationTableRow({
       {/* You'd need to create these components */}
       <NotificationDetails open={openDetails.value} onClose={openDetails.onFalse} notification={row} />
       
+      {/* Add the EditNotification component */}
+      <EditNotification
+        open={openEdit.value} 
+        onClose={openEdit.onFalse} 
+        notification={row} 
+        onUpdate={handleUpdateNotification} 
+      />
+
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

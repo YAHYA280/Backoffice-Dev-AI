@@ -1,17 +1,16 @@
 // /usagestatistics/components/ComparisonMenu.tsx
 
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
 import React, { useState } from 'react';
 import { format, subDays, subMonths, differenceInDays } from 'date-fns';
-import { faChartBar } from '@fortawesome/free-solid-svg-icons';
 
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-
-import type { DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 
 // ----------------------------------------------------------------------
 // Props

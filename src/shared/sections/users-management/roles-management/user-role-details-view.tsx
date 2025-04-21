@@ -1,7 +1,7 @@
 import type { IRoleItem } from 'src/contexts/types/role';
 
-import React from 'react';
 import { m } from 'framer-motion';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faTimes, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -10,15 +10,20 @@ import Chip from '@mui/material/Chip';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
+import Button from '@mui/material/Button';
 import ListItem from '@mui/material/ListItem';
+import Accordion from '@mui/material/Accordion';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 import { alpha, useTheme } from '@mui/material/styles';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
 
 import { varFade } from 'src/shared/components/animate/variants/fade';
+import ConditionalComponent from 'src/shared/components/conditional-component/ConditionalComponent';
 
 type UserRoleDetailsDrawerProps = {
   open: boolean;
@@ -28,6 +33,9 @@ type UserRoleDetailsDrawerProps = {
 
 export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDrawerProps) {
   const theme = useTheme();
+  // Tracks how many modules we are currently showing.
+  // We start by showing 5, then show 5 more at a time when the user clicks "Voir plus".
+  const [visibleCount, setVisibleCount] = useState(5);
 
   if (!role) return null;
 
@@ -41,6 +49,15 @@ export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDr
         minute: '2-digit',
       })
     : 'Non définie';
+
+  // Handler to load 5 more modules
+  const handleShowMore = () => {
+    setVisibleCount((prev) => prev + 5);
+  };
+
+  const totalModules = role.modulePermissions?.length || 0;
+  // Slice the array to display only [0..visibleCount).
+  const visibleModules = role.modulePermissions?.slice(0, visibleCount) || [];
 
   return (
     <Drawer
@@ -66,7 +83,10 @@ export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDr
           p: 3,
           pb: 5,
           position: 'relative',
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(theme.palette.primary.main, 0.8)} 100%)`,
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.8)} 0%, ${alpha(
+            theme.palette.primary.main,
+            0.8
+          )} 100%)`,
           color: 'white',
         }}
       >
@@ -110,6 +130,7 @@ export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDr
 
       {/* Main content */}
       <Box sx={{ p: 3 }}>
+        {/* Description of the role */}
         <Paper
           component={m.div}
           initial="initial"
@@ -130,67 +151,6 @@ export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDr
             {role.description || 'Aucune description disponible.'}
           </Typography>
         </Paper>
-
-        {/* Permissions */}
-        <Box
-          component={m.div}
-          initial="initial"
-          animate="animate"
-          variants={varFade().inUp}
-          sx={{ mb: 3 }}
-        >
-          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
-            Permissions
-          </Typography>
-
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2.5,
-              borderRadius: 2,
-              boxShadow: theme.customShadows?.z8,
-            }}
-          >
-            { ( role.permissionLevel && role.permissionLevel.length > 0 ) ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {role.permissionLevel.map((permission, index) => (
-                  <Chip
-                    key={index}
-                    label={permission}
-                    sx={{
-                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      color: 'primary.dark',
-                      fontWeight: 600,
-                      borderRadius: 1.5,
-                      py: 0.5,
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        bgcolor: alpha(theme.palette.primary.main, 0.2),
-                        transform: 'translateY(-2px)',
-                        boxShadow: `0 4px 8px 0 ${alpha(theme.palette.primary.main, 0.2)}`,
-                      },
-                    }}
-                  />
-                ))}
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  color: 'text.secondary',
-                  fontStyle: 'italic',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  p: 3,
-                  border: `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-                  borderRadius: 1,
-                }}
-              >
-                Aucune permission définie
-              </Box>
-            )}
-          </Paper>
-        </Box>
 
         {/* Detailed Information List */}
         <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp}>
@@ -279,35 +239,100 @@ export function UserRoleDetailsDrawer({ open, onClose, role }: UserRoleDetailsDr
           </List>
         </Box>
 
-        {/* Action Button */}
-        <Box
-          component={m.div}
-          initial="initial"
-          animate="animate"
-          variants={varFade().inUp}
-          sx={{ mt: 4, textAlign: 'center', display: 'flex', justifyContent: 'flex-end' }}
-        >
-          <Button
-            onClick={onClose}
-            variant="contained"
-            sx={{
-              px: 3,
-              py: 1,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              transition: 'all 0.2s',
-              color: 'primary.contrastText',
-              backgroundColor: 'primary.main',
-              boxShadow: theme.customShadows?.primary,
-              '&:hover': {
-                backgroundColor: 'primary.dark',
-                transform: 'translateY(-2px)',
-              },
-            }}
-          >
-            Fermer
-          </Button>
+        {/* Modules and Permissions in an Accordion style */}
+        <Box component={m.div} initial="initial" animate="animate" variants={varFade().inUp} sx={{ mb: 3, mt: 3 }}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="fontWeightBold" sx={{ mb: 2 }}>
+            Modules et Permissions
+          </Typography>
+
+          <ConditionalComponent isValid={role.modulePermissions && role.modulePermissions.length > 0}>
+            <>
+              {/* Display only the first 'visibleCount' modules */}
+              {visibleModules.map((moduleItem, index) => (
+                <Accordion key={index} sx={{ mb: 1 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {moduleItem.module}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {moduleItem.permissions.map((permission, idx) => (
+                        <Chip
+                          key={idx}
+                          label={permission}
+                          sx={{
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.dark',
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                            py: 0.5,
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.2),
+                              transform: 'translateY(-2px)',
+                              boxShadow: `0 4px 8px 0 ${alpha(theme.palette.primary.main, 0.2)}`,
+                            },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+
+              {/* "Show more" button if not all modules are displayed */}
+              {visibleCount < totalModules && (
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Button variant="outlined" onClick={handleShowMore} sx={{ borderRadius: 2 }}>
+                    Voir plus
+                  </Button>
+                </Box>
+              )}
+            </>
+          </ConditionalComponent>
+          <>
+              {/* Display only the first 'visibleCount' modules */}
+              {visibleModules.map((moduleItem, index) => (
+                <Accordion key={index} sx={{ mb: 1 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {moduleItem.module}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {moduleItem.permissions.map((permission, idx) => (
+                        <Chip
+                          key={idx}
+                          label={permission}
+                          sx={{
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.dark',
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                            py: 0.5,
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.2),
+                              transform: 'translateY(-2px)',
+                              boxShadow: `0 4px 8px 0 ${alpha(theme.palette.primary.main, 0.2)}`,
+                            },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+              <ConditionalComponent isValid={visibleCount < totalModules}>
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Button variant="outlined" onClick={handleShowMore} sx={{ borderRadius: 2 }}>
+                      Voir plus
+                    </Button>
+                  </Box>
+              </ConditionalComponent>
+            </>
         </Box>
       </Box>
     </Drawer>

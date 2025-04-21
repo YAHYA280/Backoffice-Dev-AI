@@ -788,7 +788,7 @@ export const MatiereList = ({
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChangeLocal}
                 buttonText="Filtres"
-                icon={<FontAwesomeIcon icon={faFilter} />}
+                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
               />
               <Tooltip title="Réinitialiser" arrow>
                 <IconButton
@@ -800,7 +800,7 @@ export const MatiereList = ({
                     '&:hover': { transform: 'translateY(-2px)' },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown

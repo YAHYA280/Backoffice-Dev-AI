@@ -26,7 +26,7 @@ import {
   Typography,
   InputLabel,
   IconButton,
-  CardContent , 
+  CardContent,
   FormControl,
   useMediaQuery
 } from '@mui/material';
@@ -110,9 +110,9 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
   const [selectedExercise, setSelectedExercise] = useState<string>('');
   const [selectedAssistantType, setSelectedAssistantType] = useState<string>('');
 
-  const assistantTypePerformanceData = useMemo(() => 
+  const assistantTypePerformanceData = useMemo(() =>
     getAssistantTypePerformanceData(selectedLevel || undefined)
-  , [selectedLevel]);
+    , [selectedLevel]);
 
   // Gestion du changement d'onglet
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -136,7 +136,7 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
   }, [filters]);
 
   // Obtenir les données filtrées d'exercices basées sur les filtres appliqués
-  const filteredExerciseData = useMemo(() => 
+  const filteredExerciseData = useMemo(() =>
     getFilteredExercisePerformance({
       level: Array.isArray(filters.level) ? filters.level : filters.level === 'all' ? undefined : filters.level,
       subject: filters.subjects,
@@ -145,12 +145,12 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
       startDate: filters.startDate,
       endDate: filters.endDate
     })
-  , [filters]);
+    , [filters]);
 
   // Analyser les performances pour obtenir les meilleures et pires performances
-  const performanceAnalysis = useMemo(() => 
+  const performanceAnalysis = useMemo(() =>
     getPerformingAssistantsAnalysis()
-  , []);
+    , []);
 
   // Configuration des options du graphique
   const chartOptions = useMemo(() => {
@@ -267,13 +267,13 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
       datasets: [
         {
           label: 'Avant correction',
-          data: Object.values(subjectData).map(subjectValue => 
+          data: Object.values(subjectData).map(subjectValue =>
             parseFloat((subjectValue.before.reduce((sum, val) => sum + val, 0) / subjectValue.before.length).toFixed(1))),
           backgroundColor: 'rgba(235, 71, 6, 0.5)', // Augmenter l'opacité
         },
         {
           label: 'Après correction',
-          data: Object.values(subjectData).map(subjectValue => 
+          data: Object.values(subjectData).map(subjectValue =>
             parseFloat((subjectValue.before.reduce((sum, val) => sum + val, 0) / subjectValue.before.length).toFixed(1))),
           backgroundColor: 'rgba(11, 226, 47, 0.5)', // Augmenter l'opacité
         }
@@ -283,14 +283,14 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
     return transformDataByMetricType(chartData, metricType);
   }, [selectedLevel, metricType]);
 
-  const hasActiveFilters = useMemo(() => 
+  const hasActiveFilters = useMemo(() =>
     selectedLevel !== 'CP' ||
     selectedSubject !== '' ||
     selectedChapter !== '' ||
     selectedExercise !== '' ||
     selectedAssistantType !== ''
-  , [selectedLevel, selectedSubject, selectedChapter, selectedExercise, selectedAssistantType]);
-  
+    , [selectedLevel, selectedSubject, selectedChapter, selectedExercise, selectedAssistantType]);
+
 
   // Données pour le graphique des performances par exercice (si un chapitre est sélectionné)
   const exercisePerformanceData = useMemo(() => {
@@ -373,241 +373,241 @@ const PerformanceComparison: React.FC<PerformanceComparisonProps> = ({
     return "";
   };
 
-// Add these interfaces for data types
-interface ChartDataset {
-  label: string;
-  data: number[];
-  backgroundColor?: string;
-  borderColor?: string;
-}
+  // Add these interfaces for data types
+  interface ChartDataset {
+    label: string;
+    data: number[];
+    backgroundColor?: string;
+    borderColor?: string;
+  }
 
-interface ChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
+  interface ChartData {
+    labels: string[];
+    datasets: ChartDataset[];
+  }
 
-interface PerformanceData {
-  labels: string[];
-  beforeCorrection: number[];
-  afterCorrection: number[];
-}
+  interface PerformanceData {
+    labels: string[];
+    beforeCorrection: number[];
+    afterCorrection: number[];
+  }
 
-interface PerformanceRecord {
-  [key: string]: { before: number; after: number };
-}
+  interface PerformanceRecord {
+    [key: string]: { before: number; after: number };
+  }
 
-// Union type for all possible exportable data types
-// Update the ExportableData type to include all possible data structures
-type ExportableData = 
-  | ChartData 
-  | PerformanceData 
-  | PerformanceRecord 
-  | Record<string, any>[] 
-  | { chapters: string[]; beforeCorrection: number[]; afterCorrection: number[]; }
-  | { labels: string[]; beforeCorrection: number[]; afterCorrection: number[]; improvement?: number[]; }
-  | Record<string, { metrics: string[]; beforeRetraining: number[]; afterRetraining: number[]; }>
-  | null;
-// Modify the handleDownload function with proper type annotations
-const handleDownload = (): void => {
-  if (onDownloadData) {
-    onDownloadData();
-  } else {
-    // Default implementation - Export current data as CSV
-    let dataToExport: ExportableData = null;
-    let filename: string = 'performance_comparison';
-
-    // Determine which data to export based on current tab
-    switch (tabValue) {
-      case 0: // Assistants tab
-        dataToExport = selectedAssistantType || selectedLevel
-          ? assistantTypePerformanceData
-          : filteredAssistants;
-        filename = 'assistant_performance_comparison';
-        break;
-      case 1: // By Level tab
-        dataToExport = getAveragePerformanceByLevel();
-        filename = 'level_performance_comparison';
-        break;
-      case 2: // By Subject tab
-        try {
-          dataToExport = getAveragePerformanceBySubject();
-          filename = 'subject_performance_comparison';
-        } catch (error) {
-          console.error("Error exporting subject data:", error);
-          alert("Une erreur s'est produite lors de l'exportation des données par matière.");
-          return;
-        }
-        break;
-      case 3: // By Chapter tab
-        if (selectedLevel && selectedSubject) {
-          dataToExport = getSubjectComparisonData(selectedLevel, selectedSubject);
-          filename = `${selectedSubject}_chapters_performance`;
-        }
-        break;
-      case 4: // By Exercise tab
-        if (selectedChapter) {
-          dataToExport = getChapterPerformanceEvolution(selectedChapter, selectedLevel);
-          filename = `${selectedChapter}_exercises_performance`;
-        }
-        break;
-      default:
-        dataToExport = null;
-        filename = 'performance_data';
-        break;
-    }      
-
-    if (dataToExport) {
-      exportToCSV(dataToExport, filename);
+  // Union type for all possible exportable data types
+  // Update the ExportableData type to include all possible data structures
+  type ExportableData =
+    | ChartData
+    | PerformanceData
+    | PerformanceRecord
+    | Record<string, any>[]
+    | { chapters: string[]; beforeCorrection: number[]; afterCorrection: number[]; }
+    | { labels: string[]; beforeCorrection: number[]; afterCorrection: number[]; improvement?: number[]; }
+    | Record<string, { metrics: string[]; beforeRetraining: number[]; afterRetraining: number[]; }>
+    | null;
+  // Modify the handleDownload function with proper type annotations
+  const handleDownload = (): void => {
+    if (onDownloadData) {
+      onDownloadData();
     } else {
-      alert("Aucune donnée disponible à exporter. Veuillez sélectionner les filtres appropriés.");
-    }
-  }
-};
+      // Default implementation - Export current data as CSV
+      let dataToExport: ExportableData = null;
+      let filename: string = 'performance_comparison';
 
-const exportToCSV = (data: ExportableData, filename: string = 'export'): void => {
-  try {
-    // Format the data based on its structure
-    let csvContent: string = 'data:text/csv;charset=utf-8,';
+      // Determine which data to export based on current tab
+      switch (tabValue) {
+        case 0: // Assistants tab
+          dataToExport = selectedAssistantType || selectedLevel
+            ? assistantTypePerformanceData
+            : filteredAssistants;
+          filename = 'assistant_performance_comparison';
+          break;
+        case 1: // By Level tab
+          dataToExport = getAveragePerformanceByLevel();
+          filename = 'level_performance_comparison';
+          break;
+        case 2: // By Subject tab
+          try {
+            dataToExport = getAveragePerformanceBySubject();
+            filename = 'subject_performance_comparison';
+          } catch (error) {
+            console.error("Error exporting subject data:", error);
+            alert("Une erreur s'est produite lors de l'exportation des données par matière.");
+            return;
+          }
+          break;
+        case 3: // By Chapter tab
+          if (selectedLevel && selectedSubject) {
+            dataToExport = getSubjectComparisonData(selectedLevel, selectedSubject);
+            filename = `${selectedSubject}_chapters_performance`;
+          }
+          break;
+        case 4: // By Exercise tab
+          if (selectedChapter) {
+            dataToExport = getChapterPerformanceEvolution(selectedChapter, selectedLevel);
+            filename = `${selectedChapter}_exercises_performance`;
+          }
+          break;
+        default:
+          dataToExport = null;
+          filename = 'performance_data';
+          break;
+      }
 
-    // Handle different data structures
-    if (Array.isArray(data)) {
-      // Handle array of objects
-      if (data.length > 0 && typeof data[0] === 'object') {
-        // Get headers
-        const headers: string[] = Object.keys(data[0]);
-        csvContent += `${headers.join(',')}\n`;
-
-        // Add rows
-        data.forEach((item: Record<string, any>) => {
-          const row: string = headers.map(header => {
-            const cell = item[header];
-            // Handle values with commas by wrapping in quotes
-            return typeof cell === 'string' && cell.includes(',')
-              ? `"${cell}"`
-              : cell;
-          }).join(',');
-          csvContent += `${row}\n`;
-        });
+      if (dataToExport) {
+        exportToCSV(dataToExport, filename);
       } else {
-        // Simple array
-        csvContent += data.join(',');
-      }
-    } else if (typeof data === 'object' && data !== null) {
-      // Handle assistant performance data (nested object with metrics)
-      if (Object.values(data).length > 0 && typeof Object.values(data)[0] === 'object' && 
-          'metrics' in Object.values(data)[0] && 'beforeRetraining' in Object.values(data)[0]) {
-        
-        // This is the filteredAssistants structure
-        const assistantData = data as Record<string, { 
-          metrics: string[]; 
-          beforeRetraining: number[]; 
-          afterRetraining: number[]; 
-        }>;
-        
-        // Get the first assistant to extract metrics (assuming all assistants have the same metrics)
-        const firstAssistant = Object.values(assistantData)[0];
-        
-        // Create header row with metric names
-        csvContent += 'Assistant,Metric,Before Retraining,After Retraining\n';
-        
-        // Add data for each assistant and metric
-        Object.entries(assistantData).forEach(([assistantName, assistantMetrics]) => {
-          assistantMetrics.metrics.forEach((metric, index) => {
-            csvContent += `${assistantName},${metric},${assistantMetrics.beforeRetraining[index]},${assistantMetrics.afterRetraining[index]}\n`;
-          });
-        });
-      }
-      // Special case for chapter data structure
-      else if ('chapters' in data && 'beforeCorrection' in data && 'afterCorrection' in data) {
-        csvContent += 'Chapter,Avant correction,Après correction\n';
-        
-        const chapterData = data as { 
-          chapters: string[]; 
-          beforeCorrection: number[]; 
-          afterCorrection: number[]; 
-        };
-        
-        chapterData.chapters.forEach((chapter: string, index: number) => {
-          csvContent += `${chapter},${chapterData.beforeCorrection[index]},${chapterData.afterCorrection[index]}\n`;
-        });
-      }
-      // Special case for performance data with labels
-      else if ('labels' in data && 'beforeCorrection' in data && 'afterCorrection' in data) {
-        csvContent += 'Label,Avant correction,Après correction';
-        
-        // Add improvement column if available
-        if ('improvement' in data) {
-          csvContent += ',Improvement';
-        }
-        csvContent += '\n';
-        
-        const perfData = data as { 
-          labels: string[]; 
-          beforeCorrection: number[]; 
-          afterCorrection: number[]; 
-          improvement?: number[]; 
-        };
-        
-        perfData.labels.forEach((label: string, index: number) => {
-          let row = `${label},${perfData.beforeCorrection[index]},${perfData.afterCorrection[index]}`;
-          if (perfData.improvement) {
-            row += `,${perfData.improvement[index]}`;
-          }
-          csvContent += `${row}\n`;
-        });
-      }
-      // Special case for chart data structure
-      else if ('labels' in data && 'datasets' in data) {
-        // Chart-like structure
-        csvContent += 'Label,';
-
-        const chartData = data as ChartData;
-        csvContent += `${chartData.datasets.map((ds: ChartDataset) => ds.label).join(',')}\n`;
-
-        // Add data rows
-        chartData.labels.forEach((label: string, index: number) => {
-          let row = `${label},`;
-          row += chartData.datasets.map((ds: ChartDataset) => ds.data[index]).join(',');
-          csvContent += `${row}\n`;
-        });
-      } 
-      else {
-        // Generic object
-        Object.entries(data).forEach(([key, value]: [string, any]) => {
-          if (typeof value === 'object' && value !== null) {
-            // Handle nested objects
-            Object.entries(value as Record<string, any>).forEach(([subKey, subValue]: [string, any]) => {
-              csvContent += `${key}_${subKey},${subValue}\n`;
-            });
-          } else {
-            csvContent += `${key},${value}\n`;
-          }
-        });
+        alert("Aucune donnée disponible à exporter. Veuillez sélectionner les filtres appropriés.");
       }
     }
+  };
 
-    // Create encoded URI for download
-    const encodedUri: string = encodeURI(csvContent);
-    
-    // Create and trigger download
-    const link: HTMLAnchorElement = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    
-    // Set filename with date for uniqueness
-    const date: string = new Date().toISOString().slice(0, 10);
-    link.setAttribute('download', `${filename}_${date}.csv`);
-    
-    // Append to document, trigger click, and remove
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log('Download triggered successfully');
-  } catch (error) {
-    console.error('Error during CSV export:', error);
-    alert('Une erreur est survenue lors de l\'exportation des données. Veuillez réessayer.');
-  }
-};
+  const exportToCSV = (data: ExportableData, filename: string = 'export'): void => {
+    try {
+      // Format the data based on its structure
+      let csvContent: string = 'data:text/csv;charset=utf-8,';
+
+      // Handle different data structures
+      if (Array.isArray(data)) {
+        // Handle array of objects
+        if (data.length > 0 && typeof data[0] === 'object') {
+          // Get headers
+          const headers: string[] = Object.keys(data[0]);
+          csvContent += `${headers.join(',')}\n`;
+
+          // Add rows
+          data.forEach((item: Record<string, any>) => {
+            const row: string = headers.map(header => {
+              const cell = item[header];
+              // Handle values with commas by wrapping in quotes
+              return typeof cell === 'string' && cell.includes(',')
+                ? `"${cell}"`
+                : cell;
+            }).join(',');
+            csvContent += `${row}\n`;
+          });
+        } else {
+          // Simple array
+          csvContent += data.join(',');
+        }
+      } else if (typeof data === 'object' && data !== null) {
+        // Handle assistant performance data (nested object with metrics)
+        if (Object.values(data).length > 0 && typeof Object.values(data)[0] === 'object' &&
+          'metrics' in Object.values(data)[0] && 'beforeRetraining' in Object.values(data)[0]) {
+
+          // This is the filteredAssistants structure
+          const assistantData = data as Record<string, {
+            metrics: string[];
+            beforeRetraining: number[];
+            afterRetraining: number[];
+          }>;
+
+          // Get the first assistant to extract metrics (assuming all assistants have the same metrics)
+          const firstAssistant = Object.values(assistantData)[0];
+
+          // Create header row with metric names
+          csvContent += 'Assistant,Metric,Before Retraining,After Retraining\n';
+
+          // Add data for each assistant and metric
+          Object.entries(assistantData).forEach(([assistantName, assistantMetrics]) => {
+            assistantMetrics.metrics.forEach((metric, index) => {
+              csvContent += `${assistantName},${metric},${assistantMetrics.beforeRetraining[index]},${assistantMetrics.afterRetraining[index]}\n`;
+            });
+          });
+        }
+        // Special case for chapter data structure
+        else if ('chapters' in data && 'beforeCorrection' in data && 'afterCorrection' in data) {
+          csvContent += 'Chapter,Avant correction,Après correction\n';
+
+          const chapterData = data as {
+            chapters: string[];
+            beforeCorrection: number[];
+            afterCorrection: number[];
+          };
+
+          chapterData.chapters.forEach((chapter: string, index: number) => {
+            csvContent += `${chapter},${chapterData.beforeCorrection[index]},${chapterData.afterCorrection[index]}\n`;
+          });
+        }
+        // Special case for performance data with labels
+        else if ('labels' in data && 'beforeCorrection' in data && 'afterCorrection' in data) {
+          csvContent += 'Label,Avant correction,Après correction';
+
+          // Add improvement column if available
+          if ('improvement' in data) {
+            csvContent += ',Improvement';
+          }
+          csvContent += '\n';
+
+          const perfData = data as {
+            labels: string[];
+            beforeCorrection: number[];
+            afterCorrection: number[];
+            improvement?: number[];
+          };
+
+          perfData.labels.forEach((label: string, index: number) => {
+            let row = `${label},${perfData.beforeCorrection[index]},${perfData.afterCorrection[index]}`;
+            if (perfData.improvement) {
+              row += `,${perfData.improvement[index]}`;
+            }
+            csvContent += `${row}\n`;
+          });
+        }
+        // Special case for chart data structure
+        else if ('labels' in data && 'datasets' in data) {
+          // Chart-like structure
+          csvContent += 'Label,';
+
+          const chartData = data as ChartData;
+          csvContent += `${chartData.datasets.map((ds: ChartDataset) => ds.label).join(',')}\n`;
+
+          // Add data rows
+          chartData.labels.forEach((label: string, index: number) => {
+            let row = `${label},`;
+            row += chartData.datasets.map((ds: ChartDataset) => ds.data[index]).join(',');
+            csvContent += `${row}\n`;
+          });
+        }
+        else {
+          // Generic object
+          Object.entries(data).forEach(([key, value]: [string, any]) => {
+            if (typeof value === 'object' && value !== null) {
+              // Handle nested objects
+              Object.entries(value as Record<string, any>).forEach(([subKey, subValue]: [string, any]) => {
+                csvContent += `${key}_${subKey},${subValue}\n`;
+              });
+            } else {
+              csvContent += `${key},${value}\n`;
+            }
+          });
+        }
+      }
+
+      // Create encoded URI for download
+      const encodedUri: string = encodeURI(csvContent);
+
+      // Create and trigger download
+      const link: HTMLAnchorElement = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+
+      // Set filename with date for uniqueness
+      const date: string = new Date().toISOString().slice(0, 10);
+      link.setAttribute('download', `${filename}_${date}.csv`);
+
+      // Append to document, trigger click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log('Download triggered successfully');
+    } catch (error) {
+      console.error('Error during CSV export:', error);
+      alert('Une erreur est survenue lors de l\'exportation des données. Veuillez réessayer.');
+    }
+  };
 
   return (
     <Card sx={{ mb: 4 }}>
@@ -650,21 +650,22 @@ const exportToCSV = (data: ExportableData, filename: string = 'export'): void =>
               variant="simple"
             />
 
-          {/* Bouton pour exporter */}
-          <Tooltip title="Exporter les données">
-            <IconButton
-              aria-label="exporter"
-              onClick={handleDownload}
-              sx={{
-                p: 1,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': { transform: 'translateY(-2px)' },
-              }}
-              size="small"
-            >
-              <FontAwesomeIcon icon={faFileExport} />
-            </IconButton>
-          </Tooltip>
+            {/* Bouton pour exporter */}
+            <Tooltip title="Exporter les données">
+              <IconButton
+                color="primary"
+                aria-label="exporter"
+                onClick={handleDownload}
+                sx={{
+                  p: 1,
+                  transition: theme.transitions.create(['transform', 'box-shadow']),
+                  '&:hover': { transform: 'translateY(-2px)' },
+                }}
+                size="small"
+              >
+                <FontAwesomeIcon icon={faFileExport} />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
         {/* Onglet 1: Performance des assistants */}

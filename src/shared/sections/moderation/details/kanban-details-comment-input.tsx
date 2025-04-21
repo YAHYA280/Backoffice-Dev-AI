@@ -35,7 +35,7 @@ export function KanbanDetailsCommentInput() {
           </IconButton>
           </Stack>
 
-          <Button variant="contained">Comment</Button>
+          <Button variant="contained">Commenter</Button>
         </Stack>
       </Paper>
     </Stack>

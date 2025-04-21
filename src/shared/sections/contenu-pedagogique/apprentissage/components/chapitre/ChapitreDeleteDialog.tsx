@@ -62,7 +62,7 @@ const ChapitreDeleteDialog = ({ open, onClose, onSubmit, chapitre }: ChapitreDel
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button variant="outlined" onClick={onClose} disabled={isDeleting}>
+        <Button variant="outlined" color="primary" onClick={onClose} disabled={isDeleting}>
           Annuler
         </Button>
         <Button

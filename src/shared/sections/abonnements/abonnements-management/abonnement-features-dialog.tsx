@@ -71,7 +71,7 @@ export function AddFeatureDialog({ open, onClose }: Props) {
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button variant="outlined" onClick={onClose}>
+            <Button variant="outlined" color="primary" onClick={onClose}>
               Annuler
             </Button>
             <LoadingButton

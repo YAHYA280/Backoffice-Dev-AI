@@ -25,8 +25,8 @@ export function ConfirmDialog({
       <DialogActions>
         {action}
 
-        <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+        <Button variant="outlined" color="primary" onClick={onClose}>
+          Annuler
         </Button>
       </DialogActions>
     </Dialog>

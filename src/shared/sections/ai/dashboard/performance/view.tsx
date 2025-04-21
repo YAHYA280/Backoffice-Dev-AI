@@ -21,7 +21,12 @@ import {
   InputAdornment,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+
+import { DashboardContent } from 'src/shared/layouts/dashboard';
 import { AI_ASSISTANT_TYPE_OPTIONS } from 'src/shared/_mock/_ai';
+
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import { AiQueryAnalysis } from './aiQueryAnalysis';
 import { AssistantComparison } from './assistantComparison';
@@ -189,7 +194,17 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
   };
 
   return (
-    <>
+    <DashboardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <CustomBreadcrumbs
+          heading="Performance"
+          links={[
+            { name: 'Tableau de bord', href: paths.dashboard.root },
+            { name: 'Assistant IA', href: paths.dashboard.ai.correction },
+            { name: 'Performance' },
+          ]}
+          sx={{ mb: { xs: 3, md: 5 } }}
+        />
+
       {/* Date Range Filter Box */}
       <Box
         sx={{
@@ -202,13 +217,13 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Reset">
             <IconButton color="primary" onClick={handleResetFilters} disabled={isLoading}>
-              <FontAwesomeIcon icon={faSyncAlt} className={isLoading ? 'fa-spin' : ''} />
+              <FontAwesomeIcon icon={faSyncAlt} size='sm' className={isLoading ? 'fa-spin' : ''} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Filtrer par date">
             <IconButton color="primary" onClick={handleOpenFilterMenu}>
               <Badge color="primary" variant="dot" invisible={!activeFilters}>
-                <FontAwesomeIcon icon={faFilter} />
+                <FontAwesomeIcon icon={faFilter} size='sm'/>
               </Badge>
             </IconButton>
           </Tooltip>
@@ -332,6 +347,6 @@ export default function AIPerformanceView({ title = 'Performance des Assistants'
           />
         </Grid>
       </Grid>
-    </>
+      </DashboardContent>
   );
 }

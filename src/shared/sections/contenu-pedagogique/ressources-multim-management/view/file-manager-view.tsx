@@ -654,15 +654,17 @@ export function FileManagerView() {
           </Tabs>
           <Box sx={{ gap: 2, flexShrink: 0 }}>
             {view === "list" ? (
+              <Tooltip title="Sélectionner colonnes" arrow >
               <Button
                 size="small"
                 variant="outlined"
-                endIcon={<FontAwesomeIcon icon={faTable} />}
+                startIcon={<FontAwesomeIcon icon={faTable} />}
                 onClick={handleOpenColumnsMenu}
                 color="primary"
               >
                 Colonnes
               </Button>
+              </Tooltip>
             ):(
               <>
               </>
@@ -673,15 +675,12 @@ export function FileManagerView() {
               componentsProps={{
                 tooltip: {
                   sx: {
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    fontSize: 14,
+                    fontSize: 12,
                     borderRadius: 1,
                     boxShadow: 3,
                     padding: "6px 12px",
                   },
                 },
-                arrow: { sx: { color: "primary.main" } },
               }}
             >
               <IconButton
@@ -689,11 +688,9 @@ export function FileManagerView() {
                 color="primary"
                 onClick={handleOpenFilterMenu}
                 sx={{
-                  width: 50,
-                  height: 50,
-                  minWidth: 0,
-                  padding: 0,
-                  borderRadius: "50%",
+                  marginLeft: 1,
+                  padding: '10px',
+                  color: 'primary.main',
                 }}
               >
                 <FontAwesomeIcon icon={faFilter} />
@@ -705,15 +702,12 @@ export function FileManagerView() {
               componentsProps={{
                 tooltip: {
                   sx: {
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    fontSize: 14,
+                    fontSize: 12,
                     borderRadius: 1,
                     boxShadow: 3,
                     padding: "6px 12px",
                   },
                 },
-                arrow: { sx: { color: "primary.main" } },
               }}
             >
               <IconButton
@@ -721,10 +715,9 @@ export function FileManagerView() {
                 onClick={handleRefresh}
                 color="primary"
                 sx={{
-                  width: 50,
-                  height: 50,
-                  padding: 0,
-                  borderRadius: "50%",
+                  marginLeft: 1,
+                  padding: '10px',
+                  color: 'primary.main',
                 }}
               >
                 <FontAwesomeIcon icon={faArrowsRotate} />
@@ -736,15 +729,12 @@ export function FileManagerView() {
               componentsProps={{
                 tooltip: {
                   sx: {
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    fontSize: 14,
+                    fontSize: 12,
                     borderRadius: 1,
                     boxShadow: 3,
                     padding: "6px 12px",
                   },
                 },
-                arrow: { sx: { color: "primary.main" } },
               }}
             >
               <IconButton
@@ -752,11 +742,9 @@ export function FileManagerView() {
                 color="primary"
                 onClick={() => {}}
                 sx={{
-                  width: 50,
-                  height: 50,
-                  minWidth: 0,
-                  padding: 0,
-                  borderRadius: "50%",
+                  marginLeft: 1,
+                  padding: '10px',
+                  color: 'primary.main',
                 }}
               >
                 <FontAwesomeIcon icon={faFileExport} />
@@ -791,7 +779,7 @@ export function FileManagerView() {
                   action={
                     <Tooltip title="Supprimer">
                       <IconButton color="primary" onClick={handleDeleteItems}>
-                        <FontAwesomeIcon icon={faTrash} />
+                        <FontAwesomeIcon icon={faTrash} size="sm" style={{ marginRight: "10px"}}/>
                       </IconButton>
                     </Tooltip>
                   }

@@ -253,6 +253,7 @@ export default function AIAssistantCustomization() {
               secondaryAction={
                 <IconButton
                   onClick={() => handleDeletePhrase(index)}
+                  color="primary"
                 >
                   <FontAwesomeIcon icon={faTrash} />
                 </IconButton>

@@ -605,7 +605,12 @@ export function GenerateInvoiceDialog({ open, onClose, payment }: Props) {
           <DialogActions sx={{ px: 3, py: 2 }}>
             {!invoiceGenerated ? (
               <>
-                <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 1 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={onClose}
+                  sx={{ borderRadius: 1 }}
+                >
                   Annuler
                 </Button>
                 {!previewMode && (

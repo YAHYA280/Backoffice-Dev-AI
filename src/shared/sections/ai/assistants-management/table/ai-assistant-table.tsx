@@ -142,7 +142,7 @@ export function AIAssistantTable({
   });
 
   const cellStyle = {
-    backgroundColor: (theme: Theme) => theme.palette.background.neutral,
+    backgroundColor: (theme: Theme) => theme.palette.background.paper,
     color: (theme: Theme) => theme.palette.text.primary,
     borderBottom: (theme: Theme) => `1px solid ${theme.palette.divider}`,
     fontWeight: 'normal',

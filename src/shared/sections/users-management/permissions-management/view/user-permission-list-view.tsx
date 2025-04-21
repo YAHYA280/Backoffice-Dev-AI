@@ -20,7 +20,6 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import roleData from 'src/shared/_mock/_role';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 import { permissionData, type IPermission } from 'src/shared/_mock/_permission';
 
@@ -36,7 +35,6 @@ import { UserPermissionEditDrawer } from '../user-permission-edit-form';
 import { UserPermissionDetailsDrawer } from '../user-permission-details-view';
 import {
   RenderCellName,
-  RenderCellRoles,
   RenderCellCreatedAt,
   RenderCellDescription,
 } from '../components/RenderCells';
@@ -235,22 +233,6 @@ export function UserPermissionListView() {
         />
       ),
       renderCell: (params) => <RenderCellCreatedAt params={params} />,
-    },
-    {
-      field: 'roles',
-      headerName: TABLE_HEAD[2].label,
-      width: TABLE_HEAD[2].width,
-      sortable: false,
-      renderHeader: (params) => (
-        <CustomColumnHeader
-          field="roles"
-          headerName={TABLE_HEAD[2].label}
-          onSearch={handleColumnSearch}
-          isRoleSelect
-          roleData = {roleData}
-        />
-      ),
-      renderCell: (params) => <RenderCellRoles params={params} />,
     },
     {
       field: 'actions',

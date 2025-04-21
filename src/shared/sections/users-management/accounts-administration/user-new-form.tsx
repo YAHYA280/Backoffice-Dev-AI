@@ -15,14 +15,12 @@ import {
   faUserFriends,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
   Card,
   Stack,
   Alert,
-  Dialog,
   Avatar,
   Button,
   Select,
@@ -30,19 +28,20 @@ import {
   TextField,
   Typography,
   InputLabel,
-  DialogTitle,
-  CardContent,
   FormControl,
-  DialogContent,
-  DialogActions,
-  useMediaQuery,
+  CardContent,
   InputAdornment,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
+import { DashboardContent } from 'src/shared/layouts/dashboard';
 import { _parents, _ADMINISTRATION_ROLES } from 'src/shared/_mock';
 
 import { toast } from 'src/shared/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/shared/components/hook-form';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import { FilePreview } from './file-preview';
 
@@ -71,20 +70,15 @@ const UserNewSchema = zod.object({
 
 export type UserNewSchemaType = zod.infer<typeof UserNewSchema>;
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-};
-
-export function UserNewForm({ open, onClose }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+export default function UserNewPage() {
+  const router = useRouter();
 
   const parents = _parents;
   const [parentSearch, setParentSearch] = useState('');
-  const filteredParents = parents.filter((p) =>
-    p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
-    p.email.toLowerCase().includes(parentSearch.toLowerCase())
+  const filteredParents = parents.filter(
+    (p) =>
+      p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
+      p.email.toLowerCase().includes(parentSearch.toLowerCase())
   );
 
   const defaultValues = useMemo(
@@ -106,15 +100,7 @@ export function UserNewForm({ open, onClose }: Props) {
     resolver: zodResolver(UserNewSchema),
     defaultValues,
   });
-  const {
-    control,
-    reset,
-    handleSubmit,
-    setValue,
-    getValues,
-    trigger,
-    watch,
-  } = methods;
+  const { control, reset, handleSubmit, setValue, getValues, trigger, watch } = methods;
   const adminRole = watch('adminRole');
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -128,7 +114,8 @@ export function UserNewForm({ open, onClose }: Props) {
   const [cinVersoFile, setCinVersoFile] = useState<File | null>(null);
 
   const buildDefaultInvitationText = useCallback(
-    () => `Invitation à rejoindre notre plateforme éducative
+    () =>
+      `Invitation à rejoindre notre plateforme éducative
 
 Bonjour ${getValues('lastName') || ''},
 
@@ -200,6 +187,10 @@ L'équipe de la plateforme`,
     } else {
       setCurrentStep((prev) => Math.max(prev - 1, 1));
     }
+  };
+
+  const onClose = () => {
+    router.push(paths.dashboard.users.accounts);
   };
 
   const onSubmit = handleSubmit(async (data) => {
@@ -280,10 +271,7 @@ L'équipe de la plateforme`,
               <Alert severity="error" sx={{ mb: 2 }}>
                 {roleSelectionError}
               </Alert>
-            ):(
-              <>
-              </>
-            )}
+            ) : null}
             <Box
               display="grid"
               rowGap={3}
@@ -356,17 +344,11 @@ L'équipe de la plateforme`,
                         <Typography color="error" variant="caption" sx={{ mt: 1, ml: 1.5 }}>
                           {adminRoleError}
                         </Typography>
-                      ):(
-                        <>
-                        </>
-                      )}
+                      ) : null}
                     </FormControl>
                   )}
                 />
-              ):(
-                <>
-                </>
-              )}
+              ) : null}
             </Box>
           </>
         );
@@ -374,7 +356,7 @@ L'équipe de la plateforme`,
         if (selectedRole === 'enfant') {
           return (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
                 Vérification du compte parent
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -404,25 +386,22 @@ L'équipe de la plateforme`,
                     sx={{
                       p: 2,
                       border: '1px solid',
-                      borderColor:
-                        selectedParent?.id === parent.id ? 'primary.main' : 'divider',
+                      borderColor: selectedParent?.id === parent.id ? 'primary.main' : 'divider',
                       borderRadius: 1,
                       cursor: 'pointer',
                       bgcolor:
-                        selectedParent?.id === parent.id
-                          ? 'primary.lighter'
-                          : 'background.paper',
+                        selectedParent?.id === parent.id ? 'primary.lighter' : 'background.paper',
                       display: 'flex',
                       alignItems: 'center',
                     }}
                     onClick={() => handleParentSelect(parent)}
                   >
-                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                      {parent.name.charAt(0)}
-                    </Avatar>
+                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>{parent.name.charAt(0)}</Avatar>
                     <Box sx={{ flexGrow: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="subtitle2">{parent.name}</Typography>
+                        <Typography variant="subtitle2" fontWeight={500}>
+                          {parent.name}
+                        </Typography>
                         {parent.verified ? (
                           <Box
                             sx={{
@@ -440,10 +419,7 @@ L'équipe de la plateforme`,
                           >
                             ✓
                           </Box>
-                        ):(
-                          <>
-                          </>
-                        )}
+                        ) : null}
                       </Box>
                       <Typography variant="body2" color="text.secondary">
                         {parent.email}
@@ -458,7 +434,7 @@ L'équipe de la plateforme`,
         if (selectedRole === 'parent') {
           return (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
                 Vérification de CIN
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -483,10 +459,7 @@ L'équipe de la plateforme`,
                     <Box sx={{ mt: 2 }}>
                       <FilePreview file={cinRectoFile} label="Recto" />
                     </Box>
-                  ):(
-                    <>
-                    </>
-                  )}
+                  ) : null}
                 </Box>
                 <Box>
                   <Button variant="contained" component="label">
@@ -506,10 +479,7 @@ L'équipe de la plateforme`,
                     <Box sx={{ mt: 2 }}>
                       <FilePreview file={cinVersoFile} label="Verso" />
                     </Box>
-                  ):(
-                    <>
-                    </>
-                  )}
+                  ) : null}
                 </Box>
               </Stack>
             </Box>
@@ -539,25 +509,17 @@ L'équipe de la plateforme`,
                   mb: 2,
                 }}
               >
-                <FontAwesomeIcon
-                  icon={faCheck}
-                  style={{ width: 20, height: 20, color: 'white' }}
-                />
+                <FontAwesomeIcon icon={faCheck} style={{ width: 20, height: 20, color: 'white' }} />
               </Box>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Informations vérifiées
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                align="center"
-                sx={{ mb: 4 }}
-              >
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
                 Les informations de l&apos;utilisateur ont été vérifiées et sont prêtes à être
                 enregistrées.
               </Typography>
             </Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom fontWeight={500}>
               Résumé des informations
             </Typography>
             <Box sx={{ bgcolor: 'grey.100', p: 3, borderRadius: 1 }}>
@@ -589,15 +551,13 @@ L'équipe de la plateforme`,
                       Rôle administratif:
                     </Typography>
                     <Typography variant="body2">
-                      {administrationRoles.find(
-                        (role) => role.value === getValues('adminRole')
-                      )?.label}
+                      {
+                        administrationRoles.find((role) => role.value === getValues('adminRole'))
+                          ?.label
+                      }
                     </Typography>
                   </>
-                ):(
-                  <>
-                  </>
-                )}
+                ) : null}
                 <Typography variant="subtitle2" color="text.secondary">
                   Email:
                 </Typography>
@@ -615,10 +575,7 @@ L'équipe de la plateforme`,
                       {selectedParent.name} ({selectedParent.email})
                     </Typography>
                   </>
-                ):(
-                  <>
-                  </>
-                )}
+                ) : null}
               </Box>
             </Box>
           </>
@@ -634,7 +591,7 @@ L'équipe de la plateforme`,
                 mb: 3,
               }}
             >
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom fontWeight={500}>
                 Modèle d&apos;email d&apos;invitation
               </Typography>
               {isCustomizing ? (
@@ -684,154 +641,135 @@ L'équipe de la plateforme`,
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          width: isMobile ? '100%' : 720,
-          maxWidth: '100%',
-          borderRadius: isMobile ? 0 : 2,
-          height: isMobile ? '100%' : 'auto',
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          bgcolor: 'grey.200',
-          py: 1,
-          px: 2,
-        }}
-      >
-        <Typography variant="subtitle1" noWrap sx={{ height: 35 }}>
-          Créer un compte utilisateur
-        </Typography>
-      </DialogTitle>
-      <DialogContent
-        sx={{
-          p: 2,
-          overflowY: isMobile ? 'auto' : 'visible',
-          maxHeight: isMobile ? 'calc(100vh - 120px)' : 'none',
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={0}
-          sx={{
-            mb: 3,
-            position: 'relative',
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: 0,
-              right: 0,
-              height: 2,
-              bgcolor: 'grey.200',
-              transform: 'translateY(-50%)',
-              zIndex: 0,
-            },
-          }}
-        >
-          {[
-            { label: 'Infos de base', step: 1 },
-            { label: "Vérifier l'ID", step: 2 },
-            { label: 'Confirmer', step: 3 },
-            { label: 'Invitation', step: 4 },
-          ].map((item) => (
-            <Box
-              key={item.step}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                flex: 1,
-                position: 'relative',
-                zIndex: 1,
-              }}
-            >
+    <DashboardContent maxWidth="xl">
+      <Box sx={{ mb: { xs: 3, md: 5 } }}>
+        <CustomBreadcrumbs
+          heading="Ajouter un compte utilisateur"
+          links={[
+            { name: 'Tableau de bord', href: paths.dashboard.root },
+            { name: 'Utilisateurs', href: paths.dashboard.users.accounts },
+            { name: 'Ajouter un compte' },
+          ]}
+        />
+      </Box>
+
+      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+        <Box sx={{ p: 2 }}>
+          <Stack
+            direction="row"
+            spacing={0}
+            sx={{
+              mb: 3,
+              position: 'relative',
+              // Increased thickness, color, and changed from 2px to 4px
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 4,
+                bgcolor: 'grey.300',
+                transform: 'translateY(-50%)',
+                zIndex: 0,
+              },
+            }}
+          >
+            {[
+              { label: 'Infos de base', step: 1 },
+              { label: "Vérifier l'ID", step: 2 },
+              { label: 'Confirmer', step: 3 },
+              { label: 'Invitation', step: 4 },
+            ].map((item) => (
+              <Box
+                key={item.step}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  flex: 1,
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    // Slightly bigger step circles (36px → more visual weight)
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    bgcolor:
+                      item.step < currentStep
+                        ? 'primary.main'
+                        : item.step === currentStep
+                          ? '#6495ED'
+                          : 'grey.300',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    mb: 0.5,
+                  }}
+                >
+                  {item.step < currentStep ? (
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      style={{ width: 20, height: 20, color: 'white' }}
+                    />
+                  ) : (
+                    item.step
+                  )}
+                </Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color:
+                      item.step < currentStep
+                        ? 'primary.main'
+                        : item.step === currentStep
+                          ? '#6495ED'
+                          : 'text.disabled',
+                    fontWeight: item.step === currentStep ? 'bold' : 'normal',
+                    fontSize: 11, // slightly bigger for emphasis
+                    textAlign: 'center',
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
+
+          <Form methods={methods} onSubmit={onSubmit}>
+            {renderStepContent()}
+            {currentStep !== 4 ? (
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  bgcolor:
-                    item.step < currentStep
-                      ? 'primary.main'
-                      : item.step === currentStep
-                      ? '#6495ED'
-                      : 'grey.300',
+                  mt: 3,
+                  p: 0,
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  mb: 0.5,
+                  justifyContent: 'space-between',
                 }}
               >
-                {item.step < currentStep ? (
-                  <FontAwesomeIcon
-                    icon={faCheck}
-                    style={{ width: 20, height: 20, color: 'white' }}
-                  />
+                {currentStep > 1 ? (
+                  <Button variant="outlined" onClick={handleBack}>
+                    Retour
+                  </Button>
                 ) : (
-                  item.step
+                  <Button variant="outlined" onClick={onClose}>
+                    Annuler
+                  </Button>
                 )}
+                {currentStep < 4 ? (
+                  <Button variant="contained" onClick={handleContinue} color="primary">
+                    {currentStep === 3 ? 'Confirmer' : 'Continuer'}
+                  </Button>
+                ) : null}
               </Box>
-              <Typography
-                variant="caption"
-                sx={{
-                  color:
-                    item.step < currentStep
-                      ? 'primary.main'
-                      : item.step === currentStep
-                      ? '#6495ED'
-                      : 'text.disabled',
-                  fontWeight: item.step === currentStep ? 'medium' : 'normal',
-                  fontSize: 10,
-                  textAlign: 'center',
-                }}
-              >
-                {item.label}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-        <Form methods={methods} onSubmit={onSubmit}>
-          {renderStepContent()}
-          {currentStep !== 4 ? (
-            <DialogActions
-              sx={{
-                mt: 3,
-                p: 0,
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              {currentStep > 1 ? (
-                <Button variant="outlined" onClick={handleBack}>
-                  Retour
-                </Button>
-              ) : (
-                <Button variant="outlined" onClick={onClose}>
-                  Annuler
-                </Button>
-              )}
-              {currentStep < 4 ? (
-                <Button variant="contained" onClick={handleContinue} color="primary">
-                  {currentStep === 3 ? 'Confirmer' : 'Continuer'}
-                </Button>
-              ):(
-                <>
-                </>
-              )}
-            </DialogActions>
-          ):(
-            <>
-            </>
-          )}
-        </Form>
-      </DialogContent>
-    </Dialog>
+            ) : null}
+          </Form>
+        </Box>
+      </Box>
+    </DashboardContent>
   );
 }

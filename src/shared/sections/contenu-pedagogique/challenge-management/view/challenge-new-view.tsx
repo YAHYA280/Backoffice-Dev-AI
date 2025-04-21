@@ -51,7 +51,7 @@ export function NewChallengeView() {
     <Container maxWidth="xl">
       <Box sx={{ mb: 4 }}>
         <Button
-          color="inherit"
+          color="primary"
           onClick={handleCancel}
           startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
           sx={{ mb: 2 }}

@@ -44,7 +44,6 @@ import {
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
 import { fIsAfter } from 'src/utils/format-time';
@@ -64,7 +63,6 @@ import {
   TablePaginationCustom,
 } from 'src/shared/components/table';
 
-import { UserNewForm } from '../user-new-form';
 import { UserTableRow } from '../user-table-row';
 import { TableHeadWithFilters } from '../table-head-with-filters';
 
@@ -138,9 +136,8 @@ const FILTER_STATUT_OPTIONS = [
 type Props = { title?: string };
 
 export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
-  const table = useTable();
+  const table = useTable({ defaultRowsPerPage: 10 });
   const router = useRouter();
-  const newForm = useBoolean();
   const [tableData, setTableData] = useState<IUserItem[]>([]);
   const [baseFilteredData, setBaseFilteredData] = useState<IUserItem[]>([]);
   const [totalRows, setTotalRows] = useState<number>(0);
@@ -332,16 +329,15 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
             sx={{ flex: 1 }}
           />
           <Button
-            onClick={newForm.onTrue}
+            onClick={() => router.push(paths.dashboard.user.new)}
             variant="contained"
             color="primary"
             startIcon={<FontAwesomeIcon icon={faPlus} style={{ width: 20 }} />}
           >
             Ajouter un compte
-          </Button>
+        </Button>
         </Box>
       </Box>
-      <UserNewForm open={newForm.value} onClose={newForm.onFalse} />
       <Menu
         anchorEl={anchorElColumns}
         open={Boolean(anchorElColumns)}
@@ -799,11 +795,11 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
             </TableBody>
           </Table>
         </TableContainer>
-        {totalRows > 5 ? (
+        {totalRows > 10 ? (
           <TablePaginationCustom
             page={table.page}
             count={totalRows}
-            rowsPerPage={table.rowsPerPage}
+            rowsPerPage={10}
             onPageChange={table.onChangePage}
             onRowsPerPageChange={table.onChangeRowsPerPage}
           />

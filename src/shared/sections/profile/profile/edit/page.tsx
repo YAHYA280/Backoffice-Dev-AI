@@ -5,13 +5,13 @@ import type { FormEvent } from 'react';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import{
+import {
   faUser,
   faPhone,
   faIdBadge,
   faEnvelope,
   faArrowLeft,
-}from '@fortawesome/free-solid-svg-icons';
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -25,28 +25,22 @@ import {
   TextField,
   Typography,
   InputAdornment,
-} from "@mui/material";
+} from '@mui/material';
 
 export default function EditProfileView() {
   const router = useRouter();
   const PROFILE_PAGE = '/dashboard/profile/profile';
 
   // State for form fields
-  const [firstName, setFirstName] = useState(
-    localStorage.getItem('userFirstName') || 'Thomas'
-  );
-  const [lastName, setLastName] = useState(
-    localStorage.getItem('userLastName') || 'Dubois'
-  );
+  const [firstName, setFirstName] = useState(localStorage.getItem('userFirstName') || 'Thomas');
+  const [lastName, setLastName] = useState(localStorage.getItem('userLastName') || 'Dubois');
   const [email, setEmail] = useState(
     localStorage.getItem('userEmail') || 'thomas.dubois@example.com'
   );
   const [secondaryEmail, setSecondaryEmail] = useState(
     localStorage.getItem('userSecondaryEmail') || ''
   );
-  const [phone, setPhone] = useState(
-    localStorage.getItem('userPhone') || '+33 6 12 34 56 78'
-  );
+  const [phone, setPhone] = useState(localStorage.getItem('userPhone') || '+33 6 12 34 56 78');
 
   // State for success message
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -109,11 +103,12 @@ export default function EditProfileView() {
             <Typography variant="body1" color="text.secondary" paragraph sx={{ mb: 3 }}>
               Mettez à jour vos coordonnées et informations personnelles.
             </Typography>
-            
+
             <Alert severity="info" sx={{ mb: 4 }}>
-              La modification de votre adresse e-mail nécessitera une vérification par email pour être validée.
+              La modification de votre adresse e-mail nécessitera une vérification par email pour
+              être validée.
             </Alert>
-            
+
             {/* Form */}
             <Box component="form" noValidate sx={{ mt: 2 }} onSubmit={handleSubmit}>
               <Grid container spacing={3}>
@@ -133,7 +128,7 @@ export default function EditProfileView() {
                     }}
                   />
                 </Grid>
-                
+
                 {/* Last Name */}
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -150,7 +145,7 @@ export default function EditProfileView() {
                     }}
                   />
                 </Grid>
-                
+
                 {/* Job Title */}
                 <Grid item xs={12}>
                   <TextField
@@ -168,7 +163,7 @@ export default function EditProfileView() {
                     }}
                   />
                 </Grid>
-                
+
                 {/* Primary Email */}
                 <Grid item xs={12}>
                   <TextField
@@ -186,7 +181,7 @@ export default function EditProfileView() {
                     }}
                   />
                 </Grid>
-                
+
                 {/* Secondary Email */}
                 <Grid item xs={12}>
                   <TextField
@@ -205,7 +200,7 @@ export default function EditProfileView() {
                     }}
                   />
                 </Grid>
-                
+
                 {/* Phone Number */}
                 <Grid item xs={12}>
                   <TextField
@@ -223,23 +218,18 @@ export default function EditProfileView() {
                   />
                 </Grid>
               </Grid>
-              
+
               {/* Action Buttons */}
               <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                <Button 
-                  variant="outlined" 
-                  color="inherit"
+                <Button
+                  variant="outlined"
                   size="large"
+                  color="primary"
                   onClick={() => router.push(PROFILE_PAGE)}
                 >
                   Annuler
                 </Button>
-                <Button 
-                  variant="contained" 
-                  color="primary"
-                  size="large"
-                  type="submit"
-                >
+                <Button variant="contained" color="primary" size="large" type="submit">
                   Enregistrer les modifications
                 </Button>
               </Box>

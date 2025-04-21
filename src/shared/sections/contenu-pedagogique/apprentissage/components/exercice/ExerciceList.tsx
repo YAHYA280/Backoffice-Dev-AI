@@ -839,7 +839,7 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterDropdownChange}
                 buttonText="Filtres"
-                icon={<FontAwesomeIcon icon={faFilter} />}
+                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
               />
 
               <Tooltip title="Réinitialiser" arrow>
@@ -852,7 +852,7 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
                     '&:hover': { transform: 'translateY(-2px)' },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown

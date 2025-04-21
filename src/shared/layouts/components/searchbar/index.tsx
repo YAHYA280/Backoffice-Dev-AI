@@ -169,7 +169,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
           <InputBase
             fullWidth
             autoFocus
-            placeholder="Search..."
+            placeholder="Rechercher..."
             value={searchQuery}
             onChange={handleSearch}
             startAdornment={

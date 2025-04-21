@@ -80,17 +80,7 @@ export const navData = [
           },
           {
             title: "Gestion rôles et permissions",
-            path: paths.dashboard.users.access_management,
-            children: [
-              {
-                title: "Rôles",
-                path: paths.dashboard.users.roles
-              },
-              {
-                title: "Permissions",
-                path: paths.dashboard.users.permissions
-              },
-            ],
+            path: paths.dashboard.users.roles,
           },
         ],
       },

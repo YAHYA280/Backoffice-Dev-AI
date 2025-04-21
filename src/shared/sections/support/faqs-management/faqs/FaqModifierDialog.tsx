@@ -141,7 +141,12 @@ export function FaqModifierDialog({ open, onClose, currentFaq }: Props) {
                   name="categorie"
                   control={control}
                   render={({ field }) => (
-                    <Select labelId="faq-categorie-label" label="Catégorie" {...field} value={field.value || ''}>
+                    <Select
+                      labelId="faq-categorie-label"
+                      label="Catégorie"
+                      {...field}
+                      value={field.value || ''}
+                    >
                       {CATEGORY_OPTIONS.map((opt) => (
                         <MenuItem key={opt.value} value={opt.value}>
                           {opt.label}
@@ -154,9 +159,8 @@ export function FaqModifierDialog({ open, onClose, currentFaq }: Props) {
                   <Typography variant="caption" color="error">
                     {methods.formState.errors.categorie.message}
                   </Typography>
-                ):(
-                  <>
-                  </>
+                ) : (
+                  <></>
                 )}
               </FormControl>
             </Grid>
@@ -167,7 +171,12 @@ export function FaqModifierDialog({ open, onClose, currentFaq }: Props) {
                   name="statut"
                   control={control}
                   render={({ field }) => (
-                    <Select labelId="faq-statut-label" label="Statut" {...field} value={field.value || ''}>
+                    <Select
+                      labelId="faq-statut-label"
+                      label="Statut"
+                      {...field}
+                      value={field.value || ''}
+                    >
                       {STATUS_OPTIONS.map((opt) => (
                         <MenuItem key={opt.value} value={opt.value}>
                           {opt.label}
@@ -180,9 +189,8 @@ export function FaqModifierDialog({ open, onClose, currentFaq }: Props) {
                   <Typography variant="caption" color="error">
                     {methods.formState.errors.statut.message}
                   </Typography>
-                ):(
-                  <>
-                  </>
+                ) : (
+                  <></>
                 )}
               </FormControl>
             </Grid>
@@ -217,10 +225,15 @@ export function FaqModifierDialog({ open, onClose, currentFaq }: Props) {
         </Form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="outlined" color="primary">
           Annuler
         </Button>
-        <LoadingButton onClick={onSubmit} variant="contained" loading={isSubmitting} color="primary">
+        <LoadingButton
+          onClick={onSubmit}
+          variant="contained"
+          loading={isSubmitting}
+          color="primary"
+        >
           Enregistrer les modifications
         </LoadingButton>
       </DialogActions>

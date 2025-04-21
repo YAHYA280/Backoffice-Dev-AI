@@ -45,11 +45,13 @@ export function CategoryModifierDialog({ open, onClose, currentCategory }: Props
     () => ({
       titre: currentCategory.title,
       description: currentCategory.description,
-      datePublication: currentCategory.datePublication ? String(currentCategory.datePublication) : '',
+      datePublication: currentCategory.datePublication
+        ? String(currentCategory.datePublication)
+        : '',
     }),
     [currentCategory]
   );
-  
+
   const methods = useForm<ModifierCategorySchemaType>({
     mode: 'onSubmit',
     resolver: zodResolver(ModifierCategorySchema),
@@ -70,7 +72,9 @@ export function CategoryModifierDialog({ open, onClose, currentCategory }: Props
       reset();
       onClose();
       router.push(paths.dashboard.support.faqs);
-    } catch (error) { /* empty */ }
+    } catch (error) {
+      /* empty */
+    }
   });
 
   return (
@@ -130,10 +134,15 @@ export function CategoryModifierDialog({ open, onClose, currentCategory }: Props
         </Form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} color="primary" variant="outlined">
           Annuler
         </Button>
-        <LoadingButton onClick={onSubmit} variant="contained" loading={isSubmitting} color="primary">
+        <LoadingButton
+          onClick={onSubmit}
+          variant="contained"
+          loading={isSubmitting}
+          color="primary"
+        >
           Enregistrer les modifications
         </LoadingButton>
       </DialogActions>

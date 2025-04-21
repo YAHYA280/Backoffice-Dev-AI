@@ -133,9 +133,17 @@ export function TableHeadWithFilters({
         size="small"
         value={columnFilters[column.id] || ''}
         onChange={(e) => onColumnFilter(column.id, e.target.value)}
+        sx={{ 
+          marginLeft: 3,
+        }}
         InputProps={{
           startAdornment: (
-            <InputAdornment position="start">
+            <InputAdornment position="start" sx={{ 
+              marginRight: 0, 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
               <Box
                 component={FontAwesomeIcon}
                 icon={faSearch}
@@ -248,7 +256,12 @@ export function TableHeadWithFilters({
               onChange={(e) => filters.setState({ title: e.target.value })}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
+                  <InputAdornment position="start" sx={{ 
+                    marginRight: 0, 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
                     <Box
                       component={FontAwesomeIcon}
                       icon={faSearch}
@@ -273,19 +286,36 @@ export function TableHeadWithFilters({
       case 'sentDate':
         return (
           <TableCell key={`search-${col.id}`} sx={{ padding: '0 16px 8px', borderTop: 'none' }}>
-            <IconButton
-              size="small"
-              onClick={datePopover.onOpen}
-              sx={{
-                width: '20px',
-                height: '20px',
-                '& svg': {
-                  fontSize: '1.03rem',
-                },
-              }}
-            >
-              <FontAwesomeIcon icon={faSearch} />
-            </IconButton>
+            <Box sx={{
+                marginLeft: 3,
+                width: 'fit-content'
+            }}>
+              <IconButton
+                size="small"
+                onClick={datePopover.onOpen}
+                sx={{ 
+                  backgroundColor: 'background.neutral',
+                  width: 32,
+                  height: 32,
+                  p: 0,
+                  '&:hover': {
+                    backgroundColor: 'background.neutral',
+                    '& svg': {
+                      color: 'primary.main'
+                    }
+                  }
+                }}
+              >
+                <FontAwesomeIcon 
+                    icon={faSearch}
+                    style={{
+                      fontSize: 16,
+                      width: '1em',
+                      height: '1em',
+                    }}
+                  />
+              </IconButton>
+            </Box>
 
             <CustomPopover
               open={datePopover.open}

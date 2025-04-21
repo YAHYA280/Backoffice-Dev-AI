@@ -30,7 +30,8 @@ import {
 } from '@dnd-kit/core';
 
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+
+import { paths } from 'src/routes/paths';
 
 import { useDebounce } from 'src/hooks/use-debounce';
 
@@ -39,6 +40,7 @@ import { hideScrollY } from 'src/shared/theme/styles';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 
 import { EmptyContent } from 'src/shared/components/empty-content';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import { moveTask, moveColumn, useGetBoard } from 'src/shared/sections/moderation/actions/kanban';
 
@@ -452,16 +454,15 @@ export function KanbanView() {
         flexDirection: 'column',
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ pr: { sm: 3 }, mb: { xs: 3, md: 5 } }}
-      >
-        <Typography variant="h4">Moderation et Signalement</Typography>
-
-
-      </Stack>
+      <CustomBreadcrumbs
+          heading="Moderation et Signalement"
+          links={[
+            { name: 'Tableau de bord', href: paths.dashboard.root },
+            { name: 'Assistant AI', href: paths.dashboard.ai.correction },
+            { name: 'Moderation et Signalement' },
+          ]}
+          sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       {/* Added filters */}
       <Stack spacing={2.5} sx={{ mb: { xs: 3, md: 5 } }}>

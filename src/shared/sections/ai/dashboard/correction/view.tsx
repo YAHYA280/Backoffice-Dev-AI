@@ -19,9 +19,14 @@ import {
   Alert,
   Snackbar,
   Container,
-  CardHeader,
-  CardContent
-} from '@mui/material';
+  CardHeader
+, CardContent } from '@mui/material';
+
+import { paths } from 'src/routes/paths';
+
+import { DashboardContent } from 'src/shared/layouts/dashboard';
+
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import Filters from './Filters';
 import HistoryCorrection from './HistoryCorrection';
@@ -378,23 +383,32 @@ const CorrectionDashboard: React.FC = () => {
   }, [filteredCorrectionData]);
 
   return (
+    <DashboardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Correction"
+        links={[
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Assistant IA', href: paths.dashboard.ai.correction },
+          { name: 'Correction' },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
     <Box sx={{ display: 'flex' }}>
+
       {/* Contenu principal */}
       <Main>
         <Container maxWidth="xl">
           {/* Section des filtres globaux */}
-          <Box sx={{ display: 'flex',alignItems: 'center', mb: 3, width: '100%' }}>
-  
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, width: '100%' }}>
+              <Box /> {/* Empty box for spacing */}
               <Filters
                 filters={filters}
                 handleFilterChange={handleFilterChange}
                 onFilterApplied={() => console.log('Filtres appliqués :', filters)}
                 onSaveFilters={applyFilters}
-                onResetFilters={resetAllFilters} 
+                onResetFilters={resetAllFilters}
               />
             </Box>
-          </Box>
           {/* Notification de filtres appliqués */}
           <Snackbar
             open={openSnackbar}
@@ -517,6 +531,7 @@ const CorrectionDashboard: React.FC = () => {
         </Container>
       </Main>
     </Box>
+    </DashboardContent>
   );
 };
 

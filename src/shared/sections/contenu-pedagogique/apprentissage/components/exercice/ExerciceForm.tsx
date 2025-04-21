@@ -629,7 +629,7 @@ export const ExerciceForm = ({
           <Stack direction="row" spacing={2} justifyContent="flex-end">
             <Button
               variant="outlined"
-              color="inherit"
+              color="primary"
               onClick={onCancel}
               disabled={isSubmitting}
               startIcon={<FontAwesomeIcon icon={faTimes} />}
@@ -639,6 +639,7 @@ export const ExerciceForm = ({
             <Button
               type="submit"
               variant="contained"
+              color="primary"
               disabled={isSubmitting}
               startIcon={
                 isSubmitting ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />

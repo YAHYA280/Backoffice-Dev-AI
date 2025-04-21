@@ -28,6 +28,7 @@ import {
 import { fCurrency } from 'src/utils/format-number';
 
 import { formatInterval } from 'src/shared/_mock';
+
 import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 interface UpgradeDialogProps {

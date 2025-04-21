@@ -82,6 +82,11 @@ export const paths = {
       access_management: `${ROOTS.DASHBOARD}/users/access-management`,
       roles: `${ROOTS.DASHBOARD}/users/access-management/roles`,
       permissions: `${ROOTS.DASHBOARD}/users/access-management/permissions`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/users/access-management/roles/edit/${id}`,
+      add: `${ROOTS.DASHBOARD}/users/access-management/roles/consulter`,
+      demo: {
+        edit: `${ROOTS.DASHBOARD}/users/access-management/roles/edit/${MOCK_ID}`
+      },
     },
     user: {
       root: `${ROOTS.DASHBOARD}/user`,

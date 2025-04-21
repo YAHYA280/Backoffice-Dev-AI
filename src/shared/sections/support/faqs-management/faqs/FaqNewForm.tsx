@@ -20,7 +20,7 @@ import {
   DialogTitle,
   FormControl,
   DialogContent,
-  DialogActions
+  DialogActions,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -80,7 +80,7 @@ export function FaqNewForm({ open, onClose }: Props) {
     control,
     handleSubmit,
     reset,
-    formState: { isSubmitting }
+    formState: { isSubmitting },
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
@@ -102,7 +102,7 @@ export function FaqNewForm({ open, onClose }: Props) {
         <Form methods={methods} onSubmit={onSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField 
+              <TextField
                 fullWidth
                 label="Titre"
                 {...methods.register('title')}
@@ -111,7 +111,7 @@ export function FaqNewForm({ open, onClose }: Props) {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField 
+              <TextField
                 fullWidth
                 label="Réponse"
                 multiline
@@ -128,8 +128,13 @@ export function FaqNewForm({ open, onClose }: Props) {
                   name="categorie"
                   control={control}
                   render={({ field }) => (
-                    <Select labelId="faq-categorie-label" label="Catégorie" {...field} value={field.value || ''}>
-                      {__Categories.map(option => (
+                    <Select
+                      labelId="faq-categorie-label"
+                      label="Catégorie"
+                      {...field}
+                      value={field.value || ''}
+                    >
+                      {__Categories.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
                         </MenuItem>
@@ -141,9 +146,8 @@ export function FaqNewForm({ open, onClose }: Props) {
                   <Typography variant="caption" color="error">
                     {methods.formState.errors.categorie.message}
                   </Typography>
-                ):(
-                  <>
-                  </>
+                ) : (
+                  <></>
                 )}
               </FormControl>
             </Grid>
@@ -154,8 +158,13 @@ export function FaqNewForm({ open, onClose }: Props) {
                   name="statut"
                   control={control}
                   render={({ field }) => (
-                    <Select labelId="faq-statut-label" label="Statut" {...field} value={field.value || ''}>
-                      {_STATUS_FAQs.map(option => (
+                    <Select
+                      labelId="faq-statut-label"
+                      label="Statut"
+                      {...field}
+                      value={field.value || ''}
+                    >
+                      {_STATUS_FAQs.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
                         </MenuItem>
@@ -167,9 +176,8 @@ export function FaqNewForm({ open, onClose }: Props) {
                   <Typography variant="caption" color="error">
                     {methods.formState.errors.statut.message}
                   </Typography>
-                ):(
-                  <>
-                  </>
+                ) : (
+                  <></>
                 )}
               </FormControl>
             </Grid>
@@ -204,10 +212,15 @@ export function FaqNewForm({ open, onClose }: Props) {
         </Form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="outlined" color="primary">
           Annuler
         </Button>
-        <LoadingButton onClick={onSubmit} variant="contained" loading={isSubmitting} color="primary">
+        <LoadingButton
+          onClick={onSubmit}
+          variant="contained"
+          loading={isSubmitting}
+          color="primary"
+        >
           Créer une FAQ
         </LoadingButton>
       </DialogActions>

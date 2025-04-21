@@ -4,15 +4,13 @@ import type { IUserTableFilters } from 'src/contexts/types/user';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
-  Chip,
-  Stack,
   Select,
   TableRow,
   Checkbox,
@@ -26,7 +24,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { chipProps, FiltersBlock, FiltersResult } from 'src/shared/components/filters-result';
 
 const FILTER_ROLE_OPTIONS = [
   { value: 'Admin', label: 'Admin' },
@@ -71,95 +68,6 @@ export function TableHeadWithFilters({
   const [showRoleInput, setShowRoleInput] = useState(false);
   const [showCreatedAtInput, setShowCreatedAtInput] = useState(false);
   const [showLastLoginInput, setShowLastLoginInput] = useState(false);
-
-  const filterChips = useMemo(() => {
-    const chips: JSX.Element[] = [];
-
-    if (filters.state.name) {
-      chips.push(
-        <Chip
-          key="name"
-          {...chipProps}
-          label={`Nom: ${filters.state.name}`}
-          onDelete={() => {
-            filters.setState({ name: '' });
-            setShowNameInput(false);
-          }}
-        />
-      );
-    }
-    if (filters.state.email) {
-      chips.push(
-        <Chip
-          key="email"
-          {...chipProps}
-          label={`Email: ${filters.state.email}`}
-          onDelete={() => {
-            filters.setState({ email: '' });
-            setShowEmailInput(false);
-          }}
-        />
-      );
-    }
-    if (filters.state.role && filters.state.role[0]) {
-      chips.push(
-        <Chip
-          key="role"
-          {...chipProps}
-          label={`Rôle: ${filters.state.role[0]}`}
-          onDelete={() => {
-            filters.setState({ role: [] });
-            setShowRoleInput(false);
-          }}
-        />
-      );
-    }
-    if (filters.state.statut && filters.state.statut.length) {
-      chips.push(
-        <Chip
-          key="statut"
-          {...chipProps}
-          label={`Statut: ${(filters.state.statut as string[]).join(', ')}`}
-          onDelete={() => filters.setState({ statut: [] })}
-        />
-      );
-    }
-    if (filters.state.createdAt) {
-      const parsedDate = dayjs(filters.state.createdAt, 'DD/MM/YYYY', true);
-      const displayDate = parsedDate.isValid()
-        ? parsedDate.format('DD/MM/YYYY')
-        : dayjs(filters.state.createdAt).format('DD/MM/YYYY');
-      chips.push(
-        <Chip
-          key="createdAt"
-          {...chipProps}
-          label={`Date de création: ${displayDate}`}
-          onDelete={() => {
-            filters.setState({ createdAt: null });
-            setShowCreatedAtInput(false);
-          }}
-        />
-      );
-    }
-    if (filters.state.lastLogin) {
-      const parsedLastLogin = dayjs(filters.state.lastLogin, 'DD/MM/YYYY', true);
-      const displayDate = parsedLastLogin.isValid()
-        ? parsedLastLogin.format('DD/MM/YYYY')
-        : dayjs(filters.state.lastLogin).format('DD/MM/YYYY');
-      chips.push(
-        <Chip
-          key="lastLogin"
-          {...chipProps}
-          label={`Date de dernière connexion: ${displayDate}`}
-          onDelete={() => {
-            filters.setState({ lastLogin: null });
-            setShowLastLoginInput(false);
-          }}
-        />
-      );
-    }
-    return chips;
-  }, [filters]);
 
   return (
     <TableHead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 2 }}>
@@ -366,22 +274,7 @@ export function TableHeadWithFilters({
           );
         })}
       </TableRow>
-      {filterChips.length > 0 ? (
-        <TableRow>
-          <TableCell colSpan={columns.length}>
-            <FiltersResult totalResults={totalResults} onReset={() => filters.onResetState()}>
-              <FiltersBlock label="" isShow>
-                <Stack direction="row" spacing={1}>
-                  {filterChips}
-                </Stack>
-              </FiltersBlock>
-            </FiltersResult>
-          </TableCell>
-        </TableRow>
-      ):(
-        <>
-        </>
-      )}
+
     </TableHead>
   );
 }

@@ -175,11 +175,12 @@ export const ChapitreForm = ({
 
         <Grid item xs={12}>
           <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="outlined" color="inherit" onClick={onCancel} disabled={isSubmitting}>
+            <Button variant="outlined" color="primary" onClick={onCancel} disabled={isSubmitting}>
               Annuler
             </Button>
             <Button
               type="submit"
+              color="primary"
               variant="contained"
               disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={20} /> : null}

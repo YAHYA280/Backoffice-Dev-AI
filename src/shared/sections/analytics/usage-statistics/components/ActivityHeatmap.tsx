@@ -1,7 +1,6 @@
 // /usagestatistics/components/ActivityHeatmap.tsx
 
 import type { ApexOptions } from 'apexcharts';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import type { DateRange, FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
 import { useMemo, useState } from 'react';

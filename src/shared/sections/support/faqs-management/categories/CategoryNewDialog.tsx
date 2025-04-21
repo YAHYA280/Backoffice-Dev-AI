@@ -131,10 +131,15 @@ export function CategoryNewDialog({ open, onClose }: Props) {
         </Form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="outlined" color="primary">
           Annuler
         </Button>
-        <LoadingButton onClick={onSubmit} variant="contained" loading={isSubmitting} color="primary">
+        <LoadingButton
+          onClick={onSubmit}
+          variant="contained"
+          loading={isSubmitting}
+          color="primary"
+        >
           Créer une catégorie
         </LoadingButton>
       </DialogActions>

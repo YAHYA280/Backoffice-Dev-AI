@@ -1,25 +1,27 @@
 // /usagestatistics/components/UnifiedFilter.tsx
-import { useState, useEffect } from 'react';
+import type { SelectChangeEvent } from '@mui/material/Select';
+
 import fr from 'date-fns/locale/fr';
+import { useState, useEffect } from 'react';
 import { format, subDays, subMonths } from 'date-fns';
-import { faFilter, faRedo } from '@fortawesome/free-solid-svg-icons';
+import { faRedo, faFilter } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 import Popover from '@mui/material/Popover';
 import Divider from '@mui/material/Divider';
-import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import IconButton from '@mui/material/IconButton';
+import FormControl from '@mui/material/FormControl';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';

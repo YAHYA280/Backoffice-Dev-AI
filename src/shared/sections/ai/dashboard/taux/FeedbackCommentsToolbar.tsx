@@ -299,6 +299,7 @@ const FeedbackCommentsToolbar: React.FC<FeedbackCommentsToolbarProps> = ({
       {/* Icône pour réinitialiser */}
       <Tooltip title="Réinitialiser les filtres">
         <IconButton
+          color="primary"
           aria-label="effacer les filtres"
           onClick={handleResetAll}
           sx={{
@@ -315,6 +316,7 @@ const FeedbackCommentsToolbar: React.FC<FeedbackCommentsToolbarProps> = ({
       {/* Icône pour exporter */}
       <Tooltip title="Exporter les données">
         <IconButton
+          color="primary"
           aria-label="exporter"
           onClick={onExport}
           sx={{

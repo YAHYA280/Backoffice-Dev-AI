@@ -10,10 +10,15 @@ import IconButton from '@mui/material/IconButton';
 // import { useBoolean } from 'src/hooks/use-boolean';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faEraser, faCirclePlus, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPen,
+  faEraser,
+  faCirclePlus,
+  faEllipsisVertical,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { varAlpha } from 'src/shared/theme/styles';
- 
+
 import { Label } from 'src/shared/components/label';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
@@ -111,7 +116,7 @@ export function KanbanColumnToolBar({
         <MenuList>
           <MenuItem onClick={popover.onClose}>
             <FontAwesomeIcon icon={faPen} />
-            Rename
+            Renommer
           </MenuItem>
 
           <MenuItem
@@ -121,13 +126,10 @@ export function KanbanColumnToolBar({
             }}
           >
             <FontAwesomeIcon icon={faEraser} />
-            Clear
+            Effacer
           </MenuItem>
-
-
         </MenuList>
       </CustomPopover>
-
     </>
   );
 }

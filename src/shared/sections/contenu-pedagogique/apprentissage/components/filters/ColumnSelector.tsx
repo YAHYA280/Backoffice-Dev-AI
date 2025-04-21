@@ -8,14 +8,15 @@ import {
   Button,
   Popover,
   Divider,
+  Tooltip,
   Checkbox,
   ListItem,
   useTheme,
   Typography,
   ListItemIcon,
   ListItemText,
-  ListItemButton,
-} from '@mui/material';
+ ListItemButton } from '@mui/material';
+
 
 export interface ColumnOption {
   id: string;
@@ -82,22 +83,24 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 
   return (
     <>
-      <Button
-        variant="outlined"
-        color="primary"
-        onClick={handleOpenColumns}
-        startIcon={<FontAwesomeIcon icon={faColumns} />}
-        sx={{
-          minWidth: 100,
-          borderRadius: 1,
-          transition: theme.transitions.create(['background-color']),
-          ...(open && {
-            bgcolor: 'primary.lighter',
-          }),
-        }}
-      >
-        {buttonText}
-      </Button>
+      <Tooltip title='sélectionner colonnes' arrow>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handleOpenColumns}
+          startIcon={<FontAwesomeIcon icon={faColumns} />}
+          sx={{
+            minWidth: 100,
+            borderRadius: 1,
+            transition: theme.transitions.create(['background-color']),
+            ...(open && {
+              bgcolor: 'primary.lighter',
+            }),
+          }}
+        >
+          {buttonText}
+        </Button>
+      </Tooltip>
 
       <Popover
         open={open}

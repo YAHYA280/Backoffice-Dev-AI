@@ -1,23 +1,24 @@
 // /usagestatistics/components/ActiveUsersChart.tsx
 
 import type { ApexOptions } from 'apexcharts';
-import type { FilterValues, DateRange } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { DateRange, FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import { useTheme, alpha } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-import InputLabel from '@mui/material/InputLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
+import { alpha, useTheme } from '@mui/material/styles';
 
 import { fNumber } from 'src/utils/format-number';
+
 import { Chart, useChart } from 'src/shared/components/chart';
+
 import { useAnalyticsApi } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
+
 import ComparisonMenu from './ComparisonMenu';
 
 type Props = {

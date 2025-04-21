@@ -40,11 +40,14 @@ import {
   InputAdornment,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Scrollbar } from 'src/shared/components/scrollbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { varFade, MotionContainer } from 'src/shared/components/animate';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
@@ -774,6 +777,16 @@ export const ChallengeList = ({
     </TableHead>
   );
 
+  const renderBreadcrumbs = () => (
+      <CustomBreadcrumbs
+        links={[
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Contenu pédagogique', href: paths.dashboard.contenu_pedagogique.challenges },
+          { name: "Gestion des challenges" },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }} />
+    );
+
   return (
     <MotionContainer>
       <m.div variants={varFade().inUp}>
@@ -803,6 +816,7 @@ export const ChallengeList = ({
             )}
           </Stack>
         </Stack>
+        {renderBreadcrumbs()}
       </m.div>
 
       <m.div variants={varFade().inUp}>
@@ -828,7 +842,7 @@ export const ChallengeList = ({
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChange}
                 buttonText="Filtres"
-                icon={<FontAwesomeIcon icon={faFilter} />}
+                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
               />
               <Tooltip title="Réinitialiser" arrow>
                 <IconButton
@@ -840,7 +854,7 @@ export const ChallengeList = ({
                     '&:hover': { transform: 'translateY(-2px)' },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown

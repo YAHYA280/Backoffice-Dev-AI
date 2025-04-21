@@ -14,6 +14,7 @@ import {
   Button,
   Popover,
   Divider,
+  Tooltip,
   ListItem,
   useTheme,
   Checkbox,
@@ -95,11 +96,12 @@ export const AdvancedExportDropdown: React.FC<AdvancedExportDropdownProps> = ({
 
   return (
     <>
+    <Tooltip title='Exporter' arrow>
       <Button
         color="primary"
         onClick={handleOpenExport}
         disabled={isExporting}
-        startIcon={<FontAwesomeIcon icon={faFileExport} />}
+        startIcon={<FontAwesomeIcon icon={faFileExport} size='sm'/>}
         sx={{
           minWidth: 10,
           borderRadius: 1,
@@ -116,6 +118,7 @@ export const AdvancedExportDropdown: React.FC<AdvancedExportDropdownProps> = ({
       >
         {}
       </Button>
+    </Tooltip>
 
       <Popover
         open={open}

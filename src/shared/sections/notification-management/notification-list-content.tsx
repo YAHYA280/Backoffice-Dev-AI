@@ -34,9 +34,10 @@ import {
   TableBody,
   TextField,
   IconButton,
-  Typography,
   FormControlLabel,
 } from '@mui/material';
+
+import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
@@ -49,6 +50,7 @@ import { _notifications, NOTIFICATION_TYPE_OPTIONS, NOTIFICATION_STATUS_OPTIONS,
 import { Label } from 'src/shared/components/label';
 import { toast } from 'src/shared/components/snackbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 import {
   useTable,
@@ -255,6 +257,7 @@ export function NotificationContent() {
       return [...prev, column];
     });
   };
+
   const toggleSelectAll = () => {
     const filterableColumns = TABLE_HEAD.filter(
       (col) => col.isFilterable !== false && col.id !== ''
@@ -270,6 +273,26 @@ export function NotificationContent() {
       setVisibleColumns(TABLE_HEAD);
     }
   };
+
+  const handleUpdateNotification = useCallback(
+    (updatedNotification: INotificationType) => {
+      setTableData((prevData) =>
+        prevData.map((item) =>
+          item.id === updatedNotification.id ? updatedNotification : item
+        )
+      );
+      
+      setBaseFilteredData((prevData) =>
+        prevData.map((item) =>
+          item.id === updatedNotification.id ? updatedNotification : item
+        )
+      );
+      
+      toast.success('Notification mise à jour avec succès!');
+    },
+    []
+  );
+
   const handleReset = () => {
     setVisibleColumns(TABLE_HEAD);
     setSearch('');
@@ -455,41 +478,39 @@ export function NotificationContent() {
   }, [totalRows, tableData, table]);
 
   return (
+    <Box maxWidth="xl">   
+      <CustomBreadcrumbs
+        heading="Gestion des notifications"
+        links={[
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Gestion des notifications' },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={() => router.push('/dashboard/notifications/new/')}
+            sx={{
+              color: 'primary.contrastText',
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
+          >
+            Ajouter une notification
+          </Button>
+        }
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
-
-    <Box maxWidth="xl">
-      
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
-          Gestion des notifications
-          </Typography>
-          <Stack direction="row" spacing={2}>
-
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<FontAwesomeIcon icon={faPlus} />}
-              onClick={() => router.push('/dashboard/notifications/new/')}
-              sx={{
-                px: 2.5,
-                py: 1,
-                boxShadow: theme.customShadows?.z8,
-                transition: theme.transitions.create(['transform', 'box-shadow']),
-                '&:hover': { transform: 'translateY(-2px)', boxShadow: theme.customShadows?.z16 },
-              }}
-            >
-              Ajouter une notification
-            </Button>
-
-          </Stack>
-        </Stack>
-      
       <Card>
         <Tabs
           value={filters.state.status || 'all'}
           onChange={handleFilterStatus}
           sx={{
             px: 2.5,
+            mb: 2,
             boxShadow: (themes) =>
               `inset 0 -2px 0 0 ${varAlpha(themes.vars.palette.grey['500Channel'], 0.08)}`,
           }}
@@ -577,23 +598,25 @@ export function NotificationContent() {
                 </Button>
               </Tooltip>
             )}
-
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={popover.onOpen}
-              startIcon={<FontAwesomeIcon icon={faColumns} />}
-              sx={{
-                minWidth: 100,
-                borderRadius: 1,
-                transition: theme.transitions.create(['background-color']),
-                ...(popover.open && {
-                  bgcolor: 'primary.lighter',
-                }),
-              }}
-            >
-              Colonnes
-            </Button>
+            <Tooltip title="Sélectionner colonnes" arrow>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={popover.onOpen}
+                startIcon={<FontAwesomeIcon icon={faColumns} size='sm'/>}
+                sx={{
+                  minWidth: 100,
+                  borderRadius: 1,
+                  transition: theme.transitions.create(['background-color']),
+                  ...(popover.open && {
+                    bgcolor: 'primary.lighter',
+                  }),
+                }}
+                size='medium'
+              >
+                Colonnes
+              </Button>
+            </Tooltip>
             <CustomPopover
               open={popover.open}
               anchorEl={popover.anchorEl}
@@ -691,7 +714,7 @@ export function NotificationContent() {
                   '&:hover': { transform: 'translateY(-2px)' },
                 }}
               >
-                <FontAwesomeIcon icon={faSyncAlt} />
+                <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 {canReset && (
                   <span
                     style={{
@@ -707,7 +730,7 @@ export function NotificationContent() {
                 )}
               </IconButton>
             </Tooltip>
-            <Tooltip title="Exporter toutes les données" arrow>
+            <Tooltip title="Exporter" arrow>
               <IconButton
                 color="primary"
                 sx={{
@@ -804,7 +827,7 @@ export function NotificationContent() {
                   exportAllData();
                 }}
               >
-                <FontAwesomeIcon icon={faFileExport} />
+                <FontAwesomeIcon icon={faFileExport} size='sm'/>
               </IconButton>
             </Tooltip>
           </Stack>
@@ -841,6 +864,7 @@ export function NotificationContent() {
                   margin: 0,
                   borderSpacing: 0,
                   borderBottom: 'none',
+                  minWidth: '1300px',
                 }}
               >
                 <colgroup>
@@ -907,6 +931,7 @@ export function NotificationContent() {
                     borderSpacing: 0,
                     borderTop: 'none',
                     width: 'calc(100% - 6px)',
+                    minWidth: '1200px',
                   }}
                 >
                   <colgroup>
@@ -932,6 +957,7 @@ export function NotificationContent() {
                         onDeleteRow={() => handleDeleteRow(row.id)}
                         hideStatus={!!filters.state.status && filters.state.status !== 'all'}
                         visibleColumns={visibleColumns}
+                        onUpdateNotification={handleUpdateNotification}
                       />
                     ))}
 

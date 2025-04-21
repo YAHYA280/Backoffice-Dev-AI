@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -26,30 +28,34 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 import { NOTIFICATION_TYPE_OPTIONS } from 'src/shared/_mock/_notification';
 
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
+
 export function CreateNotificationPage() {
   const router = useRouter();
-  
+
   // Base notification info
   const [title, setTitle] = useState('');
   const [type, setType] = useState('');
   const [recipients, setRecipients] = useState('');
   const [content, setContent] = useState('');
-  
+
   // Delivery settings
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const [scheduledTime, setScheduledTime] = useState<Date | null>(null);
   const [frequency, setFrequency] = useState('immediate');
-  
+
   // Channels
   const [channels, setChannels] = useState({
     push: false,
     email: true,
     sms: false,
   });
-  
+
   // Failure alerts
   const [retryCount, setRetryCount] = useState(3);
   const [alertRecipients, setAlertRecipients] = useState({
@@ -57,26 +63,26 @@ export function CreateNotificationPage() {
     supportTeam: false,
     affectedUser: false,
   });
-  
+
   const handleChannelChange = (channel: 'push' | 'email' | 'sms') => {
     setChannels({
       ...channels,
       [channel]: !channels[channel],
     });
   };
-  
+
   const handleAlertRecipientsChange = (recipient: string) => {
     setAlertRecipients({
       ...alertRecipients,
       [recipient]: !alertRecipients[recipient as keyof typeof alertRecipients],
     });
   };
-  
+
   const handleSubmit = () => {
     const selectedChannels = Object.entries(channels)
       .filter(([_, isSelected]) => isSelected)
       .map(([channel]) => channel);
-      
+
     const notificationData = {
       title,
       type,
@@ -91,21 +97,47 @@ export function CreateNotificationPage() {
         alertRecipients,
       },
     };
-    
+
     console.log('Notification data:', notificationData);
     router.push('/dashboard/notifications/');
   };
-  
+
   const handleCancel = () => {
     router.push('/dashboard/notifications/');
   };
-  
+
   return (
     <DashboardContent maxWidth="lg">
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4">Nouvelle Notification</Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          mb: { xs: 3, md: 5 },
+          gap: 2,
+          width: '100%',
+        }}
+      >
+        <Button
+          startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
+          onClick={() => router.back()}
+          sx={{
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+          }}
+        />
+
+        <Box sx={{ flexGrow: 1 }}>
+          <CustomBreadcrumbs
+            heading="Nouvelle Notification"
+            links={[
+              { name: 'Tableau de bord', href: paths.dashboard.root },
+              { name: 'Notifications', href: paths.dashboard.notifications_config.root },
+              { name: 'Nouvelle Notification' },
+            ]}
+          />
+        </Box>
       </Box>
-      
+
       <Grid container spacing={3}>
         {/* Basic Information */}
         <Grid item xs={12}>
@@ -118,7 +150,6 @@ export function CreateNotificationPage() {
                   onChange={(e) => setType(e.target.value)}
                   label="Type de notification"
                 >
-                  <MenuItem value="">Sélectionner un type</MenuItem>
                   {NOTIFICATION_TYPE_OPTIONS.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
@@ -126,14 +157,14 @@ export function CreateNotificationPage() {
                   ))}
                 </Select>
               </FormControl>
-              
+
               <TextField
                 label="Titre"
                 fullWidth
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-              
+
               <FormControl fullWidth>
                 <InputLabel>Destinataires</InputLabel>
                 <Select
@@ -141,13 +172,12 @@ export function CreateNotificationPage() {
                   onChange={(e) => setRecipients(e.target.value)}
                   label="Destinataires"
                 >
-                  <MenuItem value="">Sélectionner les destinataires</MenuItem>
                   <MenuItem value="all_users">Tous les utilisateurs</MenuItem>
                   <MenuItem value="premium_users">Utilisateurs Premium</MenuItem>
                   <MenuItem value="newsletter">Abonnés Newsletter</MenuItem>
                 </Select>
               </FormControl>
-              
+
               <TextField
                 label="Message"
                 multiline
@@ -159,123 +189,136 @@ export function CreateNotificationPage() {
             </Stack>
           </Card>
         </Grid>
-        
+
         {/* Advanced Settings */}
         <Grid item xs={12}>
           <Card>
             <Box sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 3 }}>Paramètres avancés des notifications</Typography>
-              
+              <Typography variant="h6" sx={{ mb: 3 }}>
+                Paramètres avancés des notifications
+              </Typography>
+
               {/* Delivery Channels */}
               <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <Box 
-                    component="span" 
-                    sx={{ 
-                      color: 'primary.main', 
-                      mr: 1, 
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 2, display: 'flex', alignItems: 'center' }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      color: 'primary.main',
+                      mr: 1,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
                     }}
                   >
-                    <Box component="span" sx={{ width: 20 }}>📢</Box>
+                    <Box component="span" sx={{ width: 20 }}>
+                      📢
+                    </Box>
                   </Box>
                   Canaux de notification
                 </Typography>
-                
+
                 <FormGroup>
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={channels.email} 
+                      <Checkbox
+                        checked={channels.email}
                         onChange={() => handleChannelChange('email')}
                         color="primary"
                       />
                     }
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>✉️</Box>
+                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>
+                          ✉️
+                        </Box>
                         Email
                       </Box>
                     }
                   />
-                  
+
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={channels.push} 
+                      <Checkbox
+                        checked={channels.push}
                         onChange={() => handleChannelChange('push')}
                         color="primary"
                       />
                     }
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>🔔</Box>
+                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>
+                          🔔
+                        </Box>
                         Push notification
                       </Box>
                     }
                   />
-                  
+
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={channels.sms} 
+                      <Checkbox
+                        checked={channels.sms}
                         onChange={() => handleChannelChange('sms')}
                         color="primary"
                       />
                     }
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>📱</Box>
+                        <Box component="span" sx={{ color: 'primary.main', mr: 1 }}>
+                          📱
+                        </Box>
                         SMS
                       </Box>
                     }
                   />
                 </FormGroup>
               </Paper>
-              
+
               {/* Frequency */}
               <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <Box 
-                    component="span" 
-                    sx={{ 
-                      color: 'primary.main', 
-                      mr: 1, 
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 2, display: 'flex', alignItems: 'center' }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      color: 'primary.main',
+                      mr: 1,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
                     }}
                   >
-                    <Box component="span" sx={{ width: 20 }}>🕒</Box>
+                    <Box component="span" sx={{ width: 20 }}>
+                      🕒
+                    </Box>
                   </Box>
                   Fréquence d&apos;envoi
                 </Typography>
-                
-                <RadioGroup
-                  value={frequency}
-                  onChange={(e) => setFrequency(e.target.value)}
-                >
-                  <FormControlLabel 
-                    value="immediate" 
-                    control={<Radio />} 
-                    label="Immédiat"
-                  />
-                  
-                  <FormControlLabel 
-                    value="daily" 
-                    control={<Radio />} 
+
+                <RadioGroup value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+                  <FormControlLabel value="immediate" control={<Radio />} label="Immédiat" />
+
+                  <FormControlLabel
+                    value="daily"
+                    control={<Radio />}
                     label="Quotidien (résumé à 18h)"
                   />
-                  
-                  <FormControlLabel 
-                    value="weekly" 
-                    control={<Radio />} 
+
+                  <FormControlLabel
+                    value="weekly"
+                    control={<Radio />}
                     label="Hebdomadaire (résumé le lundi)"
                   />
                 </RadioGroup>
-                
+
                 {frequency !== 'immediate' && (
                   <Box display="flex" alignItems="center" gap={2} sx={{ mt: 2 }}>
                     <DatePicker
@@ -292,25 +335,31 @@ export function CreateNotificationPage() {
                   </Box>
                 )}
               </Paper>
-              
+
               {/* Failure Alerts */}
               <Paper sx={{ p: 3 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <Box 
-                    component="span" 
-                    sx={{ 
-                      color: 'error.main', 
-                      mr: 1, 
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 2, display: 'flex', alignItems: 'center' }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      color: 'error.main',
+                      mr: 1,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
                     }}
                   >
-                    <Box component="span" sx={{ width: 20 }}>⚠️</Box>
+                    <Box component="span" sx={{ width: 20 }}>
+                      ⚠️
+                    </Box>
                   </Box>
                   Alertes en cas d&apos;échec
                 </Typography>
-                
+
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body2" gutterBottom>
                     Nombre de tentatives de renvoi
@@ -329,35 +378,35 @@ export function CreateNotificationPage() {
                     <Typography>{retryCount}</Typography>
                   </Box>
                 </Box>
-                
+
                 <Typography variant="body2" gutterBottom>
                   Destinataires des alertes d&apos;échec
                 </Typography>
                 <FormGroup>
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={alertRecipients.administrators} 
+                      <Checkbox
+                        checked={alertRecipients.administrators}
                         onChange={() => handleAlertRecipientsChange('administrators')}
                       />
                     }
                     label="Administrateurs"
                   />
-                  
+
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={alertRecipients.supportTeam} 
+                      <Checkbox
+                        checked={alertRecipients.supportTeam}
                         onChange={() => handleAlertRecipientsChange('supportTeam')}
                       />
                     }
                     label="Équipe support"
                   />
-                  
+
                   <FormControlLabel
                     control={
-                      <Checkbox 
-                        checked={alertRecipients.affectedUser} 
+                      <Checkbox
+                        checked={alertRecipients.affectedUser}
                         onChange={() => handleAlertRecipientsChange('affectedUser')}
                       />
                     }
@@ -368,7 +417,7 @@ export function CreateNotificationPage() {
             </Box>
           </Card>
         </Grid>
-        
+
         {/* File Attachments */}
         <Grid item xs={12}>
           <Card sx={{ p: 3 }}>
@@ -381,17 +430,24 @@ export function CreateNotificationPage() {
             </Button>
           </Card>
         </Grid>
-        
+
         {/* Actions */}
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button variant="outlined" onClick={handleCancel}>
+            <Button variant="outlined" color="primary" onClick={handleCancel}>
               Annuler
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              color="primary"
+              variant="contained"
               onClick={handleSubmit}
-              disabled={!title || !type || !recipients || !content || (!channels.push && !channels.email && !channels.sms)}
+              disabled={
+                !title ||
+                !type ||
+                !recipients ||
+                !content ||
+                (!channels.push && !channels.email && !channels.sms)
+              }
             >
               Créer
             </Button>

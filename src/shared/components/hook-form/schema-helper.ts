@@ -20,9 +20,9 @@ export const schemaHelper = {
   phoneNumber: (props?: InputProps) =>
     zod
       .string()
-      .min(1, { message: props?.message?.required_error ?? 'Phone number is required!' })
+      .min(1, { message: props?.message?.required_error ?? 'Le numéro de téléphone est requis!' })
       .refine((data) => props?.isValidPhoneNumber?.(data), {
-        message: props?.message?.invalid_type_error ?? 'Invalid phone number!',
+        message: props?.message?.invalid_type_error ?? 'Numéro de téléphone invalide!',
       }),
   /**
    * date
@@ -40,7 +40,7 @@ export const schemaHelper = {
         if (!dateString) {
           ctx.addIssue({
             code: zod.ZodIssueCode.custom,
-            message: props?.message?.required_error ?? 'Date is required!',
+            message: props?.message?.required_error ?? 'D',
           });
           return null;
         }

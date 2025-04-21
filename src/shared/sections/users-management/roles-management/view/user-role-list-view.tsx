@@ -8,6 +8,7 @@ import type {
   GridColumnVisibilityModel,
 } from '@mui/x-data-grid';
 
+import Link from 'next/link';
 import { useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faPen, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -30,8 +31,6 @@ import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import CustomToolbar from '../components/CustomToolbar';
-import { AddRoleFormDialog } from '../user-role-add-form';
-import { UserRoleEditDrawer } from '../user-role-edit-form';
 import CustomColumnHeader from '../components/CustomColumnHeader';
 import { UserRoleDetailsDrawer } from '../user-role-details-view';
 import {
@@ -67,15 +66,14 @@ export function UserRoleListView() {
 
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
 
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
 
   const [selectedRoleDetails, setSelectedRoleDetails] = useState<IRoleItem | null>(null);
 
-  const [selectedEditRole, setSelectedEditRole] = useState<IRoleItem | null>(null);
+  const confirmDelete = useBoolean();
+  
+  const [roleToDelete, setRoleToDelete] = useState<IRoleItem | null>(null);
 
-  const addRoleDialog = useBoolean();
 
   const handleColumnSearch = useCallback(
     (field: keyof IRoleItem, value: string | Date | null) => {
@@ -110,14 +108,24 @@ export function UserRoleListView() {
 
   const handleDeleteRow = useCallback(
     (id: string) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-
-      toast.success('Supprimer avec succès!');
-
-      setTableData(deleteRow);
+      const role = tableData.find((row) => row.id === id);
+      if (role) {
+        setRoleToDelete(role);
+        confirmDelete.onTrue();
+      }
     },
-    [tableData]
+    [tableData, confirmDelete]
   );
+
+  const deleteRow = useCallback(() => {
+    if (roleToDelete) {
+      const updatedData = tableData.filter((row) => row.id !== roleToDelete.id);
+      setTableData(updatedData);
+      setFilteredData(prev => prev.filter((row) => row.id !== roleToDelete.id));
+      toast.success('Rôle supprimé avec succès!');
+      confirmDelete.onFalse();
+    }
+  }, [roleToDelete, tableData, confirmDelete]);
 
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
@@ -127,18 +135,8 @@ export function UserRoleListView() {
     setTableData(deleteRows);
   }, [selectedRowIds, tableData]);
 
-  const handleEditRow = (role: IRoleItem) => {
-    setSelectedEditRole(role);
-    setOpenEditDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenEditDialog(false);
-  };
-
-  const handleSaveEdit = (updatedRole: IRoleItem) => {
-    setOpenEditDialog(false);
-  };
+  // Modified to navigate to edit page instead of opening drawer
+  // Use Link component for navigation instead of programmatic routing
 
   const handleViewRow = useCallback(
     (id: string) => {
@@ -247,16 +245,17 @@ export function UserRoleListView() {
             </IconButton>
           </Tooltip>
           <Tooltip title="Modifier">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditRow(params.row);
-              }}
-              color="primary"
-            >
-              <FontAwesomeIcon icon={faPen} />
-            </IconButton>
+            <Link href={paths.dashboard.users.edit(params.row.id)}>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                color="primary"
+              >
+                <FontAwesomeIcon icon={faPen} />
+              </IconButton>
+            </Link>
           </Tooltip>
           <Tooltip title="Supprimer">
             <IconButton size="small" onClick={() => handleDeleteRow(params.row.id)} color="error">
@@ -284,20 +283,21 @@ export function UserRoleListView() {
             { name: 'Gestion des rôles' },
           ]}
           action={
-            <Button
-              variant="contained"
-              startIcon={<FontAwesomeIcon icon={faPlus} />}
-              onClick={addRoleDialog.onTrue}
-              sx={{
-                color: 'primary.contrastText',
-                backgroundColor: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
-              }}
-            >
-              Ajouter un rôle
-            </Button>
+            <Link href={paths.dashboard.users.add}>
+              <Button
+                variant="contained"
+                startIcon={<FontAwesomeIcon icon={faPlus} />}
+                sx={{
+                  color: 'primary.contrastText',
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
+                }}
+              >
+                Ajouter un rôle
+              </Button>
+            </Link>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
         />
@@ -393,21 +393,7 @@ export function UserRoleListView() {
         </Card>
       </DashboardContent>
 
-      <AddRoleFormDialog
-        open={addRoleDialog.value}
-        onClose={addRoleDialog.onFalse}
-        addRole={(newRole) => {
-          setTableData((prev) => [...prev, newRole]);
-          toast.success('Nouveau rôle ajouté avec succès!');
-        }}
-      />
-
-      <UserRoleEditDrawer
-        open={openEditDialog}
-        onClose={handleCloseDialog}
-        currentRole={selectedEditRole}
-        onUpdateRole={handleSaveEdit}
-      />
+      
 
       <UserRoleDetailsDrawer
         open={openDetailsDialog}
@@ -437,6 +423,23 @@ export function UserRoleListView() {
           </Button>
         }
       />
+
+      <ConfirmDialog
+        open={confirmDelete.value}
+        onClose={confirmDelete.onFalse}
+        title={`Supprimer le rôle : ${roleToDelete?.name || ''}`}
+        content="Êtes-vous sûr de vouloir supprimer ce rôle ?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={deleteRow}
+          >
+            Supprimer
+          </Button>
+        }
+      />
+
     </>
   );
 }

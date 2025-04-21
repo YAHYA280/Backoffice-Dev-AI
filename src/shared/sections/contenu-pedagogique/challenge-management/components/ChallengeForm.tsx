@@ -1586,7 +1586,7 @@ export const ChallengeForm = ({
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseQuestionDialog} color="inherit">
+            <Button onClick={handleCloseQuestionDialog} color="primary">
               Annuler
             </Button>
             <Button
@@ -1781,7 +1781,7 @@ export const ChallengeForm = ({
       {/* Navigation buttons */}
       <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
         <Button
-          color="inherit"
+          color="primary"
           variant="outlined"
           disabled={activeStep === 0}
           onClick={handleBack}
@@ -1869,6 +1869,7 @@ export const ChallengeForm = ({
         ) : (
           <Button
             variant="contained"
+            color="primary"
             onClick={handleNext}
             endIcon={<FontAwesomeIcon icon={faChevronRight} />}
           >
@@ -1881,7 +1882,7 @@ export const ChallengeForm = ({
       <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 2 }}>
         <Button
           variant="text"
-          color="inherit"
+          color="warning"
           onClick={onCancel}
           startIcon={<FontAwesomeIcon icon={faTimes} />}
         >

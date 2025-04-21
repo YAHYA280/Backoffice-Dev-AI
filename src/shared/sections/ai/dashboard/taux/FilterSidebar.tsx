@@ -342,7 +342,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           }}
           title="Réinitialiser les filtres"
         >
-          <FontAwesomeIcon icon={faRotateLeft} />
+          <FontAwesomeIcon icon={faRotateLeft} size='sm'/>
         </IconButton>
         <IconButton 
           onClick={handleOpen}
@@ -351,7 +351,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           }}
           title="Ouvrir les filtres"
         >
-          <FontAwesomeIcon icon={faFilter} />
+          <FontAwesomeIcon icon={faFilter} size='sm'/>
         </IconButton>
       </Box>
 

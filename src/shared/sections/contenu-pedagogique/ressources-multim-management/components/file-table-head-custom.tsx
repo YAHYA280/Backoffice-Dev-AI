@@ -4,15 +4,13 @@ import type { IFileFilters } from "src/contexts/types/file";
 import type { UseSetStateReturn } from "src/hooks/use-set-state";
 
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import {
   Box,
-  Chip,
-  Stack,
   Select,
   Checkbox,
   TableRow,
@@ -25,8 +23,6 @@ import {
   TableSortLabel,
   InputAdornment,
 } from "@mui/material";
-
-import { chipProps, FiltersBlock, FiltersResult } from "src/shared/components/filters-result";
 
 const FILE_TYPE_OPTIONS = [
   "txt",
@@ -75,87 +71,6 @@ export function TableFileHeadCustom({
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [showStartDateInput, setShowStartDateInput] = useState(false);
   const [showEndDateInput, setShowEndDateInput] = useState(false);
-
-  const filterChips = useMemo(() => {
-    const chips: JSX.Element[] = [];
-
-    if (fileFilters.state.name) {
-      chips.push(
-        <Chip
-          key="name"
-          {...chipProps}
-          label={`Name: ${fileFilters.state.name}`}
-          onDelete={() => {
-            fileFilters.setState({ name: "" });
-            setShowNameInput(false);
-          }}
-        />
-      );
-    }
-    if (fileFilters.state.size) {
-      chips.push(
-        <Chip
-          key="size"
-          {...chipProps}
-          label={`Taille: ${fileFilters.state.size}`}
-          onDelete={() => {
-            fileFilters.setState({ size: "" });
-            setShowSizeInput(false);
-          }}
-        />
-      );
-    }
-    if (fileFilters.state.type && fileFilters.state.type.length) {
-      chips.push(
-        <Chip
-          key="type"
-          {...chipProps}
-          label={`Type: ${fileFilters.state.type.join(", ")}`}
-          onDelete={() => {
-            fileFilters.setState({ type: [] });
-            setShowTypeInput(false);
-          }}
-        />
-      );
-    }
-    if (fileFilters.state.startDate) {
-      const parsedStartDate = dayjs(fileFilters.state.startDate, "DD/MM/YYYY", true);
-      const displayStartDate = parsedStartDate.isValid()
-        ? parsedStartDate.format("DD/MM/YYYY")
-        : dayjs(fileFilters.state.startDate).format("DD/MM/YYYY");
-
-      chips.push(
-        <Chip
-          key="startDate"
-          {...chipProps}
-          label={`Date de création: ${displayStartDate}`}
-          onDelete={() => {
-            fileFilters.setState({ startDate: null });
-            setShowStartDateInput(false);
-          }}
-        />
-      );
-    }
-    if (fileFilters.state.endDate) {
-      const parsedEndDate = dayjs(fileFilters.state.endDate, "DD/MM/YYYY", true);
-      const displayEndDate = parsedEndDate.isValid()
-        ? parsedEndDate.format("DD/MM/YYYY")
-        : dayjs(fileFilters.state.endDate).format("DD/MM/YYYY");
-
-      chips.push(
-        <Chip
-          key="endDate"
-          {...chipProps}
-          label={`Date de dernière modification: ${displayEndDate}`}
-          onDelete={() => {
-            fileFilters.setState({ endDate: null });
-            setShowEndDateInput(false);
-          }}
-        />
-      );
-    }
-    return chips;
-  }, [fileFilters]);
 
   return (
     <TableHead
@@ -490,32 +405,6 @@ export function TableFileHeadCustom({
           );
         })}
       </TableRow>
-      {filterChips.length > 0 ? (
-        <TableRow>
-          <TableCell colSpan={columns.length}>
-            <FiltersResult
-              totalResults={totalResults}
-              onReset={() => {
-                fileFilters.onResetState();
-                setShowNameInput(false);
-                setShowSizeInput(false);
-                setShowTypeInput(false);
-                setShowStartDateInput(false);
-                setShowEndDateInput(false);
-              }}
-            >
-              <FiltersBlock label="" isShow>
-                <Stack direction="row" spacing={1}>
-                  {filterChips}
-                </Stack>
-              </FiltersBlock>
-            </FiltersResult>
-          </TableCell>
-        </TableRow>
-      ) : (
-        <>
-        </>
-      )}
     </TableHead>
   );
 }

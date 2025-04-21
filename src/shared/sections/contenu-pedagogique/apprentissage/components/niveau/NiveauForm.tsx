@@ -98,12 +98,13 @@ export const NiveauForm = ({
 
         <Grid item xs={12}>
           <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="outlined" color="inherit" onClick={onCancel} disabled={isSubmitting}>
+            <Button variant="outlined" color="primary" onClick={onCancel} disabled={isSubmitting}>
               Annuler
             </Button>
             <Button
               type="submit"
               variant="contained"
+              color="primary"
               disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
             >

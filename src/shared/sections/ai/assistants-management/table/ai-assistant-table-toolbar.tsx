@@ -377,6 +377,7 @@ export function AIAssistantTableToolbar({
             </Button>
             <Tooltip title="Filtres avancés">
               <IconButton
+                color="primary"
                 aria-label="filtre"
                 onClick={filterPopoverState.onOpen}
                 sx={{
@@ -391,6 +392,7 @@ export function AIAssistantTableToolbar({
             </Tooltip>
             <Tooltip title="Réinitialiser les filtres et colonnes">
               <IconButton
+                color="primary"
                 aria-label="effacer les filtres"
                 onClick={() => {
                   onClearFilters();
@@ -410,6 +412,7 @@ export function AIAssistantTableToolbar({
             </Tooltip>
             <Tooltip title="Exporter les données">
               <IconButton
+                color="primary"
                 aria-label="exporter"
                 onClick={onExportData}
                 sx={{

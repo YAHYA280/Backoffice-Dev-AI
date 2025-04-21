@@ -1,6 +1,6 @@
 import type { GridCellParams } from '@mui/x-data-grid';
 
-import { Box , Chip, Link, Stack, Typography } from '@mui/material';
+import { Box , Link, Stack, Typography } from '@mui/material';
 
 import { fDate, fTime } from 'src/utils/format-time';
 
@@ -32,19 +32,3 @@ export const RenderCellCreatedAt = ({ params }: RenderCellProps) => (
     </Box>
   </Stack>
 );
-
-export const RenderCellRoles = ({ params }: { params: any }) => {
-  const { roles } = params.row;
-  return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-      {roles.map((role: string) => (
-        <Chip
-          key={role}
-          label={role}
-          size= "small"
-          color= 'primary'
-        />
-      ))}
-    </Stack>
-  );
-};

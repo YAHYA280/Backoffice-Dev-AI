@@ -500,7 +500,7 @@ const Filters: React.FC<FiltersProps> = ({
   return (
     <>
       {/* Boutons de filtrage et de réinitialisation */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, marginLeft: 'auto' }}>
         <IconButton 
           onClick={clearAllFilters}
           sx={{ 
@@ -509,7 +509,7 @@ const Filters: React.FC<FiltersProps> = ({
           }}
           title="Réinitialiser les filtres"
         >
-          <FontAwesomeIcon icon={faRotateLeft} />
+          <FontAwesomeIcon icon={faRotateLeft} size='sm'/>
         </IconButton>
         <IconButton 
           onClick={handleOpen}
@@ -518,7 +518,7 @@ const Filters: React.FC<FiltersProps> = ({
           }}
           title="Ouvrir les filtres"
         >
-          <FontAwesomeIcon icon={faFilter} />
+          <FontAwesomeIcon icon={faFilter} size='sm'/>
           {getActiveFiltersCount() > 0 && (
             <Box
               sx={{

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import {
-  Box,
+import { Box ,
   Stack,
   Badge,
   Button,
   Select,
+  Tooltip,
   Popover,
   Divider,
   MenuItem,
@@ -18,6 +18,7 @@ import {
   InputLabel,
   FormControl,
 } from '@mui/material';
+
 
 // A single filter option type
 export interface FilterOption {
@@ -160,9 +161,11 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
         color="primary"
         onClick={handleOpenFilters}
         startIcon={
-          <Badge badgeContent={filterCount} color="error" invisible={filterCount === 0}>
-            {icon}
-          </Badge>
+          <Tooltip title='Filtres' arrow>
+            <Badge badgeContent={filterCount} color="error" invisible={filterCount === 0}>
+              {icon}
+            </Badge>
+          </Tooltip>
         }
         sx={{
           minWidth: 10,
@@ -362,7 +365,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
               })()}
 
               <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Button size="small" color="inherit" onClick={handleCancelFilter}>
+                <Button size="small" color="primary" onClick={handleCancelFilter}>
                   Annuler
                 </Button>
                 <Button

@@ -29,17 +29,19 @@ import {
   TableHead,
   Typography,
   IconButton,
-  Breadcrumbs,
   FormControl,
   TableContainer,
   InputAdornment,
 } from '@mui/material';
+
+import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Scrollbar } from 'src/shared/components/scrollbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { varFade, MotionContainer } from 'src/shared/components/animate';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
@@ -702,9 +704,13 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   );
 
   const renderBreadcrumbs = () => (
-    <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-      <Typography color="text.primary">Niveaux d&apos;enseignement</Typography>
-    </Breadcrumbs>
+    <CustomBreadcrumbs
+      links={[
+        { name: 'Tableau de bord', href: paths.dashboard.root },
+        { name: 'Contenu pédagogique', href: paths.dashboard.contenu_pedagogique.apprentissage },
+        { name: "Gestion d'apprentissage" },
+      ]}
+      sx={{ mb: { xs: 3, md: 5 } }} />
   );
 
   return (
@@ -712,7 +718,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
       <m.div variants={varFade().inUp}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 'fontWeightBold' }}>
-            Niveaux
+            Niveaux d&apos;enseignement
           </Typography>
           {onAddClick ? (
             <Button
@@ -764,7 +770,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                 filterOptions={FILTER_OPTIONS}
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChange}
-                icon={<FontAwesomeIcon icon={faFilter} />}
+                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
               />
               <Tooltip title="Réinitialiser" arrow>
                 <IconButton
@@ -778,7 +784,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                     },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} />
+                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown

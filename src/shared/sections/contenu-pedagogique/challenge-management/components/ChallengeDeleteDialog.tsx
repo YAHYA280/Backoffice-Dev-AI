@@ -171,6 +171,7 @@ export const ChallengeDeleteDialog = ({
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button
           variant="outlined"
+          color="primary"
           onClick={onClose}
           disabled={isDeleting}
           sx={{

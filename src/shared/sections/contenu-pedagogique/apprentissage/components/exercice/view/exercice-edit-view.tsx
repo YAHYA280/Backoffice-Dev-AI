@@ -133,6 +133,7 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
       <Box sx={{ mb: 4 }}>
         <Button
           variant="text"
+          color="primary"
           startIcon={<FontAwesomeIcon icon={faChevronLeft} />}
           onClick={handleCancel}
           sx={{ mb: 2 }}

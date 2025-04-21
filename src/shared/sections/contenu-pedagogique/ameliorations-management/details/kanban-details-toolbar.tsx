@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faArrowLeft, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -14,6 +14,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 // ----------------------------------------------------------------------
 
@@ -60,13 +61,13 @@ export function KanbanDetailsToolbar({
           borderBottom: (theme) => `solid 1px ${theme.vars.palette.divider}`,
         }}
       >
-        {!smUp && (
-          <Tooltip title="Back">
-            <IconButton onClick={onCloseDetails} sx={{ mr: 1 }}>
-              <FontAwesomeIcon icon={faArrowLeft} />
-            </IconButton>
-          </Tooltip>
-        )}
+        <ConditionalComponent isValid={!smUp}>
+            <Tooltip title="Back">
+              <IconButton onClick={onCloseDetails} sx={{ mr: 1 }}>
+                <FontAwesomeIcon icon={faArrowLeft} />
+              </IconButton>
+            </Tooltip>
+        </ConditionalComponent>
 
         <Button
           size="small"
@@ -76,15 +77,6 @@ export function KanbanDetailsToolbar({
         >
           {status}
         </Button>
-
-        <Stack direction="row" justifyContent="flex-end" flexGrow={1}>
-          
-          <Tooltip title="Supprimer">
-            <IconButton onClick={confirm.onTrue}>
-              <FontAwesomeIcon icon={faTrash} />
-            </IconButton>
-          </Tooltip>
-        </Stack>
       </Stack>
 
       <CustomPopover

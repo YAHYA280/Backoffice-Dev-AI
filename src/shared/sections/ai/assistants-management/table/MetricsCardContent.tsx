@@ -27,6 +27,7 @@ import CardContent from '@mui/material/CardContent';
 import FormControl from '@mui/material/FormControl';
 import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 // Types definition
 type MetricColorKey = 'totalRequests' | 'avgResponseTime' | 'utilizationRate' | 'latencyAlerts';
@@ -195,28 +196,35 @@ const MetricsCardContent: React.FC = () => {
       <Box
         sx={{
           display: 'flex',
-          justifyContent: activeFilters ? 'space-between' : 'flex-end',
+          justifyContent: 'space-between',
           mb: 2,
           alignItems: 'center',
         }}
       >
-        {/* Affichage des dates sélectionnées si des filtres sont actifs */}
-        {activeFilters && (
-          <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>
-            Période: {overviewStartDate?.format('DD/MM/YYYY')} -{' '}
-            {overviewEndDate?.format('DD/MM/YYYY')}
-          </Typography>
-        )}
+        <Typography variant="h5" component="h2" fontWeight="bold">
+          Statistiques Générales
+        </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
+          {/* Using ConditionalComponent for date display */}
+          <ConditionalComponent
+            isValid={activeFilters}
+            defaultComponent={null}
+          >
+            <Typography variant="caption" sx={{ alignSelf: 'center', mr: 1, color: 'text.secondary' }}>
+              Période: {overviewStartDate?.format('DD/MM/YYYY')} -{' '}
+              {overviewEndDate?.format('DD/MM/YYYY')}
+            </Typography>
+          </ConditionalComponent>
+
           <Tooltip title="Reset">
             <IconButton color="primary" onClick={handleResetFilters} disabled={isLoading}>
-              <FontAwesomeIcon icon={faSyncAlt} className={isLoading ? 'fa-spin' : ''} />
+              <FontAwesomeIcon icon={faSyncAlt} size='sm' className={isLoading ? 'fa-spin' : ''} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Filtrer par date">
             <IconButton color="primary" onClick={handleOpenOverviewFilterMenu}>
               <Badge color="primary" variant="dot" invisible={!activeFilters}>
-                <FontAwesomeIcon icon={faFilter} />
+                <FontAwesomeIcon icon={faFilter} size='sm' />
               </Badge>
             </IconButton>
           </Tooltip>

@@ -9,7 +9,9 @@ import type {
   CollisionDetection,
 } from '@dnd-kit/core';
 
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   arrayMove,
   SortableContext,
@@ -30,8 +32,10 @@ import {
   MeasuringStrategy,
 } from '@dnd-kit/core';
 
+import { Button } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+
+import { paths } from 'src/routes/paths';
 
 import { useDebounce } from 'src/hooks/use-debounce';
 
@@ -43,6 +47,7 @@ import { MOCK_AMELIORATIONS } from 'src/shared/_mock/_ameliorations';
 import { useSearchAmeliorations } from 'src/shared/actions/amelioration';
 
 import { EmptyContent } from 'src/shared/components/empty-content';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
 import { kanbanClasses } from '../classes';
 import { coordinateGetter } from '../utils';
@@ -358,14 +363,31 @@ export function AmeliorationsView() {
         flexDirection: 'column',
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ pr: { sm: 3 }, mb: { xs: 3, md: 5 } }}
-      >
-        <Typography variant="h4">Améliorations</Typography>
-      </Stack>
+      <CustomBreadcrumbs
+      heading='Gestion des améliorations'
+        links={[
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Contenu pédagogique', href: paths.dashboard.contenu_pedagogique.ameliorations },
+          { name: "Gestion des améliorations" },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={() => setOpenModal(true)}
+            sx={{
+              color: 'primary.contrastText',
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
+          >
+            Ajouter une amélioration
+          </Button>
+        }
+        sx={{ mb: { xs: 3, md: 5 } }} 
+      />
 
       <Stack spacing={2.5} sx={{ mb: { xs: 3, md: 5 } }}>
         {renderFilters}
@@ -376,7 +398,9 @@ export function AmeliorationsView() {
         open={openModal}
         onClose={handleCloseModal}
         onSubmit={handleAddAmelioration}
-      />    </DashboardContent>
+      />    
+      
+    </DashboardContent>
   );
 
 }

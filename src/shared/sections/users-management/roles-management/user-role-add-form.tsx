@@ -1,65 +1,70 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { SelectChangeEvent } from '@mui/material';
-import type { IRoleItem } from 'src/contexts/types/role';
 
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
+  Card,
   Chip,
+  Grid,
   Stack,
   alpha,
-  Table,
   Paper,
+  Button,
   Select,
-  Checkbox,
-  TableRow,
   MenuItem,
+  Checkbox,
+  TextField,
+  Container,
   FormGroup,
-  TableBody,
-  TableCell,
-  TableHead,
-  IconButton,
+  Accordion,
+  Typography,
   InputLabel,
   FormControl,
+  ListItemText,
   OutlinedInput,
-  TableContainer,
+  LinearProgress,
   FormControlLabel,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { LocalizationProvider } from 'src/shared/locales';
+import { DashboardContent } from 'src/shared/layouts/dashboard';
 
 import { toast } from 'src/shared/components/snackbar';
+import { ConfirmDialog } from 'src/shared/components/custom-dialog';
+import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
-// ----------------------------------------------------------------------
+const ITEM_HEIGHT = 48;
+const MAX_CHIPS = 5;
 
-interface AddRoleFormDialogProps {
-  open: boolean;
-  onClose: () => void;
-  addRole: (newRole: IRoleItem) => void;
-}
+export default function AddRolePage() {
+  const router = useRouter();
 
-export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
-  const [selectedModulesForPermission, setSelectedModulesForPermission] = useState<string[]>([]);
   const [modulePermissions, setModulePermissions] = useState<{ [key: string]: string[] }>({});
   const [createdAt, setCreatedAt] = useState<Dayjs | null>(dayjs());
-  const [tempPermissions, setTempPermissions] = useState<string[]>([]);
-  const ITEM_HEIGHT = 48;
 
+  const [isSaving, setIsSaving] = useState(false);
+  const confirmCancel = useBoolean();
+
+  // Example modules array
   const allModules = [
     { label: 'Acceuil', value: 'Acceuil' },
     { label: "Statistiques d'usage ", value: "Statistiques d'usage " },
@@ -85,6 +90,8 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
     { label: 'Gestion des assistants', value: 'Gestion des assistants' },
     { label: 'Moderation et signalement', value: 'Moderation et signalement' },
   ];
+
+  // Permissions array
   const allPermissions = [
     { label: 'Administration', value: 'Administration' },
     { label: 'Lecture', value: 'Lecture' },
@@ -94,545 +101,437 @@ export function AddRoleFormDialog({ open, onClose, addRole }: AddRoleFormDialogP
     { label: 'Import', value: 'Import' },
   ];
 
-  // Réinitialiser les modules sélectionnés pour les permissions quand la liste des modules change
+  // When selected modules change, remove permissions for modules that were unselected
   useEffect(() => {
-    // Supprimer les modules qui ne sont plus dans selectedModules de selectedModulesForPermission
-    setSelectedModulesForPermission((prev) =>
-      prev.filter((module) => selectedModules.includes(module))
-    );
+    setModulePermissions((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((module) => {
+        if (!selectedModules.includes(module)) {
+          delete updated[module];
+        }
+      });
+      return updated;
+    });
   }, [selectedModules]);
 
   const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
+    const { value } = event.target;
     const newSelectedModules = typeof value === 'string' ? value.split(',') : value;
-
     setSelectedModules(newSelectedModules);
-
-    // Identifier les modules supprimés
-    const removedModules = selectedModules.filter((module) => !newSelectedModules.includes(module));
-
-    // Mettre à jour modulePermissions en supprimant les modules qui ont été retirés
-    if (removedModules.length > 0) {
-      setModulePermissions((prevPermissions) => {
-        const updatedPermissions = { ...prevPermissions };
-        removedModules.forEach((module) => {
-          delete updatedPermissions[module];
-        });
-        return updatedPermissions;
-      });
-    }
   };
 
-  // Fonction pour supprimer un module spécifique du chip
+  // Allow deletion of a module from the selection
   const handleDeleteModule = (moduleToDelete: string) => {
-    // Supprimer de selectedModules
-    setSelectedModules(selectedModules.filter((module) => module !== moduleToDelete));
-
-    // Supprimer de selectedModulesForPermission
-    setSelectedModulesForPermission((prev) => prev.filter((module) => module !== moduleToDelete));
-
-    // Supprimer de modulePermissions
-    setModulePermissions((prevPermissions) => {
-      const updatedPermissions = { ...prevPermissions };
-      delete updatedPermissions[moduleToDelete];
-      return updatedPermissions;
+    setSelectedModules((prev) => prev.filter((m) => m !== moduleToDelete));
+    setModulePermissions((prev) => {
+      const updated = { ...prev };
+      delete updated[moduleToDelete];
+      return updated;
     });
   };
 
-  const handleModuleSelectionForPermission = (module: string) => {
-    setSelectedModulesForPermission((prev) =>
-      prev.includes(module) ? prev.filter((m) => m !== module) : [...prev, module]
-    );
-  };
-
-  const handleTempPermissionChange = (permission: string) => {
-    setTempPermissions((prevPermissions) =>
-      prevPermissions.includes(permission)
-        ? prevPermissions.filter((p) => p !== permission)
-        : [...prevPermissions, permission]
-    );
-  };
-
-  const handleApplyPermissions = () => {
-    if (selectedModulesForPermission.length === 0 || tempPermissions.length === 0) {
-      return;
-    }
-
-    const updatedPermissions = { ...modulePermissions };
-    selectedModulesForPermission.forEach((module) => {
-      updatedPermissions[module] = [...tempPermissions];
+  // Toggle a permission for a given module
+  const handlePermissionToggle = (module: string, permission: string) => {
+    setModulePermissions((prev) => {
+      const current = prev[module] || [];
+      if (current.includes(permission)) {
+        return { ...prev, [module]: current.filter((p) => p !== permission) };
+      }
+      return { ...prev, [module]: [...current, permission] };
     });
-    setModulePermissions(updatedPermissions);
-
-    // Réinitialiser les sélections temporaires
-    setSelectedModulesForPermission([]);
-    setTempPermissions([]);
   };
 
-  const handleSubmit = () => {
-    if (name && description && Object.keys(modulePermissions).length > 0 && createdAt) {
-      const flatPermissions: string[] = [];
-
-      Object.entries(modulePermissions).forEach(([module, permissions]) => {
-        permissions.forEach((permission) => {
-          flatPermissions.push(`${module}:${permission}`);
-        });
-      });
-
-      const newRole: IRoleItem = {
-        id: String(Math.floor(Math.random() * 1000000)),
-        name,
-        description,
-        permissionLevel: flatPermissions,
-        createdAt: createdAt.toDate(),
-      };
-
-      const promise = new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.promise(promise, {
-        loading: 'Chargement...',
-        success: 'Ajout du rôle avec succès!',
-        error: "Échec de l'ajout du rôle!",
-      });
-
-      addRole(newRole);
-      resetForm();
-      onClose();
+  // Toggle all permissions for a module
+  const handleToggleAll = (module: string) => {
+    const current = modulePermissions[module] || [];
+    if (current.length === allPermissions.length) {
+      setModulePermissions((prev) => ({ ...prev, [module]: [] }));
+    } else {
+      setModulePermissions((prev) => ({
+        ...prev,
+        [module]: allPermissions.map((p) => p.value),
+      }));
     }
-  };
-
-  const resetForm = () => {
-    setName('');
-    setDescription('');
-    setSelectedModules([]);
-    setSelectedModulesForPermission([]);
-    setModulePermissions({});
-    setTempPermissions([]);
-    setCreatedAt(dayjs());
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
   };
 
   const isFormValid = name && description && Object.keys(modulePermissions).length > 0 && createdAt;
 
-  // Rendre les permissions actuelles pour un module
-  const renderCurrentPermissions = (module: string) => {
-    const permissions = modulePermissions[module] || [];
-    if (permissions.length === 0) {
-      return 'Aucune permission';
+  const handleSubmit = async () => {
+    if (!isFormValid) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
     }
-    return permissions
-      .map((p) => allPermissions.find((item) => item.value === p)?.label || p)
-      .join(', ');
+
+    setIsSaving(true);
+    
+    try {
+      
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      toast.success('Ajout du rôle avec succès!');
+      
+      // Navigate back to roles list
+      setTimeout(() => {
+        router.push(paths.dashboard.users.roles);
+      }, 500);
+    } catch (error) {
+      console.error('Error adding role:', error);
+      toast.error("Échec de l'ajout du rôle!");
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    // Only show the confirmation dialog, don't navigate yet
+    confirmCancel.onTrue();
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          boxShadow: (theme) => `0 16px 32px 0 ${alpha(theme.palette.primary.dark, 0.12)}`,
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          m: 0,
-          p: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Ajouter un rôle
-          </Typography>
-        </Stack>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          size="small"
-          sx={{
-            bgcolor: 'background.paper',
-            boxShadow: (theme) => `0 2px 8px 0 ${alpha(theme.palette.common.black, 0.08)}`,
-            py: '2px',
-            transition: 'all 0.2s',
-            '&:hover': {
-              bgcolor: 'background.default',
-              transform: 'translateY(-2px)',
-              boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.common.black, 0.12)}`,
-            },
-          }}
-        >
-          <FontAwesomeIcon icon={faTimes} />
-        </IconButton>
-      </DialogTitle>
+    <DashboardContent>
+      <CustomBreadcrumbs
+        heading="Ajouter un rôle"
+        links={[
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Utilisateurs', href: paths.dashboard.users.root },
+          { name: 'Gestion des rôles', href: paths.dashboard.users.roles },
+          { name: 'Ajouter un rôle' },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
-      <DialogContent
-        sx={{ p: 3, pt: 3, bgcolor: (theme) => alpha(theme.palette.background.default, 0.4) }}
-      >
-        <Typography sx={{ mb: 3, mt: 3, color: 'text.secondary', fontWeight: 500 }}>
-          Veuillez renseigner les détails du rôle que vous souhaitez ajouter.
-        </Typography>
+      <Container maxWidth="lg">
+        <Card sx={{ p: 3, position: 'relative' }}>
+          {isSaving && (
+            <LinearProgress
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+              }}
+            />
+          )}
 
-        {/* Role Name */}
-        <TextField
-          autoFocus
-          fullWidth
-          type="text"
-          margin="dense"
-          variant="outlined"
-          label="Nom du rôle"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          sx={{
-            mt: 1,
-            mb: 2,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              '&.Mui-focused': {
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderWidth: 2,
-                },
-              },
-            },
-            '& .MuiInputLabel-root': {
-              '&.Mui-focused': {
-                color: 'primary.main',
-                fontWeight: 600,
-              },
-            },
-          }}
-        />
-
-        {/* Description */}
-        <TextField
-          fullWidth
-          margin="dense"
-          variant="outlined"
-          label="Description"
-          multiline
-          rows={4}
-          sx={{
-            mt: 1,
-            mb: 2,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              '&.Mui-focused': {
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderWidth: 2,
-                },
-              },
-            },
-            '& .MuiInputLabel-root': {
-              '&.Mui-focused': {
-                color: 'primary.main',
-                fontWeight: 600,
-              },
-            },
-          }}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        {/* Module Selection */}
-        <FormControl
-          fullWidth
-          sx={{
-            mt: 2,
-            mb: 2,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              '&.Mui-focused': {
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderWidth: 2,
-                },
-              },
-            },
-            '& .MuiInputLabel-root': {
-              '&.Mui-focused': {
-                color: 'primary.main',
-                fontWeight: 600,
-              },
-            },
-          }}
-        >
-          <InputLabel id="modules-select-label">Modules</InputLabel>
-          <Select
-            labelId="modules-select-label"
-            id="modules-select"
-            multiple
-            value={selectedModules}
-            onChange={handleModuleChange}
-            input={<OutlinedInput label="Modules" sx={{ borderRadius: 1.5 }} />}
-            MenuProps={{
-              anchorOrigin: {
-                vertical: 'bottom',
-                horizontal: 'left',
-              },
-              transformOrigin: {
-                vertical: 'top',
-                horizontal: 'left',
-              },
-              PaperProps: {
-                style: {
-                  maxHeight: ITEM_HEIGHT * 4.5,
-                  borderRadius: 8,
-                  boxShadow: '0 8px 16px 0 rgba(0,0,0,0.1)',
-                },
-              },
-            }}
-            renderValue={(selected) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-                {selected.map((value) => (
-                  <Chip
-                    key={value}
-                    label={allModules.find((m) => m.value === value)?.label || value}
-                    size="small"
-                    onDelete={() => handleDeleteModule(value)}
-                    onMouseDown={(event) => {
-                      event.stopPropagation();
-                    }}
-                    sx={{
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                      color: 'primary.main',
-                      fontWeight: 600,
-                      borderRadius: 1,
-                      '&:hover': {
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
-                      },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-            sx={{
-              minHeight: '56px',
-              '& .MuiOutlinedInput-input': {
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 0.5,
-                padding: '14px',
-                height: 'auto',
-              },
-            }}
-          >
-            {allModules.map((module) => (
-              <MenuItem
-                key={module.value}
-                value={module.value}
+          <Grid container spacing={3}>
+            {/* Role Name */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="text"
+                label="Nom du rôle"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 sx={{
-                  borderRadius: 1,
-                  mx: 0.5,
-                  my: 0.5,
-                  '&:hover': {
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                    '&.Mui-focused': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderWidth: 2,
+                      },
+                    },
                   },
-                  '&.Mui-selected': {
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                    '&:hover': {
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                }}
+              />
+            </Grid>
+
+            {/* Date de création */}
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider>
+                <DatePicker
+                  label="Date de création"
+                  value={createdAt}
+                  onChange={(newValue) => setCreatedAt(newValue)}
+                  format="DD/MM/YYYY"
+                  sx={{
+                    width: '100%',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1.5,
+                      '&.Mui-focused': {
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderWidth: 2,
+                        },
+                      },
+                    },
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </Grid>
+
+            {/* Description */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                    '&.Mui-focused': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderWidth: 2,
+                      },
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Modules List */}
+            <Grid item xs={12}>
+              <FormControl
+                fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                    '&.Mui-focused': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderWidth: 2,
+                      },
                     },
                   },
                 }}
               >
-                <Checkbox checked={selectedModules.includes(module.value)} />
-                {module.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+                <InputLabel id="modules-select-label">Modules</InputLabel>
+                <Select
+                  labelId="modules-select-label"
+                  multiple
+                  value={selectedModules}
+                  onChange={handleModuleChange}
+                  input={<OutlinedInput label="Modules" sx={{ borderRadius: 1.5 }} />}
+                  renderValue={(selected) => {
+                    const selArr = selected as string[];
+                    const displayed = selArr.slice(0, MAX_CHIPS);
+                    const hiddenCount = selArr.length - displayed.length;
+                    return (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {displayed.map((mod) => (
+                          <Chip
+                            key={mod}
+                            label={allModules.find((m) => m.value === mod)?.label || mod}
+                            onDelete={() => handleDeleteModule(mod)}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            sx={{
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              color: 'primary.main',
+                              fontWeight: 600,
+                              borderRadius: 1,
+                              '&:hover': {
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                              },
+                            }}
+                          />
+                        ))}
+                        {hiddenCount > 0 && (
+                          <Chip
+                            label={`+${hiddenCount}...`}
+                            sx={{
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                              color: 'primary.main',
+                              fontWeight: 600,
+                              borderRadius: 1,
+                            }}
+                          />
+                        )}
+                      </Box>
+                    );
+                  }}
+                  MenuProps={{
+                    anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                    transformOrigin: { vertical: 'top', horizontal: 'left' },
+                    PaperProps: {
+                      style: { 
+                        maxHeight: ITEM_HEIGHT * 6.5,
+                        marginTop: 8
+                      },
+                    },
+                    disableScrollLock: true,
+                  }}
+                  sx={{
+                    minHeight: '56px',
+                    '& .MuiOutlinedInput-input': {
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 0.5,
+                      padding: '14px',
+                    },
+                  }}
+                >
+                  {allModules.map((module) => (
+                    <MenuItem
+                      key={module.value}
+                      value={module.value}
+                      sx={{
+                        borderRadius: 0,
+                        py: 0.75,
+                        my: 0,
+                        mx: 0,
+                        backgroundColor: 'transparent',
+                        '&:hover': {
+                          backgroundColor: (theme) => alpha(theme.palette.action.hover, 0.1),
+                        },
+                        '&.Mui-selected': {
+                          backgroundColor: 'transparent',
+                          '&:hover': {
+                            backgroundColor: (theme) => alpha(theme.palette.action.hover, 0.1),
+                          },
+                        },
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedModules.includes(module.value)}
+                        sx={{
+                          color: (theme) => theme.palette.text.secondary,
+                          '&.Mui-checked': { color: 'primary.main' },
+                        }}
+                      />
+                      <ListItemText
+                        primary={module.label}
+                        sx={{ color: 'text.primary' }}
+                      />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-        {/* Configuration des permissions */}
-        <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-          Configuration des permissions
-        </Typography>
+            {/* Permissions Accordions */}
+            {selectedModules.length > 0 && (
+              <Grid item xs={12}>
+                <Paper sx={{ p: 3, mt: 2, borderRadius: 2 }}>
+                  <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                    Configuration des permissions par module
+                  </Typography>
 
-        {/* Tableau des permissions existantes */}
-        {Object.keys(modulePermissions).length > 0 && (
-          <TableContainer component={Paper} sx={{ mt: 2, mb: 3 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Module</TableCell>
-                  <TableCell>Permissions attribuées</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(modulePermissions).map((module) => (
-                  <TableRow key={module}>
-                    <TableCell>
-                      {allModules.find((m) => m.value === module)?.label || module}
-                    </TableCell>
-                    <TableCell>{renderCurrentPermissions(module)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-
-        {/* Sélection de modules et permissions */}
-        {selectedModules.length > 0 && (
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Modules Disponibles</TableCell>
-                  <TableCell>Permissions à Attribuer</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell style={{ verticalAlign: 'top' }}>
-                    <FormGroup>
-                      {selectedModules.map((module) => (
-                        <FormControlLabel
-                          key={module}
-                          control={
-                            <Checkbox
-                              checked={selectedModulesForPermission.includes(module)}
-                              onChange={() => handleModuleSelectionForPermission(module)}
+                  {selectedModules.map((module) => (
+                    <Accordion key={module} sx={{ mb: 1, overflow: 'hidden' }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {allModules.find((m) => m.value === module)?.label || module}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <FormGroup>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={
+                                  modulePermissions[module] &&
+                                  modulePermissions[module].length === allPermissions.length
+                                }
+                                indeterminate={
+                                  modulePermissions[module] &&
+                                  modulePermissions[module].length > 0 &&
+                                  modulePermissions[module].length < allPermissions.length
+                                }
+                                onChange={() => handleToggleAll(module)}
+                                sx={{
+                                  '&.Mui-checked': { color: 'primary.main' },
+                                }}
+                              />
+                            }
+                            label="Tous"
+                          />
+                          {allPermissions.map((permission) => (
+                            <FormControlLabel
+                              key={permission.value}
+                              control={
+                                <Checkbox
+                                  checked={
+                                    modulePermissions[module]
+                                      ? modulePermissions[module].includes(permission.value)
+                                      : false
+                                  }
+                                  onChange={() =>
+                                    handlePermissionToggle(module, permission.value)
+                                  }
+                                  sx={{
+                                    '&.Mui-checked': { color: 'primary.main' },
+                                  }}
+                                />
+                              }
+                              label={permission.label}
                             />
-                          }
-                          label={allModules.find((m) => m.value === module)?.label || module}
-                        />
-                      ))}
-                    </FormGroup>
-                  </TableCell>
-                  <TableCell style={{ verticalAlign: 'top' }}>
-                    <FormGroup>
-                      {allPermissions.map((permission) => (
-                        <FormControlLabel
-                          key={permission.value}
-                          control={
-                            <Checkbox
-                              checked={tempPermissions.includes(permission.value)}
-                              onChange={() => handleTempPermissionChange(permission.value)}
-                            />
-                          }
-                          label={permission.label}
-                        />
-                      ))}
-                    </FormGroup>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+                          ))}
+                        </FormGroup>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Paper>
+              </Grid>
+            )}
 
-        {/* Apply Permissions Button */}
-        {selectedModules.length > 0 && (
+            <Grid item xs={12}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="flex-end"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                spacing={2}
+                sx={{ mt: 3 }}
+              >
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
+                  onClick={handleCancel}
+                  sx={{
+                    borderRadius: 1.5,
+                    px: 2.5,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  Retour
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={!isFormValid || isSaving}
+                  startIcon={<FontAwesomeIcon icon={faSave} />}
+                  sx={{
+                    borderRadius: 1.5,
+                    px: 2.5,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.3)}`,
+                    color: 'primary.contrastText',
+                    backgroundColor: 'primary.main',
+                    '&:hover': { backgroundColor: 'primary.dark' },
+                  }}
+                >
+                  {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                </Button>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Card>
+      </Container>
+
+      <ConfirmDialog
+        open={confirmCancel.value}
+        onClose={confirmCancel.onFalse}
+        title="Annuler l'ajout"
+        content="Êtes-vous sûr de vouloir annuler l'ajout du rôle ?"
+        action={
           <Button
-            onClick={handleApplyPermissions}
             variant="contained"
-            sx={{ mt: 2, mb: 2 }}
-            disabled={selectedModulesForPermission.length === 0 || tempPermissions.length === 0}
+            color="error"
+            onClick={() => {
+              router.push(paths.dashboard.users.roles);
+            }}
           >
-            Appliquer les permissions
+            Annuler l&apos;ajout
           </Button>
-        )}
-
-        {/* Created At Date Picker */}
-        <LocalizationProvider>
-          <DatePicker
-            label="Date de création"
-            value={createdAt}
-            onChange={(newValue) => setCreatedAt(newValue)}
-            format="DD/MM/YYYY"
-            sx={{
-              width: '100%',
-              mt: 1,
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                '&.Mui-focused': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderWidth: 2,
-                  },
-                },
-              },
-              '& .MuiInputLabel-root': {
-                '&.Mui-focused': {
-                  color: 'primary.main',
-                  fontWeight: 600,
-                },
-              },
-            }}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                margin: 'dense',
-              },
-            }}
-          />
-        </LocalizationProvider>
-      </DialogContent>
-
-      <DialogActions
-        sx={{
-          p: 2.5,
-          px: 3,
-          bgcolor: (theme) => alpha(theme.palette.background.default, 0.8),
-          borderTop: (theme) => `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-          gap: 1,
-        }}
-      >
-        <Button
-          onClick={handleClose}
-          variant="outlined"
-          color="inherit"
-          sx={{
-            px: 2.5,
-            py: 1,
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            transition: 'all 0.2s',
-            borderColor: (theme) => alpha(theme.palette.divider, 0.5),
-            '&:hover': {
-              borderColor: 'divider',
-              bgcolor: (theme) => alpha(theme.palette.divider, 0.08),
-            },
-          }}
-        >
-          Annuler
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={!isFormValid}
-          sx={{
-            px: 2.5,
-            py: 1,
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.primary.main, 0.3)}`,
-            transition: 'all 0.2s',
-            color: 'primary.contrastText',
-            backgroundColor: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-            },
-          }}
-        >
-          Enregistrer
-        </Button>
-      </DialogActions>
-    </Dialog>
+        }
+      />
+    </DashboardContent>
   );
 }
