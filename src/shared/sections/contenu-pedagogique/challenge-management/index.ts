@@ -7,7 +7,7 @@ export * from './hooks/useChallenge';
 export { ChallengeList } from './components/ChallengeList';
 
 export { ChallengeItem } from './components/ChallengeItem';
-export { ChallengeForm } from './components/ChallengeForm';
+export { default as ChallengeForm } from './components/ChallengeForm/index';
 // Main components
 export { ChallengesManagementView as default } from './view';
 export { ChallengeDialog } from './components/ChallengeDialog';
