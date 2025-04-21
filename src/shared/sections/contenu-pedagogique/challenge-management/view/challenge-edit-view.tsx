@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 
 import { useChallenges } from '../hooks/useChallenge';
+// Updated import path to use the ChallengeForm from its new location
 import { ChallengeForm } from '../components/ChallengeForm';
 
 import type { Challenge } from '../types';

@@ -8,7 +8,7 @@ import { faTrophy, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { Box, Card, alpha, Stack, Button, useTheme, Container, Typography } from '@mui/material';
 
 import { useChallenges } from '../hooks/useChallenge';
-import { ChallengeForm } from '../components/ChallengeForm';
+import { ChallengeForm } from '../components/ChallengeForm/index';
 
 import type { Challenge } from '../types';
 

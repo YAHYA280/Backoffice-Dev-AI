@@ -4,14 +4,15 @@ import {
   faEye,
   faPlus,
   faTrash,
-  faListOl,
-  faGamepad,
   faQuestion,
   faChevronLeft,
+  faListOl,
   faPuzzlePiece,
+  faGamepad,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
+  Box,
   Grid,
   List,
   Chip,
@@ -27,10 +28,9 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import { QuestionType } from '../../types';
 import { QuestionSidebar } from './QuestionSidebar';
-
-import type { StepProps, EditableQuestion } from './types';
+import { StepProps, EditableQuestion } from './types';
+import { QuestionType } from '../../types';
 
 const QUESTION_TYPE_OPTIONS = [
   {
