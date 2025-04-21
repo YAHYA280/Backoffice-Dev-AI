@@ -4,15 +4,14 @@ import {
   faEye,
   faPlus,
   faTrash,
+  faListOl,
+  faGamepad,
   faQuestion,
   faChevronLeft,
-  faListOl,
   faPuzzlePiece,
-  faGamepad,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
-  Box,
   Grid,
   List,
   Chip,
@@ -28,9 +27,10 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import { QuestionSidebar } from './QuestionSidebar';
-import { StepProps, EditableQuestion } from './types';
 import { QuestionType } from '../../types';
+import { QuestionSidebar } from './QuestionSidebar';
+
+import type { StepProps, EditableQuestion } from './types';
 
 const QUESTION_TYPE_OPTIONS = [
   {
@@ -229,7 +229,6 @@ export const ChallengeFormStep3: React.FC<StepProps> = ({ form, generateId }) =>
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Typography variant="h6" gutterBottom>
-          <FontAwesomeIcon icon={faQuestion} style={{ marginRight: '8px' }} />
           Questions du Challenge
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -271,13 +270,17 @@ export const ChallengeFormStep3: React.FC<StepProps> = ({ form, generateId }) =>
                       >
                         <FontAwesomeIcon icon={faChevronLeft} rotation={270} fontSize="medium" />
                       </IconButton>
-                      <IconButton onClick={() => openEditQuestionSidebar(index)} size="medium">
+                      <IconButton
+                        onClick={() => openEditQuestionSidebar(index)}
+                        size="medium"
+                        color="info"
+                      >
                         <FontAwesomeIcon icon={faEye} fontSize="medium" />
                       </IconButton>
                       <IconButton
                         onClick={() => handleRemoveQuestion(index)}
                         size="medium"
-                        sx={{ color: '#D32F2F' }}
+                        color="primary"
                       >
                         <FontAwesomeIcon icon={faTrash} fontSize="medium" />
                       </IconButton>
@@ -301,6 +304,7 @@ export const ChallengeFormStep3: React.FC<StepProps> = ({ form, generateId }) =>
                       }
                       color="primary"
                       variant="outlined"
+                      sx={{ width: '150px' }}
                     />
                   </ListItemIcon>
                   <ListItemText

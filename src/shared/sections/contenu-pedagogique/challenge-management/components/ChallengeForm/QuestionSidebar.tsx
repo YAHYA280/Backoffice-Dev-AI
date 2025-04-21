@@ -1,47 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCheck,
-  faTimes,
+  faPlus,
   faImage,
   faVideo,
   faTrash,
-  faPlus,
-  faQuestion,
   faListOl,
   faGamepad,
+  faQuestion,
   faPuzzlePiece,
 } from '@fortawesome/free-solid-svg-icons';
 
 import Checkbox from '@mui/material/Checkbox';
 import {
   Box,
+  Tab,
   Grid,
   Chip,
   Tabs,
-  Tab,
   Stack,
+  alpha,
   Button,
   Drawer,
   Switch,
+  Select,
+  Divider,
+  MenuItem,
   TextField,
-  FormGroup,
   FormLabel,
   Typography,
   IconButton,
-  FormControl,
   InputLabel,
-  Select,
-  MenuItem,
-  Divider,
-  FormControlLabel,
+  FormControl,
   FormHelperText,
-  alpha,
+  FormControlLabel,
 } from '@mui/material';
 
 import { CustomUpload } from 'src/shared/components/upload/upload-custom';
+
 import { QuestionType } from '../../types';
-import { EditableQuestion, EditableReponse, QuestionSidebarProps } from './types';
+
+import type { EditableReponse, EditableQuestion, QuestionSidebarProps } from './types';
 
 const QUESTION_TYPE_OPTIONS = [
   {
@@ -414,7 +413,7 @@ export const QuestionSidebar: React.FC<QuestionSidebarProps> = ({
                 }}
                 onClick={handleRemoveQuestionMedia}
               >
-                <FontAwesomeIcon icon={faTrash} />
+                <FontAwesomeIcon icon={faTrash} fontSize="medium" />
               </IconButton>
             </Box>
           ) : null}
@@ -431,7 +430,7 @@ export const QuestionSidebar: React.FC<QuestionSidebarProps> = ({
                     {(currentQuestion.fichier_video.size / 1024 / 1024).toFixed(2)} MB
                   </Typography>
                   <IconButton size="small" onClick={handleRemoveQuestionMedia}>
-                    <FontAwesomeIcon icon={faTrash} />
+                    <FontAwesomeIcon icon={faTrash} fontSize="medium" />
                   </IconButton>
                 </Stack>
               </Box>
@@ -478,7 +477,7 @@ export const QuestionSidebar: React.FC<QuestionSidebarProps> = ({
                       onClick={() => handleRemoveOption(index)}
                       disabled={currentQuestion.reponses.length <= 2}
                     >
-                      <FontAwesomeIcon icon={faTrash} />
+                      <FontAwesomeIcon icon={faTrash} fontSize="medium" />
                     </IconButton>
                   </Grid>
                 </Grid>
@@ -486,6 +485,7 @@ export const QuestionSidebar: React.FC<QuestionSidebarProps> = ({
 
               <Button
                 variant="outlined"
+                color="primary"
                 startIcon={<FontAwesomeIcon icon={faPlus} />}
                 onClick={handleAddOption}
                 sx={{ mt: 1 }}
@@ -549,10 +549,10 @@ export const QuestionSidebar: React.FC<QuestionSidebarProps> = ({
       </Grid>
 
       <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} variant="outlined" color="primary">
           Annuler
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={!isValid}>
+        <Button onClick={handleSave} variant="contained" color="primary" disabled={!isValid}>
           Sauvegarder
         </Button>
       </Box>

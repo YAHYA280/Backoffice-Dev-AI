@@ -12,17 +12,18 @@ import {
   Paper,
   Divider,
   ListItem,
+  Accordion,
   Typography,
   ListItemIcon,
   ListItemText,
-  Accordion,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
-import type { StepProps } from './types';
 import { QuestionType } from '../../types';
 import { DIFFICULTE_OPTIONS, METHODE_CALCUL_SCORE_OPTIONS } from '../../constants';
+
+import type { StepProps } from './types';
 
 // Définition des icônes utilisées pour les types de questions
 const QUESTION_TYPE_OPTIONS = [

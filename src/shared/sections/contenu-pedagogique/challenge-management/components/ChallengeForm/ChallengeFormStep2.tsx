@@ -7,30 +7,29 @@ import {
   Box,
   Grid,
   Paper,
-  Stack,
-  alpha,
   Slider,
   Switch,
+  Select,
   Divider,
   MenuItem,
   TextField,
-  Typography,
   FormGroup,
-  FormControl,
+  Typography,
   InputLabel,
-  Select,
+  FormControl,
   FormHelperText,
-  FormControlLabel,
   InputAdornment,
+  FormControlLabel,
 } from '@mui/material';
 
-import { StepProps } from './types';
 import { ScoreMethod } from '../../types';
 import {
   TENTATIVES_OPTIONS,
   MOCK_PREREQUIS_CHALLENGES,
   METHODE_CALCUL_SCORE_OPTIONS,
 } from '../../constants';
+
+import type { StepProps } from './types';
 
 export const ChallengeFormStep2: React.FC<StepProps> = ({
   form,

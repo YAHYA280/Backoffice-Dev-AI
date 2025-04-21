@@ -2,41 +2,42 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faTimes, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSave,
+  faTimes,
+  faClock,
+  faCheck,
+  faQuestion,
+  faInfoCircle,
+  faChevronLeft,
+  faChevronRight,
+} from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Step,
   Paper,
+  Stack,
   Button,
   Stepper,
   StepLabel,
   Typography,
   CircularProgress,
-  Stack,
 } from '@mui/material';
 
-import ChallengeFormStep1 from './ChallengeFormStep1';
-import ChallengeFormStep2 from './ChallengeFormStep2';
-import ChallengeFormStep3 from './ChallengeFormStep3';
-import ChallengeFormStep4 from './ChallengeFormStep4';
-import { ChallengeFormProps, challengeFormSchema, ChallengeFormData } from './types';
+import { challengeFormSchema } from './types';
+// Importer correctement les composants d'étape en utilisant les imports nommés
+import { ChallengeFormStep1 } from './ChallengeFormStep1';
+import { ChallengeFormStep2 } from './ChallengeFormStep2';
+import { ChallengeFormStep3 } from './ChallengeFormStep3';
+import { ChallengeFormStep4 } from './ChallengeFormStep4';
+import { Difficulty, ChallengeStatus } from '../../types';
 import { MESSAGE_FINAL_DEFAUT, DEFAULT_SCORE_CONFIGURATION } from '../../constants';
 
+import type { ChallengeFormData, ChallengeFormProps } from './types';
+
 export const ChallengeForm: React.FC<ChallengeFormProps> = ({
-  initialValues = {
-    nom: '',
-    description: '',
-    statut: 'Actif',
-    datePublication: '',
-    difficulte: 'Moyen',
-    timer: 30,
-    nbTentatives: 1,
-    isRandomQuestions: false,
-    scoreConfiguration: DEFAULT_SCORE_CONFIGURATION,
-    multimedias: [],
-    questions: [],
-  },
+  initialValues,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -48,8 +49,23 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
 
   const generateId = () => `tmp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
+  // Utilisez un objet de valeurs par défaut complet si initialValues n'est pas fourni
+  const defaultValues = initialValues || {
+    nom: '',
+    description: '',
+    statut: ChallengeStatus.ACTIF,
+    datePublication: '',
+    difficulte: Difficulty.MOYEN,
+    timer: 30,
+    nbTentatives: 1,
+    isRandomQuestions: false,
+    scoreConfiguration: DEFAULT_SCORE_CONFIGURATION,
+    multimedias: [],
+    questions: [],
+  };
+
   const initialMultimedias =
-    initialValues.multimedias?.map((item) => ({
+    defaultValues.multimedias?.map((item) => ({
       ...item,
       id: item.id || generateId(),
     })) || [];
@@ -57,9 +73,9 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
   const form = useForm<ChallengeFormData>({
     resolver: zodResolver(challengeFormSchema),
     defaultValues: {
-      ...initialValues,
+      ...defaultValues,
       multimedias: initialMultimedias,
-      questions: initialValues.questions || [],
+      questions: defaultValues.questions || [],
     } as ChallengeFormData,
     mode: 'onChange',
   });
@@ -76,22 +92,22 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
     {
       label: 'Informations générales',
       description: 'Définissez les informations de base du challenge',
-      icon: 'faInfoCircle',
+      icon: faInfoCircle,
     },
     {
       label: 'Paramètres',
       description: 'Configurez les paramètres du challenge',
-      icon: 'faClock',
+      icon: faClock,
     },
     {
-      label: 'Contenu des questions',
+      label: 'Questions du Challenge',
       description: 'Créez et organisez les questions',
-      icon: 'faQuestion',
+      icon: faQuestion,
     },
     {
       label: 'Finalisation',
       description: 'Vérifiez et finalisez votre challenge',
-      icon: 'faCheck',
+      icon: faCheck,
     },
   ];
 
@@ -195,7 +211,8 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
 
     // Create a properly formatted Challenge object
     const challengeData = {
-      id: initialValues.id || generateId(),
+      // Générer un nouvel ID si on crée un nouveau challenge, sinon utiliser l'ID existant
+      id: (defaultValues as any).id || generateId(),
       nom: data.nom,
       description: data.description,
       statut: data.statut,
@@ -236,7 +253,7 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
                 sx={{ cursor: index <= activeStep || completed[index - 1] ? 'pointer' : 'default' }}
               >
                 <Stack direction="row" spacing={1} alignItems="center">
-                  {/* La référence directe aux icônes FontAwesome est remplacée ici */}
+                  <FontAwesomeIcon icon={step.icon} />
                   <Typography>{step.label}</Typography>
                 </Stack>
               </StepLabel>
@@ -267,6 +284,7 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
         {activeStep === steps.length - 1 ? (
           <Button
             variant="contained"
+            color="primary"
             type="submit"
             onClick={handleSubmit(handleFormSubmit)}
             disabled={isSubmitting || !isValid || questions?.length === 0}
@@ -274,7 +292,7 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
               isSubmitting ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />
             }
           >
-            {initialValues.id ? 'Mettre à jour' : 'Créer le challenge'}
+            {(defaultValues as any).id ? 'Mettre à jour' : 'Créer le challenge'}
           </Button>
         ) : (
           <Button
@@ -291,7 +309,7 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
       {/* Cancel button */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 2 }}>
         <Button
-          variant="text"
+          variant="outlined"
           color="warning"
           onClick={onCancel}
           startIcon={<FontAwesomeIcon icon={faTimes} />}

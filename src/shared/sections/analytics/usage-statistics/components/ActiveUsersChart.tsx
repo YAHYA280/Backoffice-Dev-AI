@@ -1,7 +1,7 @@
 // /usagestatistics/components/ActiveUsersChart.tsx
 
 import type { ApexOptions } from 'apexcharts';
-import type { SelectChangeEvent } from '@mui/material/Select';
+// import type { SelectChangeEvent } from '@mui/material/Select';
 import type { DateRange, FilterValues } from 'src/shared/sections/analytics/hooks/useAnalyticsApi';
 
 import { useMemo, useState } from 'react';
@@ -33,10 +33,10 @@ export default function ActiveUsersChart({ title, subheader, filters, view }: Pr
   const [compareRange, setCompareRange] = useState<DateRange | null>(null);
   const isComparing = Boolean(compareRange);
 
-  const [selectedWeek, setSelectedWeek] = useState('current');
-  const handleWeekChange = (event: SelectChangeEvent) => {
-    setSelectedWeek(event.target.value);
-  };
+  // const [selectedWeek, setSelectedWeek] = useState('current');
+  // const handleWeekChange = (event: SelectChangeEvent) => {
+  //   setSelectedWeek(event.target.value);
+  // };
 
   // useMemo to prevent infinite loops
   const localFilters = useMemo(() => ({ ...filters, compareRange }), [filters, compareRange]);
