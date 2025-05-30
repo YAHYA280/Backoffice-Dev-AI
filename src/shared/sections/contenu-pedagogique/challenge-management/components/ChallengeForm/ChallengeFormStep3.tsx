@@ -9,6 +9,7 @@ import {
   faQuestion,
   faChevronLeft,
   faPuzzlePiece,
+  faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -18,6 +19,7 @@ import {
   Paper,
   alpha,
   Stack,
+  Alert,
   Button,
   Divider,
   ListItem,
@@ -31,6 +33,11 @@ import { QuestionType } from '../../types';
 import { QuestionSidebar } from './QuestionSidebar';
 
 import type { StepProps, EditableQuestion } from './types';
+
+// Étendez l'interface StepProps pour inclure la propriété error
+interface ExtendedStepProps extends StepProps {
+  error?: string;
+}
 
 const QUESTION_TYPE_OPTIONS = [
   {
@@ -59,7 +66,7 @@ const QUESTION_TYPE_OPTIONS = [
   },
 ];
 
-export const ChallengeFormStep3: React.FC<StepProps> = ({ form, generateId }) => {
+export const ChallengeFormStep3: React.FC<ExtendedStepProps> = ({ form, generateId, error }) => {
   const { watch, setValue } = form;
   const questions = watch('questions') || [];
 
@@ -233,6 +240,19 @@ export const ChallengeFormStep3: React.FC<StepProps> = ({ form, generateId }) =>
         </Typography>
         <Divider sx={{ mb: 2 }} />
       </Grid>
+
+      {/* Affichage du message d'erreur */}
+      {error && (
+        <Grid item xs={12}>
+          <Alert
+            severity="error"
+            icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
+            sx={{ mb: 2 }}
+          >
+            {error}
+          </Alert>
+        </Grid>
+      )}
 
       <Grid item xs={12}>
         <Button

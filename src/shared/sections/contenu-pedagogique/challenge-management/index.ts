@@ -7,12 +7,12 @@ export * from './hooks/useChallenge';
 export { ChallengeList } from './components/ChallengeList';
 
 export { ChallengeItem } from './components/ChallengeItem';
-export { default as ChallengeForm } from './components/ChallengeForm/index';
 // Main components
 export { ChallengesManagementView as default } from './view';
 export { ChallengeDialog } from './components/ChallengeDialog';
 export { ChallengeDetailDrawer } from './components/ChallengeDetailDrawer';
 export { ChallengeDeleteDialog } from './components/ChallengeDeleteDialog';
+export { default as ChallengeForm } from './components/ChallengeForm/index';
 
 // Types and Enums
 export { Difficulty, ScoreMethod, QuestionType, MultimediaType, ChallengeStatus } from './types';

@@ -74,6 +74,7 @@ export const getIntervalLabel = (value: string | undefined) => {
   const option = ABONNEMENT_INTERVALS_OPTIONS.find((interval) => interval.value === value);
   return option ? option.label : 'Mensuel';
 };
+
 // Fonction pour formater l'intervalle en texte
 export const formatInterval = (interval: string) => {
   switch (interval) {

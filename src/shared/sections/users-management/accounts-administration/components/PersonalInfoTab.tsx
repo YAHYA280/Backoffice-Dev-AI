@@ -123,7 +123,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
               )}
             </Box>
 
-            <ConditionalComponent isValid={values.role === 'Parent' && existingCIN}>
+            {/* <ConditionalComponent isValid={values.role === 'Parent' && existingCIN}>
               <>
                 <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
                   Pièces d&apos;identité
@@ -178,7 +178,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                   />
                 </Card>
               </>
-            </ConditionalComponent>
+            </ConditionalComponent> */}
           </Card>
         </Grid>
 
@@ -198,6 +198,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 defaultComponent={
                   <Box>
                     <Button
+                      color="primary"
                       startIcon={<SaveIcon />}
                       variant="contained"
                       onClick={onSubmit}

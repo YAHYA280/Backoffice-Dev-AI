@@ -176,8 +176,8 @@ const SatisfactionRateView: React.FC = () => {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Box sx={{ padding: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
           {/* Badge pour indiquer le nombre de filtres actifs */}
           <Badge
             badgeContent={activeFilterCount}
@@ -200,7 +200,7 @@ const SatisfactionRateView: React.FC = () => {
 
         {/* Afficher les filtres actifs sous forme de chips */}
         <ConditionalComponent isValid={activeFilterCount > 0}>
-          <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
               <FontAwesomeIcon icon={faFilter} style={{ marginRight: '5px' }} />
               Filtres actifs:

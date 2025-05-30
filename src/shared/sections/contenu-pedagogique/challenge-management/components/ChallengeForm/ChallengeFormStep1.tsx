@@ -47,7 +47,6 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
         </Typography>
         <Divider sx={{ mb: 2 }} />
       </Grid>
-
       <Grid item xs={12} md={8}>
         <Controller
           name="nom"
@@ -64,7 +63,6 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
           )}
         />
       </Grid>
-
       <Grid item xs={12} md={4}>
         <Controller
           name="statut"
@@ -107,7 +105,6 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
           )}
         />
       </Grid>
-
       <Grid item xs={12}>
         <Controller
           name="description"
@@ -126,7 +123,6 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
           )}
         />
       </Grid>
-
       <Grid item xs={12} md={6}>
         <Controller
           name="difficulte"
@@ -169,17 +165,16 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
           )}
         />
       </Grid>
-
       <Grid item xs={12} md={6}>
         <Controller
           name="niveauId"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.niveauId}>
               <InputLabel>Niveau</InputLabel>
-              <Select {...field} label="Niveau" displayEmpty>
+              <Select {...field} label="Niveau" displayEmpty required>
                 <MenuItem value="">
-                  <em>Tous niveaux</em>
+                  <em>Sélectionnez un niveau</em>
                 </MenuItem>
                 {niveaux.map((niveau) => (
                   <MenuItem key={niveau.id} value={niveau.id}>
@@ -187,11 +182,11 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
                   </MenuItem>
                 ))}
               </Select>
+              {errors.niveauId && <FormHelperText>{errors.niveauId.message}</FormHelperText>}
             </FormControl>
           )}
         />
       </Grid>
-
       <Grid item xs={12} md={6}>
         <Controller
           name="datePublication"
@@ -210,7 +205,6 @@ export const ChallengeFormStep1: React.FC<StepProps> = ({ form, niveaux = [] }) 
           )}
         />
       </Grid>
-
       <Grid item xs={12}>
         <Controller
           name="fichiers_supplementaires"

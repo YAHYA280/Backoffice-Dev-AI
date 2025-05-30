@@ -4,6 +4,7 @@ import type { Dayjs } from 'dayjs';
 import type { SelectChangeEvent } from '@mui/material';
 
 import dayjs from 'dayjs';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -42,8 +43,17 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { endpoints } from 'src/utils/axios';
+
+import { GATEWAY_API_URL } from 'src/config-global';
 import { LocalizationProvider } from 'src/shared/locales';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
+import {
+  allModules,
+  allPermissions,
+  type Permission,
+  type PermissionType,
+} from 'src/contexts/types/role';
 
 import { toast } from 'src/shared/components/snackbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
@@ -63,43 +73,6 @@ export default function AddRolePage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const confirmCancel = useBoolean();
-
-  // Example modules array
-  const allModules = [
-    { label: 'Acceuil', value: 'Acceuil' },
-    { label: "Statistiques d'usage ", value: "Statistiques d'usage " },
-    { label: 'Performances ', value: 'Performances ' },
-    { label: 'Suivi des erreurs ', value: 'Suivi des erreurs ' },
-    { label: 'Logs', value: 'Logs' },
-    { label: 'Utilisateurs', value: 'Utilisateurs' },
-    { label: 'Comptes', value: 'Comptes' },
-    { label: 'Rôles', value: 'Rôles' },
-    { label: 'Permissions', value: 'Permissions' },
-    { label: "Gestion d'apprentissage ", value: "Gestion d'apprentissage " },
-    { label: 'Gestion des challenges ', value: 'Gestion des challenges ' },
-    { label: 'Ressources multimedias ', value: 'Ressources multimedias ' },
-    { label: 'Gestion des ameliorations', value: 'Gestion des ameliorations' },
-    { label: 'Gestion des plans ', value: 'Gestion des plans ' },
-    { label: 'Suivi & Facturation', value: 'Suivi & Facturation' },
-    { label: 'Notifications', value: 'Notifications' },
-    { label: 'Gestion des FAQs ', value: 'Gestion des FAQs ' },
-    { label: 'Gestion des tickets ', value: 'Gestion des tickets ' },
-    { label: 'Configuration du chatbot', value: 'Configuration du chatbot' },
-    { label: 'Configurations', value: 'Configurations' },
-    { label: 'Tableau de bord', value: 'Tableau de bord' },
-    { label: 'Gestion des assistants', value: 'Gestion des assistants' },
-    { label: 'Moderation et signalement', value: 'Moderation et signalement' },
-  ];
-
-  // Permissions array
-  const allPermissions = [
-    { label: 'Administration', value: 'Administration' },
-    { label: 'Lecture', value: 'Lecture' },
-    { label: 'Écriture', value: 'Écriture' },
-    { label: 'Suppression', value: 'Suppression' },
-    { label: 'Export', value: 'Export' },
-    { label: 'Import', value: 'Import' },
-  ];
 
   // When selected modules change, remove permissions for modules that were unselected
   useEffect(() => {
@@ -163,18 +136,57 @@ export default function AddRolePage() {
     }
 
     setIsSaving(true);
-    
+
     try {
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success('Ajout du rôle avec succès!');
-      
-      // Navigate back to roles list
-      setTimeout(() => {
-        router.push(paths.dashboard.users.roles);
-      }, 500);
+      const permissions: Permission[] = [];
+
+      Object.keys(modulePermissions).forEach((moduleValue) => {
+        const moduleCode = moduleValue;
+
+        modulePermissions[moduleValue].forEach((permValue) => {
+          permissions.push({
+            subModule: moduleCode,
+            permissionType: permValue as PermissionType,
+          });
+        });
+      });
+
+      const roleData = {
+        name,
+        description,
+        permissions,
+      };
+
+      console.log('Sending role data to API:', roleData);
+
+      try {
+        const response = await axios({
+          method: 'post',
+          url: `${GATEWAY_API_URL}${endpoints.role.add}`,
+          data: roleData,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        toast.success('Ajout du rôle avec succès!');
+
+        setTimeout(() => {
+          router.push(paths.dashboard.users.roles);
+        }, 500);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error('Error response:', error.response?.data);
+
+          if (error.response?.data?.code === '001') {
+            toast.error('Un rôle avec ce nom existe déjà. Veuillez choisir un autre nom.');
+          } else {
+            toast.error("Échec de l'ajout du rôle!");
+          }
+        } else {
+          console.error('Unexpected error:', error);
+          toast.error('Une erreur inattendue est survenue.');
+        }
+        setIsSaving(false);
+      }
     } catch (error) {
       console.error('Error adding role:', error);
       toast.error("Échec de l'ajout du rôle!");
@@ -348,9 +360,9 @@ export default function AddRolePage() {
                     anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
                     transformOrigin: { vertical: 'top', horizontal: 'left' },
                     PaperProps: {
-                      style: { 
+                      style: {
                         maxHeight: ITEM_HEIGHT * 6.5,
-                        marginTop: 8
+                        marginTop: 8,
                       },
                     },
                     disableScrollLock: true,
@@ -393,10 +405,7 @@ export default function AddRolePage() {
                           '&.Mui-checked': { color: 'primary.main' },
                         }}
                       />
-                      <ListItemText
-                        primary={module.label}
-                        sx={{ color: 'text.primary' }}
-                      />
+                      <ListItemText primary={module.label} sx={{ color: 'text.primary' }} />
                     </MenuItem>
                   ))}
                 </Select>
@@ -450,9 +459,7 @@ export default function AddRolePage() {
                                       ? modulePermissions[module].includes(permission.value)
                                       : false
                                   }
-                                  onChange={() =>
-                                    handlePermissionToggle(module, permission.value)
-                                  }
+                                  onChange={() => handlePermissionToggle(module, permission.value)}
                                   sx={{
                                     '&.Mui-checked': { color: 'primary.main' },
                                   }}

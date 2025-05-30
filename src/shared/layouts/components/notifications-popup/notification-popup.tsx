@@ -52,6 +52,7 @@ const TABS = [
   { value: 'all', label: 'Tous' },
   { value: 'read', label: 'Lu' },
   { value: 'unread', label: 'Non lu' },
+  { value: 'favorite', label: 'Favoris' },
 ];
 
 export function NotificationPopup(props: NotificationPopupProps) {
@@ -70,6 +71,23 @@ export function NotificationPopup(props: NotificationPopupProps) {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(menuAnchorEl);
 
+  const handleToggleFavorite = (id: string) => {
+    setNotifications(notifications.map((n) =>
+      n.id === id ? { ...n, favorite: !n.favorite } : n
+    ));
+  };
+  
+  const handleDelete = (id: string) => {
+    setNotifications(notifications.filter((n) => n.id !== id));
+  };
+  
+  const handleArchive = (id: string) => {
+    setNotifications(notifications.map((n) =>
+      n.id === id ? { ...n, archived: !n.archived } : n
+    ));
+  };
+  
+
   const totalUnRead = notifications.filter((item) => !item.viewed).length;
 
   const filteredNotifications = notifications.filter((notification) => {
@@ -79,6 +97,7 @@ export function NotificationPopup(props: NotificationPopupProps) {
     if (currentTab === 'read' && !notification.viewed) {
       return false;
     }
+    if (currentTab === 'favorite' && !notification.favorite) return false;
 
     if (search && !notification.title.toLowerCase().includes(search.toLowerCase())) {
       return false;
@@ -269,6 +288,7 @@ export function NotificationPopup(props: NotificationPopupProps) {
               color={
                 (tab.value === 'unread' && 'info') ||
                 (tab.value === 'read' && 'success') ||
+                (tab.value === 'favorite' && 'warning') ||
                 'default'
               }
             >
@@ -276,7 +296,11 @@ export function NotificationPopup(props: NotificationPopupProps) {
                 ? notifications.length
                 : tab.value === 'unread'
                   ? notifications.filter((item) => !item.viewed).length
-                  : notifications.filter((item) => item.viewed).length}
+                  : tab.value === 'read'
+                    ? notifications.filter((item) => item.viewed).length
+                    : tab.value === 'favorite'
+                      ? notifications.filter((item) => item.favorite).length
+                      : 0}
             </Label>
           }
         />
@@ -293,6 +317,9 @@ export function NotificationPopup(props: NotificationPopupProps) {
               key={notification.id}
               notification={notification}
               onMarkAsRead={handleMarkAsRead}
+              onToggleFavorite={handleToggleFavorite}
+              onDelete={handleDelete}
+              onArchive={handleArchive}
             />
           ))
         ) : (

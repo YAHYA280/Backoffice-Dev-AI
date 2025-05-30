@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -45,7 +45,9 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
   prerequisChallenges = [],
 }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const [questionError, setQuestionError] = useState('');
   const [completed, setCompleted] = useState<{ [k: number]: boolean }>({});
+  const [formIsValid, setFormIsValid] = useState(false);
 
   const generateId = () => `tmp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -83,10 +85,17 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
   const {
     handleSubmit,
     trigger,
-    formState: { isValid },
+    formState: { isValid, errors },
     watch,
   } = form;
   const questions = watch('questions');
+
+  // Vérifier si le formulaire est valide à chaque changement
+  useEffect(() => {
+    if (activeStep === 3 && questions && questions.length > 0) {
+      setFormIsValid(true);
+    }
+  }, [activeStep, questions, isValid]);
 
   const steps = [
     {
@@ -135,6 +144,11 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
         ];
         break;
       case 2:
+        if (!questions || questions.length === 0) {
+          setQuestionError('Vous devez ajouter au moins une question avant de continuer.');
+          console.error('Vous devez ajouter au moins une question avant de continuer.');
+          return;
+        }
         fieldsToValidate = ['questions'];
         break;
       default:
@@ -174,7 +188,7 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
       case 1:
         return <ChallengeFormStep2 {...commonProps} />;
       case 2:
-        return <ChallengeFormStep3 {...commonProps} />;
+        return <ChallengeFormStep3 {...commonProps} error={questionError} />;
       case 3:
         return <ChallengeFormStep4 {...commonProps} />;
       default:
@@ -183,9 +197,8 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
   };
 
   const handleFormSubmit = (data: ChallengeFormData) => {
-    // Make sure all questions have proper IDs before submitting
     const finalQuestions = data.questions.map((q, idx) => {
-      // Ensure all elements have IDs
+      // S'assurer que tous les éléments ont des IDs
       const elements = (q.elements || []).map((element) => ({
         ...element,
         id: element.id || generateId(),
@@ -203,13 +216,13 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
       };
     });
 
-    // Fix ScoreConfiguration - ensure id is always present
+    // Corriger la ScoreConfiguration - s'assurer que l'id est toujours présent
     const scoreConfig = {
       ...data.scoreConfiguration,
       id: data.scoreConfiguration.id || generateId(),
     };
 
-    // Create a properly formatted Challenge object
+    // Créer un objet Challenge correctement formaté
     const challengeData = {
       // Générer un nouvel ID si on crée un nouveau challenge, sinon utiliser l'ID existant
       id: (defaultValues as any).id || generateId(),
@@ -236,7 +249,6 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
         : undefined,
     };
 
-    // Submit the formatted challenge data
     onSubmit(challengeData);
   };
 
@@ -285,9 +297,9 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
           <Button
             variant="contained"
             color="primary"
-            type="submit"
             onClick={handleSubmit(handleFormSubmit)}
-            disabled={isSubmitting || !isValid || questions?.length === 0}
+            // Désactive le bouton uniquement si isSubmitting ou s'il n'y a pas de questions
+            disabled={isSubmitting || questions?.length === 0}
             startIcon={
               isSubmitting ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />
             }
@@ -317,6 +329,18 @@ export const ChallengeForm: React.FC<ChallengeFormProps> = ({
           Abandonner
         </Button>
       </Box>
+
+      {/* Affichage des erreurs pour le débogage (à supprimer en production) */}
+      {Object.keys(errors).length > 0 && activeStep === 3 && (
+        <Box sx={{ mt: 3, p: 2, bgcolor: '#fff9f9', borderRadius: 1 }}>
+          <Typography color="error" variant="subtitle2">
+            Erreurs de validation:
+          </Typography>
+          <pre style={{ overflow: 'auto', maxHeight: '200px' }}>
+            {JSON.stringify(errors, null, 2)}
+          </pre>
+        </Box>
+      )}
     </Box>
   );
 };

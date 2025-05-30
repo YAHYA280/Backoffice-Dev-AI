@@ -226,7 +226,7 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
         {/* Refresh button to reset filters */}
         <Tooltip title="Réinitialiser les filtres">
           <IconButton
-            color="inherit"
+            color="primary"
             onClick={handleResetFilters}
             sx={{
               height: 40,
@@ -236,13 +236,13 @@ export default function UnifiedFilter({ filters, onFilterChange, view }: Props) 
               boxShadow: (theme) => `0 0 2px ${theme.palette.grey[400]}`,
             }}
           >
-            <FontAwesome icon={faRedo} width={16} />
+            <FontAwesome icon={faRedo}  width={16} />
           </IconButton>
         </Tooltip>
 
         {/* Filter button with badge for active filters */}
         <IconButton
-          color="inherit"
+          color="primary"
           onClick={handleClick}
           sx={{
             height: 40,

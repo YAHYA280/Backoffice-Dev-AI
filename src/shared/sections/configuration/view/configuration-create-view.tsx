@@ -335,6 +335,7 @@ export function ConfigurationCreateView({ addCGU }: ConfigurationCreateViewProps
                   color="inherit"
                   startIcon={<ArrowBackIcon />}
                   sx={{
+                    color: 'primary.main',
                     px: 2,
                     py: 1,
                     borderRadius: 2,

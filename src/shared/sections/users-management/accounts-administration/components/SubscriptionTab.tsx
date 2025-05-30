@@ -1,42 +1,57 @@
 import type { ChildUser } from 'src/contexts/types/user';
 import type { Upgrade, UpgradeType } from 'src/contexts/types/common';
-import type { PurchasedSubscription } from 'src/contexts/types/abonnement';
+import type { IAbonnementItem, PurchasedSubscription } from 'src/contexts/types/abonnement';
 
 import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
 
 import AddIcon from '@mui/icons-material/Add';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Box, Card, Grid, Link, Stack, Alert, Button, Divider, Typography } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 
 import { fCurrency } from 'src/utils/format-number';
 
-import { getIntervalLabel } from 'src/shared/_mock';
+import { abonnementItems, getIntervalLabel } from 'src/shared/_mock';
 
 import { Label } from 'src/shared/components/label';
 import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { UpgradeDialog } from './UpgradeDialog';
+import { ChangePlanDialog } from './ChangePlanDialog';
 
 interface SubscriptionTabProps {
-  subscription: PurchasedSubscription;
+  open: boolean;
+  onClose: () => void;
+  onChangePlan: (planId: string, interval: string) => void;
+  subscription?: PurchasedSubscription;
   children: ChildUser[];
   totalSubjectsSelected: number;
   remainingSubjectsToAllocate: number;
   openSubjectsModal: (childId: string) => void;
   applyUpgrade: (upgrade: Upgrade) => void;
+  changePlan: (planId: string) => void;
+  availablePlans?: IAbonnementItem[];
+  navigateToPlans?: () => void;
 }
 
 const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
+  open,
+  onClose,
+  onChangePlan,
   subscription,
   children,
   totalSubjectsSelected,
   remainingSubjectsToAllocate,
   openSubjectsModal,
   applyUpgrade,
+  changePlan,
+  navigateToPlans,
+  availablePlans = [],
 }) => {
   // États pour le dialogue d'upgrade
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
@@ -47,15 +62,16 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
   const [priceEstimation, setPriceEstimation] = useState<number>(0);
 
   // Prix par défaut
-  const subjectBasePrice = 5; // Prix par matière supplémentaire
   const questionBasePrice = 2; // Prix par question supplémentaire
-  const currentSubscriptionPrice = subscription.price.monthly || 0;
+  const currentSubscriptionPrice = subscription?.price?.monthly || 0;
 
   // Calculer le nombre actuel de questions ou de matières selon le type d'upgrade
   const getCurrentValue = useCallback(
-    (type: UpgradeType, childId: string | null): number => {
-      if (type === 'subjects') {
-        return subscription.nbr_subjects;
+    (type: UpgradeType, childId: string | null): number | string => {
+      if (!subscription) return 0;
+
+      if (type === 'interval') {
+        return subscription.interval;
       }
 
       if (childId) {
@@ -70,37 +86,49 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
 
   // Calculer le total après l'upgrade
   const calculateTotalAfterUpgrade = useCallback(
-    (type: UpgradeType, value: number, childId: string | null): number => {
+    (type: UpgradeType, value: number, childId: string | null): number | string => {
       const current = getCurrentValue(type, childId);
-      return current + value;
+      if (type === 'interval') {
+        return upgradeInterval || 'monthly';
+      }
+
+      // Pour les questions, on additionne comme avant
+      return (current as number) + value;
     },
-    [getCurrentValue]
+    [getCurrentValue, upgradeInterval]
   );
 
   // Ouvrir le dialogue d'upgrade
   const openUpgradeDialog = useCallback(
     (type: UpgradeType, childId?: string) => {
+      // Vérifier si un abonnement existe
+      if (!subscription) return;
+
       // Initialisation des valeurs d'upgrade par défaut
-      const initialValue = type === 'subjects' ? 1 : 5;
+      const initialValue = type === 'interval' ? 0 : 5;
 
       setUpgradeType(type);
       setUpgradeValue(initialValue);
       setTargetChildId(childId || null);
 
       // Calculer le prix estimé initial
-      const basePrice = type === 'subjects' ? subjectBasePrice : questionBasePrice;
-      const initialPrice = basePrice * initialValue;
-      setPriceEstimation(initialPrice);
-
+      if (type === 'interval') {
+        // Pour le changement d'intervalle, pas de prix initial
+        setPriceEstimation(0);
+      } else {
+        // Pour les questions
+        const initialPrice = questionBasePrice * initialValue;
+        setPriceEstimation(initialPrice);
+      }
       setUpgradeInterval('monthly');
       setUpgradeDialogOpen(true);
     },
-    [subjectBasePrice, questionBasePrice]
+    [questionBasePrice, subscription]
   );
 
   // Appliquer l'upgrade
   const handleApplyUpgrade = useCallback(() => {
-    if (!upgradeType) return;
+    if (!upgradeType || !subscription) return;
 
     const currentDate = new Date().toISOString();
     const upgradeCost = priceEstimation;
@@ -108,17 +136,7 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
     // Créer l'objet d'upgrade approprié selon le type
     let upgrade: Upgrade;
 
-    if (upgradeType === 'subjects') {
-      // Pour les upgrades de matières (GlobalUpgrade)
-      upgrade = {
-        id: `upgrade-${currentDate}`,
-        type: 'subjects',
-        cost: upgradeCost,
-        date: currentDate,
-        additional_subjects: upgradeValue,
-        interval: upgradeInterval,
-      };
-    } else if (upgradeType === 'questions' && targetChildId) {
+    if (upgradeType === 'questions' && targetChildId) {
       // Pour les upgrades de questions pour un enfant spécifique (ChildSpecificUpgrade)
       upgrade = {
         id: `upgrade-${currentDate}`,
@@ -127,6 +145,15 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
         date: currentDate,
         childId: targetChildId,
         additional_questions: upgradeValue,
+      };
+    } else if (upgradeType === 'interval') {
+      // Pour les upgrades d'intervalle de facturation
+      upgrade = {
+        id: `upgrade-${currentDate}`,
+        type: 'interval',
+        cost: upgradeCost,
+        date: currentDate,
+        interval: upgradeInterval,
       };
     } else {
       // Pour d'autres cas (UpgradeBase)
@@ -143,7 +170,47 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
 
     // Fermer le dialogue
     setUpgradeDialogOpen(false);
-  }, [upgradeType, upgradeInterval, priceEstimation, targetChildId, applyUpgrade, upgradeValue]);
+  }, [
+    upgradeType,
+    upgradeInterval,
+    priceEstimation,
+    targetChildId,
+    applyUpgrade,
+    upgradeValue,
+    subscription,
+  ]);
+
+  // Vérifier si l'abonnement existe
+  const hasSubscription = !!subscription;
+
+  // Affichage pour le cas où il n'y a pas d'abonnement
+  if (!hasSubscription) {
+    return (
+      <Grid container spacing={3} justifyContent="center">
+        <Grid xs={12} md={8} item>
+          <Card sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="h5" gutterBottom>
+              Aucun abonnement actif
+            </Typography>
+            <Typography variant="body1" color="text.secondary" paragraph>
+              Vous n&apos;avez pas encore d&apos;abonnement actif. Choisissez un abonnement pour
+              accéder à toutes les fonctionnalités.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<ShoppingCartIcon />}
+              onClick={navigateToPlans}
+              size="large"
+              sx={{ mt: 2 }}
+            >
+              Choisir un abonnement
+            </Button>
+          </Card>
+        </Grid>
+      </Grid>
+    );
+  }
 
   return (
     <Grid container spacing={3}>
@@ -244,16 +311,28 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
 
           <Divider sx={{ my: 2 }} />
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Stack spacing={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SwapHorizIcon />}
+              onClick={() => changePlan}
+              size="small"
+              fullWidth
+            >
+              Changer d&apos;abonnement
+            </Button>
+
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
-              onClick={() => openUpgradeDialog('subjects')}
+              onClick={() => openUpgradeDialog('interval')}
               size="small"
+              fullWidth
             >
-              Upgrade abonnement
+              Changer intervalle de facturation
             </Button>
-          </Box>
+          </Stack>
         </Card>
       </Grid>
 
@@ -369,10 +448,21 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
         targetChildId={targetChildId}
         onChildSelect={setTargetChildId}
         upgradeInterval={upgradeInterval}
-        currentBillingInterval={subscription.interval}
-        setUpgradeInterval={upgradeType === 'subjects' ? setUpgradeInterval : undefined}
-        currentSubscriptionPrice={subscription.price.monthly}
+        currentBillingInterval={subscription?.interval || 'monthly'}
+        setUpgradeInterval={upgradeType === 'interval' ? setUpgradeInterval : undefined}
+        currentSubscriptionPrice={subscription?.price?.monthly || 0}
       />
+
+      {/* Dialogue de changement de plan */}
+      <ConditionalComponent isValid={!!subscription}>
+        <ChangePlanDialog
+          open={open}
+          onClose={onClose}
+          currentSubscription={subscription}
+          onChangePlan={onChangePlan}
+          availablePlans={abonnementItems}
+        />{' '}
+      </ConditionalComponent>
     </Grid>
   );
 };

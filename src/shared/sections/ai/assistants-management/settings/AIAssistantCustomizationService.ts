@@ -13,7 +13,7 @@ export class AIAssistantCustomizationService {
           welcomeMessage: "Bonjour ! Comment puis-je vous aider ?",
           motivationalPhrases: ["Excellent travail !", "Continue comme ça !", "Tu progresses bien !"],
           helpPhrases: ["Je vais t'expliquer la règle...", "Voici comment conjuguer ce verbe..."],
-          audioFormat: "mp3",
+          audioFormat: ["mp3"], // Make sure this is an array
           voiceTranscription: false,
           imageSupport: false,
           imageFormat: [],

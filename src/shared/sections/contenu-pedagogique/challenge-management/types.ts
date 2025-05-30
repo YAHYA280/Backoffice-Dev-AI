@@ -86,6 +86,24 @@ export interface PrerequisChallenge {
   pourcentageMinimum: number; // Added for business logic
 }
 
+export interface Trophy {
+  id: string;
+  titre: string;
+  description: string;
+  type: 'OR' | 'ARGENT' | 'BRONZE' | 'BADGE_PERSONNALISE';
+  iconeUrl?: string;
+  critereAttribution: CritereAttribution;
+  createdAt: string;
+  challengeId: string;
+}
+
+export interface CritereAttribution {
+  minScore?: number; // Score minimum requis
+  maxTemps?: number; // Temps maximum pour réussir (en secondes ou minutes)
+  maxTentatives?: number; // Tentatives max autorisées pour obtenir le trophée
+  tousLesQtsReussis?: boolean; // Tous les questions doivent être réussis ?
+}
+
 // Updated Challenge interface
 export interface Challenge {
   id: string;
@@ -108,6 +126,7 @@ export interface Challenge {
   scoreConfiguration: ScoreConfiguration;
   multimedias?: Multimedia[];
   questions?: Question[];
+  trophies?: Trophy[];
 
   // Business properties from original code, not in diagram but needed for UI
   isRandomQuestions?: boolean;

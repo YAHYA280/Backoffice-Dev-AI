@@ -252,7 +252,6 @@ export const _phoneNumbers = [
   '+48 22 123 45 67',
 ];
 
-
 export const _countryNames = [
   'United States',
   'Canada',
@@ -304,7 +303,7 @@ export const _roles = [
   `Modérateur`,
   `Agent de support`,
   `Parent`,
-  `Enfant`
+  `Enfant`,
 ];
 
 // ----------------------------------------------------------------------
@@ -481,7 +480,6 @@ export const _tags = [
   `Musique`,
 ];
 
-
 // ----------------------------------------------------------------------
 
 export const _taskNames = [
@@ -545,58 +543,58 @@ export const _courseNames = [
 export const _fileNames = [
   'cover-2.jpg',
   'design-suriname-2015.mp3',
-  'expertise-2015-conakry-sao-tome-and-principe-gender.mp4',
+  'expertise-2015.mp4',
   'money-popup-crack.pdf',
   'cover-4.jpg',
   'cover-6.jpg',
   'large-news.txt',
-  'nauru-6015-small-fighter-left-gender.psd',
+  'nauru-6015.psd',
   'tv-xs.doc',
-  'gustavia-entertainment-productivity.docx',
-  'vintage-bahrain-saipan.xls',
-  'indonesia-quito-nancy-grace-left-glad.xlsx',
+  'gustavia.docx',
+  'vintage-bahrain.xls',
+  'indonesia-quito.xlsx',
   'legislation-grain.zip',
-  'large-energy-dry-philippines.rar',
+  'large-energy-dry.rar',
   'footer-243-ecuador.iso',
-  'kyrgyzstan-04795009-picabo-street-guide-style.ai',
-  'india-data-large-gk-chesterton-mother.esp',
-  'footer-barbados-celine-dion.ppt',
-  'socio-respectively-366996.pptx',
-  'socio-ahead-531437-sweden-popup.wav',
-  'trinidad-samuel-morse-bring.m4v',
+  'kyrgyzstan-04795009.ai',
+  'india-data-large.esp',
+  'footer-barbados.ppt',
+  'socio-respectively.pptx',
+  'socio-ahead-531437.wav',
+  'trinidad-samuel-morse.m4v',
   'cover-12.jpg',
   'cover-18.jpg',
-  'xl-david-blaine-component-tanzania-books.pdf',
-  'gustavia-entertainment-productivity.docx',
+  'xl-david-blaine-component.pdf',
+  'gustavia-entertainment.docx',
   'vintage-bahrain-saipan.xls',
-  'indonesia-quito-nancy-grace-left-glad.xlsx',
+  'indonesia-quito.xlsx',
   'legislation-grain.zip',
-  'large-energy-dry-philippines.rar',
+  'large-energy-dry.rar',
   'footer-243-ecuador.iso',
-  'kyrgyzstan-04795009-picabo-street-guide-style.ai',
-  'india-data-large-gk-chesterton-mother.esp',
+  'kyrgyzstan-04795009-picabo.ai',
+  'india-data-large-gk.esp',
   'footer-barbados-celine-dion.ppt',
   'socio-respectively-366996.pptx',
-  'gustavia-entertainment-productivity.docx',
+  'gustavia-entertainment.docx',
   'vintage-bahrain-saipan.xls',
-  'indonesia-quito-nancy-grace-left-glad.xlsx',
+  'indonesia-quito-nancy.xlsx',
   'legislation-grain.zip',
-  'large-energy-dry-philippines.rar',
+  'large-energy-dry.rar',
   'footer-243-ecuador.iso',
-  'kyrgyzstan-04795009-picabo-street-guide-style.ai',
-  'india-data-large-gk-chesterton-mother.esp',
-  'footer-barbados-celine-dion.ppt',
+  'kyrgyzstan-04795009.ai',
+  'india-data-large-gk.esp',
+  'footer-barbados-celine.ppt',
   'socio-respectively-366996.pptx',
-  'gustavia-entertainment-productivity.docx',
+  'gustavia-entertainment.docx',
   'vintage-bahrain-saipan.xls',
-  'indonesia-quito-nancy-grace-left-glad.xlsx',
+  'indonesia-quito-nancy.xlsx',
   'legislation-grain.zip',
-  'large-energy-dry-philippines.rar',
+  'large-energy-dry.rar',
   'footer-243-ecuador.iso',
-  'kyrgyzstan-04795009-picabo-street-guide-style.ai',
-  'india-data-large-gk-chesterton-mother.esp',
-  'footer-barbados-celine-dion.ppt',
-  'socio-respectively-366996.pptx',
+  'kyrgyzstan-04795009.ai',
+  'india-data-large.esp',
+  'footer-barbados-celine.ppt',
+  'socio-respectively.pptx',
 ];
 
 export const _eventNames = [
@@ -682,7 +680,7 @@ export const _descriptions = [
   `Sunt totam facilis. Quam commodi voluptatem veniam. Tempora deleniti itaque fugit nihil voluptas.`,
   `Ipsam aliquam velit nobis repellendus officiis aut deserunt id et. Nihil sunt aut dolores aut. Dolores est ipsa quia et laborum quidem laborum accusamus id. Facilis odit quod hic laudantium saepe omnis nisi in sint. Sed cupiditate possimus id.`,
   `Magnam non eveniet optio optio ut aliquid atque. Velit libero aspernatur quis laborum consequatur laudantium. Tempora facere optio fugit accusantium ut. Omnis aspernatur reprehenderit autem esse ut ut enim voluptatibus.`,
-`Est enim et sit non impedit aperiam cumque animi. Aut eius impedit saepe blanditiis. Totam molestias magnam minima fugiat.`,
+  `Est enim et sit non impedit aperiam cumque animi. Aut eius impedit saepe blanditiis. Totam molestias magnam minima fugiat.`,
   `Unde a inventore et. Sed esse ut. Atque ducimus quibusdam fuga quas id qui fuga.`,
   `Eaque natus adipisci soluta nostrum dolorem. Nesciunt ipsum molestias ut aliquid natus ut omnis qui fugiat. Dolor et rem. Ut neque voluptatem blanditiis quasi ullam deleniti.`,
   `Nam et error exercitationem qui voluptate optio. Officia omnis qui accusantium ipsam qui. Quia sequi nulla perspiciatis optio vero omnis maxime omnis ipsum. Perspiciatis consequuntur asperiores veniam dolores.`,
@@ -780,18 +778,9 @@ export const _descriptions = [
   `Sunt totam facilis. Quam commodi voluptatem veniam. Tempora deleniti itaque fugit nihil voluptas.`,
 ];
 
-export const _userRoles = [
-  `Admin`,
-  `Parent`,
-  "Enfant",
-];
+export const _userRoles = [`Admin`, `Parent`, 'Enfant'];
 
-
-export const _userStatus = [
-  `Suspendu`,
-  `Bloqué`,
-  `Supprimé`,
-];
+export const _userStatus = [`Suspendu`, `Bloqué`, `Supprimé`];
 
 export const _parents = [
   { id: '1', name: 'Martin Dupont', email: 'martin.dupont@exemple.com', verified: true },
@@ -807,20 +796,18 @@ export const _ADMINISTRATION_ROLES = [
   { value: 'support', label: 'Support Technique' },
 ];
 
-
 export const _STATUS_OPTIONS = [
-  { value: 'Actif', label: 'Actif'},
-  { value: 'Bloqué', label: 'Bloqué'},
-  { value: 'Suspendu', label: 'Suspendu'},
-  { value: 'Supprimé', label: 'Supprimé'},
-]
-
+  { value: 'ACTIVE', label: 'Actif' },
+  { value: 'BLOCKED', label: 'Bloqué' },
+  { value: 'SUSPENDED', label: 'Suspendu' },
+  { value: 'DELETED', label: 'Supprimé' },
+];
 
 export const _STATUS_FAQs = [
-  { value: 'Publié', label: 'Publié'},
-  { value: 'Brouillion', label: 'Brouillion'},
-  { value: 'Archivé', label: 'Archivé'},
-]
+  { value: 'Publié', label: 'Publié' },
+  { value: 'Brouillion', label: 'Brouillion' },
+  { value: 'Archivé', label: 'Archivé' },
+];
 // ----------------------------------------------------------------------
 
 export const _ameliorationsTitles = [
@@ -834,6 +821,6 @@ export const _ameliorationsTitles = [
 export const _cin = [
   {
     recto: '/mock-images/recto.png',
-    verso: '/mock-images/verso.png'
-  }
+    verso: '/mock-images/verso.png',
+  },
 ];

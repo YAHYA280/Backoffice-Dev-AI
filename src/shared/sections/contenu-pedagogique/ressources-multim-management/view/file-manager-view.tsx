@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from "react";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import type { IFileMock, IFolderMock} from "src/shared/_mock";
 import type { IFile, IFileFilters, IFolderManager } from "src/contexts/types/file";
 
 import dayjs from "dayjs";
@@ -16,7 +17,8 @@ import {
   faTable,
   faTimes,
   faFilter,
-  faFileExport,
+  faUpload,
+  faFolder,
   faArrowsRotate,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,6 +27,7 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { tablePaginationClasses } from "@mui/material/TablePagination";
 import {
   Box,
@@ -41,6 +44,7 @@ import {
   IconButton,
   FormControl,
   ListItemText,
+  ListItemIcon,
   InputAdornment,
 } from "@mui/material";
 
@@ -51,7 +55,7 @@ import { useSetState } from "src/hooks/use-set-state";
 
 import { fIsAfter } from "src/utils/format-time";
 
-import { _allFiles } from "src/shared/_mock";
+import { _files , _folders} from "src/shared/_mock";
 import { DashboardContent } from "src/shared/layouts/dashboard";
 
 import { toast } from "src/shared/components/snackbar";
@@ -76,6 +80,7 @@ dayjs.extend(isSameOrBefore);
 
 export const FILE_TYPE_OPTIONS = [
   "txt",
+  "dossier",
   "zip",
   "audio",
   "image",
@@ -164,7 +169,7 @@ const OPERATOR_OPTIONS_TYPE = [
 
 const FILE_COLUMNS = [
   { id: "select", label: "", width: 50 },
-  { id: "name", label: "Nom", width: 300 },
+  { id: "name", label: "Nom", width: 250 },
   { id: "size", label: "Taille", width: 120 },
   { id: "type", label: "Type", width: 120 },
   { id: "startDate", label: "Date de création", width: 160 },
@@ -211,9 +216,9 @@ const defaultFolder: IFolderManager = {
   url: "",
   tags: [],
   isFavorited: false,
-  shared: null,
   createdAt: null,
   modifiedAt: null,
+  parentId: null
 };
 
 type ApplyFilterProps = {
@@ -223,7 +228,10 @@ type ApplyFilterProps = {
   comparator: (a: any, b: any) => number;
 };
 
-function applyFilter({ inputData, comparator, filters, dateError }: ApplyFilterProps) {
+
+
+
+function applyFilter({ inputData, comparator, filters }: ApplyFilterProps) {
   let data = [...inputData];
 
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
@@ -282,10 +290,33 @@ function applyFilter({ inputData, comparator, filters, dateError }: ApplyFilterP
 
 export function FileManagerView() {
   const table = useTable({ defaultRowsPerPage: 10 });
-  const [tableData, setTableData] = useState<IFile[]>(_allFiles);
+  const [tableData, setTableData] = useState<Array<IFolderMock|IFileMock>>([
+    ..._folders,
+    ..._files,
+  ]);
   const confirm = useBoolean();
-  const upload = useBoolean();
-  const [view, setView] = useState("list");
+  const [currentFolderId, setCurrentFolderId] = useState<string|null>(null);
+  const handleFolderOpen = (id: string) => {
+    setCurrentFolderId(id);
+    table.onChangePage(null, 0); // Reset to first page when navigating
+  };
+  const handleBack = () => {
+    if (currentFolderId) {
+      const parentId = getCurrentFolderParent(currentFolderId);
+      setCurrentFolderId(parentId as string | null); // Using type assertion
+      table.onChangePage(null, 0);
+    }
+  };
+
+  const newFolderDialog = useBoolean();
+  const importDialog = useBoolean();
+
+  const [folderName, setFolderName] = useState("");
+  const handleChangeFolderName = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFolderName(e.target.value);
+  }, []);
+
+  const [view, setView] = useState<"list" | "grid">("list");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     DEFAULT_TABLE_COLUMNS.map((col) => col.id)
   );
@@ -309,39 +340,31 @@ export function FileManagerView() {
   });
   const dateError = fIsAfter(filters.state.startDate, filters.state.endDate);
 
-  const handleOpenColumnsMenu = (event: MouseEvent<HTMLButtonElement>) => {
-    setAnchorElColumns(event.currentTarget);
-  };
-  const handleCloseColumnsMenu = () => {
-    setAnchorElColumns(null);
-  };
-  const handleToggleColumn = (columnId: string) => {
+  const [anchorNew, setAnchorNew] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorNew);
+  const handleMenuClick = (e: MouseEvent<HTMLButtonElement>) => setAnchorNew(e.currentTarget);
+  const handleMenuClose = () => setAnchorNew(null);
+  const handleNewFolder = () => { handleMenuClose(); newFolderDialog.onTrue(); };
+  const handleImportFile = () => { handleMenuClose(); importDialog.onTrue(); };
+
+  const handleOpenColumnsMenu = (e: MouseEvent<HTMLButtonElement>) => setAnchorElColumns(e.currentTarget);
+  const handleCloseColumnsMenu = () => setAnchorElColumns(null);
+  const handleToggleColumn = (colId: string) =>
     setVisibleColumns((prev) =>
-      prev.includes(columnId)
-        ? prev.filter((id) => id !== columnId)
-        : [...prev, columnId]
+      prev.includes(colId) ? prev.filter((x) => x !== colId) : [...prev, colId]
     );
-  };
-  const handleToggleAll = (checked: boolean) => {
-    if (checked) {
-      setVisibleColumns(DEFAULT_TABLE_COLUMNS.map((col) => col.id));
-    } else {
-      setVisibleColumns(["name"]);
-    }
-  };
-  const filteredColumns = DEFAULT_TABLE_COLUMNS.filter((col) =>
-    col.label.toLowerCase().includes(columnSearch.toLowerCase())
+  const handleToggleAll = (checked: boolean) =>
+    setVisibleColumns(checked ? DEFAULT_TABLE_COLUMNS.map((c) => c.id) : ["name"]);
+  const filteredColumns = DEFAULT_TABLE_COLUMNS.filter((c) =>
+    c.label.toLowerCase().includes(columnSearch.toLowerCase())
   );
-  const handleOpenFilterMenu = (event: MouseEvent<HTMLButtonElement>) => {
-    setAnchorElFilter(event.currentTarget);
-  };
-  const handleCloseFilterMenu = () => {
-    setAnchorElFilter(null);
-  };
-  const handleChangeFilterColumn = (event: SelectChangeEvent) => {
-    const newCol = event.target.value as string;
-    setFilterColumn(newCol);
-    switch (newCol) {
+
+  const handleOpenFilterMenu = (e: MouseEvent<HTMLButtonElement>) => setAnchorElFilter(e.currentTarget);
+  const handleCloseFilterMenu = () => setAnchorElFilter(null);
+  const handleChangeFilterColumn = (e: SelectChangeEvent) => {
+    const col = e.target.value;
+    setFilterColumn(col);
+    switch (col) {
       case "type":
         setFilterOperator("is");
         break;
@@ -354,13 +377,10 @@ export function FileManagerView() {
         break;
       default:
         setFilterOperator("contains");
-        break;
     }
     setFilterValue("");
   };
-  const handleChangeFilterOperator = (event: SelectChangeEvent) => {
-    setFilterOperator(event.target.value as string);
-  };
+  const handleChangeFilterOperator = (e: SelectChangeEvent) => setFilterOperator(e.target.value);
   const handleApplyFilter = () => {
     setCustomFilter({ column: filterColumn, operator: filterOperator, value: filterValue });
     handleCloseFilterMenu();
@@ -371,8 +391,9 @@ export function FileManagerView() {
     setFilterValue("");
     setCustomFilter({ column: "name", operator: "contains", value: "" });
     filters.setState({ name: "", type: [], startDate: null, endDate: null, size: "" });
-    setVisibleColumns(DEFAULT_TABLE_COLUMNS.map((col) => col.id));
+    setVisibleColumns(DEFAULT_TABLE_COLUMNS.map((c) => c.id));
   };
+
   let dataFiltered = applyFilter({
     inputData: tableData,
     comparator: getComparator(table.order, table.orderBy),
@@ -381,74 +402,121 @@ export function FileManagerView() {
   });
   if (customFilter.value) {
     dataFiltered = dataFiltered.filter((file) => {
-      const fileValue = (file as any)[customFilter.column];
-      if (fileValue === undefined || fileValue === null) return false;
-      return compareValue(fileValue, customFilter.value, customFilter.operator);
+      const val = (file as any)[customFilter.column];
+      return val != null && compareValue(val, customFilter.value, customFilter.operator);
     });
   }
+  const folderItems = dataFiltered.filter(item => item.parentId === currentFolderId);
+
+  const getCurrentFolderParent = (folderId: string): string | null => {
+    const currentFolder = tableData.find(item => item.id === folderId);
+    return currentFolder?.parentId || null; // Return null instead of undefined
+  };
+  const pageItems = folderItems.slice(
+    table.page * table.rowsPerPage,
+    table.page * table.rowsPerPage + table.rowsPerPage
+  );
+
+  const notFoundInFolder = folderItems.length === 0;
   const dataInPage = dataFiltered.slice(
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage
   );
-  const notFound = dataFiltered.length === 0;
+
   const handleChangeView = useCallback(
-    (event: React.SyntheticEvent, newView: string) => {
-      if (newView) {
-        setView(newView);
-      }
-    },
+    (_e: React.SyntheticEvent, v: string) => v && setView(v as any),
     []
   );
+
   const handleDeleteItem = useCallback(
     (id: string) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
+      setTableData((prev) => prev.filter((r) => r.id !== id));
       toast.success("Suppression réussie !");
-      setTableData(deleteRow);
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
-    [dataInPage.length, table, tableData]
+    [dataInPage.length, table]
   );
+
   const handleDeleteItems = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-    toast.success("Suppression réussie !");
-    setTableData(deleteRows);
+    setTableData((prev) => prev.filter((r) => !table.selected.includes(r.id)));
+    toast.success("Suppression réussie !");
     table.onUpdatePageDeleteRows({
       totalRowsInPage: dataInPage.length,
       totalRowsFiltered: dataFiltered.length,
     });
-  }, [dataFiltered.length, dataInPage.length, table, tableData]);
-  const computedTableHead = [
-    ...DEFAULT_TABLE_COLUMNS.filter(
-      (col) => col.id !== "actions" && visibleColumns.includes(col.id)
-    ),
-    DEFAULT_TABLE_COLUMNS.find((col) => col.id === "actions")!,
-  ];
+  }, [dataFiltered.length, dataInPage.length, table]);
 
+  const computedTableHead = [
+    ...DEFAULT_TABLE_COLUMNS.filter((c) => c.id !== "actions" && visibleColumns.includes(c.id)),
+    DEFAULT_TABLE_COLUMNS.find((c) => c.id === "actions")!,
+  ];
   return (
     <DashboardContent maxWidth="xl">
       <Box sx={{ mb: { xs: 3, md: 5 } }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <CustomBreadcrumbs
-            heading="Gestion des ressources"
-            links={[
-              { name: "Tableau de bord", href: paths.dashboard.root },
-              { name: "Contenu pédagogique", href: paths.dashboard.contenu_pedagogique.ressourcesMultimedia },
-              { name: "Ressources multimédias" },
-            ]}
-            sx={{ flex: 1 }}
-          />
+        <CustomBreadcrumbs
+  heading="Gestion des ressources"
+  links={[
+    { name: "Tableau de bord", href: paths.dashboard.root },
+    { name: "Contenu pédagogique", href: paths.dashboard.contenu_pedagogique.ressourcesMultimedia },
+    { name: "Ressources multimédias" },
+    ...(currentFolderId ? [{ name: tableData.find(item => item.id === currentFolderId)?.name || 'Dossier' }] : []),
+  ]}
+  sx={{ flex: 1 }}
+/>
+          
           <Button
-            onClick={upload.onTrue}
-            variant="contained"
-            color="primary"
-            startIcon={<FontAwesomeIcon icon={faPlus} style={{ width: 20 }} />}
+    onClick={handleMenuClick}
+    variant="contained"
+    color="primary"
+    startIcon={<FontAwesomeIcon icon={faPlus} />}
+  >
+    Nouveau
+  </Button>
+
+         
+  <Menu
+            anchorEl={anchorNew}
+            open={menuOpen}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
-            Ajouter une ressource
-          </Button>
+            <MenuItem onClick={handleNewFolder}>
+              <ListItemIcon><FontAwesomeIcon icon={faFolder} /></ListItemIcon>
+              <ListItemText>Nouveau dossier</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleImportFile}>
+              <ListItemIcon><FontAwesomeIcon icon={faUpload} /></ListItemIcon>
+              <ListItemText>Importer un fichier</ListItemText>
+            </MenuItem>
+          </Menu>
+  
         </Box>
       </Box>
 
-      <FileManagerNewFolderDialog open={upload.value} onClose={upload.onFalse} />
+      <FileManagerNewFolderDialog
+        open={newFolderDialog.value}
+        onClose={newFolderDialog.onFalse}
+        
+        title="Créer un dossier"
+        folderName={folderName}
+        onChangeFolderName={handleChangeFolderName}
+        onCreate={() => {
+          // your create‐folder logic
+          newFolderDialog.onFalse();
+          setFolderName("");
+        }}
+      />
+      
+      <FileManagerNewFolderDialog
+        open={importDialog.value}
+        onClose={importDialog.onFalse}
+        title="Importer des fichiers"
+        onUpload={() => {
+          importDialog.onFalse();
+        }}
+      />
 
       <Menu
         anchorEl={anchorElColumns}
@@ -652,104 +720,100 @@ export function FileManagerView() {
             <Tab label="Liste" value="list" />
             <Tab label="Grid" value="grid" />
           </Tabs>
+          {currentFolderId && (
+            <Button
+            onClick={handleBack}
+            variant="outlined"
+            startIcon={<ArrowBackIosNewIcon />}
+            size="small"
+            sx={{
+              mt: 2,
+              mb: 2,
+              borderRadius: 2,
+              textTransform: 'none',
+              boxShadow: 1,
+              color: 'primary.main',
+              borderColor: 'primary.main',
+              '&:hover': {
+                boxShadow: 4,
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+            }}
+          >
+            Retour
+          </Button>
+          )}
           <Box sx={{ gap: 2, flexShrink: 0 }}>
             {view === "list" ? (
-              <Tooltip title="Sélectionner colonnes" arrow >
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FontAwesomeIcon icon={faTable} />}
-                onClick={handleOpenColumnsMenu}
-                color="primary"
-              >
-                Colonnes
-              </Button>
+              <Tooltip title="Sélectionner colonnes" arrow>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<FontAwesomeIcon icon={faTable} />}
+                  onClick={handleOpenColumnsMenu}
+                  color="primary"
+                >
+                  Colonnes
+                </Button>
               </Tooltip>
             ):(
               <>
               </>
             )}
             <Tooltip
-              title="Filtres"
-              arrow
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    fontSize: 12,
-                    borderRadius: 1,
-                    boxShadow: 3,
-                    padding: "6px 12px",
+                title="Filtres"
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      fontSize: 12,
+                      borderRadius: 1,
+                      boxShadow: 3,
+                      padding: "6px 12px",
+                    },
                   },
-                },
-              }}
-            >
-              <IconButton
-                size="small"
-                color="primary"
-                onClick={handleOpenFilterMenu}
-                sx={{
-                  marginLeft: 1,
-                  padding: '10px',
-                  color: 'primary.main',
                 }}
               >
-                <FontAwesomeIcon icon={faFilter} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip
-              title="Rafraîchir"
-              arrow
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    fontSize: 12,
-                    borderRadius: 1,
-                    boxShadow: 3,
-                    padding: "6px 12px",
-                  },
-                },
-              }}
-            >
-              <IconButton
-                size="small"
-                onClick={handleRefresh}
-                color="primary"
-                sx={{
-                  marginLeft: 1,
-                  padding: '10px',
-                  color: 'primary.main',
-                }}
-              >
-                <FontAwesomeIcon icon={faArrowsRotate} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip
-              title="Exporter"
-              arrow
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    fontSize: 12,
-                    borderRadius: 1,
-                    boxShadow: 3,
-                    padding: "6px 12px",
-                  },
-                },
-              }}
-            >
-              <IconButton
-                size="small"
-                color="primary"
-                onClick={() => {}}
-                sx={{
-                  marginLeft: 1,
-                  padding: '10px',
-                  color: 'primary.main',
-                }}
-              >
-                <FontAwesomeIcon icon={faFileExport} />
-              </IconButton>
-            </Tooltip>
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={handleOpenFilterMenu}
+                    sx={{
+                      marginLeft: 1,
+                      padding: '10px',
+                      color: 'primary.main',
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faFilter} />
+                  </IconButton>
+                </Tooltip><Tooltip
+                  title="Rafraîchir"
+                  arrow
+                  componentsProps={{
+                    tooltip: {
+                      sx: {
+                        fontSize: 12,
+                        borderRadius: 1,
+                        boxShadow: 3,
+                        padding: "6px 12px",
+                      },
+                    },
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={handleRefresh}
+                    color="primary"
+                    sx={{
+                      marginLeft: 1,
+                      padding: '10px',
+                      color: 'primary.main',
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faArrowsRotate} />
+                  </IconButton>
+                </Tooltip>
+
           </Box>
         </Box>
 
@@ -790,34 +854,51 @@ export function FileManagerView() {
                 </>
               )}
               <TableBody>
-                {notFound ? (
+                {notFoundInFolder ? (
                   <TableNoData notFound />
                 ) : (
-                  dataFiltered
-                    .slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage)
-                    .map((row) => (
-                      <FileManagerTableRow
-                        key={row.id}
-                        row={row}
-                        folder={defaultFolder}
-                        selected={table.selected.includes(row.id)}
-                        onSelectRow={() => table.onSelectRow(row.id)}
-                        onDeleteRow={() => handleDeleteItem(row.id)}
-                        columns={computedTableHead}
-                      />
-                    ))
+                  pageItems.map((row) => (
+                    <FileManagerTableRow
+                      key={row.id}
+                      row={row}
+                      folder={defaultFolder}
+                      selected={table.selected.includes(row.id)}
+                      onSelectRow={() => table.onSelectRow(row.id)}
+                      onDeleteRow={() => handleDeleteItem(row.id)}
+                      columns={computedTableHead}
+
+                      // ← here’s the new bit:
+                      onDoubleClick={() => {
+                        if ((row as IFolderMock).type === 'dossier') {
+                          setCurrentFolderId(row.id);
+                        }
+                      }}
+                    />
+                  ))
                 )}
               </TableBody>
+
             </Table>
           ) : (
-            <FileManagerGridView
-              table={table}
-              dataFiltered={dataFiltered}
-              onDeleteItem={handleDeleteItem}
-              onOpenConfirm={confirm.onTrue}
-            />
+            <Box sx={{ px: 2, pt: 2 }}> 
+    <FileManagerGridView
+      table={table}
+      dataFiltered={folderItems} // Use folderItems instead of dataFiltered
+      onDeleteItem={handleDeleteItem}
+      onOpenConfirm={confirm.onTrue}
+      onDoubleClick={(id) => {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        const item = tableData.find(item => item.id === id);
+        if (item && item.type === 'dossier') {
+          handleFolderOpen(id);
+        }
+      }}
+    />
+  </Box>  
           )}
         </TableContainer>
+
+        
 
         {dataFiltered.length > table.rowsPerPage ? (
           <TablePaginationCustom

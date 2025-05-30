@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import ListItem from "@mui/material/ListItem";
-import Typography from "@mui/material/Typography";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+// Material UI imports
+import {
+  Box,
+  List,
+  Fade,
+  Paper,
+  Button,
+  Divider,
+  ListItem,
+  useTheme,
+  Typography,
+  ListItemText,
+  ListItemButton
+} from "@mui/material";
 
+// Settings panel components
 import AIAssistantFiltering from "./settings/AIAssistantFiltering";
 import AIAssistantLanguages from "./settings/AIAssistantLanguages";
 import AIAssistantDescription from "./settings/AIAssistantDescription";
@@ -19,123 +27,179 @@ import AIAssistantDetailLevel from "./settings/AIAssistantDetailLevel";
 import AIAssistantCustomization from "./settings/AIAssistantCustomization";
 import AIAssistantTestingValidation from "./settings/AIAssistantTestingValidation";
 
+// Types
+type MenuOption = {
+  id: string;
+  label: string;
+  component: React.ReactNode;
+};
+
 type AIAssistantSettingsProps = {
   assistantId: string;
 };
 
 export default function AIAssistantSettings({ assistantId }: AIAssistantSettingsProps) {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<string>("Description");
-  
-  const menuOptions = [
-    "Description",
-    "Gestion des Réponses IA",
-    "Réglage du Niveau de Détail",
-    "Gestion des Langues",
-    "Supervision et Filtrage",
-    "Test et Validation",
-  ];
-  
-  const handleMenuItemClick = (option: string) => {
-    setSelectedOption(option);
-  };
-  
-  const handleReturnClick = () => {
-    router.back();
-  };
-  
-  // Fonction pour rendre le contenu basé sur l'option sélectionnée
-  const renderContent = () => {
-    switch (selectedOption) {
-      case "Description":
-        return <AIAssistantDescription assistantId={assistantId} />;
-      case "Gestion des Réponses IA":
-        return <AIAssistantCustomization />;
-      case "Réglage du Niveau de Détail":
-        return <AIAssistantDetailLevel assistantId={assistantId} />;
-      case "Gestion des Langues":
-        return <AIAssistantLanguages assistantId={assistantId} />;
-      case "Supervision et Filtrage":
-        return <AIAssistantFiltering assistantId={assistantId} />;
-      case "Test et Validation":
-        return <AIAssistantTestingValidation assistantId={assistantId} />; // 🔹 Correction ici
-      default:
-        return (
-          <Typography variant="body1">
-            Sélectionnez une option dans le menu pour configurer l&apos;assistant.
-          </Typography>
-        );
+  const theme = useTheme();
+  const [selectedOption, setSelectedOption] = useState<string>("description");
+
+  // Memoized menu options to prevent recreating on every render
+  const menuOptions: MenuOption[] = useMemo(() => [
+    {
+      id: "description",
+      label: "Description",
+      component: <AIAssistantDescription assistantId={assistantId} />
+    },
+    {
+      id: "customization",
+      label: "Gestion des Réponses IA",
+      component: <AIAssistantCustomization />
+    },
+    {
+      id: "detail-level",
+      label: "Réglage du Niveau de Détail",
+      component: <AIAssistantDetailLevel assistantId={assistantId} />
+    },
+    {
+      id: "languages",
+      label: "Gestion des Langues",
+      component: <AIAssistantLanguages assistantId={assistantId} />
+    },
+    {
+      id: "filtering",
+      label: "Supervision et Filtrage",
+      component: <AIAssistantFiltering assistantId={assistantId} />
+    },
+    {
+      id: "testing",
+      label: "Test et Validation",
+      component: <AIAssistantTestingValidation assistantId={assistantId} />
     }
-  };
-  
-  return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* Sidebar fixe */}
-      <Box 
-        sx={{
-          width: 280,
-          borderRight: "1px solid #e0e0e0",
-          bgcolor: "#f5f5f5",
-          p: 2,
-          height: "100%",
-          position: "fixed",
-          overflowY: "auto"
-        }}
+  ], [assistantId]);
+
+  // Get the currently selected component
+  const activeComponent = useMemo(() => {
+    const option = menuOptions.find(opt => opt.id === selectedOption);
+    return option?.component || (
+      <Typography variant="body1" sx={{ textAlign: "center", py: 4 }}>
+        Sélectionnez une option dans le menu pour configurer l&apos;assistant.
+      </Typography>
+    );
+  }, [selectedOption, menuOptions]);
+
+  const handleReturnClick = () => router.back();
+
+  // Sidebar component - extracted for better organization
+  const Sidebar = () => (
+    <Paper
+      elevation={3}
+      sx={{
+        width: 280,
+        borderRight: `1px solid ${theme.palette.divider}`,
+        bgcolor: theme.palette.background.paper,
+        p: 2,
+        height: "100%",
+        position: "fixed",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        onClick={handleReturnClick}
+        startIcon={<ArrowBackIcon />}
+        sx={{ mb: 2 }}
       >
-        {/* Bouton de retour */}
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={handleReturnClick}
-          sx={{ mb: 2 }}
-        >
-          Retour
-        </Button>
-        
-        <Typography variant="h6">Paramètres de l&apos;Assistant</Typography>
-        <Divider sx={{ my: 2 }} />
-        
-        <List>
-          {menuOptions.map((option) => (
-            <ListItem key={option} disablePadding>
-              <ListItemButton
-                selected={selectedOption === option}
-                onClick={() => handleMenuItemClick(option)}
-                sx={{
-                  "&.Mui-selected": {
-                    bgcolor: "#e3f2fd",
-                    borderRight: "3px solid #1976d2",
-                  },
-                }}
-              >
-                <ListItemText primary={option} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-      
-      {/* Contenu principal avec marge pour éviter le chevauchement avec le menu fixe */}
-      <Box 
+        Retour
+      </Button>
+
+      <Typography variant="h6" sx={{ mb: 1 }}>Paramètres de l&apos;Assistant</Typography>
+      <Divider sx={{ my: 2 }} />
+
+      <List sx={{ flexGrow: 1 }}>
+        {menuOptions.map((menuItem) => (
+          <ListItem key={menuItem.id} disablePadding>
+            <ListItemButton
+              selected={selectedOption === menuItem.id}
+              onClick={() => setSelectedOption(menuItem.id)}
+              sx={{
+                borderRadius: 1,
+                mb: 0.5,
+                "&.Mui-selected": {
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
+                  "&:hover": {
+                    bgcolor: theme.palette.primary.main,
+                  }
+                },
+              }}
+            >
+              <ListItemText primary={menuItem.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Paper>
+  );
+
+  // Main content component - extracted for better organization
+  const MainContent = () => {
+    const activeMenuOption = menuOptions.find(opt => opt.id === selectedOption);
+
+    return (
+      <Box
         sx={{
           flexGrow: 1,
-          ml: "280px", // Correspondant à la largeur du menu
+          ml: "280px",
           p: 4,
           height: "100vh",
           overflowY: "auto"
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ textAlign: "center" }} >
-          {selectedOption}
-        </Typography>
-        
-        <Divider sx={{ width: "100%", maxWidth: 800, mb: 3 }} />
-        
-        <Box sx={{ width: "100%", maxWidth: 800, mx: "auto" }}>
-          {renderContent()}
-        </Box>
+        <Fade in timeout={450}>
+          <div>
+            <Typography
+              variant="h4"
+              gutterBottom
+              sx={{
+                textAlign: "center",
+                color: theme.palette.primary.main,
+                fontWeight: "medium"
+              }}
+            >
+              {activeMenuOption?.label || "Configuration de l'Assistant"}
+            </Typography>
+
+            <Divider sx={{ width: "100%", maxWidth: 800, mx: "auto", mb: 4 }} />
+
+            <Box sx={{
+              width: "100%",
+              maxWidth: 800,
+              mx: "auto",
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: theme.palette.background.paper
+            }}>
+              {activeComponent}
+            </Box>
+          </div>
+        </Fade>
       </Box>
+    );
+  };
+
+  return (
+    <Box sx={{
+      display: "flex",
+      height: "100vh",
+      overflow: "hidden",
+      bgcolor: theme.palette.background.default
+    }}>
+      <Sidebar />
+      <MainContent />
     </Box>
   );
 }

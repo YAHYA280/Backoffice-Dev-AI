@@ -1,11 +1,14 @@
 'use client';
 
-import type { FileDetail, IFileManager, IFolderManager } from 'src/contexts/types/file';
+import type { IFolderMock } from 'src/shared/_mock';
+import type { IFile, FileDetail, IFolderManager } from 'src/contexts/types/file';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
+  faStar,
   faTrash,
   faDownload,
   faEllipsisV,
@@ -47,12 +50,13 @@ export type ColumnDefinition = {
 };
 
 type Props = {
-  row: IFileManager;
+  row: IFile | IFolderMock;
   selected: boolean;
   onSelectRow: () => void;
   onDeleteRow: () => void;
   columns?: ColumnDefinition[];
   folder: IFolderManager;
+  onDoubleClick?: () => void;
 };
 
 export function FileManagerTableRow({
@@ -62,6 +66,7 @@ export function FileManagerTableRow({
   onDeleteRow,
   folder,
   columns,
+  onDoubleClick,
 }: Props) {
   const theme = useTheme();
   const details = useBoolean();
@@ -74,7 +79,11 @@ export function FileManagerTableRow({
     click: () => {
       details.onTrue();
     },
-    doubleClick: () => {},
+    doubleClick: () => {
+      if (onDoubleClick && (row as IFolderMock).type === 'dossier') {
+        onDoubleClick();
+      }
+    },
   });
 
   const defaultStyles = {
@@ -85,6 +94,18 @@ export function FileManagerTableRow({
     '&:last-of-type': {
       borderRight: 'none',
     },
+  };
+
+  const [isFavorite, setIsFavorite] = useState(row.isFavorited);
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+    toast.success(
+      isFavorite 
+        ? `${row.name} retiré des favoris` 
+        : `${row.name} ajouté aux favoris`
+    );
+    popover.onClose();
   };
 
   const rowStyle = {
@@ -104,7 +125,7 @@ export function FileManagerTableRow({
   if (columns && columns.length > 0) {
     return (
       <>
-        <TableRow selected={selected} sx={rowStyle}>
+        <TableRow selected={selected} sx={rowStyle} onClick={handleClick}>
           <TableCell padding="checkbox">
             <Checkbox
               checked={selected}
@@ -184,7 +205,7 @@ export function FileManagerTableRow({
                 );
               case 'actions':
                 return (
-                  <TableCell key="actions" align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
+                  <TableCell key="actions" align="center" sx={{ px: 1, whiteSpace: 'nowrap' }}>
                     <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
                       <Tooltip title="Voir détails">
                         <IconButton
@@ -261,6 +282,15 @@ export function FileManagerTableRow({
                           <FontAwesomeIcon icon={faDownload} />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip title={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+                      <IconButton
+                        color={isFavorite ? 'warning' : 'default'}
+                        size="small"
+                        onClick={handleToggleFavorite}
+                      >
+                        <FontAwesomeIcon icon={faStar} />
+                      </IconButton>
+                    </Tooltip>
                     </Stack>
                   </TableCell>
                 );

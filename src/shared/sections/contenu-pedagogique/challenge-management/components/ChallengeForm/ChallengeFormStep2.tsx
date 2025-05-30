@@ -22,6 +22,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
+
 import { ScoreMethod } from '../../types';
 import {
   TENTATIVES_OPTIONS,
@@ -36,7 +38,13 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
   niveaux = [],
   prerequisChallenges = [],
 }) => {
-  const { control, watch, setValue } = form;
+  // Add errors to the destructuring here
+  const {
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
 
   const niveauId = watch('niveauId');
   const scoreMethod = watch('scoreConfiguration.methode');
@@ -69,15 +77,17 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
                   Durée du timer: {value} minutes
                 </Typography>
                 <Slider
-                  value={value || 30}
+                  value={value || 5}
                   onChange={(_, newValue) => onChange(newValue)}
                   aria-labelledby="timer-slider"
                   valueLabelDisplay="auto"
                   step={5}
                   marks
                   min={5}
-                  max={120}
+                  max={60}
+                  // Remove the 'required' attribute here as it's not supported by Slider
                 />
+                {errors.timer && <FormHelperText error>{errors.timer.message}</FormHelperText>}
               </>
             )}
           />
@@ -89,15 +99,18 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
           name="nbTentatives"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.nbTentatives}>
               <InputLabel>Nombre de tentatives autorisées</InputLabel>
-              <Select {...field} label="Nombre de tentatives autorisées">
+              <Select {...field} label="Nombre de tentatives autorisées" required>
                 {TENTATIVES_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>
                 ))}
               </Select>
+              {errors.nbTentatives && (
+                <FormHelperText>{errors.nbTentatives.message}</FormHelperText>
+              )}
             </FormControl>
           )}
         />
@@ -134,9 +147,9 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
           name="scoreConfiguration.methode"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.scoreConfiguration?.methode}>
               <InputLabel>Méthode de calcul du score</InputLabel>
-              <Select {...field} label="Méthode de calcul du score">
+              <Select {...field} label="Méthode de calcul du score" required>
                 {METHODE_CALCUL_SCORE_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -146,13 +159,17 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
               <FormHelperText>
                 {METHODE_CALCUL_SCORE_OPTIONS.find((o) => o.value === field.value)?.description}
               </FormHelperText>
+              {errors.scoreConfiguration?.methode && (
+                <FormHelperText error>{errors.scoreConfiguration?.methode.message}</FormHelperText>
+              )}
             </FormControl>
           )}
         />
       </Grid>
 
       {/* Additional parameters based on score method selected */}
-      {scoreMethod === ScoreMethod.TEMPS && (
+
+      <ConditionalComponent isValid={scoreMethod === ScoreMethod.TEMPS}>
         <Grid item xs={12} md={6}>
           <TextField
             label="Bonus de temps (points)"
@@ -168,9 +185,9 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
             }}
           />
         </Grid>
-      )}
+      </ConditionalComponent>
 
-      {scoreMethod === ScoreMethod.PENALITES && (
+      <ConditionalComponent isValid={scoreMethod === ScoreMethod.PENALITES}>
         <Grid item xs={12} md={6}>
           <TextField
             label="Pénalité par erreur (points)"
@@ -186,7 +203,7 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
             }}
           />
         </Grid>
-      )}
+      </ConditionalComponent>
 
       <Grid item xs={12}>
         <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -233,7 +250,7 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
               />
             </Grid>
 
-            {prerequisId !== 'none' && (
+            <ConditionalComponent isValid={prerequisId !== 'none'}>
               <Grid item xs={12} md={6}>
                 <Controller
                   name="prerequisPourcentage"
@@ -260,7 +277,7 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
                   )}
                 />
               </Grid>
-            )}
+            </ConditionalComponent>
           </Grid>
         </Paper>
       </Grid>
@@ -284,6 +301,9 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
               multiline
               rows={2}
               placeholder="Ex: Félicitations ! Vous avez réussi le challenge avec brio !"
+              required
+              error={!!errors.messageSucces}
+              helperText={errors.messageSucces?.message}
             />
           )}
         />
@@ -301,6 +321,9 @@ export const ChallengeFormStep2: React.FC<StepProps> = ({
               multiline
               rows={2}
               placeholder="Ex: Pas de chance cette fois-ci. Essayez encore !"
+              required
+              error={!!errors.messageEchec}
+              helperText={errors.messageEchec?.message}
             />
           )}
         />

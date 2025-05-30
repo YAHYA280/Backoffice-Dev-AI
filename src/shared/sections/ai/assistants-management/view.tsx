@@ -7,7 +7,11 @@ import type {
 } from 'src/types/ai-assistant';
 
 import { useRouter } from 'next/navigation';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+
+import Button from '@mui/material/Button';
 
 import { paths } from 'src/routes/paths';
 
@@ -292,12 +296,28 @@ export function PersonalizationAiView() {
     <>
       <DashboardContent maxWidth="xl">
         <CustomBreadcrumbs
-          heading="Assistant IA"
+          heading="Gestion des assistants IA"
           links={[
             { name: 'Tableau de bord', href: paths.dashboard.root },
             { name: 'Assistant IA', href: paths.dashboard.ai.assistants_management },
             { name: 'Gestion des assistants' },
           ]}
+          action={
+            <Button
+            variant="contained"
+            startIcon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={addDialog.onTrue}
+            sx={{
+              backgroundColor: 'primary.main',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'primary.main',
+              },
+            }}
+          >
+            Nouveau assistant
+          </Button>
+          }
           sx={{ mb: { xs: 3, md: 5 } }}
         />
         <AIAssistantTable

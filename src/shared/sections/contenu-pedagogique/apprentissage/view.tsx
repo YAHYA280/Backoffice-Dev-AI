@@ -861,5 +861,17 @@ export const ApprentissageView: React.FC = () => {
     }
   };
 
-  return <Container maxWidth={false}>{renderContent()}</Container>;
+  return (
+    <Container 
+      maxWidth={false} 
+      sx={{ 
+        mx: '10%', 
+        width: '96%', 
+        marginLeft: 'auto', 
+        marginRight: 'auto' 
+      }}
+    >
+      {renderContent()}
+    </Container>
+  );
 };

@@ -85,7 +85,7 @@ export const paths = {
       edit: (id: string) => `${ROOTS.DASHBOARD}/users/access-management/roles/edit/${id}`,
       add: `${ROOTS.DASHBOARD}/users/access-management/roles/consulter`,
       demo: {
-        edit: `${ROOTS.DASHBOARD}/users/access-management/roles/edit/${MOCK_ID}`
+        edit: `${ROOTS.DASHBOARD}/users/access-management/roles/edit/${MOCK_ID}`,
       },
     },
     user: {
@@ -106,6 +106,10 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/contenu-pedagogique`,
       apprentissage: `${ROOTS.DASHBOARD}/contenu-pedagogique/apprentissage`,
       challenges: `${ROOTS.DASHBOARD}/contenu-pedagogique/challenges`,
+      trophies: (challengeId: string) => `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}`,
+      newTrophy: (challengeId: string) => `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}/new`,
+      editTrophy: (challengeId: string, trophyId: string) =>
+        `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}/${trophyId}/edit`,
       ressourcesMultimedia: `${ROOTS.DASHBOARD}/contenu-pedagogique/ressources-multimedia`,
       ameliorations: `${ROOTS.DASHBOARD}/contenu-pedagogique/ameliorations`,
     },
@@ -133,11 +137,17 @@ export const paths = {
     },
     abonnements: {
       root: `${ROOTS.DASHBOARD}/abonnements`,
-      new: `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/new`,
-      details: (id: string) => `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/${id}`,
-      edit: (id: string) => `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements/${id}/edit`,
+      new: `${ROOTS.DASHBOARD}/abonnements/new`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/abonnements/${id}`,
+      edit: (id: string) => `${ROOTS.DASHBOARD}/abonnements/${id}/edit`,
       suivi_facturation: `${ROOTS.DASHBOARD}/abonnements/suivi-factures`,
-      gestion_abonnements: `${ROOTS.DASHBOARD}/abonnements/gestion-abonnements`,
+      gestion_abonnements: `${ROOTS.DASHBOARD}/abonnements`,
+    },
+    paiements: {
+      root: `${ROOTS.DASHBOARD}/paiements`,
+      suivi_facturation: `${ROOTS.DASHBOARD}/paiements/suivi-factures`,
+      payment_configuration: `${ROOTS.DASHBOARD}/paiements/payment-configuration`,
+      method: (name: string) => `${ROOTS.DASHBOARD}/paiements/payment-configuration/${name}`,
     },
     ai: {
       root: `${ROOTS.DASHBOARD}/ai`,
@@ -146,8 +156,9 @@ export const paths = {
       taux: `${ROOTS.DASHBOARD}/ai/taux`,
       performance: `${ROOTS.DASHBOARD}/ai/performance`,
     },
-    moderation : {
+    moderation: {
       root: `${ROOTS.DASHBOARD}/moderation`,
     },
+    audit: `${ROOTS.DASHBOARD}/audit`,
   },
 };

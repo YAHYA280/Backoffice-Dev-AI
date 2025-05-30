@@ -174,6 +174,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ currentUser, handleResetPassw
 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                 <Button
+                  color="primary"
                   variant="contained"
                   onClick={openConfirmationDialog}
                   sx={{ backgroundColor: '#1e293b', '&:hover': { backgroundColor: '#0f172a' } }}
@@ -211,7 +212,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ currentUser, handleResetPassw
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeConfirmationDialog} sx={{ color: '#1e293b' }}>
+          <Button onClick={closeConfirmationDialog} sx={{ color: 'primary.main' }}>
             Annuler
           </Button>
           <Button onClick={handleConfirmReset} variant="contained" color="primary" autoFocus>

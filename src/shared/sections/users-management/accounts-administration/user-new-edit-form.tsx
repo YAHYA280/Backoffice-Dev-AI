@@ -5,17 +5,15 @@ import { z as zod } from 'zod';
 import { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import { TextField } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Autocomplete from '@mui/material/Autocomplete';
-import { Stack, Button, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { paths } from 'src/routes/paths';
@@ -177,87 +175,7 @@ export function UserNewEditForm({ currentUser }: Props) {
                 }
               />
             </Box>
-
-            {values.role === 'Parent' ? (
-              <>
-                <Box
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Box
-                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                    onClick={() => setRectoOpen(!rectoOpen)}
-                  >
-                    <Label color="default" sx={{ mr: 1 }}>
-                      CIN recto
-                    </Label>
-                    <FontAwesomeIcon
-                      icon={rectoOpen ? faChevronDown : faChevronRight}
-                      style={{ width: 20, height: 20 }}
-                    />
-                  </Box>
-                  {rectoOpen && existingCIN ? (
-                    <Box
-                      component="img"
-                      src={existingCIN.recto}
-                      alt="CIN Recto"
-                      sx={{
-                        width: '100%',
-                        height: 'auto',
-                        maxWidth: 400,
-                        borderRadius: 1,
-                        border: '1px solid #ccc',
-                        mt: 2,
-                      }}
-                    />
-                  ) : null}
-                </Box>
-
-                <Box
-                  sx={{
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Box
-                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                    onClick={() => setVersoOpen(!versoOpen)}
-                  >
-                    <Label color="default" sx={{ mr: 1 }}>
-                      CIN verso
-                    </Label>
-                    <FontAwesomeIcon
-                      icon={versoOpen ? faChevronDown : faChevronRight}
-                      style={{ width: 20, height: 20 }}
-                    />
-                  </Box>
-                  {versoOpen && existingCIN ? (
-                    <Box
-                      component="img"
-                      src={existingCIN.verso}
-                      alt="CIN Verso"
-                      sx={{
-                        width: '100%',
-                        height: 'auto',
-                        maxWidth: 400,
-                        borderRadius: 1,
-                        border: '1px solid #ccc',
-                        mt: 2,
-                      }}
-                    />
-                  ) : null}
-                </Box>
-              </>
-            ) : (
-              <></>
-            )}
+            
             <Box sx={{ flexGrow: 1 }} />
           </Card>
         </Grid>
@@ -359,68 +277,6 @@ export function UserNewEditForm({ currentUser }: Props) {
               )}
             </Box>
 
-            {values.role === 'Parent' ? (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Réimporter CIN
-                </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Recto
-                    </Typography>
-                    <Button variant="contained" component="label">
-                      Choisir un fichier
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*,application/pdf"
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            setCinRectoFile(e.target.files[0]);
-                          }
-                        }}
-                      />
-                    </Button>
-                    {cinRectoFile ? (
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        Fichier sélectionné : {cinRectoFile.name}
-                      </Typography>
-                    ) : (
-                      <></>
-                    )}
-                  </Box>
-
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Verso
-                    </Typography>
-                    <Button variant="contained" component="label">
-                      Choisir un fichier
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*,application/pdf"
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            setCinVersoFile(e.target.files[0]);
-                          }
-                        }}
-                      />
-                    </Button>
-                    {cinVersoFile ? (
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        Fichier sélectionné : {cinVersoFile.name}
-                      </Typography>
-                    ) : (
-                      <></>
-                    )}
-                  </Box>
-                </Stack>
-              </Box>
-            ) : (
-              <></>
-            )}
             <Box sx={{ flexGrow: 1 }} />
             <Box sx={{ textAlign: 'right', mt: 3 }}>
               <LoadingButton

@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faSave, 
-  faTrash, 
-  faHistory, 
-  faPaperPlane, 
-  faChevronDown, 
+import {
+  faSave,
+  faTrash,
+  faHistory,
+  faPaperPlane,
+  faChevronDown,
   faCheckCircle,
-  faExclamationCircle, 
-  faExclamationTriangle, 
+  faExclamationCircle,
+  faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
 
 import {
@@ -64,7 +64,7 @@ export default function AIAssistantTestingValidation({ assistantId }: AIAssistan
   const [evaluation, setEvaluation] = useState<'pertinent' | 'partiellement' | 'incorrect' | null>(null);
   const [evaluationComments, setEvaluationComments] = useState("");
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
-  
+
   // État pour l'historique des tests
   const [testHistory, setTestHistory] = useState<TestResult[]>([
     {
@@ -86,45 +86,45 @@ export default function AIAssistantTestingValidation({ assistantId }: AIAssistan
       responseTime: 1.8
     }
   ]);
-  
+
   // État pour les alertes et messages
   const [alertMessage, setAlertMessage] = useState<{type: 'success' | 'error' | 'warning' | 'info', message: string} | null>(null);
-  
+
   // Fonction pour soumettre une question de test
   const handleSubmitQuestion = async () => {
     if (!question.trim()) return;
-    
+
     setIsGeneratingResponse(true);
     setCurrentResponse("");
     setShowEvaluationForm(false);
     setEvaluation(null);
     setEvaluationComments("");
-    
+
     try {
       // Simuler un appel API à l'assistant IA
       const startTime = Date.now();
-      
+
       // Simulation d'un délai de réponse
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Exemple de réponse générée (à remplacer par l'appel API réel)
-      const aiResponse = `Voici ma réponse à votre question: "${question}". 
-      
+      const aiResponse = `Voici ma réponse à votre question: "${question}".
+
 Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce de fournir des explications adaptées à leur niveau de compréhension.`;
-      
+
       const endTime = Date.now();
       const responseTime = ((endTime - startTime) / 1000).toFixed(1);
-      
+
       setCurrentResponse(aiResponse);
       setShowEvaluationForm(true);
       setAlertMessage({
         type: 'success',
         message: `Réponse générée en ${responseTime} secondes`
       });
-      
+
       // Effacer le message après 5 secondes
       setTimeout(() => setAlertMessage(null), 5000);
-      
+
     } catch (error) {
       console.error("Erreur lors de la génération de la réponse:", error);
       setAlertMessage({
@@ -135,7 +135,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
       setIsGeneratingResponse(false);
     }
   };
-  
+
   // Fonction pour soumettre une évaluation
   const handleSubmitEvaluation = () => {
     if (!evaluation) {
@@ -145,7 +145,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
       });
       return;
     }
-    
+
     const newTestResult: TestResult = {
       id: `test-${Date.now()}`,
       timestamp: new Date().toISOString(),
@@ -155,30 +155,30 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
       comments: evaluationComments,
       responseTime: 1.5 // À remplacer par le temps réel mesuré
     };
-    
+
     setTestHistory([newTestResult, ...testHistory]);
-    
+
     // Réinitialiser le formulaire
     setQuestion("");
     setCurrentResponse("");
     setShowEvaluationForm(false);
     setEvaluation(null);
     setEvaluationComments("");
-    
+
     setAlertMessage({
       type: 'success',
       message: "Évaluation enregistrée avec succès"
     });
-    
+
     // Effacer le message après 5 secondes
     setTimeout(() => setAlertMessage(null), 5000);
   };
-  
+
   // Fonction pour supprimer un test de l'historique
   const handleDeleteTest = (testId: string) => {
     setTestHistory(testHistory.filter(test => test.id !== testId));
   };
-  
+
   // Fonction pour formatter la date
   const formatDate = (dateString: string) => {
     try {
@@ -194,7 +194,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
       return dateString;
     }
   };
-  
+
   // Fonction pour obtenir l'icône d'évaluation
   const getEvaluationIcon = (evalType: 'pertinent' | 'partiellement' | 'incorrect' | null) => {
     switch(evalType) {
@@ -208,7 +208,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
         return null;
     }
   };
-  
+
   // Fonction pour obtenir le libellé de l'évaluation
   const getEvaluationLabel = (evalType: 'pertinent' | 'partiellement' | 'incorrect' | null) => {
     switch(evalType) {
@@ -228,21 +228,21 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
       <Typography variant="h5" gutterBottom>
         Test et Validation de l&apos;Assistant IA
       </Typography>
-      
+
       <Typography variant="body1" paragraph>
         Utilisez cet outil pour tester les réponses de l&apos;assistant IA
       </Typography>
-      
+
       {alertMessage && (
-        <Alert 
-          severity={alertMessage.type} 
+        <Alert
+          severity={alertMessage.type}
           sx={{ mb: 3 }}
           onClose={() => setAlertMessage(null)}
         >
           {alertMessage.message}
         </Alert>
       )}
-      
+
       <Grid container spacing={3}>
         {/* Zone de test */}
         <Grid item xs={12}>
@@ -251,7 +251,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
               Zone de Test
             </Typography>
             <Divider sx={{ mb: 3 }} />
-            
+
             <TextField
               fullWidth
               label="Entrez une question de test"
@@ -263,7 +263,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
               rows={2}
               sx={{ mb: 2 }}
             />
-            
+
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"
@@ -277,7 +277,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
             </Box>
           </Paper>
         </Grid>
-        
+
         {/* Affichage de la réponse */}
         {(currentResponse || isGeneratingResponse) && (
           <Grid item xs={12}>
@@ -286,16 +286,16 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                 Réponse de l&apos;Assistant IA
               </Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               {isGeneratingResponse ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                   <CircularProgress />
                 </Box>
               ) : (
-                <Box sx={{ 
-                  p: 2, 
-                  bgcolor: 'background.default', 
-                  borderRadius: 1, 
+                <Box sx={{
+                  p: 2,
+                  bgcolor: 'background.default',
+                  borderRadius: 1,
                   whiteSpace: 'pre-wrap',
                   border: '1px solid',
                   borderColor: 'divider'
@@ -308,7 +308,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
             </Paper>
           </Grid>
         )}
-        
+
         {/* Zone d'évaluation */}
         {showEvaluationForm && (
           <Grid item xs={12}>
@@ -317,7 +317,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                 Évaluation de la Réponse
               </Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               <FormControl component="fieldset" sx={{ mb: 3 }}>
                 <FormLabel component="legend">Qualité de la réponse</FormLabel>
                 <RadioGroup
@@ -325,39 +325,36 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                   value={evaluation}
                   onChange={(e) => setEvaluation(e.target.value as 'pertinent' | 'partiellement' | 'incorrect')}
                 >
-                  <FormControlLabel 
-                    value="pertinent" 
-                    control={<Radio />} 
+                  <FormControlLabel
+                    value="pertinent"
+                    control={<Radio />}
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green', marginRight: '8px' }} />
                         <Typography>Pertinent</Typography>
                       </Box>
-                    } 
+                    }
                   />
-                  <FormControlLabel 
-                    value="partiellement" 
-                    control={<Radio />} 
+                  <FormControlLabel
+                    value="partiellement"
+                    control={<Radio />}
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: 'orange', marginRight: '8px' }} />
                         <Typography>Partiellement correct</Typography>
                       </Box>
-                    } 
+                    }
                   />
-                  <FormControlLabel 
-                    value="incorrect" 
-                    control={<Radio />} 
+                  <FormControlLabel
+                    value="incorrect"
+                    control={<Radio />}
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <FontAwesomeIcon icon={faExclamationCircle} style={{ color: 'red', marginRight: '8px' }} />
                         <Typography>Incorrect</Typography>
                       </Box>
-                    } 
+                    }
                   />
                 </RadioGroup>
               </FormControl>
-              
+
               <TextField
                 fullWidth
                 label="Commentaires d'évaluation (optionnel)"
@@ -369,7 +366,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                 rows={2}
                 sx={{ mb: 3 }}
               />
-              
+
               <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   variant="contained"
@@ -384,7 +381,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
             </Paper>
           </Grid>
         )}
-        
+
         {/* Historique des tests */}
         <Grid item xs={12}>
           <Paper elevation={2} sx={{ p: 3 }}>
@@ -392,15 +389,15 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
               <Typography variant="h6">
                 Historique des Tests
               </Typography>
-              <Chip 
-                icon={<FontAwesomeIcon icon={faHistory} />} 
-                label={`${testHistory.length} tests effectués`} 
-                color="primary" 
+              <Chip
+                icon={<FontAwesomeIcon icon={faHistory} />}
+                label={`${testHistory.length} tests effectués`}
+                color="primary"
                 variant="outlined"
               />
             </Box>
             <Divider sx={{ mb: 3 }} />
-            
+
             {testHistory.length === 0 ? (
               <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
                 Aucun test n&apos;a encore été effectué.
@@ -423,23 +420,22 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                         <TableRow key={test.id}>
                           <TableCell>{formatDate(test.timestamp)}</TableCell>
                           <TableCell>
-                            {test.question.length > 50 
-                              ? `${test.question.substring(0, 50)}...` 
+                            {test.question.length > 50
+                              ? `${test.question.substring(0, 50)}...`
                               : test.question}
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {getEvaluationIcon(test.evaluation)}
                               <Typography sx={{ ml: 1 }}>
                                 {getEvaluationLabel(test.evaluation)}
                               </Typography>
                             </Box>
                           </TableCell>
                           <TableCell>{test.responseTime}s</TableCell>
-                          <TableCell>
-                            <Tooltip title="Supprimer ce test">
-                              <IconButton 
-                                size="small" 
+                          <TableCell sx={{ textAlign: 'center' }}>
+                            <Tooltip title="Supprimer ce test" >
+                              <IconButton
+                                size="small"
                                 color="error"
                                 onClick={() => handleDeleteTest(test.id)}
                               >
@@ -452,19 +448,18 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                     </TableBody>
                   </Table>
                 </TableContainer>
-                
+
                 <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
                   Détails des tests
                 </Typography>
-                
+
                 {testHistory.map((test) => (
                   <Accordion key={test.id} sx={{ mb: 1 }}>
                     <AccordionSummary expandIcon={<FontAwesomeIcon icon={faChevronDown} />}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {getEvaluationIcon(test.evaluation)}
-                        <Typography sx={{ ml: 1, fontWeight: 'bold' }}>
-                          {test.question.length > 70 
-                            ? `${test.question.substring(0, 70)}...` 
+                        <Typography sx={{ ml: 0, fontWeight: 'bold' }}>
+                          {test.question.length > 70
+                            ? `${test.question.substring(0, 70)}...`
                             : test.question}
                         </Typography>
                       </Box>
@@ -484,8 +479,7 @@ Je suis un assistant IA conçu pour aider les élèves du primaire. Je m'efforce
                         <Grid item xs={12}>
                           <Typography variant="subtitle2">Évaluation:</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            {getEvaluationIcon(test.evaluation)}
-                            <Typography sx={{ ml: 1 }}>
+                            <Typography sx={{ ml: 0 }}>
                               {getEvaluationLabel(test.evaluation)}
                             </Typography>
                           </Box>

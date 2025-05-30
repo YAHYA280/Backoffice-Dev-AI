@@ -43,7 +43,7 @@ export type ISubject = {
   isSelected: boolean;
 };
 
-export type UpgradeType = 'subjects' | 'questions';
+export type UpgradeType = 'interval' | 'questions';
 
 export interface UpgradeBase {
   id: string;
@@ -59,8 +59,7 @@ export interface ChildSpecificUpgrade extends UpgradeBase {
 }
 
 export interface GlobalUpgrade extends UpgradeBase {
-  type: 'subjects';
-  additional_subjects: number;
+  type: 'interval';
   interval: string;
 }
 

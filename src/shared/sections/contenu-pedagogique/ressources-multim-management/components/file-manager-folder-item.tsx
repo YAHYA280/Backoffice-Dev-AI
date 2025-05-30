@@ -1,40 +1,29 @@
 import type { CardProps } from '@mui/material/Card';
-import type { IFolderManager } from 'src/contexts/types/file';
+import type { FileDetail, IFolderManager } from 'src/contexts/types/file';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrash, faDotCircle, faEllipsisV, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faStar, faTrash, faDownload, faDotCircle, faEllipsisV, faCheckCircle, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
+import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { fData } from 'src/utils/format-number';
-
-import { CONFIG } from 'src/config-global';
 
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
-import { FileManagerNewFolderDialog } from './file-manager-new-folder-dialog';
-
-type Props = CardProps & {
-  selected?: boolean;
-  onDelete: () => void;
-  onSelect?: () => void;
-  folder: IFolderManager;
-};
+import { FileDetailDrawer } from './FileDetailDrawer';
+import { FileManagerModifierDialog } from './file-manager-modifier-dialog';
 
 export function FileManagerFolderItem({
   sx,
@@ -42,22 +31,42 @@ export function FileManagerFolderItem({
   selected,
   onSelect,
   onDelete,
+  onDoubleClick,
   ...other
-}: Props) {
+}: CardProps & {
+  selected?: boolean;
+  onDelete: () => void;
+  onSelect?: () => void;
+  onDoubleClick?: () => void;
+  folder: IFolderManager;
+}) {
+  const theme = useTheme();
   const popover = usePopover();
   const confirm = useBoolean();
-  const details = useBoolean();
   const checkbox = useBoolean();
   const editFolder = useBoolean();
-  const [folderName, setFolderName] = useState(folder.name);
+  const details = useBoolean();
+  const [isFavorite, setIsFavorite] = useState(folder.isFavorited);
 
-  const handleChangeFolderName = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setFolderName(event.target.value);
-    },
-    []
-  );
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (onDoubleClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onDoubleClick();
+    }
+  };
 
+  const handleDownload = () => {
+    window.open(folder.url, '_blank');
+    popover.onClose();
+  };
+
+  const handleToggleFavorite = () => {
+    setIsFavorite((fav) => !fav);
+    popover.onClose();
+  };
+
+  
   const renderAction = (
     <Stack direction="row" alignItems="center" sx={{ top: 8, right: 8, position: 'absolute' }}>
       <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
@@ -66,11 +75,12 @@ export function FileManagerFolderItem({
     </Stack>
   );
 
+
   const renderIcon = (
-    <Box onMouseEnter={checkbox.onTrue} onMouseLeave={checkbox.onFalse} sx={{ width: 36, height: 36 }}>
-      {(checkbox.value || selected) && onSelect ? (
+    <Box sx={{ width: 36, height: 36 }}>
+      {selected ? (
         <Checkbox
-          checked={selected}
+          checked
           onClick={onSelect}
           icon={<FontAwesomeIcon icon={faDotCircle} />}
           checkedIcon={<FontAwesomeIcon icon={faCheckCircle} />}
@@ -79,21 +89,23 @@ export function FileManagerFolderItem({
       ) : (
         <Box
           component="img"
-          src={`${CONFIG.site.basePath}/assets/icons/files/ic-folder.svg`}
-          sx={{ width: 1, height: 1 }}
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH}/assets/icons/files/ic-folder.svg`}
+          sx={{ width: 1, height: 1, cursor: 'pointer' }}
+          onClick={onSelect}
         />
       )}
     </Box>
   );
-
+  
   const renderText = (
     <ListItemText
-      onClick={details.onTrue}
       primary={folder.name}
       secondary={
         <>
-          {fData(folder.size)}
-          <Box component="span" sx={{ mx: 0.75, width: 2, height: 2, borderRadius: '50%', bgcolor: 'currentColor' }} />
+          <Box
+            component="span"
+            sx={{ mx: 0.75, width: 2, height: 2, borderRadius: '50%', bgcolor: 'currentColor' }}
+          />
           {folder.totalFiles} fichiers
         </>
       }
@@ -109,23 +121,6 @@ export function FileManagerFolderItem({
     />
   );
 
-  const renderAvatar = (
-    <AvatarGroup
-      max={3}
-      sx={{
-        [`& .${avatarGroupClasses.avatar}`]: {
-          width: 24,
-          height: 24,
-          '&:first-of-type': { fontSize: 12 },
-        },
-      }}
-    >
-      {folder.shared?.map((person) => (
-        <Avatar key={person.id} alt={person.name} src={person.avatarUrl} />
-      ))}
-    </AvatarGroup>
-  );
-
   return (
     <>
       <Paper
@@ -135,25 +130,27 @@ export function FileManagerFolderItem({
           p: 2.5,
           maxWidth: 222,
           display: 'flex',
+          flexDirection: 'column',
           borderRadius: 2,
           cursor: 'pointer',
           position: 'relative',
-          bgcolor: 'transparent',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          ...((checkbox.value || selected) && {
-            bgcolor: 'background.paper',
-            boxShadow: (theme) => theme.customShadows.z20,
-          }),
+          bgcolor: checkbox.value || selected ? 'background.paper' : 'transparent',
+          boxShadow: checkbox.value || selected ? theme.customShadows.z20 : undefined,
           ...sx,
         }}
+        onClick={(e) => {
+          if (onSelect) {
+            onSelect();
+          }
+        }}
+        onDoubleClick={handleDoubleClick}
         {...other}
       >
         {renderIcon}
         {renderAction}
         {renderText}
-        {!!folder?.shared?.length && renderAvatar}
       </Paper>
+
       <CustomPopover
         open={popover.open}
         anchorEl={popover.anchorEl}
@@ -161,14 +158,30 @@ export function FileManagerFolderItem({
         slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuList>
+          <MenuItem onClick={handleDownload}>
+            <FontAwesomeIcon icon={faDownload} />&nbsp;Télécharger
+          </MenuItem>
           <MenuItem
             onClick={() => {
               popover.onClose();
-              editFolder.onTrue();
+              details.onTrue();
             }}
-            sx={{ color: 'error.main' }}
           >
-            <FontAwesomeIcon icon={faPen} />
+            <FontAwesomeIcon icon={faEye} style={{ marginRight: 8 }} />
+            Voir détails
+          </MenuItem>
+          <MenuItem onClick={handleToggleFavorite}>
+            <FontAwesomeIcon icon={faStar} />&nbsp;
+            {isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          </MenuItem>
+          <Divider sx={{ borderStyle: 'dashed' }} />
+          <MenuItem
+            onClick={() => {
+              editFolder.onTrue();
+              popover.onClose();
+            }}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} style={{ marginRight: 8 }} />
             Modifier
           </MenuItem>
           <Divider sx={{ borderStyle: 'dashed' }} />
@@ -179,22 +192,11 @@ export function FileManagerFolderItem({
             }}
             sx={{ color: 'error.main' }}
           >
-            <FontAwesomeIcon icon={faTrash} />
-            Supprimer
+            <FontAwesomeIcon icon={faTrash} />&nbsp;Supprimer
           </MenuItem>
         </MenuList>
       </CustomPopover>
-      <FileManagerNewFolderDialog
-        open={editFolder.value}
-        onClose={editFolder.onFalse}
-        title="Edit Folder"
-        onUpdate={() => {
-          editFolder.onFalse();
-          setFolderName(folderName);
-        }}
-        folderName={folderName}
-        onChangeFolderName={handleChangeFolderName}
-      />
+
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -205,6 +207,18 @@ export function FileManagerFolderItem({
             Supprimer
           </Button>
         }
+      />
+      <FileDetailDrawer
+        open={details.value}
+        onClose={details.onFalse}
+        file={folder as unknown as FileDetail}
+      />
+      <FileManagerModifierDialog
+        open={editFolder.value}
+        onClose={editFolder.onFalse}
+        title="Modifier le dossier"
+        onUpdate={() => editFolder.onFalse()}
+        fileData={folder}
       />
     </>
   );

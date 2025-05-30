@@ -10,7 +10,49 @@ import {
   DEFAULT_SCORE_CONFIGURATION,
 } from '../constants';
 
-import type { Question, Challenge, Pagination, ApiResponse, FilterParams } from '../types';
+import type { Trophy, Question, Challenge, Pagination, ApiResponse, FilterParams } from '../types';
+
+export const mockTrophies: Trophy[] = [
+  {
+    id: 't1',
+    titre: 'Trophée Or',
+    description: 'Obtenu pour un score parfait en moins de 20 minutes.',
+    type: 'OR',
+    iconeUrl: 'https://cdn-icons-png.flaticon.com/512/2583/2583346.png',
+    challengeId: '1',
+    createdAt: subDays(new Date(), 10).toISOString(),
+    critereAttribution: {
+      minScore: 100,
+      maxTemps: 20,
+      tousLesQtsReussis: true,
+    },
+  },
+  {
+    id: 't2',
+    titre: 'Trophée Argent',
+    description: 'Score supérieur à 80 avec toutes les questions réussies.',
+    type: 'ARGENT',
+    iconeUrl: 'https://cdn-icons-png.flaticon.com/512/2583/2583394.png',
+    challengeId: '1',
+    createdAt: subDays(new Date(), 7).toISOString(),
+    critereAttribution: {
+      minScore: 80,
+      tousLesQtsReussis: true,
+    },
+  },
+  {
+    id: 't3',
+    titre: 'Badge Nature Expert',
+    description: 'Toutes les questions du quiz Nature réussies.',
+    type: 'BADGE_PERSONNALISE',
+    iconeUrl: 'https://cdn-icons-png.flaticon.com/512/4149/4149675.png',
+    challengeId: '2',
+    createdAt: subDays(new Date(), 3).toISOString(),
+    critereAttribution: {
+      tousLesQtsReussis: true,
+    },
+  },
+];
 
 // Generate mock questions with the updated structure
 const generateMockQuestions = (): Question[] => [

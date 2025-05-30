@@ -557,6 +557,7 @@ export const ChallengeList = ({
 
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
   const table = useTable({
     defaultRowsPerPage: pagination.limit,
@@ -636,6 +637,10 @@ export const ChallengeList = ({
     Object.keys(columnFilters).forEach((colId) => onColumnFilterChange?.(colId, ''));
     onPageChange(1);
     onLimitChange(10);
+  };
+
+  const handleTrophyConfigClick = (challenge: Challenge) => {
+    setSelectedChallengeId((prev) => (prev === challenge.id ? null : challenge.id));
   };
 
   const visibleTableHead = useMemo(
@@ -936,6 +941,7 @@ export const ChallengeList = ({
                           onSelectRow={() => table.onSelectRow(challenge.id)}
                           onToggleActive={onToggleActive}
                           visibleColumns={visibleColumns}
+                          onTrophyConfigClick={handleTrophyConfigClick}
                         />
                       ))
                     )}
@@ -947,7 +953,7 @@ export const ChallengeList = ({
                         filteredChallenges.length
                       )}
                     />
-                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
+                    {notFound ? <TableNoData notFound sx={{ py: 10 }} /> : null}
                   </TableBody>
                 </Table>
               </TableContainer>

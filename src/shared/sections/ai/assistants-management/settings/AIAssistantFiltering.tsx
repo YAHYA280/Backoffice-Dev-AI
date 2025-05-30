@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEdit,
@@ -43,9 +43,9 @@ import {
   InputAdornment,
   CircularProgress,
   FormControlLabel,
-} from "@mui/material";
+} from '@mui/material';
 
-import { AIAssistantHistoryService } from "../AIAssistantHistoryService";
+import { AIAssistantHistoryService } from '../AIAssistantHistoryService';
 
 type SupervisionRule = {
   id: string;
@@ -75,46 +75,47 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [rules, setRules] = useState<SupervisionRule[]>([
     {
-        id: "rule-1",
-        name: "Vérification de la complexité",
-        description: "Analyse le niveau de difficulté des réponses pour s'assurer qu'il correspond au niveau scolaire",
-        enabled: true,
-        isSystemRule: true
+      id: 'rule-1',
+      name: 'Vérification de la complexité',
+      description:
+        "Analyse le niveau de difficulté des réponses pour s'assurer qu'il correspond au niveau scolaire",
+      enabled: true,
+      isSystemRule: true,
     },
     {
-        id: "rule-2",
-        name: "Détection des réponses directes",
-        description: "Empêche l'IA de donner des réponses directes aux exercices",
-        enabled: true,
-        isSystemRule: true
+      id: 'rule-2',
+      name: 'Détection des réponses directes',
+      description: "Empêche l'IA de donner des réponses directes aux exercices",
+      enabled: true,
+      isSystemRule: true,
     },
     {
-        id: "rule-3",
-        name: "Contrôle du niveau de langue",
-        description: "Vérifie que le vocabulaire utilisé est adapté au niveau des élèves",
-        enabled: true,
-        isSystemRule: true
+      id: 'rule-3',
+      name: 'Contrôle du niveau de langue',
+      description: 'Vérifie que le vocabulaire utilisé est adapté au niveau des élèves',
+      enabled: true,
+      isSystemRule: true,
     },
     {
-        id: "rule-4",
-        name: "Limitation des réponses",
-        description: "Limite la longueur des réponses à 500 caractères maximum",
-        enabled: true,
-        isSystemRule: true
+      id: 'rule-4',
+      name: 'Limitation des réponses',
+      description: 'Limite la longueur des réponses à 500 caractères maximum',
+      enabled: true,
+      isSystemRule: true,
     },
     {
-      id: "custom-1",
-      name: "Vocabulaire simplifié",
-      description: "Adapte le niveau de langage pour les élèves de primaire",
+      id: 'custom-1',
+      name: 'Vocabulaire simplifié',
+      description: 'Adapte le niveau de langage pour les élèves de primaire',
       enabled: true,
       isSystemRule: false,
       parameters: {
-        complexityLevel: 2
+        complexityLevel: 2,
       },
-      lastModified: "2025-02-15T14:30:00",
-      lastModifiedBy: "Marie Dubois",
-      lastModificationComment: "Adaptation pour les CP-CE1"
-    }
+      lastModified: '2025-02-15T14:30:00',
+      lastModifiedBy: 'Marie Dubois',
+      lastModificationComment: 'Adaptation pour les CP-CE1',
+    },
   ]);
 
   // Fetch modification history from service
@@ -124,27 +125,33 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<SupervisionRule | null>(null);
-  const [newRuleComment, setNewRuleComment] = useState("");
+  const [newRuleComment, setNewRuleComment] = useState('');
   const [ruleFormData, setRuleFormData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     enabled: true,
-    parameters: {}
+    parameters: {},
   });
 
   // Terms blocking
-  const [newBlockedTermStudent, setNewBlockedTermStudent] = useState("");
+  const [newBlockedTermStudent, setNewBlockedTermStudent] = useState('');
   const [blockedTermsStudent, setBlockedTermsStudent] = useState<string[]>([
-    "gros mot", "insulte", "violence", "inapproprié"
+    'gros mot',
+    'insulte',
+    'violence',
+    'inapproprié',
   ]);
-  const [newBlockedTerm, setNewBlockedTerm] = useState("");
+  const [newBlockedTerm, setNewBlockedTerm] = useState('');
   const [blockedTerms, setBlockedTerms] = useState<string[]>([
-    "torturer", "tuer", "fume", "relations sexuelle "
+    'torturer',
+    'tuer',
+    'fume',
+    'relations sexuelle ',
   ]);
 
   // States for date filtering
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // Filtered history based on selected dates
   const filteredHistory = modificationHistory.filter((entry) => {
@@ -160,10 +167,10 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
     const fetchFilteringSettings = async () => {
       try {
         // Simulation d'un appel API
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors du chargement des paramètres de filtrage :", error);
+        console.error('Erreur lors du chargement des paramètres de filtrage :', error);
         setLoading(false);
       }
     };
@@ -173,12 +180,8 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
 
   // Gestion des événements
   const handleRuleToggle = (ruleId: string) => {
-    setRules(prevRules =>
-      prevRules.map(rule =>
-        rule.id === ruleId
-          ? { ...rule, enabled: !rule.enabled }
-          : rule
-      )
+    setRules((prevRules) =>
+      prevRules.map((rule) => (rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule))
     );
   };
 
@@ -186,17 +189,17 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   const handleAddBlockedTerm = () => {
     const trimmedTerm = newBlockedTerm.trim();
     if (trimmedTerm && !blockedTerms.includes(trimmedTerm)) {
-      setBlockedTerms(prevTerms => [...prevTerms, trimmedTerm]);
-      setNewBlockedTerm(""); // Réinitialiser le champ
+      setBlockedTerms((prevTerms) => [...prevTerms, trimmedTerm]);
+      setNewBlockedTerm(''); // Réinitialiser le champ
     }
   };
 
   const handleRemoveBlockedTerm = (term: string) => {
-    setBlockedTerms(prevTerms => prevTerms.filter(t => t !== term));
+    setBlockedTerms((prevTerms) => prevTerms.filter((t) => t !== term));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleAddBlockedTerm();
     }
   };
@@ -205,17 +208,17 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   const handleAddBlockedTermStudent = () => {
     const trimmedTerm = newBlockedTermStudent.trim();
     if (trimmedTerm && !blockedTermsStudent.includes(trimmedTerm)) {
-      setBlockedTermsStudent(prevTerms => [...prevTerms, trimmedTerm]);
-      setNewBlockedTermStudent(""); // Réinitialiser le champ
+      setBlockedTermsStudent((prevTerms) => [...prevTerms, trimmedTerm]);
+      setNewBlockedTermStudent(''); // Réinitialiser le champ
     }
   };
 
   const handleRemoveBlockedTermStudent = (term: string) => {
-    setBlockedTermsStudent(prevTerms => prevTerms.filter(t => t !== term));
+    setBlockedTermsStudent((prevTerms) => prevTerms.filter((t) => t !== term));
   };
 
   const handleKeyPressStudent = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleAddBlockedTermStudent();
     }
   };
@@ -227,18 +230,18 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         name: rule.name,
         description: rule.description,
         enabled: rule.enabled,
-        parameters: rule.parameters || {}
+        parameters: rule.parameters || {},
       });
     } else {
       setEditingRule(null);
       setRuleFormData({
-        name: "",
-        description: "",
+        name: '',
+        description: '',
         enabled: true,
-        parameters: {}
+        parameters: {},
       });
     }
-    setNewRuleComment("");
+    setNewRuleComment('');
     setRuleDialogOpen(true);
   };
 
@@ -255,15 +258,15 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   };
 
   const handleRuleFormChange = (field: string, value: any) => {
-    setRuleFormData(prev => ({
+    setRuleFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleSaveRule = () => {
     const now = new Date().toISOString();
-    const user = "Utilisateur Actuel"; // Dans une vraie application, récupérer de l'authentification
+    const user = 'Utilisateur Actuel'; // Dans une vraie application, récupérer de l'authentification
 
     if (editingRule) {
       // Édition d'une règle existante
@@ -275,12 +278,10 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         parameters: ruleFormData.parameters,
         lastModified: now,
         lastModifiedBy: user,
-        lastModificationComment: newRuleComment
+        lastModificationComment: newRuleComment,
       };
 
-      setRules(prev =>
-        prev.map(rule => rule.id === editingRule.id ? updatedRule : rule)
-      );
+      setRules((prev) => prev.map((rule) => (rule.id === editingRule.id ? updatedRule : rule)));
 
       // Ajouter à l'historique
       AIAssistantHistoryService.addEntry({
@@ -288,10 +289,9 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         date: new Date().toLocaleString(),
         user,
         section: "Réglementation de l'Assistant IA",
-        action: "modify",
-        comment: `Modification de la règle "${updatedRule.name}": ${newRuleComment}`
+        action: 'modify',
+        comment: `Modification de la règle "${updatedRule.name}": ${newRuleComment}`,
       });
-
     } else {
       // Ajout d'une nouvelle règle
       const newRule: SupervisionRule = {
@@ -303,10 +303,10 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         isSystemRule: false,
         lastModified: now,
         lastModifiedBy: user,
-        lastModificationComment: newRuleComment
+        lastModificationComment: newRuleComment,
       };
 
-      setRules(prev => [...prev, newRule]);
+      setRules((prev) => [...prev, newRule]);
 
       // Ajouter à l'historique
       AIAssistantHistoryService.addEntry({
@@ -314,8 +314,8 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         date: new Date().toLocaleString(),
         user,
         section: "Réglementation de l'Assistant IA",
-        action: "add",
-        comment: `Ajout de la règle "${newRule.name}": ${newRuleComment}`
+        action: 'add',
+        comment: `Ajout de la règle "${newRule.name}": ${newRuleComment}`,
       });
     }
 
@@ -323,21 +323,21 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
   };
 
   const handleDeleteRule = (ruleId: string) => {
-    const ruleToDelete = rules.find(r => r.id === ruleId);
+    const ruleToDelete = rules.find((r) => r.id === ruleId);
 
     if (ruleToDelete) {
       // Add to history service
       AIAssistantHistoryService.addEntry({
         id: `hist-${Date.now()}`,
         date: new Date().toLocaleString(),
-        user: "Utilisateur Actuel",
+        user: 'Utilisateur Actuel',
         section: "Réglementation de l'Assistant IA",
-        action: "delete",
-        comment: `Suppression de la règle "${ruleToDelete.name}"`
+        action: 'delete',
+        comment: `Suppression de la règle "${ruleToDelete.name}"`,
       });
 
       // Remove the rule
-      setRules(prev => prev.filter(rule => rule.id !== ruleId));
+      setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
     }
   };
 
@@ -345,23 +345,23 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
     setSaving(true);
     try {
       // Simulate API call to save settings
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Add entry to history service
       AIAssistantHistoryService.addEntry({
         id: `hist-${Date.now()}`,
         date: new Date().toLocaleString(),
-        user: "Utilisateur Actuel",
+        user: 'Utilisateur Actuel',
         section: "Réglementation de l'Assistant IA",
-        action: "modify",
-        comment: "Mise à jour des paramètres de l'assistant IA"
+        action: 'modify',
+        comment: "Mise à jour des paramètres de l'assistant IA",
       });
 
       // Show success message
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde des paramètres de filtrage:", error);
+      console.error('Erreur lors de la sauvegarde des paramètres de filtrage:', error);
     } finally {
       setSaving(false);
     }
@@ -371,23 +371,23 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
     setUpdatingKnowledgeBase(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Add entry to history service
       AIAssistantHistoryService.addEntry({
         id: `hist-${Date.now()}`,
         date: new Date().toLocaleString(),
-        user: "Utilisateur Actuel",
-        section: "Base de connaissances",
-        action: "modify",
-        comment: "Mise à jour de la base de connaissances de l'IA"
+        user: 'Utilisateur Actuel',
+        section: 'Base de connaissances',
+        action: 'modify',
+        comment: "Mise à jour de la base de connaissances de l'IA",
       });
 
       // Show success message
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la base de connaissances:", error);
+      console.error('Erreur lors de la mise à jour de la base de connaissances:', error);
     } finally {
       setUpdatingKnowledgeBase(false);
     }
@@ -395,63 +395,64 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
 
   const handleReset = () => {
     // Reset to default values
-    setBlockedTerms(["gros mot", "insulte", "violence", "inapproprié"]);
+    setBlockedTerms(['gros mot', 'insulte', 'violence', 'inapproprié']);
 
     // Reset rules - Réglementation de l'Assistant IA
     setRules([
       // Règles système
       {
-          id: "rule-1",
-          name: "Vérification de la complexité",
-          description: "Analyse le niveau de difficulté des réponses pour s'assurer qu'il correspond au niveau scolaire",
-          enabled: true,
-          isSystemRule: true
+        id: 'rule-1',
+        name: 'Vérification de la complexité',
+        description:
+          "Analyse le niveau de difficulté des réponses pour s'assurer qu'il correspond au niveau scolaire",
+        enabled: true,
+        isSystemRule: true,
       },
       {
-          id: "rule-2",
-          name: "Détection des réponses directes",
-          description: "Empêche l'IA de donner des réponses directes aux exercices",
-          enabled: true,
-          isSystemRule: true
+        id: 'rule-2',
+        name: 'Détection des réponses directes',
+        description: "Empêche l'IA de donner des réponses directes aux exercices",
+        enabled: true,
+        isSystemRule: true,
       },
       {
-          id: "rule-3",
-          name: "Contrôle du niveau de langue",
-          description: "Vérifie que le vocabulaire utilisé est adapté au niveau des élèves",
-          enabled: true,
-          isSystemRule: true
+        id: 'rule-3',
+        name: 'Contrôle du niveau de langue',
+        description: 'Vérifie que le vocabulaire utilisé est adapté au niveau des élèves',
+        enabled: true,
+        isSystemRule: true,
       },
       {
-          id: "rule-4",
-          name: "Limitation des réponses",
-          description: "Limite la longueur des réponses à 500 caractères maximum",
-          enabled: true,
-          isSystemRule: true
+        id: 'rule-4',
+        name: 'Limitation des réponses',
+        description: 'Limite la longueur des réponses à 500 caractères maximum',
+        enabled: true,
+        isSystemRule: true,
       },
       // Règle personnalisée par défaut
       {
-        id: "custom-1",
-        name: "Vocabulaire simplifié",
-        description: "Adapte le niveau de langage pour les élèves de primaire",
+        id: 'custom-1',
+        name: 'Vocabulaire simplifié',
+        description: 'Adapte le niveau de langage pour les élèves de primaire',
         enabled: true,
         isSystemRule: false,
         parameters: {
-          complexityLevel: 2
+          complexityLevel: 2,
         },
         lastModified: new Date().toISOString(),
-        lastModifiedBy: "Système",
-        lastModificationComment: "Réinitialisation aux valeurs par défaut"
-      }
+        lastModifiedBy: 'Système',
+        lastModificationComment: 'Réinitialisation aux valeurs par défaut',
+      },
     ]);
 
     // Add reset entry to history service
     AIAssistantHistoryService.addEntry({
       id: `hist-${Date.now()}`,
       date: new Date().toLocaleString(),
-      user: "Utilisateur Actuel",
+      user: 'Utilisateur Actuel',
       section: "Réglementation de l'Assistant IA",
-      action: "modify",
-      comment: "Réinitialisation aux valeurs par défaut"
+      action: 'modify',
+      comment: 'Réinitialisation aux valeurs par défaut',
     });
   };
 
@@ -463,7 +464,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch (e) {
       return dateString;
@@ -472,7 +473,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <CircularProgress />
       </Box>
     );
@@ -482,28 +483,31 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
     <Box sx={{ mb: 5 }}>
       {saveSuccess && (
         <Alert severity="success" sx={{ mb: 3 }}>
-          Les paramètres de supervision et filtrage ont été enregistrés avec succès dans la base de connaissances IA.
+          Les paramètres de supervision et filtrage ont été enregistrés avec succès dans la base de
+          connaissances IA.
         </Alert>
       )}
 
       <Typography variant="body1" paragraph>
-        Configurez les règles et paramètres de supervision pour protéger les élèves du primaire lors de leurs interactions avec l&apos;assistant IA.
+        Configurez les règles et paramètres de supervision pour protéger les élèves du primaire lors
+        de leurs interactions avec l&apos;assistant IA.
       </Typography>
 
       <Grid container spacing={3}>
         {/* Section 1: Règles de supervision unifiées */}
         <Grid item xs={12}>
           <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Réglementation de l&apos;Assistant IA
-              </Typography>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+            >
+              <Typography variant="h6">Réglementation de l&apos;Assistant IA</Typography>
               <Box>
                 <Button
                   startIcon={<FontAwesomeIcon icon={faPlusCircle} />}
                   onClick={() => handleOpenRuleDialog()}
                   variant="contained"
                   size="small"
+                  color="primary"
                 >
                   Ajouter une règle
                 </Button>
@@ -512,46 +516,20 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
             <Divider sx={{ mb: 3 }} />
 
             <Typography variant="body2" paragraph>
-              Ensemble des règles que l&apos;administrateur peut activer pour contrôler les réponses des assistants IA qui aident les élèves de primaire.
+              Ensemble des règles que l&apos;administrateur peut activer pour contrôler les réponses
+              des assistants IA qui aident les élèves de primaire.
             </Typography>
 
             <List>
               {/* Règle 1: Vérification de la complexité */}
               <ListItem
                 key="rule-1"
-                secondaryAction={
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={rules.find(r => r.id === "rule-1")?.enabled || false}
-                          onChange={() => handleRuleToggle("rule-1")}
-                        />
-                      }
-                      label=""
-                    />
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleOpenRuleDialog(rules.find(r => r.id === "rule-1"))}
-                      color="primary"
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleDeleteRule("rule-1")}
-                      color="error"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </IconButton>
-                  </Box>
-                }
                 sx={{
                   bgcolor: 'background.paper',
                   mb: 1,
                   borderRadius: 1,
                   border: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
                 }}
               >
                 <ListItemText
@@ -561,41 +539,89 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="body2" component="div">
-                      Analyse le niveau de difficulté des réponses pour s&apos;assurer qu&apos;il correspond au niveau scolaire
+                    <Typography sx={{ width: '95%' }} variant="body2" component="div">
+                      Analyse le niveau de difficulté des réponses pour s&apos;assurer qu&apos;il
+                      correspond au niveau scolaire
                     </Typography>
                   }
                 />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleOpenRuleDialog(rules.find((r) => r.id === 'rule-1'))}
+                    color="primary"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleDeleteRule('rule-1')}
+                    color="error"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </IconButton>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={rules.find((r) => r.id === 'rule-1')?.enabled || false}
+                        onChange={() => handleRuleToggle('rule-1')}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      />
+                    }
+                    label=""
+                  />
+                </Box>
               </ListItem>
 
               {/* Règle 2: Détection des réponses directes */}
               <ListItem
                 key="rule-2"
                 secondaryAction={
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={rules.find(r => r.id === "rule-2")?.enabled || false}
-                          onChange={() => handleRuleToggle("rule-2")}
-                        />
-                      }
-                      label=""
-                    />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
+                  >
                     <IconButton
                       edge="end"
-                      onClick={() => handleOpenRuleDialog(rules.find(r => r.id === "rule-2"))}
+                      size="small"
+                      onClick={() => handleOpenRuleDialog(rules.find((r) => r.id === 'rule-2'))}
                       color="primary"
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </IconButton>
                     <IconButton
+                      size="small"
                       edge="end"
-                      onClick={() => handleDeleteRule("rule-2")}
+                      onClick={() => handleDeleteRule('rule-2')}
                       color="error"
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </IconButton>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rules.find((r) => r.id === 'rule-2')?.enabled || false}
+                          onChange={() => handleRuleToggle('rule-2')}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        />
+                      }
+                      label=""
+                    />
                   </Box>
                 }
                 sx={{
@@ -603,7 +629,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                   mb: 1,
                   borderRadius: 1,
                   border: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
                 }}
               >
                 <ListItemText
@@ -623,39 +649,12 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
               {/* Règle 3: Contrôle du niveau de langue */}
               <ListItem
                 key="rule-3"
-                secondaryAction={
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={rules.find(r => r.id === "rule-3")?.enabled || false}
-                          onChange={() => handleRuleToggle("rule-3")}
-                        />
-                      }
-                      label=""
-                    />
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleOpenRuleDialog(rules.find(r => r.id === "rule-3"))}
-                      color="primary"
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleDeleteRule("rule-3")}
-                      color="error"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </IconButton>
-                  </Box>
-                }
                 sx={{
                   bgcolor: 'background.paper',
                   mb: 1,
                   borderRadius: 1,
                   border: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
                 }}
               >
                 <ListItemText
@@ -665,49 +664,61 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="body2" component="div">
+                    <Typography sx={{ width: '95%' }} variant="body2" component="div">
                       Vérifie que le vocabulaire utilisé est adapté au niveau des élèves
                     </Typography>
                   }
                 />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleOpenRuleDialog(rules.find((r) => r.id === 'rule-3'))}
+                    color="primary"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleDeleteRule('rule-3')}
+                    color="error"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </IconButton>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={rules.find((r) => r.id === 'rule-3')?.enabled || false}
+                        onChange={() => handleRuleToggle('rule-3')}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      />
+                    }
+                    label=""
+                  />
+                </Box>
               </ListItem>
 
               {/* Règle 4: Limitation des réponses */}
               <ListItem
                 key="rule-4"
-                secondaryAction={
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={rules.find(r => r.id === "rule-4")?.enabled || false}
-                          onChange={() => handleRuleToggle("rule-4")}
-                        />
-                      }
-                      label=""
-                    />
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleOpenRuleDialog(rules.find(r => r.id === "rule-4"))}
-                      color="primary"
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleDeleteRule("rule-4")}
-                      color="error"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </IconButton>
-                  </Box>
-                }
                 sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   bgcolor: 'background.paper',
                   mb: 1,
                   borderRadius: 1,
                   border: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
+                  px: 2,
                 }}
               >
                 <ListItemText
@@ -717,30 +728,100 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="body2" component="div">
+                    <Typography sx={{ width: '95%' }} variant="body2" component="div">
                       Limite la longueur des réponses à 500 caractères maximum
                     </Typography>
                   }
                 />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleOpenRuleDialog(rules.find((r) => r.id === 'rule-4'))}
+                    color="primary"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => handleDeleteRule('rule-4')}
+                    color="error"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </IconButton>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={rules.find((r) => r.id === 'rule-4')?.enabled || false}
+                        onChange={() => handleRuleToggle('rule-4')}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      />
+                    }
+                    label=""
+                  />
+                </Box>
               </ListItem>
 
               {/* Règles personnalisées */}
-              {rules.filter(rule => !["rule-1", "rule-2", "rule-3", "rule-4"].includes(rule.id)).map((rule) => (
-                <ListItem
-                  key={rule.id}
-                  secondaryAction={
-                    <Box>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={rule.enabled}
-                            onChange={() => handleRuleToggle(rule.id)}
-                          />
-                        }
-                        label=""
-                      />
+              {rules
+                .filter((rule) => !['rule-1', 'rule-2', 'rule-3', 'rule-4'].includes(rule.id))
+                .map((rule) => (
+                  <ListItem
+                    key={rule.id}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      mb: 1,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle1" component="div">
+                          {rule.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <>
+                          <Typography sx={{ width: '95%' }} variant="body2" component="div">
+                            {rule.description}
+                          </Typography>
+                          {rule.lastModified && (
+                            <Typography
+                              sx={{ width: '95%' }}
+                              variant="caption"
+                              color="text.secondary"
+                              component="div"
+                            >
+                              Dernière modification: {formatDate(rule.lastModified)} par{' '}
+                              {rule.lastModifiedBy || 'Inconnu'}
+                              {rule.lastModificationComment &&
+                                ` - "${rule.lastModificationComment}"`}
+                            </Typography>
+                          )}
+                        </>
+                      }
+                    />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                      }}
+                    >
                       <IconButton
                         edge="end"
+                        size="small"
                         onClick={() => handleOpenRuleDialog(rule)}
                         color="primary"
                       >
@@ -748,43 +829,26 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                       </IconButton>
                       <IconButton
                         edge="end"
+                        size="small"
                         onClick={() => handleDeleteRule(rule.id)}
                         color="error"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </IconButton>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={rule.enabled}
+                            onChange={() => handleRuleToggle(rule.id)}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        }
+                        label=""
+                      />
                     </Box>
-                  }
-                  sx={{
-                    bgcolor: 'background.paper',
-                    mb: 1,
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'divider'
-                  }}
-                >
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle1" component="div">
-                        {rule.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <>
-                        <Typography variant="body2" component="div">
-                          {rule.description}
-                        </Typography>
-                        {rule.lastModified && (
-                          <Typography variant="caption" color="text.secondary" component="div">
-                            Dernière modification: {formatDate(rule.lastModified)} par {rule.lastModifiedBy || "Inconnu"}
-                            {rule.lastModificationComment && ` - "${rule.lastModificationComment}"`}
-                          </Typography>
-                        )}
-                      </>
-                    }
-                  />
-                </ListItem>
-              ))}
+                  </ListItem>
+                ))}
             </List>
           </Paper>
         </Grid>
@@ -819,7 +883,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                           <FontAwesomeIcon icon={faPlusCircle} />
                         </IconButton>
                       </InputAdornment>
-                    )
+                    ),
                   }}
                 />
               </Grid>
@@ -830,7 +894,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 Termes bloqués:
               </Typography>
 
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {blockedTerms.map((term) => (
                   <Chip
                     key={term}
@@ -876,7 +940,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                           <FontAwesomeIcon icon={faPlusCircle} />
                         </IconButton>
                       </InputAdornment>
-                    )
+                    ),
                   }}
                 />
               </Grid>
@@ -887,7 +951,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 Termes bloqués:
               </Typography>
 
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {blockedTermsStudent.map((term) => (
                   <Chip
                     key={term}
@@ -903,60 +967,69 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
           </Paper>
         </Grid>
 
-        {/* Boutons d'action */}
-        <Grid item xs={12}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleReset}
-              disabled={saving || updatingKnowledgeBase}
-            >
-              Réinitialiser par défaut
-            </Button>
-            <Box>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleUpdateKnowledgeBase}
-                disabled={saving || updatingKnowledgeBase}
-                startIcon={updatingKnowledgeBase ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSync} />}
-                sx={{ mr: 2 }}
-              >
-                {updatingKnowledgeBase ? "Mise à jour..." : "Mise à jour de la base de connaissances de l'IA"}
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSave}
-                disabled={saving || updatingKnowledgeBase}
-                startIcon={saving ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />}
-              >
-                {saving ? "Enregistrement..." : "Enregistrer les modifications"}
-              </Button>
-            </Box>
-          </Box>
-        </Grid>
+{/* Boutons d'action */}
+<Grid item xs={12}>
+  <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+    {/* Première ligne: "Réinitialiser par défaut" et "Enregistrer les modifications" */}
+    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Button
+        variant="outlined"
+        color="secondary"
+        onClick={handleReset}
+        disabled={saving || updatingKnowledgeBase}
+      >
+        Réinitialiser par défaut
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSave}
+        disabled={saving || updatingKnowledgeBase}
+        startIcon={saving ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSave} />}
+      >
+        {saving ? "Enregistrement..." : "Enregistrer les modifications"}
+      </Button>
+    </Box>
+    
+    {/* Deuxième ligne: "Mise à jour de la base de connaissances de l'IA" */}
+    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleUpdateKnowledgeBase}
+        disabled={saving || updatingKnowledgeBase}
+        startIcon={updatingKnowledgeBase ? <CircularProgress size={20} /> : <FontAwesomeIcon icon={faSync} />}
+      >
+        {updatingKnowledgeBase ? "Mise à jour..." : "Mise à jour de la base de connaissances de l'IA"}
+      </Button>
+    </Box>
+  </Box>
+</Grid>
 
         {/* Historique des modifications */}
         <Grid item xs={12} sx={{ mt: 3 }}>
           <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Historique des modifications
-              </Typography>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+            >
+              <Typography variant="h6">Historique des modifications</Typography>
               <Button
                 startIcon={<FontAwesomeIcon icon={faHistory} />}
                 onClick={handleOpenHistoryDialog}
                 variant="outlined"
                 size="small"
+                color="primary"
               >
                 Voir tout l&apos;historique
               </Button>
             </Box>
             <Divider sx={{ mb: 3 }} />
             {filteredHistory.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: 'center', py: 3 }}
+              >
                 Aucune modification n&apos;a été enregistrée.
               </Typography>
             ) : (
@@ -976,15 +1049,8 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
       </Grid>
 
       {/* Dialog for viewing modification history */}
-      <Dialog
-        open={historyDialogOpen}
-        onClose={handleCloseHistoryDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Historique des modifications
-        </DialogTitle>
+      <Dialog open={historyDialogOpen} onClose={handleCloseHistoryDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Historique des modifications</DialogTitle>
         <DialogContent dividers>
           <TableContainer>
             <Table size="small">
@@ -1018,7 +1084,9 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
           </TableContainer>
 
           {/* Pagination */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
                 Lignes par page:
@@ -1036,14 +1104,11 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-                {filteredHistory.length > 0 ?
-                  `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, filteredHistory.length)} sur ${filteredHistory.length}` :
-                  "0-0 sur 0"}
+                {filteredHistory.length > 0
+                  ? `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, filteredHistory.length)} sur ${filteredHistory.length}`
+                  : '0-0 sur 0'}
               </Typography>
-              <IconButton
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
+              <IconButton onClick={() => setPage(page - 1)} disabled={page === 0}>
                 <FontAwesomeIcon icon={faChevronLeft} />
               </IconButton>
               <IconButton
@@ -1110,14 +1175,9 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
       </Dialog>
 
       {/* Dialog for adding/editing a rule */}
-      <Dialog
-        open={ruleDialogOpen}
-        onClose={handleCloseRuleDialog}
-        maxWidth="md"
-        fullWidth
-      >
+      <Dialog open={ruleDialogOpen} onClose={handleCloseRuleDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingRule ? "Modifier la règle" : "Ajouter une nouvelle règle"}
+          {editingRule ? 'Modifier la règle' : 'Ajouter une nouvelle règle'}
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3}>
@@ -1127,7 +1187,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 fullWidth
                 required
                 value={ruleFormData.name}
-                onChange={(e) => handleRuleFormChange("name", e.target.value)}
+                onChange={(e) => handleRuleFormChange('name', e.target.value)}
                 margin="normal"
               />
             </Grid>
@@ -1138,7 +1198,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 multiline
                 rows={3}
                 value={ruleFormData.description}
-                onChange={(e) => handleRuleFormChange("description", e.target.value)}
+                onChange={(e) => handleRuleFormChange('description', e.target.value)}
                 margin="normal"
               />
             </Grid>
@@ -1147,7 +1207,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
                 control={
                   <Switch
                     checked={ruleFormData.enabled}
-                    onChange={(e) => handleRuleFormChange("enabled", e.target.checked)}
+                    onChange={(e) => handleRuleFormChange('enabled', e.target.checked)}
                   />
                 }
                 label="Règle active"
@@ -1169,7 +1229,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseRuleDialog} color="inherit">
+          <Button variant="outlined" onClick={handleCloseRuleDialog} color="inherit">
             Annuler
           </Button>
           <Button
@@ -1178,7 +1238,7 @@ export default function AIAssistantFiltering({ assistantId }: AIAssistantFilteri
             variant="contained"
             disabled={!ruleFormData.name.trim()}
           >
-            {editingRule ? "Enregistrer les modifications" : "Ajouter la règle"}
+            {editingRule ? 'Enregistrer les modifications' : 'Ajouter la règle'}
           </Button>
         </DialogActions>
       </Dialog>

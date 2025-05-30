@@ -110,7 +110,7 @@ export function EditChallengeView({ id }: EditChallengeViewProps) {
       <Container maxWidth="xl">
         <Box sx={{ mb: 4 }}>
           <Button
-            color="inherit"
+            color="primary"
             onClick={handleCancel}
             startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
             sx={{ mb: 2 }}
@@ -129,7 +129,7 @@ export function EditChallengeView({ id }: EditChallengeViewProps) {
     <Container maxWidth="xl">
       <Box sx={{ mb: 4 }}>
         <Button
-          color="inherit"
+          color="primary"
           onClick={handleCancel}
           startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
           sx={{ mb: 2 }}

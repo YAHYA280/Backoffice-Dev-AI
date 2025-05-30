@@ -53,7 +53,10 @@ ChartJS.register(...registerables);
 // Styles pour le contenu principal
 const Main = styled('main')(({ theme }) => ({
   flexGrow: 1,
-  padding: theme.spacing(3),
+  paddingTop: theme.spacing(3),
+  paddingRight: theme.spacing(3),
+  paddingBottom: theme.spacing(3),
+  paddingLeft: 0, 
 }));
 
 const CorrectionDashboard: React.FC = () => {
@@ -397,7 +400,7 @@ const CorrectionDashboard: React.FC = () => {
 
       {/* Contenu principal */}
       <Main>
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" disableGutters>
           {/* Section des filtres globaux */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, width: '100%' }}>
               <Box /> {/* Empty box for spacing */}

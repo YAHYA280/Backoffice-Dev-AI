@@ -25,6 +25,8 @@ export interface INotificationType {
   updatedAt: string;
   link?: string; // lien optionnel
   viewed: boolean; // Read or Not
+  favorite?: boolean;
+  archived? : boolean;
   icon?: IconDefinition;
   
 

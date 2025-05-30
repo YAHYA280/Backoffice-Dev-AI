@@ -135,6 +135,7 @@ export const _notifications = [...Array(15)].map((_, index) => {
     updatedAt: _mock.time(index),
     link,
     viewed: index % 4 !== 0, 
+    favorite: index % 5 === 0,
     icon,
   };
 });

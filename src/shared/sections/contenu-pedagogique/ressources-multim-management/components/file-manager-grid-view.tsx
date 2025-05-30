@@ -1,7 +1,7 @@
 import type { IFile } from 'src/contexts/types/file';
 import type { TableProps } from 'src/shared/components/table';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef } from 'react';
 
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -12,28 +12,28 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { FileManagerPanel } from './file-manager-panel';
 import { FileManagerFileItem } from './file-manager-file-item';
 import { FileManagerFolderItem } from './file-manager-folder-item';
-import { FileManagerNewFolderDialog } from './file-manager-new-folder-dialog';
 
 type Props = {
   table: TableProps;
   dataFiltered: IFile[];
   onOpenConfirm: () => void;
   onDeleteItem: (id: string) => void;
+  onDoubleClick?: (id: string) => void; // Add this prop
 };
 
-export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenConfirm }: Props) {
+export function FileManagerGridView({ 
+  table, 
+  dataFiltered, 
+  onDeleteItem, 
+  onOpenConfirm,
+  onDoubleClick, // Add this parameter
+}: Props) {
   const { selected, onSelectRow: onSelectItem } = table;
   const files = useBoolean();
-  const upload = useBoolean();
   const folders = useBoolean();
-  const newFolder = useBoolean();
   const containerRef = useRef(null);
-  const [folderName, setFolderName] = useState('');
 
-  const handleChangeFolderName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setFolderName(event.target.value);
-  }, []);
-
+  // dataFiltered should already contain only items within the current folder
   const foldersData = dataFiltered.filter((item) => item.type === 'dossier');
   const filesData = dataFiltered.filter((item) => item.type !== 'dossier');
   const startIdx = table.page * table.rowsPerPage;
@@ -41,13 +41,11 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
   const filesInPage = filesData.slice(startIdx, endIdx);
 
   return (
-    <>
-      <Box ref={containerRef}>
+    <Box ref={containerRef}>
         <FileManagerPanel
           sx={{ m: 2 }}
           title="Dossiers"
           subtitle={`${foldersData.length} dossiers`}
-          onOpen={newFolder.onTrue}
           collapse={folders.value}
           onCollapse={folders.onToggle}
         />
@@ -69,7 +67,8 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
                 selected={selected.includes(folder.id)}
                 onSelect={() => onSelectItem(folder.id)}
                 onDelete={() => onDeleteItem(folder.id)}
-                sx={{ maxWidth: 'auto' }}
+                onDoubleClick={() => onDoubleClick?.(folder.id)} // Add double-click handler
+                sx={{ maxWidth: 'auto', }}
               />
             ))}
           </Box>
@@ -79,7 +78,6 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
           sx={{ m: 2 }}
           title="Fichiers"
           subtitle={`${filesData.length} fichiers`}
-          onOpen={upload.onTrue}
           collapse={files.value}
           onCollapse={files.onToggle}
         />
@@ -101,37 +99,24 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
                 selected={selected.includes(file.id)}
                 onSelect={() => onSelectItem(file.id)}
                 onDelete={() => onDeleteItem(file.id)}
-                sx={{ maxWidth: 'auto' }}
+                sx={{ maxWidth: 'auto' }} 
                 folder={{
                   id: '',
                   name: '',
+                  parentId: null,
                   size: 0,
                   type: '',
                   url: '',
                   tags: [],
                   totalFiles: undefined,
                   isFavorited: false,
-                  shared: null,
                   createdAt: null,
-                  modifiedAt: null,
-                }}
+                  modifiedAt: null
+                }}              
               />
             ))}
           </Box>
         </Collapse>
       </Box>
-      <FileManagerNewFolderDialog open={upload.value} onClose={upload.onFalse} />
-      <FileManagerNewFolderDialog
-        open={newFolder.value}
-        onClose={newFolder.onFalse}
-        title="New Folder"
-        onCreate={() => {
-          newFolder.onFalse();
-          setFolderName('');
-        }}
-        folderName={folderName}
-        onChangeFolderName={handleChangeFolderName}
-      />
-    </>
   );
 }

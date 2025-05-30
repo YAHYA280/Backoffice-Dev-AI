@@ -1,7 +1,7 @@
 import type { StackProps } from '@mui/material/Stack';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faChevronUp, faArrowRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faArrowRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -38,20 +38,6 @@ export function FileManagerPanel({
         <Stack direction="row" alignItems="center" spacing={1} flexGrow={1}>
           <Typography variant="h6"> {title} </Typography>
 
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={onOpen}
-            sx={{
-              width: 24,
-              height: 24,
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              '&:hover': { bgcolor: 'primary.dark' },
-            }}
-          >
-            <FontAwesomeIcon icon={faPlus} />
-          </IconButton>
         </Stack>
 
         <Box sx={{ typography: 'body2', color: 'text.disabled', mt: 0.5 }}>{subtitle}</Box>

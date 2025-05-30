@@ -2,28 +2,44 @@
 
 import type { INotificationType } from 'src/contexts/types/notification';
 
+import React from 'react';
 import { fr } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
-import { 
-  faLink, 
+import {
+  faLink,
   faBell,
-  faInfoCircle, 
+  faInfoCircle,
   faCheckCircle,
-  faExclamationTriangle 
+  faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import { useTheme } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import ListItemButton from '@mui/material/ListItemButton';
+import StarIcon from '@mui/icons-material/Star';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
+import {
+  Box,
+  Menu,
+  Stack,
+  Tooltip,
+  MenuItem,
+  IconButton,
+  Typography,
+  ListItemText,
+  ListItemIcon,
+  ListItemButton,
+} from '@mui/material';
 
 import { NOTIFICATION_TYPE_OPTIONS } from 'src/shared/_mock/_notification';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 // ----------------------------------------------------------------------
 
@@ -36,7 +52,7 @@ export function NotificationIcon({ type, icon }: NotificationIconProps) {
   if (icon) {
     return <FontAwesome icon={icon} />;
   }
-  // Default icon si aucune icone n'est specifier dans le data
+
   const getDefaultIcon = () => {
     switch (type) {
       case 'information':
@@ -60,33 +76,35 @@ export function NotificationIcon({ type, icon }: NotificationIconProps) {
 export type NotificationPopupItemProps = {
   notification: INotificationType;
   onMarkAsRead?: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onDelete?: (id: string) => void;
 };
 
-export function NotificationPopupItem({ notification, onMarkAsRead }: NotificationPopupItemProps) {
+export function NotificationPopupItem({
+  notification,
+  onMarkAsRead,
+  onToggleFavorite,
+  onArchive,
+  onDelete,
+}: NotificationPopupItemProps) {
   const router = useRouter();
   const theme = useTheme();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-  const { id, title, sentDate, type, content, viewed, link, icon } = notification;
-
-  // Lien Par Default pour le bouton parametres
+  const { id, title, sentDate, type, content, viewed, link, icon, favorite, archived } = notification;
   const notificationLink = link || '/dashboard/profile/notifications/';
 
   const handleClick = () => {
-    if (!viewed && onMarkAsRead) {
-      onMarkAsRead(id);
-    }
-    
-    if (link) {
-      router.push(notificationLink);
-    }
+    if (!viewed && onMarkAsRead) onMarkAsRead(id);
+    if (link) router.push(notificationLink);
   };
 
   const getTypeLabel = (typeValue: string): string => {
     const typeOption = NOTIFICATION_TYPE_OPTIONS.find((option) => option.value === typeValue);
     return typeOption ? typeOption.label : typeValue;
   };
-  
-  // Format date in French
+
   const formattedDate = formatDistanceToNow(new Date(sentDate), {
     addSuffix: true,
     locale: fr,
@@ -108,25 +126,24 @@ export function NotificationPopupItem({ notification, onMarkAsRead }: Notificati
       }}
     >
       <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ width: '100%' }}>
-        {/* Left: Icon + Unread indicator */}
+        {/* Left icon + indicator */}
         <Stack direction="row" alignItems="center" position="relative">
           <Stack
             alignItems="center"
             justifyContent="center"
-            sx={{ 
-              width: 40, 
-              height: 40, 
-              borderRadius: '50%', 
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
               bgcolor: `${theme.palette.primary.lighter}`,
               color: `${theme.palette.primary.main}`,
-              flexShrink: 0
+              flexShrink: 0,
             }}
           >
             <NotificationIcon type={type} icon={icon} />
           </Stack>
-          
-          {!viewed && (
-            <Box
+          <ConditionalComponent isValid={!viewed}>
+          <Box
               sx={{
                 top: 0,
                 right: 0,
@@ -137,56 +154,54 @@ export function NotificationPopupItem({ notification, onMarkAsRead }: Notificati
                 bgcolor: 'info.main',
               }}
             />
-          )}
+          </ConditionalComponent>
         </Stack>
 
-        {/* Right: Content */}
+        {/* Right content */}
         <Stack sx={{ flexGrow: 1, overflow: 'hidden' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography 
-              variant="subtitle2" 
+            <Typography
+              variant="subtitle2"
               sx={{
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                maxWidth: 'calc(100% - 30px)'
+                maxWidth: 'calc(100% - 30px)',
               }}
             >
               {title}
             </Typography>
-            {link && (
-              <Tooltip title="Lien associé">
-                <IconButton 
-                  size="small" 
-                  color="primary" 
+            <ConditionalComponent isValid={Boolean(link)}>
+            <Tooltip title="Lien associé">
+                <IconButton
+                  size="small"
+                  color="primary"
                   sx={{ p: 0.5, flexShrink: 0 }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!viewed && onMarkAsRead) {
-                      onMarkAsRead(id);
-                    }
+                    if (!viewed && onMarkAsRead) onMarkAsRead(id);
                     router.push(notificationLink);
                   }}
                 >
                   <FontAwesome icon={faLink} fontSize="small" />
                 </IconButton>
               </Tooltip>
-            )}
+            </ConditionalComponent>
           </Stack>
 
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
               mt: 0.5,
               display: '-webkit-box',
               overflow: 'hidden',
               WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 2, // choisir nombre de lignes a afficher
+              WebkitLineClamp: 2,
               textOverflow: 'ellipsis',
               wordBreak: 'break-word',
               lineHeight: '1.5em',
-              maxHeight: '3em', 
+              maxHeight: '3em',
             }}
           >
             {content}
@@ -216,6 +231,94 @@ export function NotificationPopupItem({ notification, onMarkAsRead }: Notificati
             </Typography>
           </Stack>
         </Stack>
+
+        {/* Action Menu */}
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            setAnchorEl(e.currentTarget);
+          }}
+        >
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkAsRead?.(id);
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              {viewed ? (
+                <MarkEmailUnreadIcon fontSize="small" />
+              ) : (
+                <MarkEmailReadIcon fontSize="small" />
+              )}
+            </ListItemIcon>
+            <ListItemText>
+              {viewed ? 'Marquer comme non lu' : 'Marquer comme lu'}
+            </ListItemText>
+          </MenuItem>
+
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.(id);
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              {favorite ? (
+                <StarIcon fontSize="small" color="warning" />
+              ) : (
+                <StarBorderIcon fontSize="small" />
+              )}
+            </ListItemIcon>
+            <ListItemText>
+              {favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            </ListItemText>
+          </MenuItem>
+
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onArchive?.(id);
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              {archived ? (
+                <UnarchiveIcon fontSize="small" />
+              ) : (
+                <ArchiveIcon fontSize="small" />
+              )}
+            </ListItemIcon>
+            <ListItemText>{archived ? 'Désarchiver' : 'Archiver'}</ListItemText>
+          </MenuItem>
+
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(id);
+              setAnchorEl(null);
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Supprimer</ListItemText>
+          </MenuItem>
+        </Menu>
       </Stack>
     </ListItemButton>
   );

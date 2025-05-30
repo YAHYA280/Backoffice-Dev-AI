@@ -4,6 +4,11 @@ import packageJson from '../package.json';
 
 // ----------------------------------------------------------------------
 
+// GATEWAY API
+export const GATEWAY_API_URL =
+  process.env.NEXT_PUBLIC_HOST_GATEWAY_API_URL || 'http://localhost:7070';
+
+// config Value
 export type ConfigValue = {
   isStaticExport: boolean;
   site: {

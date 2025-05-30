@@ -22,13 +22,13 @@ export type IFileShared = {
 export type IFolderManager = {
   id: string;
   name: string;
+  parentId: string | null
   size: number;
   type: string;
   url: string;
   tags: string[];
   totalFiles?: number;
   isFavorited: boolean;
-  shared: IFileShared[] | null;
   createdAt: IDateValue;
   modifiedAt: IDateValue;
 };
@@ -36,12 +36,12 @@ export type IFolderManager = {
 export type IFileManager = {
   id: string;
   name: string;
+  parentId: string | null
   size: number;
   type: string;
   url: string;
   tags: string[];
   isFavorited: boolean;
-  shared: IFileShared[] | null;
   createdAt: IDateValue;
   modifiedAt: IDateValue;
 };

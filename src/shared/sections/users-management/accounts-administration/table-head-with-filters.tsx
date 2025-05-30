@@ -24,7 +24,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-
 const FILTER_ROLE_OPTIONS = [
   { value: 'Admin', label: 'Admin' },
   { value: 'Parent', label: 'Parent' },
@@ -34,7 +33,7 @@ const FILTER_ROLE_OPTIONS = [
 type Column = {
   id: string;
   label: string;
-  width?: number;
+  width?: string | number;
   sx?: any;
 };
 
@@ -84,16 +83,19 @@ export function TableHeadWithFilters({
                 <Checkbox
                   indeterminate={numSelected > 0 && numSelected < rowCount}
                   checked={rowCount > 0 && numSelected === rowCount}
-                  onChange={(event) =>
-                    onSelectAllRows && onSelectAllRows(event.target.checked)
-                  }
+                  onChange={(event) => onSelectAllRows && onSelectAllRows(event.target.checked)}
                 />
               </TableCell>
             );
           }
           if (col.id === 'statut' || col.id === 'actions') {
             return (
-              <TableCell key={col.id} width={col.width} sx={col.sx} sortDirection={orderBy === col.id ? order : false}>
+              <TableCell
+                key={col.id}
+                width={col.width}
+                sx={col.sx}
+                sortDirection={orderBy === col.id ? order : false}
+              >
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: -0.3 }}>
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', p: 0 }}>
                     <TableSortLabel
@@ -111,7 +113,13 @@ export function TableHeadWithFilters({
             );
           }
           return (
-            <TableCell key={col.id} width={col.width} sx={col.sx} sortDirection={orderBy === col.id ? order : false} align="left">
+            <TableCell
+              key={col.id}
+              width={col.width}
+              sx={col.sx}
+              sortDirection={orderBy === col.id ? order : false}
+              align="left"
+            >
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: -0.3 }}>
                 <Box sx={{ display: 'inline-flex', alignItems: 'center', p: 0 }}>
                   <TableSortLabel
@@ -142,13 +150,24 @@ export function TableHeadWithFilters({
                                 <FontAwesomeIcon icon={faSearch} />
                               </InputAdornment>
                             ),
-                            sx: { '& fieldset': { border: 'none' }, backgroundColor: 'background.neutral', borderRadius: 1 },
+                            sx: {
+                              '& fieldset': { border: 'none' },
+                              backgroundColor: 'background.neutral',
+                              borderRadius: 1,
+                            },
                           }}
                         />
                       ) : (
                         <Box
                           onClick={() => setShowNameInput(true)}
-                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            cursor: 'pointer',
+                            backgroundColor: 'background.neutral',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           <FontAwesomeIcon icon={faSearch} />
                         </Box>
@@ -170,13 +189,24 @@ export function TableHeadWithFilters({
                                 <FontAwesomeIcon icon={faSearch} />
                               </InputAdornment>
                             ),
-                            sx: { '& fieldset': { border: 'none' }, backgroundColor: 'background.neutral', borderRadius: 1 },
+                            sx: {
+                              '& fieldset': { border: 'none' },
+                              backgroundColor: 'background.neutral',
+                              borderRadius: 1,
+                            },
                           }}
                         />
                       ) : (
                         <Box
                           onClick={() => setShowEmailInput(true)}
-                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            cursor: 'pointer',
+                            backgroundColor: 'background.neutral',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           <FontAwesomeIcon icon={faSearch} />
                         </Box>
@@ -208,7 +238,14 @@ export function TableHeadWithFilters({
                       ) : (
                         <Box
                           onClick={() => setShowRoleInput(true)}
-                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            cursor: 'pointer',
+                            backgroundColor: 'background.neutral',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           <FontAwesomeIcon icon={faSearch} />
                         </Box>
@@ -217,7 +254,11 @@ export function TableHeadWithFilters({
                       return showCreatedAtInput ? (
                         <DatePicker
                           autoFocus
-                          value={filters.state.createdAt ? dayjs(filters.state.createdAt, 'DD/MM/YYYY') : null}
+                          value={
+                            filters.state.createdAt
+                              ? dayjs(filters.state.createdAt, 'DD/MM/YYYY')
+                              : null
+                          }
                           onChange={(newValue) => {
                             if (newValue) {
                               filters.setState({ createdAt: newValue.format('DD/MM/YYYY') });
@@ -229,12 +270,21 @@ export function TableHeadWithFilters({
                             if (!filters.state.createdAt) setShowCreatedAtInput(false);
                           }}
                           format="DD/MM/YYYY"
-                          slotProps={{ textField: { fullWidth: true, size: 'small', error: dateError } }}
+                          slotProps={{
+                            textField: { fullWidth: true, size: 'small', error: dateError },
+                          }}
                         />
                       ) : (
                         <Box
                           onClick={() => setShowCreatedAtInput(true)}
-                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            cursor: 'pointer',
+                            backgroundColor: 'background.neutral',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           <FontAwesomeIcon icon={faSearch} />
                         </Box>
@@ -243,7 +293,11 @@ export function TableHeadWithFilters({
                       return showLastLoginInput ? (
                         <DatePicker
                           autoFocus
-                          value={filters.state.lastLogin ? dayjs(filters.state.lastLogin, 'DD/MM/YYYY') : null}
+                          value={
+                            filters.state.lastLogin
+                              ? dayjs(filters.state.lastLogin, 'DD/MM/YYYY')
+                              : null
+                          }
                           onChange={(newValue) => {
                             if (newValue) {
                               filters.setState({ lastLogin: newValue.format('DD/MM/YYYY') });
@@ -255,12 +309,21 @@ export function TableHeadWithFilters({
                             if (!filters.state.lastLogin) setShowLastLoginInput(false);
                           }}
                           format="DD/MM/YYYY"
-                          slotProps={{ textField: { fullWidth: true, size: 'small', error: dateError } }}
+                          slotProps={{
+                            textField: { fullWidth: true, size: 'small', error: dateError },
+                          }}
                         />
                       ) : (
                         <Box
                           onClick={() => setShowLastLoginInput(true)}
-                          sx={{ cursor: 'pointer', backgroundColor: 'background.neutral', borderRadius: 1, p: 1, display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            cursor: 'pointer',
+                            backgroundColor: 'background.neutral',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
                         >
                           <FontAwesomeIcon icon={faSearch} />
                         </Box>
@@ -274,7 +337,6 @@ export function TableHeadWithFilters({
           );
         })}
       </TableRow>
-
     </TableHead>
   );
 }

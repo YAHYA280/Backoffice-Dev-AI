@@ -1,8 +1,8 @@
 'use client';
 
-import type { PurchasedSubscription } from 'src/contexts/types/abonnement';
+import type { Upgrade, ISubject } from 'src/contexts/types/common';
 import type { ChildUser, IUserItem, ParentUser } from 'src/contexts/types/user';
-import type { Upgrade, ISubject, GlobalUpgrade } from 'src/contexts/types/common';
+import type { IAbonnementItem, PurchasedSubscription } from 'src/contexts/types/abonnement';
 
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -22,16 +22,19 @@ import BookIcon from '@mui/icons-material/Book';
 import Typography from '@mui/material/Typography';
 import PersonIcon from '@mui/icons-material/Person';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 import { _cin, _listUsers, abonnementItems } from 'src/shared/_mock';
 
 import { toast } from 'src/shared/components/snackbar';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import TabPanel from './components/TabPanel';
 import SecurityTab from './components/SecurityTab';
 import SubscriptionTab from './components/SubscriptionTab';
 import PersonalInfoTab from './components/PersonalInfoTab';
 import { SubjectsModal } from './components/SubjectsModal';
+import { ChangePlanDialog } from './components/ChangePlanDialog';
 
 // Schéma pour la réinitialisation du mot de passe
 export const PasswordResetSchema = zod
@@ -92,6 +95,7 @@ export function UserConsulterForm({ currentUser }: Props) {
   const [tabValue, setTabValue] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+  const [changePlanDialogOpen, setChangePlanDialogOpen] = useState(false);
 
   // Gestion des matières
   const [currentChildId, setCurrentChildId] = useState<string | null>(null);
@@ -104,9 +108,9 @@ export function UserConsulterForm({ currentUser }: Props) {
   const mockChildren =
     currentUser?.role === 'Parent' ? (currentUser as ParentUser).children || [] : [];
   const [children, setChildren] = useState<ChildUser[]>(mockChildren);
-  const [subscription, setSubscription] = useState<PurchasedSubscription>(
+  const [subscription, setSubscription] = useState<PurchasedSubscription | null>(
     currentUser?.role === 'Parent'
-      ? (currentUser as ParentUser).subscription
+      ? (currentUser as ParentUser).subscription || null
       : (abonnementItems[0] as PurchasedSubscription)
   );
 
@@ -149,12 +153,19 @@ export function UserConsulterForm({ currentUser }: Props) {
     0
   );
 
-  const remainingSubjectsToAllocate = subscription.nbr_subjects - totalSubjectsSelected;
+  const remainingSubjectsToAllocate = subscription
+    ? subscription.nbr_subjects - totalSubjectsSelected
+    : 0;
   const currentChild = children.find((child) => child.id === currentChildId);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  // Fonction pour ouvrir le dialogue de changement de plan
+  const openChangePlanDialog = useCallback(() => {
+    setChangePlanDialogOpen(true);
+  }, []);
 
   const existingCIN = _cin.length > 0 ? _cin[0] : null;
   const defaultValues = useMemo(() => {
@@ -174,7 +185,7 @@ export function UserConsulterForm({ currentUser }: Props) {
       role: currentUser?.role || '',
       company: currentUser?.company || '',
       parentId: '',
-      daily_question_limit: subscription.daily_question_limit || 5,
+      daily_question_limit: subscription?.daily_question_limit || 0,
       isVerified: currentUser?.isVerified || false,
     };
 
@@ -183,7 +194,7 @@ export function UserConsulterForm({ currentUser }: Props) {
       const childUser = currentUser as ChildUser;
       values.parentId = childUser.parentId || '';
       values.daily_question_limit =
-        childUser.daily_question_limit || subscription.daily_question_limit || 5;
+        childUser.daily_question_limit || subscription?.daily_question_limit || 0;
     }
 
     return values;
@@ -283,7 +294,7 @@ export function UserConsulterForm({ currentUser }: Props) {
         }
 
         // Pour un enfant dans le contexte d'un parent
-        if (currentChild) {
+        if (currentChild && subscription) {
           // Calculer combien de matières sont déjà sélectionnées par tous les enfants
           const currentChildSelectedCount = currentSubjects.filter((s) => s.isSelected).length;
 
@@ -313,7 +324,7 @@ export function UserConsulterForm({ currentUser }: Props) {
         return currentSubjects;
       });
     },
-    [currentChild, currentChildId, children, subscription.nbr_subjects, currentUser]
+    [currentChild, currentChildId, children, subscription, currentUser]
   );
 
   // Sauvegarder les matières sélectionnées pour l'enfant actuel
@@ -347,10 +358,9 @@ export function UserConsulterForm({ currentUser }: Props) {
     setSubjectsDialogOpen(false);
   }, [currentChild, currentChildId, availableSubjects, currentUser]);
 
-  // Appliquer l'upgrade (appelé depuis SubscriptionTab)
   const applyUpgrade = useCallback(
     (upgrade: Upgrade) => {
-      if (!upgrade.type) return;
+      if (!upgrade.type || !subscription) return;
 
       if ('childId' in upgrade && upgrade.type === 'questions') {
         // Upgrade spécifique à un enfant (questions)
@@ -372,23 +382,44 @@ export function UserConsulterForm({ currentUser }: Props) {
         toast.success(
           `Mise à niveau réussie pour ${targetChild?.firstName}: ${upgrade.additional_questions} question(s) quotidienne(s) supplémentaire(s)`
         );
-      } else if (upgrade.type === 'subjects' && 'additional_subjects' in upgrade) {
-        const globalUpgrade = upgrade as GlobalUpgrade;
-
-        setSubscription((prev) => ({
-          ...prev,
-          nbr_subjects: prev.nbr_subjects + globalUpgrade.additional_subjects,
-        }));
-
-        toast.success(
-          `Mise à niveau réussie: ${globalUpgrade.additional_subjects} matière(s) supplémentaire(s) (${globalUpgrade.interval})`
-        );
+      } else if (upgrade.type === 'interval' && 'interval' in upgrade) {
+        // Mettre à jour l'intervalle de facturation
+        setSubscription((currentSubscription) => {
+          if (!currentSubscription) return null;
+          return {
+            ...currentSubscription,
+            interval: upgrade.interval,
+          };
+        });
+        toast.success(`Intervalle de facturation modifié avec succès.`);
       }
 
       console.log('Upgrade appliqué:', upgrade);
     },
     [children, subscription]
   );
+
+  // Fonction pour changer de plan d'abonnement
+  const handleChangePlan = useCallback((planId: string, interval: string) => {
+    // Trouver le nouveau plan
+    const newPlan = abonnementItems.find((plan) => plan.id === planId) as IAbonnementItem;
+    if (!newPlan) {
+      toast.error("Ce plan d'abonnement n'existe pas.");
+      return;
+    }
+
+    // Mettre à jour l'abonnement avec le nouveau plan
+    setSubscription({
+      ...newPlan,
+      id: planId,
+      interval,
+      createdAt: new Date().toISOString(),
+      // S'assurer que tous les champs nécessaires sont présents pour un nouvel abonnement
+    } as PurchasedSubscription);
+
+    setChangePlanDialogOpen(false);
+    toast.success(`Abonnement souscrit avec succès: ${newPlan.title}`);
+  }, []);
 
   const avatarSrc = currentUser?.avatarUrl || undefined;
 
@@ -423,21 +454,50 @@ export function UserConsulterForm({ currentUser }: Props) {
       </TabPanel>
 
       {/* Tab pour Abonnement et Matières (Parent) */}
-      {values.role === 'Parent' && (
+      <ConditionalComponent isValid={values.role === 'Parent'}>
         <TabPanel value={tabValue} index={1}>
-          <SubscriptionTab
-            subscription={subscription}
-            children={children}
-            totalSubjectsSelected={totalSubjectsSelected}
-            remainingSubjectsToAllocate={remainingSubjectsToAllocate}
-            openSubjectsModal={openSubjectsModal}
-            applyUpgrade={applyUpgrade}
-          />
+          {subscription ? (
+            <SubscriptionTab
+              open={changePlanDialogOpen}
+              onClose={() => setChangePlanDialogOpen(false)}
+              onChangePlan={handleChangePlan}
+              subscription={subscription}
+              children={children}
+              totalSubjectsSelected={totalSubjectsSelected}
+              remainingSubjectsToAllocate={remainingSubjectsToAllocate}
+              openSubjectsModal={openSubjectsModal}
+              applyUpgrade={applyUpgrade}
+              changePlan={openChangePlanDialog}
+              availablePlans={abonnementItems}
+            />
+          ) : (
+            <Card sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Aucun abonnement actif
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Vous n&apos;avez pas d&apos;abonnement actif. Choisissez un abonnement pour accéder
+                aux fonctionnalités et assigner des matières à vos enfants.
+              </Alert>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  startIcon={<ShoppingCartIcon />}
+                  onClick={openChangePlanDialog}
+                >
+                  Choisir un abonnement
+                </Button>
+              </Box>
+            </Card>
+          )}
         </TabPanel>
-      )}
+      </ConditionalComponent>
 
       {/* Tab pour Matières et Parent (Enfant) */}
-      {values.role === 'Enfant' && (
+      <ConditionalComponent isValid={values.role === 'Enfant'}>
         <TabPanel value={tabValue} index={1}>
           <Grid container spacing={3}>
             {/* Section Matières */}
@@ -503,7 +563,7 @@ export function UserConsulterForm({ currentUser }: Props) {
             </Grid>
           </Grid>
         </TabPanel>
-      )}
+      </ConditionalComponent>
 
       {/* Tab pour Sécurité du compte */}
       <TabPanel
@@ -520,6 +580,15 @@ export function UserConsulterForm({ currentUser }: Props) {
         subjects={availableSubjects}
         onToggleSubject={toggleSubject}
         onSave={saveSubjectsChanges}
+      />
+
+      {/* Dialog de changement de plan */}
+      <ChangePlanDialog
+        open={changePlanDialogOpen}
+        onClose={() => setChangePlanDialogOpen(false)}
+        currentSubscription={subscription || undefined}
+        availablePlans={abonnementItems}
+        onChangePlan={handleChangePlan}
       />
     </>
   );

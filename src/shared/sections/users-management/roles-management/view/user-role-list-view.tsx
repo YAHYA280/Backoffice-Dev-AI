@@ -8,8 +8,9 @@ import type {
   GridColumnVisibilityModel,
 } from '@mui/x-data-grid';
 
+import axios from 'axios';
 import Link from 'next/link';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faPen, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
@@ -22,7 +23,9 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import roleData from 'src/shared/_mock/_role';
+import { endpoints } from 'src/utils/axios';
+
+import { GATEWAY_API_URL } from 'src/config-global';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
 
 import { toast } from 'src/shared/components/snackbar';
@@ -56,9 +59,9 @@ const HIDE_COLUMNS_TOGGLABLE = ['category', 'actions'];
 export function UserRoleListView() {
   const confirmRows = useBoolean();
 
-  const [tableData, setTableData] = useState<IRoleItem[]>(roleData);
+  const [tableData, setTableData] = useState<IRoleItem[]>([]);
 
-  const [filteredData, setFilteredData] = useState<IRoleItem[]>(roleData);
+  const [filteredData, setFilteredData] = useState<IRoleItem[]>([]);
 
   const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>([]);
 
@@ -71,9 +74,52 @@ export function UserRoleListView() {
   const [selectedRoleDetails, setSelectedRoleDetails] = useState<IRoleItem | null>(null);
 
   const confirmDelete = useBoolean();
-  
-  const [roleToDelete, setRoleToDelete] = useState<IRoleItem | null>(null);
+  const roleAssignedWarning = useBoolean();
 
+  const [roleToDelete, setRoleToDelete] = useState<IRoleItem | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios({
+        method: 'get',
+        url: `${GATEWAY_API_URL}${endpoints.role.list}`,
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const transformedData = response.data.content.map((roleItem: any): IRoleItem => {
+        const createdAtDate = new Date(
+          roleItem.createdAt[0],
+          roleItem.createdAt[1] - 1,
+          roleItem.createdAt[2],
+          roleItem.createdAt[3],
+          roleItem.createdAt[4],
+          roleItem.createdAt[5]
+        );
+
+        return {
+          id: roleItem.id,
+          name: roleItem.name,
+          description: roleItem.description,
+          permissions: roleItem.permissions,
+          createdAt: createdAtDate,
+        };
+      });
+
+      setTableData(transformedData);
+      setFilteredData(transformedData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Erreur lors du chargement des données');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleColumnSearch = useCallback(
     (field: keyof IRoleItem, value: string | Date | null) => {
@@ -106,37 +152,115 @@ export function UserRoleListView() {
     [tableData]
   );
 
+  const checkRoleIsAssigned = useCallback(async (id: string) => {
+    try {
+      const response = await axios({
+        method: 'get',
+        url: `${GATEWAY_API_URL}${endpoints.role.isAssigned.replace('id', id)}`,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking if role is assigned:', error);
+      toast.error('Erreur lors de la vérification du rôle');
+      return true;
+    }
+  }, []);
+
   const handleDeleteRow = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const role = tableData.find((row) => row.id === id);
       if (role) {
         setRoleToDelete(role);
-        confirmDelete.onTrue();
+
+        try {
+          setLoading(true);
+          const isAssigned = await checkRoleIsAssigned(id);
+
+          if (isAssigned) {
+            roleAssignedWarning.onTrue();
+          } else {
+            confirmDelete.onTrue();
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        } finally {
+          setLoading(false);
+        }
       }
     },
-    [tableData, confirmDelete]
+    [tableData, confirmDelete, roleAssignedWarning, checkRoleIsAssigned]
   );
 
-  const deleteRow = useCallback(() => {
+  const deleteRow = useCallback(async () => {
     if (roleToDelete) {
-      const updatedData = tableData.filter((row) => row.id !== roleToDelete.id);
-      setTableData(updatedData);
-      setFilteredData(prev => prev.filter((row) => row.id !== roleToDelete.id));
-      toast.success('Rôle supprimé avec succès!');
-      confirmDelete.onFalse();
+      try {
+        setLoading(true);
+        await axios({
+          method: 'delete',
+          url: `${GATEWAY_API_URL}${endpoints.role.edit.replace('id', roleToDelete.id)}`,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        setTableData((prev) => prev.filter((row) => row.id !== roleToDelete.id));
+        setFilteredData((prev) => prev.filter((row) => row.id !== roleToDelete.id));
+        toast.success('Rôle supprimé avec succès!');
+      } catch (error) {
+        console.error('Error deleting role:', error);
+        toast.error('Erreur lors de la suppression du rôle');
+      } finally {
+        setLoading(false);
+        confirmDelete.onFalse();
+      }
     }
-  }, [roleToDelete, tableData, confirmDelete]);
+  }, [roleToDelete, confirmDelete]);
 
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
+  const handleDeleteRows = useCallback(async () => {
+    const deletePromises = selectedRowIds.map(async (id) => {
+      if (typeof id === 'string') {
+        const isAssigned = await checkRoleIsAssigned(id);
+        if (!isAssigned) {
+          try {
+            await axios({
+              method: 'delete',
+              url: `${GATEWAY_API_URL}${endpoints.role.edit.replace('id', id)}`,
+              headers: { 'Content-Type': 'application/json' },
+            });
+            return id;
+          } catch (error) {
+            console.error(`Error deleting role ${id}:`, error);
+            return null;
+          }
+        }
+        return null;
+      }
+      return null;
+    });
 
-    toast.success('Supprimer avec succès!');
+    try {
+      setLoading(true);
+      const deletedIds = await Promise.all(deletePromises);
+      const successfullyDeletedIds = deletedIds.filter((id) => id !== null);
 
-    setTableData(deleteRows);
-  }, [selectedRowIds, tableData]);
+      if (successfullyDeletedIds.length > 0) {
+        setTableData((prev) => prev.filter((row) => !successfullyDeletedIds.includes(row.id)));
+        setFilteredData((prev) => prev.filter((row) => !successfullyDeletedIds.includes(row.id)));
+        toast.success(`${successfullyDeletedIds.length} rôle(s) supprimé(s) avec succès!`);
+      }
 
-  // Modified to navigate to edit page instead of opening drawer
-  // Use Link component for navigation instead of programmatic routing
+      if (successfullyDeletedIds.length < selectedRowIds.length) {
+        toast.warning(
+          "Certains rôles n'ont pas pu être supprimés car ils sont assignés à des utilisateurs"
+        );
+      }
+    } catch (error) {
+      console.error('Error during batch delete:', error);
+      toast.error('Erreur lors de la suppression des rôles');
+    } finally {
+      setLoading(false);
+      confirmRows.onFalse();
+    }
+  }, [selectedRowIds, checkRoleIsAssigned, confirmRows]);
 
   const handleViewRow = useCallback(
     (id: string) => {
@@ -258,7 +382,12 @@ export function UserRoleListView() {
             </Link>
           </Tooltip>
           <Tooltip title="Supprimer">
-            <IconButton size="small" onClick={() => handleDeleteRow(params.row.id)} color="error">
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteRow(params.row.id)}
+              color="error"
+              disabled={loading}
+            >
               <FontAwesomeIcon icon={faTrash} />
             </IconButton>
           </Tooltip>
@@ -359,13 +488,12 @@ export function UserRoleListView() {
               columnsManagementReset: 'Réinitialiser',
               MuiTablePagination: {
                 labelRowsPerPage: 'Lignes par page :',
-                labelDisplayedRows: ({ from, to, count }) => 
-                  `${from}–${to} sur ${count}`
-              }
+                labelDisplayedRows: ({ from, to, count }) => `${from}–${to} sur ${count}`,
+              },
             }}
             checkboxSelection
             disableRowSelectionOnClick
-            rows={filteredData}
+            rows={filteredData.length > 0 ? filteredData : tableData}
             columns={columns}
             getRowHeight={() => 'auto'}
             pageSizeOptions={[5, 10, 25]}
@@ -383,6 +511,7 @@ export function UserRoleListView() {
               toolbar: { setFilterButtonEl },
               columnsManagement: { getTogglableColumns },
             }}
+            loading={loading}
             sx={{
               [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
               '& .MuiDataGrid-row': {
@@ -392,8 +521,6 @@ export function UserRoleListView() {
           />
         </Card>
       </DashboardContent>
-
-      
 
       <UserRoleDetailsDrawer
         open={openDetailsDialog}
@@ -408,17 +535,12 @@ export function UserRoleListView() {
         content={
           <>
             Êtes-vous sûr de vouloir supprimer <strong> {selectedRowIds.length} </strong> rôle(s) ?
+            <br />
+            Note: Les rôles assignés à des utilisateurs ne seront pas supprimés.
           </>
         }
         action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              handleDeleteRows();
-              confirmRows.onFalse();
-            }}
-          >
+          <Button variant="contained" color="error" onClick={handleDeleteRows} disabled={loading}>
             Supprimer
           </Button>
         }
@@ -430,16 +552,30 @@ export function UserRoleListView() {
         title={`Supprimer le rôle : ${roleToDelete?.name || ''}`}
         content="Êtes-vous sûr de vouloir supprimer ce rôle ?"
         action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={deleteRow}
-          >
+          <Button variant="contained" color="error" onClick={deleteRow} disabled={loading}>
             Supprimer
           </Button>
         }
       />
 
+      <ConfirmDialog
+        open={roleAssignedWarning.value}
+        onClose={roleAssignedWarning.onFalse}
+        title="Impossible de supprimer"
+        content={
+          <>
+            Le rôle <strong>{roleToDelete?.name}</strong> est assigné à un ou plusieurs
+            utilisateurs.
+            <br />
+            Veuillez retirer ce rôle des utilisateurs avant de le supprimer.
+          </>
+        }
+        action={
+          <Button variant="contained" onClick={roleAssignedWarning.onFalse}>
+            Compris
+          </Button>
+        }
+      />
     </>
   );
 }

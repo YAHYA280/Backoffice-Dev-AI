@@ -411,7 +411,7 @@ export function AddAmeliorationModal({ open, onClose, onSubmit }: AddAmelioratio
               mt: 3,
             }}
           >
-            <Button variant="outlined" onClick={onClose}>
+            <Button variant="outlined" onClick={onClose} sx={{ color: 'primary.main' }}>
               Annuler
             </Button>
             <Button variant="contained" color="primary" onClick={onSubmitHandler}>

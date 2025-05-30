@@ -73,19 +73,25 @@ export function ChallengesManagementView({
 
   const handleSubmitDelete = async () => {
     if (selectedChallenge) {
-      console.log('Deleting challenge:', selectedChallenge.id);
       await handleDeleteChallenge(selectedChallenge.id);
     }
     handleCloseDeleteDialog();
   };
 
   const handleDeleteRows = async (selectedRows: string[]) => {
-    console.log('Deleting multiple challenges:', selectedRows);
     await handleDeleteMultipleChallenges(selectedRows);
   };
 
   return (
-    <Container maxWidth={false}>
+    <Container
+      maxWidth={false}
+      sx={{
+        mx: '10%',
+        width: '96%',
+        marginLeft: 'auto',
+        marginRight: 'auto'
+      }}
+    >
       <ChallengeList
         challenges={challenges}
         loading={loading}

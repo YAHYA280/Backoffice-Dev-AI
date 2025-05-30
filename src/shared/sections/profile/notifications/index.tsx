@@ -15,10 +15,10 @@ import {
   useMediaQuery,
 } from '@mui/material';
 
-import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
-
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
+
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { MOCK_NOTIFICATIONS } from './data';
 import { SettingsPanel } from './components/SettingsPanel';

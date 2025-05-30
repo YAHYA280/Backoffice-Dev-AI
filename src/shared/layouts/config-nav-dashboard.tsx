@@ -6,14 +6,15 @@ import {
   faUsers,
   faRobot,
   faHeadset,
+  faBoxOpen,
   faEuroSign,
   faChartLine,
   faChartSimple,
-  faGraduationCap
+  faGraduationCap,
+  faClipboardList,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { paths } from 'src/routes/paths';
-
 
 // ----------------------------------------------------------------------
 
@@ -23,14 +24,15 @@ const ICONS = {
   user: <FontAwesomeIcon icon={faUsers} />,
   course: <FontAwesomeIcon icon={faGraduationCap} />,
   invoice: <FontAwesomeIcon icon={faEuroSign} />,
+  box: <FontAwesomeIcon icon={faBoxOpen} />,
   tour: <FontAwesomeIcon icon={faBell} />,
   support: <FontAwesomeIcon icon={faHeadset} />,
   kanban: <FontAwesomeIcon icon={faRobot} />,
   settings: <FontAwesomeIcon icon={faCog} />,
   assistants: <FontAwesomeIcon icon={faRobot} />,
   aiBoard: <FontAwesomeIcon icon={faChartLine} />,
+  audit: <FontAwesomeIcon icon={faClipboardList} />,
 };
-
 
 export const navData = [
   {
@@ -51,15 +53,15 @@ export const navData = [
             path: paths.dashboard.analytics.usage_statistics,
           },
           {
-            title: "Performances des utilisateurs",
+            title: 'Performances des utilisateurs',
             path: paths.dashboard.analytics.users_performances,
           },
           {
-            title: "Suivi des erreurs",
+            title: 'Suivi des erreurs',
             path: paths.dashboard.analytics.suivi_erreurs,
           },
           {
-            title: "Logs et Traçabilité",
+            title: 'Logs et Traçabilité',
             path: paths.dashboard.analytics.logs,
           },
         ],
@@ -75,11 +77,11 @@ export const navData = [
         icon: ICONS.user,
         children: [
           {
-            title: "Comptes",
+            title: 'Comptes',
             path: paths.dashboard.users.accounts,
           },
           {
-            title: "Gestion rôles et permissions",
+            title: 'Gestion rôles et permissions',
             path: paths.dashboard.users.roles,
           },
         ],
@@ -94,15 +96,15 @@ export const navData = [
             path: paths.dashboard.contenu_pedagogique.apprentissage,
           },
           {
-            title: "Gestion des challenges",
+            title: 'Gestion des challenges',
             path: paths.dashboard.contenu_pedagogique.challenges,
           },
           {
-            title: "Ressources multimedias",
+            title: 'Ressources multimedias',
             path: paths.dashboard.contenu_pedagogique.ressourcesMultimedia,
           },
           {
-            title: "Gestion des ameliorations",
+            title: 'Gestion des ameliorations',
             path: paths.dashboard.contenu_pedagogique.ameliorations,
           },
         ],
@@ -110,15 +112,20 @@ export const navData = [
       {
         title: 'Abonnements',
         path: paths.dashboard.abonnements.root,
+        icon: ICONS.box,
+      },
+      {
+        title: 'Paiements',
+        path: paths.dashboard.paiements.root,
         icon: ICONS.invoice,
         children: [
           {
-            title: "Gestion des plans",
-            path: paths.dashboard.abonnements.gestion_abonnements,
+            title: 'Suivi & Facturation',
+            path: paths.dashboard.paiements.suivi_facturation,
           },
           {
-            title: "Suivi & Facturation",
-            path: paths.dashboard.abonnements.suivi_facturation,
+            title: 'Configuration des paiements',
+            path: paths.dashboard.paiements.payment_configuration,
           },
         ],
       },
@@ -133,22 +140,22 @@ export const navData = [
         icon: ICONS.support,
         children: [
           {
-            title: "Gestion des FAQs",
+            title: 'Gestion des FAQs',
             path: paths.dashboard.support.faqs,
           },
           {
-            title: "Gestion des tickets",
+            title: 'Gestion des tickets',
             path: paths.dashboard.support.tickets,
           },
           {
-            title: "Configuration du chatbot",
+            title: 'Configuration du chatbot',
             path: paths.dashboard.support.chatbot,
           },
         ],
       },
       {
         title: 'Configuration',
-        path: paths.dashboard.configuration.root, 
+        path: paths.dashboard.configuration.root,
         icon: ICONS.settings,
       },
     ],
@@ -162,15 +169,15 @@ export const navData = [
         icon: ICONS.aiBoard,
         children: [
           {
-            title: "Correction",
+            title: 'Correction',
             path: paths.dashboard.ai.correction,
           },
           {
-            title: "Taux",
+            title: 'Taux',
             path: paths.dashboard.ai.taux,
           },
           {
-            title: "Performance",
+            title: 'Performance',
             path: paths.dashboard.ai.performance,
           },
         ],
@@ -182,8 +189,18 @@ export const navData = [
       },
       {
         title: 'Moderation et signalement',
-        path: paths.dashboard.moderation.root , 
+        path: paths.dashboard.moderation.root,
         icon: ICONS.kanban,
+      },
+    ],
+  },
+  {
+    subheader: 'Audits',
+    items: [
+      {
+        title: 'Audits',
+        path: paths.dashboard.audit,
+        icon: ICONS.audit,
       },
     ],
   },

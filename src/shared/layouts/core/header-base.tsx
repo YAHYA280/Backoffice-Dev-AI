@@ -1,3 +1,4 @@
+import type { AuditEvent } from 'src/contexts/types/audit';
 import type { NavSectionProps } from 'src/shared/components/nav-section';
 import type { INotificationType } from 'src/contexts/types/notification';
 
@@ -15,14 +16,13 @@ import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
+import { HistoryDrawer } from '../components/history-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
-import { ContactsPopover } from '../components/contacts-popover';
 import { NotificationPopup } from '../components/notifications-popup';
 
 import type { HeaderSectionProps } from './header-section';
 import type { AccountDrawerProps } from '../components/account-drawer';
-import type { ContactsPopoverProps } from '../components/contacts-popover';
 import type { LanguagePopoverProps } from '../components/language-popover';
 
 // ----------------------------------------------------------------------
@@ -60,8 +60,8 @@ export type HeaderBaseProps = HeaderSectionProps & {
     nav?: NavSectionProps['data'];
     account?: AccountDrawerProps['data'];
     langs?: LanguagePopoverProps['data'];
-    contacts?: ContactsPopoverProps['data'];
     notifications?: INotificationType[];
+    history?: AuditEvent[];
   };
   slots?: {
     navMobile?: {
@@ -80,6 +80,7 @@ export type HeaderBaseProps = HeaderSectionProps & {
     menuButton?: boolean;
     localization?: boolean;
     notifications?: boolean;
+    history?: boolean;
   };
 };
 
@@ -96,11 +97,11 @@ export function HeaderBase({
     helpLink = true,
     settings = true,
     purchase = true,
-    contacts = true,
     searchbar = true,
     menuButton = true,
     localization = true,
     notifications = true,
+    history = true,
   } = {},
   ...other
 }: HeaderBaseProps) {
@@ -163,6 +164,9 @@ export function HeaderBase({
               {/* -- Searchbar -- */}
               {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />}
 
+              {/* -- History drawer -- */}
+              {history && <HistoryDrawer data-slot="history" data={data?.history} />}
+
               {/* -- Language popover -- */}
               {localization && <LanguagePopover data-slot="localization" data={data?.langs} />}
 
@@ -170,9 +174,6 @@ export function HeaderBase({
               {notifications && (
                 <NotificationPopup data-slot="notifications" data={data?.notifications} />
               )}
-
-              {/* -- Contacts popover -- */}
-              {contacts && <ContactsPopover data-slot="contacts" data={data?.contacts} />}
 
               {/* -- Settings button -- */}
               {settings && <SettingsButton data-slot="settings" />}

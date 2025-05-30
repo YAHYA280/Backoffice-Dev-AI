@@ -1,7 +1,5 @@
 'use client';
 
-import type { IUserItem, IUserTableFilters } from 'src/contexts/types/user';
-
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -32,13 +30,16 @@ import {
   Divider,
   MenuItem,
   Checkbox,
+  TableRow,
   TableBody,
   TextField,
+  TableCell,
   IconButton,
   FormControl,
   ListItemText,
   InputAdornment,
   TableContainer,
+  CircularProgress,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -50,23 +51,23 @@ import { fIsAfter } from 'src/utils/format-time';
 
 import { varAlpha } from 'src/shared/theme/styles';
 import { _STATUS_OPTIONS } from 'src/shared/_mock';
-import { _listUsers } from 'src/shared/_mock/_user';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
+import { mapRoleToUserType, type IUserTableFilters } from 'src/contexts/types/user';
 
 import { Label } from 'src/shared/components/label';
 import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 import {
   useTable,
   TableNoData,
-  getComparator,
   TableSelectedAction,
   TablePaginationCustom,
 } from 'src/shared/components/table';
 
 import { UserTableRow } from '../user-table-row';
+import { apiService, type IUserItem } from '../../api.service';
 import { TableHeadWithFilters } from '../table-head-with-filters';
 
-const listUsers = _listUsers;
 const STATUS = [{ value: 'Tous', label: 'Tous' }, ..._STATUS_OPTIONS];
 
 dayjs.extend(isSameOrAfter);
@@ -74,22 +75,18 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(customParseFormat);
 
 const TABLE_HEAD = [
-  { id: 'select', label: '', width: 50 },
-  { id: 'name', label: 'Nom', width: 150 },
-  { id: 'email', label: 'Email', width: 150 },
-  { id: 'role', label: 'Rôle', width: 130 },
-  { id: 'statut', label: 'Statut', width: 130 },
-  { id: 'createdAt', label: 'Date de création', width: 160 },
-  { id: 'lastLogin', label: 'Dernière connexion', width: 190 },
-  { id: 'actions', label: 'Actions', width: 60, sx: { textAlign: 'left' } },
+  { id: 'select', label: '', width: '5%' },
+  { id: 'name', label: 'Nom', width: '15%' },
+  { id: 'email', label: 'Email', width: '20%' },
+  { id: 'role', label: 'Rôle', width: '10%' },
+  { id: 'statut', label: 'Statut', width: '10%' },
+  { id: 'createdAt', label: 'Date de création', width: '15%' },
+  { id: 'lastLogin', label: 'Dernière connexion', width: '20%' },
+  { id: 'actions', label: 'Actions', width: '5%', sx: { textAlign: 'left' } },
 ];
 
-const FIXED_COLUMNS = TABLE_HEAD.filter(
-  (col) => col.id === 'select' || col.id === 'actions'
-);
-const DEFAULT_COLUMNS = TABLE_HEAD.filter(
-  (col) => col.id !== 'select' && col.id !== 'actions'
-);
+const FIXED_COLUMNS = TABLE_HEAD.filter((col) => col.id === 'select' || col.id === 'actions');
+const DEFAULT_COLUMNS = TABLE_HEAD.filter((col) => col.id !== 'select' && col.id !== 'actions');
 
 const FILTER_COLUMN_OPTIONS = [
   { value: 'name', label: 'Nom' },
@@ -127,10 +124,10 @@ const FILTER_ROLE_OPTIONS = [
 ];
 
 const FILTER_STATUT_OPTIONS = [
-  { value: 'Actif', label: 'Actif' },
-  { value: 'Bloqué', label: 'Bloqué' },
-  { value: 'Suspendu', label: 'Suspendu' },
-  { value: 'Supprimé', label: 'Supprimé' },
+  { value: 'ACTIVE', label: 'Actif' },
+  { value: 'BLOCKED', label: 'Bloqué' },
+  { value: 'SUSPENDED', label: 'Suspendu' },
+  { value: 'DELETED', label: 'Supprimé' },
 ];
 
 type Props = { title?: string };
@@ -164,44 +161,54 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
   );
   const [anchorElColumns, setAnchorElColumns] = useState<null | HTMLElement>(null);
   const [anchorElFilter, setAnchorElFilter] = useState<null | HTMLElement>(null);
+  const [statusCounts, setStatusCounts] = useState({
+    Tous: 0,
+    ACTIVE: 0,
+    BLOCKED: 0,
+    SUSPENDED: 0,
+    DELETED: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
   const handleOpenColumnsMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorElColumns(event.currentTarget);
   };
+
   const handleCloseColumnsMenu = () => {
     setAnchorElColumns(null);
   };
+
   const handleToggleColumn = (columnId: string) => {
     setVisibleColumns((prev) =>
-      prev.includes(columnId)
-        ? prev.filter((id) => id !== columnId)
-        : [...prev, columnId]
+      prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]
     );
   };
+
   const handleOpenFilterMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorElFilter(event.currentTarget);
   };
+
   const handleCloseFilterMenu = () => {
     setAnchorElFilter(null);
   };
-  const handleChangeFilterColumn = (
-    event: React.ChangeEvent<{ value: unknown }>
-  ) => {
+
+  const handleChangeFilterColumn = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newCol = event.target.value as string;
     setFilterColumn(newCol);
     if (newCol === 'role' || newCol === 'status') {
       setFilterOperator('is');
-    } else if((newCol === 'createdAt' || newCol === 'lastLogin')){
-        setFilterOperator('avant');
-      }else{
-        setFilterOperator('contains');
-      }
+    } else if (newCol === 'createdAt' || newCol === 'lastLogin') {
+      setFilterOperator('avant');
+    } else {
+      setFilterOperator('contains');
+    }
     setFilterValue('');
   };
-  const handleChangeFilterOperator = (
-    event: React.ChangeEvent<{ value: unknown }>
-  ) => {
+
+  const handleChangeFilterOperator = (event: React.ChangeEvent<{ value: unknown }>) => {
     setFilterOperator(event.target.value as string);
   };
+
   const handleApplyFilters = () => {
     setCustomFilter({
       column: filterColumn,
@@ -210,6 +217,7 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
     });
     handleCloseFilterMenu();
   };
+
   const handleRefresh = () => {
     setFilterColumn('name');
     setFilterOperator('contains');
@@ -225,51 +233,75 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
     });
     setVisibleColumns(DEFAULT_COLUMNS.map((col) => col.id));
   };
+
   const handleSelectAllClick = (checked: boolean) => {
     table.onSelectAllRows(
       checked,
       baseFilteredData.map((row) => row.id)
     );
   };
-  useEffect(() => {
-    let baseFiltered = applyFilter({
-      inputData: listUsers,
-      comparator: getComparator(table.order, table.orderBy),
-      filters: { ...filters.state, statut: [] },
-      dateError,
-    });
-    if (customFilter.value) {
-      baseFiltered = baseFiltered.filter((user) => {
-        let userValue;
-        if (customFilter.column === 'name') {
-          userValue = `${user.firstName} ${user.lastName}`;
-        } else {
-          userValue = (user as any)[customFilter.column];
-        }
-        if (userValue == null) return false;
-        return compareValue(userValue, customFilter.value, customFilter.operator);
+
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = {
+        page: table.page,
+        size: table.rowsPerPage,
+        sortBy: table.orderBy || 'createdAt',
+        sortDirection: table.order,
+        nameSearch: filters.state.name || '',
+        emailSearch: filters.state.email || '',
+        statusSearch:
+          filters.state.statut.length === 0 || filters.state.statut[0] === 'Tous'
+            ? ''
+            : filters.state.statut[0],
+
+        roleSearch:
+          Array.isArray(filters.state.role) && filters.state.role.length > 0
+            ? mapRoleToUserType(filters.state.role[0])
+            : '',
+        dateSearch: filters.state.createdAt?.toString() || '',
+        lastLoginSearch: filters.state.lastLogin?.toString() || '',
+      };
+
+      const response = await apiService.user.getAllUsers(params);
+      setBaseFilteredData(response.users);
+      setTableData(response.users);
+      setTotalRows(response.total);
+      setStatusCounts({
+        Tous: response.statusCounts.Tous || response.total,
+        ACTIVE: response.statusCounts.ACTIVE || 0,
+        BLOCKED: response.statusCounts.BLOCKED || 0,
+        SUSPENDED: response.statusCounts.SUSPENDED || 0,
+        DELETED: response.statusCounts.DELETED || 0,
       });
+      console.log(params);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
-    setBaseFilteredData(baseFiltered);
-    const finalFiltered =
-      !filters.state.statut.length || filters.state.statut.includes('Tous')
-        ? baseFiltered
-        : baseFiltered.filter((user) =>
-            filters.state.statut.includes(user.status)
-          );
-    setTotalRows(finalFiltered.length);
-    const start = table.page * table.rowsPerPage;
-    const end = start + table.rowsPerPage;
-    setTableData(finalFiltered.slice(start, end));
   }, [
-    filters.state,
+    filters.state.createdAt,
+    filters.state.email,
+    filters.state.lastLogin,
+    filters.state.name,
+    filters.state.role,
+    filters.state.statut,
     table.order,
     table.orderBy,
-    dateError,
     table.page,
     table.rowsPerPage,
-    customFilter,
   ]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const refresh = useCallback(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
   const handleFilterStatus = useCallback(
     (event: React.SyntheticEvent, newValue: string) => {
       table.onResetPage();
@@ -277,34 +309,31 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
     },
     [filters, table]
   );
+
   const handleEditRow = useCallback(
     (id: string) => {
       router.push(paths.dashboard.user.edit(id));
     },
     [router]
   );
+
   const handleDeleteSelected = () => {
-    toast.success(
-      `Suppression réussie de ${table.selected.length} compte sélectionnées.`
-    );
+    toast.success(`Suppression réussie de ${table.selected.length} compte sélectionnées.`);
   };
+
   const computedTableHead = useMemo(() => {
-    const toggable = DEFAULT_COLUMNS.filter((col) =>
-      visibleColumns.includes(col.id)
-    );
+    const toggable = DEFAULT_COLUMNS.filter((col) => visibleColumns.includes(col.id));
     return [FIXED_COLUMNS[0], ...toggable, FIXED_COLUMNS[1]];
   }, [visibleColumns]);
+
   const finalTableHead = useMemo(() => {
-    if (
-      filters.state.statut.length > 0 &&
-      filters.state.statut.includes('Suspendu')
-    ) {
+    if (filters.state.statut.length > 0 && filters.state.statut.includes('Suspendu')) {
       const filteredHead = computedTableHead.filter((col) => col.id !== 'statut');
       const lastLoginIndex = filteredHead.findIndex((col) => col.id === 'lastLogin');
       const dureRestanteColumn = {
         id: 'dureRestante',
         label: 'Durée Restante',
-        width: 160,
+        width: '15%',
       };
       return [
         ...filteredHead.slice(0, lastLoginIndex + 1),
@@ -335,7 +364,7 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
             startIcon={<FontAwesomeIcon icon={faPlus} style={{ width: 20 }} />}
           >
             Ajouter un compte
-        </Button>
+          </Button>
         </Box>
       </Box>
       <Menu
@@ -364,8 +393,8 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
         <MenuItem>
           <Checkbox
             checked={
-              visibleColumns.filter((id) => id !== DEFAULT_COLUMNS[0].id)
-                .length === DEFAULT_COLUMNS.slice(1).length
+              visibleColumns.filter((id) => id !== DEFAULT_COLUMNS[0].id).length ===
+              DEFAULT_COLUMNS.slice(1).length
             }
             onChange={(e) => {
               if (e.target.checked) {
@@ -424,8 +453,8 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
               {(filterColumn === 'status' || filterColumn === 'role'
                 ? OPERATOR_OPTIONS_TYPE
                 : filterColumn === 'createdAt' || filterColumn === 'lastLogin'
-                ? OPERATOR_OPTIONS_DATE
-                : OPERATOR_OPTIONS_COMMON
+                  ? OPERATOR_OPTIONS_DATE
+                  : OPERATOR_OPTIONS_COMMON
               ).map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -493,7 +522,6 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
                   },
                 }}
               />
-
             ) : filterColumn === 'lastLogin' ? (
               <DatePicker
                 label="Valeur"
@@ -578,8 +606,7 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
                 icon={
                   <Label
                     variant={
-                      tab.value === 'Tous' ||
-                      filters.state.statut.includes(tab.value)
+                      tab.value === 'Tous' || filters.state.statut.includes(tab.value)
                         ? 'filled'
                         : 'soft'
                     }
@@ -589,33 +616,29 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
                         backgroundColor: 'rgba(33, 33, 33, 0.5)',
                         fontWeight: 'bold',
                       }),
-                      ...(tab.value === 'Actif' && {
+                      ...(tab.value === 'ACTIVE' && {
                         color: '#FFFFFF',
                         backgroundColor: '#22bb33',
                         fontWeight: 'bold',
                       }),
-                      ...(tab.value === 'Bloqué' && {
+                      ...(tab.value === 'BLOCKED' && {
                         color: '#FFFFFF',
                         backgroundColor: '#212121',
                         fontWeight: 'bold',
                       }),
-                      ...(tab.value === 'Supprimé' && {
+                      ...(tab.value === 'DELETED' && {
                         color: '#FFFFFF',
                         backgroundColor: '#F44336',
                         fontWeight: 'bold',
                       }),
-                      ...(tab.value === 'Suspendu' && {
+                      ...(tab.value === 'SUSPENDED' && {
                         color: '#FFFFFF',
                         backgroundColor: '#FF9800',
                         fontWeight: 'bold',
                       }),
                     }}
                   >
-                    {tab.value === 'Tous'
-                      ? baseFilteredData.length
-                      : baseFilteredData.filter(
-                          (user) => user.status === tab.value
-                        ).length}
+                    {statusCounts[tab.value as keyof typeof statusCounts] || 0}
                   </Label>
                 }
               />
@@ -741,8 +764,19 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
             </Tooltip>
           </Box>
         </Box>
-        <TableContainer sx={{ maxHeight: 450, position: 'relative' }}>
-          <Table size="medium" sx={{ width: '100%', minWidth: { xs: 'auto', sm: 720 } }}>
+        <TableContainer
+          sx={{
+            maxHeight: 450,
+            position: 'relative',
+            mx: '10%',
+            width: '100%',
+            margin: '0 auto',
+          }}
+        >
+          <Table
+            size="medium"
+            sx={{ width: '100%', minWidth: { xs: 'auto', sm: 720 }, tableLayout: 'fixed' }}
+          >
             <TableHeadWithFilters
               columns={finalTableHead}
               filters={filters}
@@ -775,37 +809,51 @@ export function AccountsView({ title = 'Liste des utilisateurs' }: Props) {
                   zIndex: 2,
                 }}
               />
-            ):(
-              <>
-              </>
+            ) : (
+              <></>
             )}
-            <TableBody>
-              {tableData.map((row) => (
-                <UserTableRow
-                  key={row.id}
-                  row={row}
-                  selected={table.selected.includes(row.id)}
-                  onSelectRow={() => table.onSelectRow(row.id)}
-                  statusFilter={filters.state.statut.length ? filters.state.statut[0] : 'Tous'}
-                  onEditRow={() => handleEditRow(row.id)}
-                  columns={finalTableHead}
-                />
-              ))}
-              {notFound && <TableNoData notFound />}
+            <TableBody sx={{ width: '100%' }}>
+              <ConditionalComponent
+                isValid={isLoading}
+                defaultComponent={
+                  <>
+                    {tableData.map((row) => (
+                      <UserTableRow
+                        key={row.id}
+                        row={row}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
+                        statusFilter={
+                          filters.state.statut.length ? filters.state.statut[0] : 'Tous'
+                        }
+                        onEditRow={() => handleEditRow(row.id)}
+                        onRefresh={refresh}
+                        columns={finalTableHead}
+                      />
+                    ))}
+                    {notFound && <TableNoData notFound />}
+                  </>
+                }
+              >
+                <TableRow>
+                  <TableCell colSpan={finalTableHead.length} align="center">
+                    <CircularProgress sx={{ mb: 2 }} />
+                  </TableCell>
+                </TableRow>
+              </ConditionalComponent>
             </TableBody>
           </Table>
         </TableContainer>
-        {totalRows > 10 ? (
+        {totalRows > table.rowsPerPage ? (
           <TablePaginationCustom
             page={table.page}
             count={totalRows}
-            rowsPerPage={10}
+            rowsPerPage={table.rowsPerPage}
             onPageChange={table.onChangePage}
             onRowsPerPageChange={table.onChangeRowsPerPage}
           />
-        ):(
-          <>
-          </>
+        ) : (
+          <></>
         )}
       </Card>
     </DashboardContent>
@@ -860,12 +908,7 @@ function compareValue(value: any, filterValue: string, operator: string): boolea
   }
 }
 
-function applyFilter({
-  inputData,
-  comparator,
-  filters,
-  dateError,
-}: ApplyFilterProps) {
+function applyFilter({ inputData, comparator, filters, dateError }: ApplyFilterProps) {
   let data = [...inputData];
   data.sort(comparator);
   if (filters.name) {
@@ -875,9 +918,7 @@ function applyFilter({
     });
   }
   if (filters.email) {
-    data = data.filter((user) =>
-      user.email.toLowerCase().includes(filters.email.toLowerCase())
-    );
+    data = data.filter((user) => user.email.toLowerCase().includes(filters.email.toLowerCase()));
   }
   if (filters.role.length) {
     data = data.filter((user) => filters.role.includes(user.role));

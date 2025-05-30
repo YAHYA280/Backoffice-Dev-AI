@@ -3,7 +3,7 @@ import type { IAIAssistantItem } from 'src/types/ai-assistant';
 
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Stack,
@@ -43,9 +43,8 @@ export function AIAssistantForm({
   onSubmit,
   onDelete,
   initialData = null,
-  isEdit = false
+  isEdit = false,
 }: AIAssistantFormProps) {
-
   const [formData, setFormData] = useState<IAIAssistantItem>({
     id: '',
     name: '',
@@ -92,7 +91,9 @@ export function AIAssistantForm({
   const isApprentissge = formData.type === 'Apprentissge';
 
   // Updated to use SelectChangeEvent from Material UI
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent
+  ) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -122,7 +123,7 @@ export function AIAssistantForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEdit ? "Modifier l'Assistant IA" : "Ajouter un Assistant IA"}</DialogTitle>
+      <DialogTitle>{isEdit ? "Modifier l'Assistant IA" : 'Ajouter un Assistant IA'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} mt={2}>
           <TextField
@@ -147,26 +148,22 @@ export function AIAssistantForm({
 
           <FormControl fullWidth>
             <InputLabel>Type d&apos;assistant</InputLabel>
-            <Select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-            >
+            <Select name="type" value={formData.type} onChange={handleChange}>
               {AI_ASSISTANT_TYPE_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <FormControl fullWidth>
             <InputLabel>Niveau scolaire</InputLabel>
-            <Select
-              name="educationLevel"
-              value={formData.educationLevel}
-              onChange={handleChange}
-            >
+            <Select name="educationLevel" value={formData.educationLevel} onChange={handleChange}>
               {AI_ASSISTANT_EDUCATION_LEVELS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -175,13 +172,11 @@ export function AIAssistantForm({
             <>
               <FormControl fullWidth>
                 <InputLabel>Matière</InputLabel>
-                <Select
-                  name="subject"
-                  value={formData.subject || ''}
-                  onChange={handleChange}
-                >
+                <Select name="subject" value={formData.subject || ''} onChange={handleChange}>
                   {AI_ASSISTANT_SUBJECTS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -222,11 +217,7 @@ export function AIAssistantForm({
 
           <FormControl fullWidth>
             <InputLabel>Statut</InputLabel>
-            <Select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
+            <Select name="status" value={formData.status} onChange={handleChange}>
               <MenuItem value="active">Actif</MenuItem>
               <MenuItem value="inactive">Inactif</MenuItem>
             </Select>
@@ -234,26 +225,17 @@ export function AIAssistantForm({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="inherit">
-          {isEdit ? "Retour" : "Annuler"}
+        <Button onClick={onClose} color="inherit" variant="outlined">
+          {isEdit ? 'Retour' : 'Annuler'}
         </Button>
-
-        {isEdit && onDelete && (
-          <Button
-            onClick={handleDelete}
-            color="error"
-            startIcon={<FontAwesomeIcon icon={faTrashAlt} />}
-          >
-            Supprimer l&apos;assistant
-          </Button>
-        )}
 
         <Button
           onClick={handleSubmit}
           variant="contained"
           startIcon={isEdit ? <FontAwesomeIcon icon={faPen} /> : <FontAwesomeIcon icon={faPlus} />}
+          color="primary"
         >
-          {isEdit ? "Enregistrer les modifications" : "Créer l'assistant"}
+          {isEdit ? 'Enregistrer les modifications' : "Créer l'assistant"}
         </Button>
       </DialogActions>
     </Dialog>

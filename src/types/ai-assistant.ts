@@ -31,7 +31,7 @@ export interface IAIAssistantCustomizationSettings {
   welcomeMessage: string;
   motivationalPhrases: string[];
   helpPhrases: string[];
-  audioFormat: "mp3" | "wav" | "aac";
+  audioFormat: ("mp3" | "wav" | "aac")[]; // Changed to array
   voiceTranscription: boolean;
   imageSupport: boolean;
   imageFormat: ("jpg" | "png" | "svg" | "pdf")[]; // Assurez-vous que "pdf" est inclus ici
@@ -135,3 +135,45 @@ export type AIAssistantDetailLevelProps = {
 export type AIAssistantDescriptionProps = {
   assistantId: string;
 };
+// Nouvelle interface pour DefaultValue
+export interface IDefaultValueProps {
+  /**
+   * La valeur à afficher
+   */
+  value: any;
+  
+  /**
+   * Texte à afficher quand la valeur est vide ou invalide
+   */
+  defaultText?: string;
+  
+  /**
+   * Style visuel du placeholder
+   */
+  variant?: 'subtle' | 'dash' | 'badge' | 'alert';
+  
+  /**
+   * Afficher une icône avec la valeur par défaut
+   */
+  showIcon?: boolean;
+  
+  /**
+   * Fonction personnalisée pour déterminer si une valeur est vide
+   */
+  isEmpty?: (val: any) => boolean;
+  
+  /**
+   * Fonction de validation optionnelle
+   */
+  validator?: ((val: any) => boolean) | null;
+  
+  /**
+   * Afficher en ligne ou en bloc
+   */
+  inline?: boolean;
+  
+  /**
+   * Styles MUI supplémentaires
+   */
+  sx?: Record<string, any>;
+}

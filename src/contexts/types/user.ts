@@ -1,3 +1,5 @@
+import { _STATUS_OPTIONS } from 'src/shared/_mock/assets';
+
 import type { IAbonnementItem } from './abonnement';
 import type { ISubject, IDateValue, ISocialLink } from './common';
 
@@ -32,7 +34,7 @@ export interface PurchasedSubscription extends IAbonnementItem {
 }
 export interface ParentUser extends BaseUser {
   role: 'Parent';
-  subscription: PurchasedSubscription;
+  subscription?: PurchasedSubscription;
   children: ChildUser[];
 }
 
@@ -144,3 +146,33 @@ export type IUserAccount = {
   country: string | null;
   photoURL: File | string | null;
 };
+
+export function mapRoleToUserType(role: string): string {
+  switch (role) {
+    case 'Enfant':
+      return 'CHILD';
+    case 'Parent':
+      return 'PARENT';
+    case 'Admin':
+      return 'ADMIN';
+    default:
+      return role;
+  }
+}
+export function mapUserTypeToRole(userType: string): string {
+  switch (userType) {
+    case 'CHILD':
+      return 'Enfant';
+    case 'PARENT':
+      return 'Parent';
+    case 'ADMIN':
+      return 'Admin';
+    default:
+      return userType;
+  }
+}
+export const getStatusValue = (label: string): string | undefined =>
+  _STATUS_OPTIONS.find((option) => option.label === label)?.value;
+
+export const getStatusLabel = (value: string): string | undefined =>
+  _STATUS_OPTIONS.find((option) => option.value === value)?.label;

@@ -1,8 +1,10 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
+  faCog,
   faUndo,
   faTrash,
   faClock,
@@ -28,10 +30,13 @@ import {
   IconButton,
 } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+
 import { fDate } from 'src/utils/format-time';
 
 import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
+import ConditionalComponent from 'src/shared/components/ConditionalComponent/ConditionalComponent';
 
 import { ChallengeStatus } from '../types';
 import { STATUT_OPTIONS, DIFFICULTE_OPTIONS } from '../constants';
@@ -62,6 +67,7 @@ interface ChallengeItemProps {
   onRestoreClick?: () => void;
   onToggleActive?: (challenge: Challenge, active: boolean) => void;
   onResetClick?: () => void;
+  onTrophyConfigClick?: (challenge: Challenge) => void;
   visibleColumns?: string[];
 }
 
@@ -75,6 +81,7 @@ export const ChallengeItem = ({
   onRestoreClick,
   onToggleActive,
   onResetClick,
+  onTrophyConfigClick,
   visibleColumns = [
     'nom',
     'description',
@@ -86,7 +93,11 @@ export const ChallengeItem = ({
   ],
 }: ChallengeItemProps) => {
   const popover = usePopover();
-
+  const router = useRouter();
+  const navigate = (path: string) => {
+    router.push(path);
+  };
+  
   const statutOption =
     STATUT_OPTIONS.find((option) => option.value === challenge.statut) || STATUT_OPTIONS[0];
 
@@ -99,6 +110,11 @@ export const ChallengeItem = ({
     if (onToggleActive) {
       onToggleActive(challenge, event.target.checked);
     }
+  };
+
+  const handleTrophyConfigClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(paths.dashboard.contenu_pedagogique.trophies(challenge.id));
   };
 
   const formatDate = (date: string) => {
@@ -138,15 +154,14 @@ export const ChallengeItem = ({
           '&:hover': {
             backgroundColor: (theme) => alpha(theme.palette.primary.lighter, 0.08),
           },
-          ...(isDeleted && {
+          ...(isDeleted ? {
             opacity: 0.6,
             bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.3),
-          }),
-          ...(!challenge.active &&
-            !isDeleted && {
+          } : {}),
+          ...((!challenge.active && !isDeleted) ? {
               opacity: 0.7,
               bgcolor: (theme) => alpha(theme.palette.action.disabledBackground, 0.1),
-            }),
+            } : {}),
         }}
       >
         <TableCell
@@ -199,11 +214,11 @@ export const ChallengeItem = ({
                     {challenge.nom}
                   </Typography>
                 </Tooltip>
-                {questionsCount > 0 && (
+                <ConditionalComponent isValid = {questionsCount > 0}>
                   <Typography variant="caption" color="text.secondary" display="block">
                     {questionsCount} question{questionsCount > 1 ? 's' : ''}
                   </Typography>
-                )}
+                </ConditionalComponent>
               </Box>
             </Stack>
           </TableCell>
@@ -348,6 +363,7 @@ export const ChallengeItem = ({
           sx={{
             ...getCellProps('actions').sx,
             whiteSpace: 'nowrap',
+            maxWidth: 190,
           }}
         >
           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
@@ -410,7 +426,25 @@ export const ChallengeItem = ({
                   </IconButton>
                 </Tooltip>
 
-                {onResetClick && participantsCount > 0 ? (
+                <Tooltip title="Configurer les trophées">
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={(e) => {
+                      handleTrophyConfigClick(e)
+                    }}
+                    sx={{
+                      transition: (theme) => theme.transitions.create(['background-color']),
+                      '&:hover': {
+                        backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                      },
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCog} />
+                  </IconButton>
+                </Tooltip>
+
+                { (onResetClick && participantsCount > 0) ? (
                   <Tooltip title="Réinitialiser les participations">
                     <IconButton
                       color="warning"

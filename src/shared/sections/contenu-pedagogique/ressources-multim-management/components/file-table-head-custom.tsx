@@ -104,15 +104,16 @@ export function TableFileHeadCustom({
               <TableCell
                 key={col.id}
                 width={col.width}
-                sx={{ ...col.sx, textAlign: "right" }}
+                sx={{ ...col.sx, textAlign: "center" }}
                 sortDirection={orderBy === col.id ? order : false}
               >
                 <Box
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: "flex-end",
+                    alignItems: "center",
                     gap: -0.3,
+                    pl: 4
                   }}
                 >
                   <Box sx={{ display: "inline-flex", alignItems: "center", p: 0 }}>

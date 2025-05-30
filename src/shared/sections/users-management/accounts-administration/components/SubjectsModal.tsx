@@ -64,8 +64,10 @@ export function SubjectsModal({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Annuler</Button>
-        <Button onClick={onSave} variant="contained">
+        <Button variant="outlined" onClick={onClose} sx={{ color: 'primary.main' }}>
+          Annuler
+        </Button>
+        <Button variant="contained" onClick={onSave} color="primary">
           Enregistrer
         </Button>
       </DialogActions>

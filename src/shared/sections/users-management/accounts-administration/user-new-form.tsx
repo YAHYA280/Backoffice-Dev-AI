@@ -1,60 +1,73 @@
 'use client';
 
+import type { IRoleItem } from 'src/contexts/types/role';
+
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useMemo, useState, useCallback } from 'react';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { isValidPhoneNumber } from 'react-phone-number-input/input';
-import {
-  faCheck,
-  faChild,
-  faSearch,
-  faUserShield,
-  faUserFriends,
-} from '@fortawesome/free-solid-svg-icons';
+import { useForm, Controller, FormProvider } from 'react-hook-form';
+import { faChild, faUserShield } from '@fortawesome/free-solid-svg-icons';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import {
+  Check as CheckIcon,
+  Search as SearchIcon,
+  FamilyRestroom as ParentIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Card,
-  Stack,
+  Grid,
+  Step,
+  List,
+  Chip,
   Alert,
-  Avatar,
+  Paper,
+  Stack,
   Button,
   Select,
+  Avatar,
+  Stepper,
+  Divider,
   MenuItem,
   TextField,
+  StepLabel,
+  Container,
   Typography,
   InputLabel,
-  FormControl,
   CardContent,
-  InputAdornment,
+  FormControl,
+  ListItemText,
+  ListItemAvatar,
+  ListItemButton,
+  FormHelperText,
+  CircularProgress,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/shared/layouts/dashboard';
-import { _parents, _ADMINISTRATION_ROLES } from 'src/shared/_mock';
 
 import { toast } from 'src/shared/components/snackbar';
-import { Form, Field, schemaHelper } from 'src/shared/components/hook-form';
+import { Field, schemaHelper } from 'src/shared/components/hook-form';
 import { CustomBreadcrumbs } from 'src/shared/components/custom-breadcrumbs';
 
-import { FilePreview } from './file-preview';
+import {
+  apiService,
+  type IUserItem,
+  type UserRequest,
+  type AdminRequest,
+  type ChildRequest,
+  type ParentRequest,
+} from '../api.service';
 
-interface Parent {
-  id: string;
-  name: string;
-  email: string;
-  verified: boolean;
-}
-
-const administrationRoles = _ADMINISTRATION_ROLES;
-
-const UserNewSchema = zod.object({
+// Schéma de base pour tous les utilisateurs
+const baseUserSchema = zod.object({
   firstName: zod.string().min(1, { message: 'Le prénom est requis.' }),
   lastName: zod.string().min(1, { message: 'Le nom est requis.' }),
   email: zod
@@ -63,578 +76,628 @@ const UserNewSchema = zod.object({
     .email({ message: 'Adresse e-mail invalide.' }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   birthDate: zod.string().min(1, { message: 'La date de naissance est requise.' }),
-  role: zod.string().min(1, { message: 'Le rôle est requis.' }),
-  parentId: zod.string().optional(),
-  adminRole: zod.string().optional(),
 });
 
-export type UserNewSchemaType = zod.infer<typeof UserNewSchema>;
+// Schéma pour le rôle
+const roleSchema = zod.object({
+  selectedRole: zod.enum(['admin', 'parent', 'child'], {
+    errorMap: () => ({ message: 'Veuillez sélectionner un rôle' }),
+  }),
+});
 
-export default function UserNewPage() {
-  const router = useRouter();
+// Schéma pour les champs spécifiques selon le rôle
+const roleSpecificSchema = zod.object({
+  selectedParent: zod
+    .object({
+      id: zod.string().or(zod.number()),
+      firstName: zod.string(),
+      lastName: zod.string(),
+      email: zod.string().email(),
+      userType: zod.string(),
+      role: zod.string(),
+      status: zod.string(),
+      lastLogin: zod.any().nullable(),
+      createdAt: zod.any(),
+    })
+    .nullable()
+    .optional(),
+  selectedAdminRoles: zod.array(zod.union([zod.string(), zod.number()])).optional(),
+});
 
-  const parents = _parents;
-  const [parentSearch, setParentSearch] = useState('');
-  const filteredParents = parents.filter(
-    (p) =>
-      p.name.toLowerCase().includes(parentSearch.toLowerCase()) ||
-      p.email.toLowerCase().includes(parentSearch.toLowerCase())
-  );
+// Schéma complet combiné
+const fullFormSchema = baseUserSchema.merge(roleSchema).merge(roleSpecificSchema);
 
-  const defaultValues = useMemo(
-    () => ({
-      firstName: '',
-      lastName: '',
-      email: '',
+const steps = ['Sélection du rôle', 'Informations personnelles', 'Configuration', 'Confirmation'];
+
+export default function AddUserInterface() {
+  const [activeStep, setActiveStep] = useState(0);
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'parent' | 'child' | ''>('');
+  const [selectedParent, setSelectedParent] = useState<IUserItem | null>(null);
+  const [selectedAdminRoles, setSelectedAdminRoles] = useState<string[]>([]);
+  const [searchParent, setSearchParent] = useState('');
+  const [stepErrors, setStepErrors] = useState<{ [key: string]: string }>({});
+  const [parents, setParents] = useState<IUserItem[]>([]);
+  const [administrationRoles, setAdministrationRoles] = useState<IRoleItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const methods = useForm({
+    resolver: zodResolver(fullFormSchema),
+    defaultValues: {
+      firstName: 'aaa',
+      lastName: 'aaaa',
+      email: 'aaaa@gmail.com',
       phoneNumber: '',
-      birthDate: '',
-      role: '',
-      parentId: '',
-      adminRole: '',
-    }),
-    []
-  );
-
-  const methods = useForm<UserNewSchemaType>({
-    mode: 'all',
-    resolver: zodResolver(UserNewSchema),
-    defaultValues,
+      birthDate: '10/05/2025',
+      selectedRole: '' as 'admin' | 'parent' | 'child' | '',
+      selectedParent: null as IUserItem | null,
+      selectedAdminRoles: [] as string[],
+    },
+    mode: 'onChange',
   });
-  const { control, reset, handleSubmit, setValue, getValues, trigger, watch } = methods;
-  const adminRole = watch('adminRole');
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRole, setSelectedRole] = useState('');
-  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
-  const [roleSelectionError, setRoleSelectionError] = useState<string | null>(null);
-  const [adminRoleError, setAdminRoleError] = useState<string | null>(null);
-  const [isCustomizing, setIsCustomizing] = useState(false);
-  const [invitationContent, setInvitationContent] = useState('');
-  const [cinRectoFile, setCinRectoFile] = useState<File | null>(null);
-  const [cinVersoFile, setCinVersoFile] = useState<File | null>(null);
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    trigger,
+    clearErrors,
+    formState: { errors },
+  } = methods;
 
-  const buildDefaultInvitationText = useCallback(
-    () =>
-      `Invitation à rejoindre notre plateforme éducative
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const data = await apiService.role.getAllRoles();
+        setAdministrationRoles(data);
+      } catch (err) {
+        console.error('Erreur lors du chargement des rôles:', err);
+      }
+    };
+    const fetchParents = async () => {
+      try {
+        const data = await apiService.user.getAllUsers({ roleSearch: 'PARENT' });
+        setParents(data.users);
+      } catch (err) {
+        console.error('Erreur lors du chargement des parents:', err);
+      }
+    };
+    fetchRoles();
+    fetchParents();
+  }, []);
 
-Bonjour ${getValues('lastName') || ''},
+  // Fonction pour nettoyer les erreurs et états non pertinents selon le rôle
+  const cleanUpRoleSpecificData = (role: string) => {
+    // Nettoie les erreurs de step
+    setStepErrors({});
 
-Votre compte a été créé avec succès sur notre plateforme éducative. 
-Vous pouvez maintenant vous connecter en utilisant les informations suivantes :
+    // Nettoie les erreurs du formulaire pour les champs non pertinents
+    if (role !== 'child') {
+      setSelectedParent(null);
+      setValue('selectedParent', null);
+      clearErrors('selectedParent');
+    }
 
-Email : ${getValues('email') || ''}
-Mot de passe temporaire : *******
-
-Veuillez cliquer sur le bouton ci-dessous pour activer votre compte :
-
-[Activer mon compte]
-
-Ce lien expirera dans 24 heures.
-
-Cordialement,
-L'équipe de la plateforme`,
-    [getValues]
-  );
-
-  const handleRoleSelect = (role: string) => {
-    setSelectedRole(role);
-    setValue('role', role);
-    setRoleSelectionError(null);
     if (role !== 'admin') {
-      setValue('adminRole', '');
+      setSelectedAdminRoles([]);
+      setValue('selectedAdminRoles', []);
+      clearErrors('selectedAdminRoles');
     }
   };
 
-  const handleParentSelect = (parent: Parent) => {
-    setSelectedParent(parent);
-    setValue('parentId', parent.id);
-  };
+  const validateStep = async (step: number): Promise<boolean> => {
+    setStepErrors({});
 
-  const handleContinue = async () => {
-    if (currentStep === 1) {
-      if (!selectedRole) {
-        setRoleSelectionError('Veuillez sélectionner un rôle.');
-        return;
+    if (step === 0) {
+      const isValid = await trigger(['selectedRole']);
+      return isValid;
+    }
+
+    if (step === 1) {
+      const isValid = await trigger(['firstName', 'lastName', 'email', 'phoneNumber', 'birthDate']);
+      return isValid;
+    }
+
+    if (step === 2) {
+      const newErrors: { [key: string]: string } = {};
+
+      if (selectedRole === 'child') {
+        if (!selectedParent) {
+          newErrors.parent = 'Veuillez sélectionner un parent';
+        }
       }
-      if (selectedRole === 'admin' && !adminRole) {
-        setAdminRoleError('Veuillez sélectionner un rôle administrateur.');
-        return;
-      }
-      const fieldsToValidate = [
-        'firstName',
-        'lastName',
-        'email',
-        'phoneNumber',
-        'birthDate',
-        'role',
-      ];
-      const isValid = await trigger(fieldsToValidate as any);
-      if (!isValid) return;
+
       if (selectedRole === 'admin') {
-        setCurrentStep(3);
-      } else {
-        setCurrentStep(2);
+        if (selectedAdminRoles.length === 0) {
+          newErrors.adminRoles = 'Veuillez sélectionner au moins un rôle administrateur';
+        }
       }
-    } else {
-      setCurrentStep((prev) => prev + 1);
+
+      // Pour le rôle parent, pas de validation spécifique nécessaire à l'étape 2
+      if (selectedRole === 'parent') {
+        // Aucune validation supplémentaire requise
+      }
+
+      setStepErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    }
+
+    return true;
+  };
+
+  const handleNext = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    const isValid = await validateStep(activeStep);
+    if (isValid) {
+      setActiveStep((prevStep) => prevStep + 1);
+      setStepErrors({});
     }
   };
 
-  const handleBack = () => {
-    if (selectedRole === 'admin') {
-      if (currentStep === 4) setCurrentStep(3);
-      else if (currentStep === 3) setCurrentStep(1);
-    } else {
-      setCurrentStep((prev) => Math.max(prev - 1, 1));
-    }
+  const handleBack = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    setActiveStep((prevStep) => prevStep - 1);
+    setStepErrors({});
   };
 
-  const onClose = () => {
-    router.push(paths.dashboard.users.accounts);
+  const handleRoleSelection = (role: 'admin' | 'parent' | 'child') => {
+    setSelectedRole(role);
+    setValue('selectedRole', role);
+
+    // Nettoie les données spécifiques aux autres rôles
+    cleanUpRoleSpecificData(role);
+
+    // Force la validation du champ selectedRole
+    trigger(['selectedRole']);
   };
 
-  const onSubmit = handleSubmit(async (data) => {
+  const onSubmit = async (data: any) => {
+    // Validation finale avant soumission
+    const isValid = await validateStep(activeStep);
+    if (!isValid) return;
+
+    const baseUserData: UserRequest = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      birthDate: data.birthDate ? dayjs(data.birthDate).format('YYYY-MM-DD') : '',
+    };
+
+    setIsLoading(true);
     try {
-      const promise = new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.promise(promise, {
-        loading: 'Création en cours...',
-        success: 'Compte créé avec succès !',
-        error: 'Erreur lors de la création du compte.',
+      if (selectedRole === 'admin') {
+        const adminData: AdminRequest = {
+          ...baseUserData,
+          roleIds: selectedAdminRoles,
+        };
+        await apiService.user.addAdmin(adminData);
+      } else if (selectedRole === 'parent') {
+        const parentData: ParentRequest = baseUserData;
+        await apiService.user.addParent(parentData);
+      } else if (selectedRole === 'child') {
+        const childData: ChildRequest = {
+          ...baseUserData,
+          parentId: selectedParent?.id ?? '',
+        };
+        await apiService.user.addChild(childData);
+      }
+
+      toast.success('Compte créé avec succès !');
+
+      // Reset complet du formulaire
+      setActiveStep(0);
+      setSelectedRole('');
+      setSelectedParent(null);
+      setSelectedAdminRoles([]);
+      setStepErrors({});
+      setSearchParent('');
+
+      methods.reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        birthDate: '',
+        selectedRole: '' as 'admin' | 'parent' | 'child' | '',
+        selectedParent: null,
+        selectedAdminRoles: [],
       });
-      await promise;
-      console.info('DATA', data);
-      reset();
-      onClose();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      const backendMessage = error?.response?.data?.message;
+
+      if (backendMessage === 'Email already exists') {
+        toast.error('Cet email est déjà utilisé.');
+      } else if (backendMessage === 'Missing data') {
+        toast.error('Données manquantes.');
+      } else {
+        console.error("Erreur lors de l'ajout de l'utilisateur:", error);
+        toast.error("Échec de l'ajout de l'utilisateur!");
+      }
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <FontAwesomeIcon icon={faUserShield} style={{ fontSize: 40, color: '#1976d2' }} />;
+      case 'parent':
+        return <ParentIcon sx={{ fontSize: 40, color: '#388e3c' }} />;
+      case 'child':
+        return <FontAwesomeIcon icon={faChild} style={{ fontSize: 40, color: '#f57c00' }} />;
+      default:
+        return null;
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrateur';
+      case 'parent':
+        return 'Parent';
+      case 'child':
+        return 'Enfant';
+      default:
+        return '';
+    }
+  };
 
   const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
+    switch (activeStep) {
+      case 0:
         return (
-          <>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
-              sx={{ mb: 4 }}
-              justifyContent="center"
-            >
+          <Box>
+            <Typography variant="h6" gutterBottom align="center" sx={{ mb: 3 }}>
+              Quel type de compte souhaitez-vous créer ?
+            </Typography>
+            <Grid container spacing={3}>
               {[
                 {
-                  label: 'Administrateur',
-                  value: 'admin',
-                  description: 'Droits complets sur le système',
-                  icon: <FontAwesomeIcon icon={faUserShield} />,
+                  role: 'admin',
+                  title: 'Administrateur',
+                  description: 'Accès complet au système et gestion des utilisateurs',
                 },
                 {
-                  label: 'Parent',
-                  value: 'parent',
-                  description: 'Gestion des comptes enfants',
-                  icon: <FontAwesomeIcon icon={faUserFriends} />,
+                  role: 'parent',
+                  title: 'Parent',
+                  description: 'Gestion des comptes enfants et suivi des activités',
                 },
                 {
-                  label: 'Enfant',
-                  value: 'enfant',
-                  description: 'Accès limité au contenu éducatif',
-                  icon: <FontAwesomeIcon icon={faChild} />,
+                  role: 'child',
+                  title: 'Enfant',
+                  description: 'Accès au contenu éducatif adapté',
                 },
-              ].map((role) => (
-                <Card
-                  key={role.value}
-                  variant="outlined"
-                  onClick={() => handleRoleSelect(role.value)}
-                  sx={{
-                    width: '100%',
-                    cursor: 'pointer',
-                    border: selectedRole === role.value ? '2px solid' : '1px solid',
-                    borderColor: selectedRole === role.value ? '#C8FAD6' : 'divider',
-                    bgcolor: selectedRole === role.value ? '#C8FAD6' : 'background.paper',
-                  }}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                    <Typography fontSize="24px" sx={{ mb: 1 }}>
-                      {role.icon}
-                    </Typography>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {role.label}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" fontSize="12px">
-                      {role.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
-            {roleSelectionError ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {roleSelectionError}
-              </Alert>
-            ) : null}
-            <Box
-              display="grid"
-              rowGap={3}
-              columnGap={2}
-              gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
-              sx={{ mb: 2 }}
-            >
-              <Field.Text name="firstName" label="Prénom" />
-              <Field.Text name="lastName" label="Nom" />
-              <Field.Text name="email" label="Adresse e-mail" />
-              <Field.Phone name="phoneNumber" label="Numéro de téléphone" />
-              <Controller
-                name="birthDate"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <DatePicker
-                    label="Date de naissance"
-                    value={field.value ? dayjs(field.value, 'YYYY-MM-DD') : null}
-                    onChange={(newValue) => {
-                      if (newValue) {
-                        field.onChange(newValue.format('YYYY-MM-DD'));
-                      } else {
-                        field.onChange('');
-                      }
-                    }}
-                    format="DD/MM/YYYY"
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        sx: { '& .MuiInputBase-root': { height: 48 } },
-                        error: Boolean(fieldState.error),
-                        helperText: fieldState.error?.message,
+              ].map((option) => (
+                <Grid item xs={12} md={4} key={option.role}>
+                  <Card
+                    variant={selectedRole === option.role ? 'elevation' : 'outlined'}
+                    sx={{
+                      cursor: 'pointer',
+                      border:
+                        selectedRole === option.role ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                      backgroundColor: selectedRole === option.role ? '#f3f7ff' : 'white',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 2,
                       },
                     }}
-                  />
-                )}
-              />
-              {selectedRole === 'admin' ? (
+                    onClick={() => handleRoleSelection(option.role as any)}
+                  >
+                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                      {getRoleIcon(option.role)}
+                      <Typography variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
+                        {option.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {option.description}
+                      </Typography>
+                      {selectedRole === option.role && (
+                        <CheckIcon sx={{ color: '#1976d2', mt: 1 }} />
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+            {errors.selectedRole && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {errors.selectedRole.message}
+              </Alert>
+            )}
+          </Box>
+        );
+
+      case 1:
+        return (
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box>
+              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+                Informations personnelles
+              </Typography>
+              <Box
+                display="grid"
+                rowGap={3}
+                columnGap={2}
+                gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }}
+                sx={{ mb: 2 }}
+              >
+                <Field.Text name="firstName" label="Prénom" />
+                <Field.Text name="lastName" label="Nom" />
+                <Field.Text name="email" label="Adresse e-mail" />
+                <Field.Phone name="phoneNumber" label="Numéro de téléphone" />
                 <Controller
-                  name="adminRole"
+                  name="birthDate"
                   control={control}
-                  render={({ field }) => (
-                    <FormControl
-                      fullWidth
-                      error={!!adminRoleError}
-                      sx={{ gridColumn: { xs: '1', sm: '1 / span 2' } }}
-                    >
-                      <InputLabel>Rôle administratif</InputLabel>
-                      <Select
-                        {...field}
-                        label="Rôle administratif"
-                        MenuProps={{
-                          anchorOrigin: {
-                            vertical: 'top',
-                            horizontal: 'left',
-                          },
-                          transformOrigin: {
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                          },
-                        }}
-                      >
-                        {administrationRoles.map((role) => (
-                          <MenuItem key={role.value} value={role.value}>
-                            {role.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {adminRoleError ? (
-                        <Typography color="error" variant="caption" sx={{ mt: 1, ml: 1.5 }}>
-                          {adminRoleError}
-                        </Typography>
-                      ) : null}
-                    </FormControl>
+                  render={({ field, fieldState }) => (
+                    <DatePicker
+                      label="Date de naissance"
+                      value={field.value ? dayjs(field.value, 'YYYY-MM-DD') : null}
+                      onChange={(newValue) => {
+                        if (newValue) {
+                          field.onChange(newValue.format('YYYY-MM-DD'));
+                        } else {
+                          field.onChange('');
+                        }
+                      }}
+                      format="DD/MM/YYYY"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          sx: { '& .MuiInputBase-root': { height: 48 } },
+                          error: Boolean(fieldState.error),
+                          helperText: fieldState.error?.message,
+                        },
+                      }}
+                    />
                   )}
                 />
-              ) : null}
+              </Box>
             </Box>
-          </>
+          </LocalizationProvider>
         );
+
       case 2:
-        if (selectedRole === 'enfant') {
-          return (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                Vérification du compte parent
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Recherchez et sélectionnez le compte parent associé à cet enfant.
-              </Typography>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Recherche par nom ou adresse e-mail
-              </Typography>
-              <TextField
-                fullWidth
-                placeholder="Rechercher un parent..."
-                value={parentSearch}
-                onChange={(e) => setParentSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FontAwesomeIcon icon={faSearch} style={{ width: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 2 }}
-              />
-              <Stack spacing={1}>
-                {filteredParents.map((parent) => (
-                  <Box
-                    key={parent.id}
-                    sx={{
-                      p: 2,
-                      border: '1px solid',
-                      borderColor: selectedParent?.id === parent.id ? 'primary.main' : 'divider',
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                      bgcolor:
-                        selectedParent?.id === parent.id ? 'primary.lighter' : 'background.paper',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                    onClick={() => handleParentSelect(parent)}
-                  >
-                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>{parent.name.charAt(0)}</Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="subtitle2" fontWeight={500}>
-                          {parent.name}
-                        </Typography>
-                        {parent.verified ? (
-                          <Box
-                            sx={{
-                              ml: 1,
-                              bgcolor: 'success.light',
-                              color: 'success.dark',
-                              borderRadius: '50%',
-                              width: 20,
-                              height: 20,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 12,
-                            }}
-                          >
-                            ✓
-                          </Box>
-                        ) : null}
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {parent.email}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-          );
-        }
-        if (selectedRole === 'parent') {
-          return (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                Vérification de CIN
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Veuillez télécharger votre CIN (Recto & Verso) pour vérification.
-              </Typography>
-              <Stack direction="column" spacing={4}>
-                <Box>
-                  <Button variant="contained" component="label">
-                    Télécharger Recto
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*,application/pdf"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          setCinRectoFile(e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </Button>
-                  {cinRectoFile ? (
-                    <Box sx={{ mt: 2 }}>
-                      <FilePreview file={cinRectoFile} label="Recto" />
-                    </Box>
-                  ) : null}
-                </Box>
-                <Box>
-                  <Button variant="contained" component="label">
-                    Télécharger Verso
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*,application/pdf"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          setCinVersoFile(e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </Button>
-                  {cinVersoFile ? (
-                    <Box sx={{ mt: 2 }}>
-                      <FilePreview file={cinVersoFile} label="Verso" />
-                    </Box>
-                  ) : null}
-                </Box>
-              </Stack>
-            </Box>
-          );
-        }
-        return null;
-      case 3:
         return (
-          <>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                mb: 4,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  bgcolor: 'success.main',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-              >
-                <FontAwesomeIcon icon={faCheck} style={{ width: 20, height: 20, color: 'white' }} />
-              </Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Informations vérifiées
-              </Typography>
-              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                Les informations de l&apos;utilisateur ont été vérifiées et sont prêtes à être
-                enregistrées.
-              </Typography>
-            </Box>
-            <Typography variant="h6" gutterBottom fontWeight={500}>
-              Résumé des informations
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+              Configuration spécifique
             </Typography>
-            <Box sx={{ bgcolor: 'grey.100', p: 3, borderRadius: 1 }}>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  rowGap: 2,
-                  columnGap: 2,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Nom complet:
+
+            {selectedRole === 'child' && (
+              <Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  Sélectionner le parent
                 </Typography>
-                <Typography variant="body2">
-                  {getValues('firstName')} {getValues('lastName')}
-                </Typography>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Type de compte:
-                </Typography>
-                <Typography variant="body2">
-                  {selectedRole === 'admin' && 'Administrateur'}
-                  {selectedRole === 'parent' && 'Parent'}
-                  {selectedRole === 'enfant' && 'Enfant'}
-                </Typography>
-                {selectedRole === 'admin' && getValues('adminRole') ? (
-                  <>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Rôle administratif:
-                    </Typography>
-                    <Typography variant="body2">
-                      {
-                        administrationRoles.find((role) => role.value === getValues('adminRole'))
-                          ?.label
-                      }
-                    </Typography>
-                  </>
-                ) : null}
-                <Typography variant="subtitle2" color="text.secondary">
-                  Email:
-                </Typography>
-                <Typography variant="body2">{getValues('email')}</Typography>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Téléphone:
-                </Typography>
-                <Typography variant="body2">{getValues('phoneNumber')}</Typography>
-                {selectedRole === 'enfant' && selectedParent ? (
-                  <>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Compte parent:
-                    </Typography>
-                    <Typography variant="body2">
-                      {selectedParent.name} ({selectedParent.email})
-                    </Typography>
-                  </>
-                ) : null}
-              </Box>
-            </Box>
-          </>
-        );
-      case 4:
-        return (
-          <>
-            <Box
-              sx={{
-                bgcolor: 'grey.100',
-                p: 3,
-                borderRadius: 1,
-                mb: 3,
-              }}
-            >
-              <Typography variant="h6" gutterBottom fontWeight={500}>
-                Modèle d&apos;email d&apos;invitation
-              </Typography>
-              {isCustomizing ? (
                 <TextField
                   fullWidth
-                  multiline
-                  minRows={10}
-                  value={invitationContent}
-                  onChange={(e) => setInvitationContent(e.target.value)}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    p: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    bgcolor: 'common.white',
-                    whiteSpace: 'pre-line',
+                  label="Rechercher un parent"
+                  value={searchParent}
+                  onChange={(e) => setSearchParent(e.target.value)}
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 1 }} />,
                   }}
-                >
-                  {invitationContent || buildDefaultInvitationText()}
-                </Box>
-              )}
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  if (!isCustomizing && !invitationContent) {
-                    setInvitationContent(buildDefaultInvitationText());
-                  }
-                  setIsCustomizing((prev) => !prev);
-                }}
-              >
-                {isCustomizing ? 'Enregistrer' : 'Personnaliser'}
-              </Button>
-              <Button variant="contained" onClick={onSubmit} color="primary">
-                Envoyer l&apos;invitation
-              </Button>
-            </Box>
-          </>
+                />
+                <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto' }}>
+                  <List>
+                    {parents
+                      .filter(
+                        (parent) =>
+                          searchParent === '' ||
+                          `${parent.firstName} ${parent.lastName}`
+                            .toLowerCase()
+                            .includes(searchParent.toLowerCase()) ||
+                          parent.email.toLowerCase().includes(searchParent.toLowerCase())
+                      )
+                      .map((parent) => (
+                        <ListItemButton
+                          key={parent.id}
+                          selected={selectedParent?.id === parent.id}
+                          onClick={() => {
+                            setSelectedParent(parent);
+                            setValue('selectedParent', parent);
+                            if (stepErrors.parent) {
+                              setStepErrors((prev) => ({ ...prev, parent: '' }));
+                            }
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar sx={{ bgcolor: '#388e3c' }}>
+                              {parent.firstName.charAt(0)}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={`${parent.firstName} ${parent.lastName}`}
+                            secondary={parent.email}
+                          />
+                          {selectedParent?.id === parent.id && (
+                            <CheckIcon sx={{ color: '#1976d2' }} />
+                          )}
+                        </ListItemButton>
+                      ))}
+                  </List>
+                </Paper>
+                {stepErrors.parent && (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    {stepErrors.parent}
+                  </Alert>
+                )}
+              </Box>
+            )}
+
+            {selectedRole === 'admin' && (
+              <Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  Rôles administrateur
+                </Typography>
+                <FormControl fullWidth error={!!stepErrors.adminRoles} sx={{ mb: 2 }}>
+                  <InputLabel id="select-admin-roles-label">Sélectionner les rôles</InputLabel>
+
+                  <Select
+                    labelId="select-admin-roles-label"
+                    id="select-admin-roles"
+                    multiple
+                    value={selectedAdminRoles}
+                    onChange={(e) => {
+                      const value = e.target.value as string[];
+                      setSelectedAdminRoles(value);
+                      setValue('selectedAdminRoles', value);
+                      if (stepErrors.adminRoles && value.length > 0) {
+                        setStepErrors((prev) => ({ ...prev, adminRoles: '' }));
+                      }
+                    }}
+                    label="Sélectionner les rôles"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, pt: 0.5, pb: 0.5 }}>
+                        {selected.map((value) => {
+                          const role = administrationRoles.find((r) => r.id === value);
+                          return <Chip key={value} label={role?.name} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 300,
+                        },
+                      },
+                    }}
+                  >
+                    {administrationRoles.map((role) => (
+                      <MenuItem key={role.id} value={role.id}>
+                        <Box>
+                          <Typography variant="body1">{role.name}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {role.description}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+
+                  {stepErrors.adminRoles && (
+                    <FormHelperText>{stepErrors.adminRoles}</FormHelperText>
+                  )}
+                </FormControl>
+              </Box>
+            )}
+
+            {selectedRole === 'parent' && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <ParentIcon sx={{ fontSize: 60, color: '#388e3c', mb: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Configuration du compte parent
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Le compte parent sera créé avec les permissions par défaut. Vous pourrez gérer les
+                  comptes enfants après la création.
+                </Typography>
+              </Box>
+            )}
+          </Box>
         );
+
+      case 3:
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom align="center" sx={{ mb: 3 }}>
+              Confirmation
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3 }}>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {getRoleIcon(selectedRole)}
+                  <Box>
+                    <Typography variant="h6">{getRoleLabel(selectedRole)}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Type de compte sélectionné
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider />
+
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Nom complet
+                    </Typography>
+                    <Typography variant="body1">
+                      {methods.getValues('firstName')} {methods.getValues('lastName')}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Email
+                    </Typography>
+                    <Typography variant="body1">{methods.getValues('email')}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Téléphone
+                    </Typography>
+                    <Typography variant="body1">{methods.getValues('phoneNumber')}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Date de naissance
+                    </Typography>
+                    <Typography variant="body1">
+                      {methods.getValues('birthDate')
+                        ? dayjs(methods.getValues('birthDate')).format('DD/MM/YYYY')
+                        : ''}
+                    </Typography>
+                  </Grid>
+                </Grid>
+
+                {selectedRole === 'child' && selectedParent && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Parent associé
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar sx={{ bgcolor: '#388e3c', width: 32, height: 32 }}>
+                          {selectedParent.firstName.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2">
+                            {selectedParent.firstName} {selectedParent.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {selectedParent.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </>
+                )}
+
+                {selectedRole === 'admin' && selectedAdminRoles.length > 0 && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Rôles administrateur
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {selectedAdminRoles.map((roleId) => {
+                          const role = administrationRoles.find((r) => r.id === roleId);
+                          return <Chip key={roleId} label={role?.name} color="primary" />;
+                        })}
+                      </Box>
+                    </Box>
+                  </>
+                )}
+              </Stack>
+            </Paper>
+          </Box>
+        );
+
       default:
         return null;
     }
@@ -652,124 +715,46 @@ L'équipe de la plateforme`,
           ]}
         />
       </Box>
-
-      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
-        <Box sx={{ p: 2 }}>
-          <Stack
-            direction="row"
-            spacing={0}
-            sx={{
-              mb: 3,
-              position: 'relative',
-              // Increased thickness, color, and changed from 2px to 4px
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 4,
-                bgcolor: 'grey.300',
-                transform: 'translateY(-50%)',
-                zIndex: 0,
-              },
-            }}
-          >
-            {[
-              { label: 'Infos de base', step: 1 },
-              { label: "Vérifier l'ID", step: 2 },
-              { label: 'Confirmer', step: 3 },
-              { label: 'Invitation', step: 4 },
-            ].map((item) => (
-              <Box
-                key={item.step}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  flex: 1,
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    // Slightly bigger step circles (36px → more visual weight)
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    bgcolor:
-                      item.step < currentStep
-                        ? 'primary.main'
-                        : item.step === currentStep
-                          ? '#6495ED'
-                          : 'grey.300',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    mb: 0.5,
-                  }}
-                >
-                  {item.step < currentStep ? (
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      style={{ width: 20, height: 20, color: 'white' }}
-                    />
-                  ) : (
-                    item.step
-                  )}
-                </Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color:
-                      item.step < currentStep
-                        ? 'primary.main'
-                        : item.step === currentStep
-                          ? '#6495ED'
-                          : 'text.disabled',
-                    fontWeight: item.step === currentStep ? 'bold' : 'normal',
-                    fontSize: 11, // slightly bigger for emphasis
-                    textAlign: 'center',
-                  }}
-                >
-                  {item.label}
-                </Typography>
-              </Box>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
             ))}
-          </Stack>
+          </Stepper>
 
-          <Form methods={methods} onSubmit={onSubmit}>
-            {renderStepContent()}
-            {currentStep !== 4 ? (
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 0,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                }}
-              >
-                {currentStep > 1 ? (
-                  <Button variant="outlined" onClick={handleBack}>
-                    Retour
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Box sx={{ minHeight: 400 }}>{renderStepContent()}</Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">
+                  Retour
+                </Button>
+
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    disabled={isLoading}
+                    startIcon={isLoading && <CircularProgress size={20} color="inherit" />}
+                  >
+                    {isLoading ? 'Création en cours...' : "Créer l'utilisateur"}
                   </Button>
                 ) : (
-                  <Button variant="outlined" onClick={onClose}>
-                    Annuler
+                  <Button type="button" onClick={handleNext} variant="contained" color="primary">
+                    Suivant
                   </Button>
                 )}
-                {currentStep < 4 ? (
-                  <Button variant="contained" onClick={handleContinue} color="primary">
-                    {currentStep === 3 ? 'Confirmer' : 'Continuer'}
-                  </Button>
-                ) : null}
               </Box>
-            ) : null}
-          </Form>
-        </Box>
-      </Box>
+            </form>
+          </FormProvider>
+        </Paper>
+      </Container>
     </DashboardContent>
   );
 }

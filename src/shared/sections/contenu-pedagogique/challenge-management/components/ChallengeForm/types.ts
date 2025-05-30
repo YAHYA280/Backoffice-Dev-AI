@@ -2,7 +2,7 @@ import type { UseFormReturn } from 'react-hook-form';
 
 import { z } from 'zod';
 
-import { MESSAGE_FINAL_DEFAUT, DEFAULT_SCORE_CONFIGURATION } from '../../constants';
+import { DEFAULT_SCORE_CONFIGURATION } from '../../constants';
 import {
   Difficulty,
   ScoreMethod,
@@ -57,7 +57,7 @@ export const challengeFormSchema = z.object({
   datePublication: z.string().min(1, 'La date de publication est requise'),
   dateCreation: z.string().optional(),
   dateMiseAJour: z.string().optional(),
-  niveauId: z.string().optional(),
+  niveauId: z.string().min(1, 'Le niveau est requis'),
   difficulte: z.nativeEnum(Difficulty, {
     errorMap: () => ({
       message: 'Le niveau de difficulté est requis et doit être une valeur valide',
@@ -66,7 +66,7 @@ export const challengeFormSchema = z.object({
   timer: z
     .number()
     .min(5, "Le timer doit être d'au moins 5 minutes")
-    .max(180, 'Le timer ne peut pas dépasser 180 minutes'),
+    .max(50, 'Le timer ne peut pas dépasser 20 minutes'),
   nbTentatives: z
     .number()
     .min(0, 'Pour des tentatives illimitées, utilisez 0. Sinon, utilisez un nombre positif')
@@ -77,15 +77,12 @@ export const challengeFormSchema = z.object({
   messageSucces: z
     .string()
     .min(1, 'Le message de succès est requis')
-    .max(250, 'Le message de succès ne peut pas dépasser 250 caractères')
-    .optional()
-    .default(MESSAGE_FINAL_DEFAUT.success),
+    .max(250, 'Le message de succès ne peut pas dépasser 250 caractères'),
   messageEchec: z
     .string()
     .min(1, "Le message d'échec est requis")
-    .max(250, "Le message d'échec ne peut pas dépasser 250 caractères")
-    .optional()
-    .default(MESSAGE_FINAL_DEFAUT.failure),
+    .max(250, "Le message d'échec ne peut pas dépasser 250 caractères"),
+
   prerequisId: z.string().optional(),
   prerequisPourcentage: z
     .number()

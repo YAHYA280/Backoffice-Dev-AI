@@ -10,7 +10,6 @@ import type {
 import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPlus,
   faFilter,
   faColumns,
   faSyncAlt,
@@ -337,19 +336,6 @@ export function AIAssistantTableToolbar({
         <MetricsCardContent />
       </Card>
       <Card>
-        {/* Nouveau assistant button on the top right */}
-        <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            startIcon={<FontAwesomeIcon icon={faPlus} />}
-            onClick={onAddAssistant}
-            sx={{ backgroundColor: 'primary.main', color: 'white' }}
-            size="small"
-          >
-            Nouveau assistant
-          </Button>
-        </Box>
-
         {/* Columns selection row below */}
         <Stack
           direction="row"
