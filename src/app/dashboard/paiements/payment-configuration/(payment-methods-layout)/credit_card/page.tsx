@@ -1,9 +1,9 @@
-import CreditCardView from 'src/shared/sections/paiements/payment-configuration/payment-methods-conf/credit-card/view';
+import CreditCardConfigView from 'src/shared/sections/paiements/payment-configuration/views/CreditCardConfigView';
 
 export const metadata = {
-  title: 'Dashboard: Payment methods',
+  title: 'Configuration Carte Bancaire - Dashboard',
 };
 
-export default function PaymentMethodsPage() {
-  return <CreditCardView />;
+export default function CreditCardConfigPage() {
+  return <CreditCardConfigView />;
 }

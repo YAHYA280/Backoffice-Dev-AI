@@ -1,9 +1,9 @@
-import BankTransferConfView from 'src/shared/sections/paiements/payment-configuration/payment-methods-conf/bank-transfer/view';
+import BankTransferConfigView from 'src/shared/sections/paiements/payment-configuration/views/BankTransferConfigView';
 
 export const metadata = {
-  title: 'Dashboard: Payment methods',
+  title: 'Configuration Virement Bancaire - Dashboard',
 };
 
-export default function PaymentMethodsPage() {
-  return <BankTransferConfView />;
+export default function BankTransferConfigPage() {
+  return <BankTransferConfigView />;
 }

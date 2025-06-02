@@ -1,9 +1,9 @@
-import PaymentMethodsView from 'src/shared/sections/paiements/payment-configuration/payment-methods-list/view';
+import PaymentConfigurationView from 'src/shared/sections/paiements/payment-configuration/views/PaymentConfigurationView';
 
 export const metadata = {
-  title: 'Dashboard: Payment methods',
+  title: 'Configuration des paiements - Dashboard',
 };
 
-export default function PaymentMethodsPage() {
-  return <PaymentMethodsView />;
+export default function PaymentConfigurationPage() {
+  return <PaymentConfigurationView />;
 }

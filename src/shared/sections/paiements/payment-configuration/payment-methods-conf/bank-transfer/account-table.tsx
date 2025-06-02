@@ -1,3 +1,5 @@
+// Path: src/shared/sections/paiements/payment-configuration/payment-methods-conf/bank-transfer/account-table.tsx
+
 import React, { useState } from 'react';
 
 import {
@@ -282,6 +284,7 @@ const BankAccountsManager: React.FC<Props> = ({ updateBankAccounts, bankAccounts
           </Button>
         </ConditionalComponent>
       </Box>
+
       <Collapse in={showAddForm}>
         <Box sx={{ mb: 2 }}>
           <BankAccountForm
