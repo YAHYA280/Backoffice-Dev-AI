@@ -1,4 +1,4 @@
-// Path: src/shared/sections/paiements/payment-configuration/components/layout/PaymentConfigContainer.tsx
+// Path: src/shared/sections/paiements/payment-configuration/components/common/PaymentConfigLayout.tsx
 
 'use client';
 
@@ -6,12 +6,12 @@ import React from 'react';
 
 import { Box, alpha, useTheme, Container } from '@mui/material';
 
-interface PaymentConfigContainerProps {
+interface PaymentConfigLayoutProps {
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export const PaymentConfigContainer: React.FC<PaymentConfigContainerProps> = ({
+export const PaymentConfigLayout: React.FC<PaymentConfigLayoutProps> = ({
   children,
   maxWidth = 'lg',
 }) => {

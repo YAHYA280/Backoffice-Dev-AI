@@ -3,6 +3,7 @@
 export type PaymentMode = 'live' | 'sandbox';
 export type ThreeDSecureOption = 'REQUIRED' | 'ALWAYS';
 
+// Stripe Configuration
 export interface StripeConfig {
   id?: string;
   active: boolean;
@@ -10,57 +11,59 @@ export interface StripeConfig {
   liveSecretKey: string;
   sandboxSecretKey: string;
   webhookUrl?: string;
+  webhookSecret?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
+// Credit Card Configuration
 export interface CreditCardConfig {
   id?: string;
   active: boolean;
   title: string;
-  logos: string[];
-  disabledCreditCards: string[];
+  allowedBrands: string[];
+  disabledBrands: string[];
   vaulting: boolean;
-  contingencyFor3DSecure: ThreeDSecureOption;
-  stripeConfig?: StripeConfig;
+  threeDSecure: ThreeDSecureOption;
+  displayLogos: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export interface BankTransferConfig {
-  id?: string;
-  active: boolean;
-  title: string;
-  description: string;
-  accountId?: string;
-  bankAccounts: BankAccount[];
-  stripeConfig?: StripeConfig;
-}
-
+// Bank Account
 export interface BankAccount {
-  id?: number;
+  id: string;
   accountName: string;
   bankName: string;
   accountNumber: string;
   iban: string;
   swift: string;
-  currency?: string;
-  order: number;
-  isDefault?: boolean;
+  currency: string;
+  isDefault: boolean;
 }
 
+// Bank Transfer Configuration
+export interface BankTransferConfig {
+  id?: string;
+  active: boolean;
+  title: string;
+  description: string;
+  instructions?: string;
+  showAccountDetails: boolean;
+  bankAccounts: BankAccount[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Payment Method Base
 export interface PaymentMethod {
   id: string;
-  type: 'credit_card' | 'bank_transfer' | 'paypal' | 'apple_pay';
+  type: 'stripe' | 'credit_card' | 'bank_transfer';
   title: string;
   description: string;
   active: boolean;
+  configured: boolean;
   icon?: string;
-  config?: any;
-}
-
-export interface PaymentConfigFormData {
-  stripe: StripeConfig;
-  creditCard: CreditCardConfig;
-  bankTransfer: BankTransferConfig;
 }
 
 // API Response types
@@ -71,7 +74,56 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Combined Configuration Response
 export interface PaymentConfigResponse {
   stripe: StripeConfig;
+  creditCard: CreditCardConfig;
+  bankTransfer: BankTransferConfig;
   methods: PaymentMethod[];
+}
+
+// Configuration Status
+export interface ConfigurationStatus {
+  stripe: {
+    configured: boolean;
+    active: boolean;
+    mode?: PaymentMode;
+  };
+  creditCard: {
+    configured: boolean;
+    active: boolean;
+  };
+  bankTransfer: {
+    configured: boolean;
+    active: boolean;
+    accountsCount: number;
+  };
+}
+
+// Form Data Types
+export interface StripeFormData {
+  active: boolean;
+  mode: PaymentMode;
+  liveSecretKey: string;
+  sandboxSecretKey: string;
+  webhookUrl?: string;
+  webhookSecret?: string;
+}
+
+export interface CreditCardFormData {
+  active: boolean;
+  title: string;
+  allowedBrands: string[];
+  disabledBrands: string[];
+  vaulting: boolean;
+  threeDSecure: ThreeDSecureOption;
+  displayLogos: boolean;
+}
+
+export interface BankTransferFormData {
+  active: boolean;
+  title: string;
+  description: string;
+  instructions?: string;
+  showAccountDetails: boolean;
 }

@@ -106,8 +106,10 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/contenu-pedagogique`,
       apprentissage: `${ROOTS.DASHBOARD}/contenu-pedagogique/apprentissage`,
       challenges: `${ROOTS.DASHBOARD}/contenu-pedagogique/challenges`,
-      trophies: (challengeId: string) => `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}`,
-      newTrophy: (challengeId: string) => `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}/new`,
+      trophies: (challengeId: string) =>
+        `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}`,
+      newTrophy: (challengeId: string) =>
+        `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}/new`,
       editTrophy: (challengeId: string, trophyId: string) =>
         `${ROOTS.DASHBOARD}/contenu-pedagogique/trophies/${challengeId}/${trophyId}/edit`,
       ressourcesMultimedia: `${ROOTS.DASHBOARD}/contenu-pedagogique/ressources-multimedia`,
@@ -148,6 +150,9 @@ export const paths = {
       suivi_facturation: `${ROOTS.DASHBOARD}/paiements/suivi-factures`,
       payment_configuration: `${ROOTS.DASHBOARD}/paiements/payment-configuration`,
       method: (name: string) => `${ROOTS.DASHBOARD}/paiements/payment-configuration/${name}`,
+      stripe: `${ROOTS.DASHBOARD}/paiements/payment-configuration/stripe`,
+      credit_card: `${ROOTS.DASHBOARD}paiements/payment-configuration/credit_card`,
+      bank_transfer: `${ROOTS.DASHBOARD}paiements/payment-configuration/bank_transfer`,
     },
     ai: {
       root: `${ROOTS.DASHBOARD}/ai`,

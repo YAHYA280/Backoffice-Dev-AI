@@ -1,32 +1,48 @@
-// Path: src/shared/sections/paiements/payment-configuration/components/layout/PaymentConfigHeader.tsx
+// Path: src/shared/sections/paiements/payment-configuration/components/common/PaymentConfigHeader.tsx
 
 'use client';
 
 import React from 'react';
 
 import { Box, Chip, Stack, alpha, useTheme, Typography } from '@mui/material';
-import {
-  Payment as PaymentIcon,
-  Security as SecurityIcon,
-  VerifiedUser as VerifiedIcon,
-} from '@mui/icons-material';
+
+import { FontAwesome } from 'src/shared/components/fontawesome';
 
 interface PaymentConfigHeaderProps {
   title: string;
   description: string;
+  icon: any; // FontAwesome icon
   isConfigured?: boolean;
   isActive?: boolean;
   mode?: 'live' | 'sandbox';
+  variant?: 'primary' | 'success' | 'warning' | 'info';
 }
 
 export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
   title,
   description,
+  icon,
   isConfigured = false,
   isActive = false,
   mode,
+  variant = 'primary',
 }) => {
   const theme = useTheme();
+
+  const getVariantColor = () => {
+    switch (variant) {
+      case 'success':
+        return theme.palette.success.main;
+      case 'warning':
+        return theme.palette.warning.main;
+      case 'info':
+        return theme.palette.info.main;
+      default:
+        return theme.palette.primary.main;
+    }
+  };
+
+  const variantColor = getVariantColor();
 
   return (
     <Box
@@ -35,10 +51,10 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
         mb: 4,
         borderRadius: 3,
         background: `linear-gradient(135deg, 
-          ${alpha(theme.palette.primary.main, 0.1)} 0%, 
+          ${alpha(variantColor, 0.1)} 0%, 
           ${alpha(theme.palette.background.paper, 0.9)} 100%)`,
         border: '1px solid',
-        borderColor: alpha(theme.palette.primary.main, 0.2),
+        borderColor: alpha(variantColor, 0.2),
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -53,7 +69,7 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
           height: 100,
           borderRadius: '50%',
           background: `linear-gradient(45deg, 
-            ${alpha(theme.palette.primary.main, 0.1)}, 
+            ${alpha(variantColor, 0.1)}, 
             ${alpha(theme.palette.secondary.main, 0.1)})`,
           zIndex: 0,
         }}
@@ -72,11 +88,14 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
               sx={{
                 p: 1.5,
                 borderRadius: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                color: 'primary.main',
+                backgroundColor: alpha(variantColor, 0.1),
+                color: variantColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <PaymentIcon fontSize="large" />
+              <FontAwesome icon={icon} width={32} />
             </Box>
 
             <Box>
@@ -93,7 +112,12 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
         <Stack direction="row" spacing={1.5} alignItems="center">
           {/* Configuration Status */}
           <Chip
-            icon={isConfigured ? <VerifiedIcon /> : <SecurityIcon />}
+            icon={
+              <FontAwesome
+                icon={isConfigured ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'}
+                width={18}
+              />
+            }
             label={isConfigured ? 'Configuré' : 'Non configuré'}
             color={isConfigured ? 'success' : 'warning'}
             variant="filled"
@@ -109,6 +133,12 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
           {/* Active Status */}
           {isConfigured && (
             <Chip
+              icon={
+                <FontAwesome
+                  icon={isActive ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}
+                  width={18}
+                />
+              }
               label={isActive ? 'Activé' : 'Désactivé'}
               color={isActive ? 'success' : 'error'}
               variant="outlined"
@@ -122,6 +152,9 @@ export const PaymentConfigHeader: React.FC<PaymentConfigHeaderProps> = ({
           {/* Mode Status */}
           {mode && (
             <Chip
+              icon={
+                <FontAwesome icon={mode === 'live' ? 'fas fa-globe' : 'fas fa-flask'} width={18} />
+              }
               label={mode === 'live' ? 'Production' : 'Test'}
               color={mode === 'live' ? 'info' : 'secondary'}
               variant="outlined"

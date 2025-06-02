@@ -1,5 +1,11 @@
+import {
+  getPermissionTypeLabelByValue,
+  getSubModuleLabelByValue,
+  type IRoleItem,
+} from 'src/contexts/types/role';
+
 import { m } from 'framer-motion';
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faTimes, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,12 +25,6 @@ import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
-
-import {
-  type IRoleItem,
-  getSubModuleLabelByValue,
-  getPermissionTypeLabelByValue,
-} from 'src/contexts/types/role';
 
 import { varFade } from 'src/shared/components/animate/variants/fade';
 import ConditionalComponent from 'src/shared/components/conditional-component/ConditionalComponent';

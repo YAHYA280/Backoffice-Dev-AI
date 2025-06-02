@@ -2,6 +2,12 @@
 
 import type { Dayjs } from 'dayjs';
 import type { SelectChangeEvent } from '@mui/material';
+import {
+  allModules,
+  allPermissions,
+  type Permission,
+  type PermissionType,
+} from 'src/contexts/types/role';
 
 import dayjs from 'dayjs';
 import axios from 'axios';
@@ -48,12 +54,6 @@ import { endpoints } from 'src/utils/axios';
 import { GATEWAY_API_URL } from 'src/config-global';
 import { LocalizationProvider } from 'src/shared/locales';
 import { DashboardContent } from 'src/shared/layouts/dashboard';
-import {
-  allModules,
-  allPermissions,
-  type Permission,
-  type PermissionType,
-} from 'src/contexts/types/role';
 
 import { toast } from 'src/shared/components/snackbar';
 import { ConfirmDialog } from 'src/shared/components/custom-dialog';

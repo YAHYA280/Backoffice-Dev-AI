@@ -1,4 +1,4 @@
-// Path: src/shared/sections/paiements/payment-configuration/hooks/useStripeConfig.ts
+// Path: src/shared/sections/paiements/payment-configuration/hooks/usePaymentConfigurations.ts
 
 'use client';
 
@@ -8,7 +8,7 @@ import type {
   StripeConfig,
   CreditCardConfig,
   BankTransferConfig,
-  PaymentConfigResponse,
+  ConfigurationStatus,
   ApiResponse,
 } from '../types/payment.types';
 
@@ -20,6 +20,7 @@ const mockStripeConfig: StripeConfig = {
   liveSecretKey: '',
   sandboxSecretKey: '',
   webhookUrl: '',
+  webhookSecret: '',
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -28,50 +29,64 @@ const mockCreditCardConfig: CreditCardConfig = {
   id: '1',
   active: false,
   title: 'Carte bancaire',
-  logos: ['Visa', 'Mastercard'],
-  disabledCreditCards: [],
+  allowedBrands: ['Visa', 'Mastercard'],
+  disabledBrands: [],
   vaulting: false,
-  contingencyFor3DSecure: 'REQUIRED',
+  threeDSecure: 'REQUIRED',
+  displayLogos: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 const mockBankTransferConfig: BankTransferConfig = {
   id: '1',
   active: false,
   title: 'Virement bancaire',
-  description: 'Payez directement sur notre compte bancaire',
-  accountId: '',
+  description: 'Effectuez le paiement directement depuis votre compte bancaire',
+  instructions: "Veuillez indiquer l'ID de votre commande en référence.",
+  showAccountDetails: true,
   bankAccounts: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+// Utility functions for localStorage simulation
+const getStorageKey = (configType: string) => `payment-config-${configType}`;
+
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
+      if (parsed.updatedAt) parsed.updatedAt = new Date(parsed.updatedAt);
+      return parsed;
+    }
+  } catch (error) {
+    console.error(`Error loading ${key} from storage:`, error);
+  }
+  return defaultValue;
+};
+
+const saveToStorage = <T>(key: string, data: T): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Error saving ${key} to storage:`, error);
+  }
 };
 
 // API simulation functions
 const fetchStripeConfig = async (): Promise<StripeConfig> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // In a real app, this would be an API call
-  // For demo purposes, we'll simulate with sessionStorage
-  const stored = sessionStorage.getItem('stripe-config');
-  if (stored) {
-    try {
-      const config = JSON.parse(stored);
-      // Ensure dates are properly parsed
-      return {
-        ...config,
-        createdAt: config.createdAt ? new Date(config.createdAt) : new Date(),
-        updatedAt: config.updatedAt ? new Date(config.updatedAt) : new Date(),
-      };
-    } catch {
-      return mockStripeConfig;
-    }
-  }
-  return mockStripeConfig;
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  return loadFromStorage(getStorageKey('stripe'), mockStripeConfig);
 };
 
 const updateStripeConfig = async (config: StripeConfig): Promise<ApiResponse<StripeConfig>> => {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 800));
 
-  // Simulate potential API error (5% chance)
+  // Simulate potential API error
   if (Math.random() < 0.05) {
     throw new Error('Erreur de connexion au serveur');
   }
@@ -85,14 +100,12 @@ const updateStripeConfig = async (config: StripeConfig): Promise<ApiResponse<Str
     throw new Error('La clé secrète sandbox est requise en mode test');
   }
 
-  // Update config with current timestamp
   const updatedConfig: StripeConfig = {
     ...config,
     updatedAt: new Date(),
   };
 
-  // Save to sessionStorage for demo
-  sessionStorage.setItem('stripe-config', JSON.stringify(updatedConfig));
+  saveToStorage(getStorageKey('stripe'), updatedConfig);
 
   return {
     success: true,
@@ -102,68 +115,51 @@ const updateStripeConfig = async (config: StripeConfig): Promise<ApiResponse<Str
 };
 
 const fetchCreditCardConfig = async (): Promise<CreditCardConfig> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  const stored = sessionStorage.getItem('credit-card-config');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return mockCreditCardConfig;
-    }
-  }
-  return mockCreditCardConfig;
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return loadFromStorage(getStorageKey('credit-card'), mockCreditCardConfig);
 };
 
 const updateCreditCardConfig = async (
   config: CreditCardConfig
 ): Promise<ApiResponse<CreditCardConfig>> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 600));
 
-  // Simulate potential API error
   if (Math.random() < 0.05) {
     throw new Error('Erreur de connexion au serveur');
   }
 
-  // Validate required fields
   if (!config.title.trim()) {
     throw new Error('Le titre est requis');
   }
 
-  sessionStorage.setItem('credit-card-config', JSON.stringify(config));
+  const updatedConfig: CreditCardConfig = {
+    ...config,
+    updatedAt: new Date(),
+  };
+
+  saveToStorage(getStorageKey('credit-card'), updatedConfig);
 
   return {
     success: true,
-    data: config,
+    data: updatedConfig,
     message: 'Configuration carte bancaire mise à jour avec succès',
   };
 };
 
 const fetchBankTransferConfig = async (): Promise<BankTransferConfig> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  const stored = sessionStorage.getItem('bank-transfer-config');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return mockBankTransferConfig;
-    }
-  }
-  return mockBankTransferConfig;
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  return loadFromStorage(getStorageKey('bank-transfer'), mockBankTransferConfig);
 };
 
 const updateBankTransferConfig = async (
   config: BankTransferConfig
 ): Promise<ApiResponse<BankTransferConfig>> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 700));
 
-  // Simulate potential API error
   if (Math.random() < 0.05) {
     throw new Error('Erreur de connexion au serveur');
   }
 
-  // Validate required fields
   if (!config.title.trim()) {
     throw new Error('Le titre est requis');
   }
@@ -172,16 +168,21 @@ const updateBankTransferConfig = async (
     throw new Error('La description est requise');
   }
 
-  sessionStorage.setItem('bank-transfer-config', JSON.stringify(config));
+  const updatedConfig: BankTransferConfig = {
+    ...config,
+    updatedAt: new Date(),
+  };
+
+  saveToStorage(getStorageKey('bank-transfer'), updatedConfig);
 
   return {
     success: true,
-    data: config,
+    data: updatedConfig,
     message: 'Configuration virement bancaire mise à jour avec succès',
   };
 };
 
-// Main Stripe configuration hook
+// Individual configuration hooks
 export const useStripeConfig = () => {
   const [config, setConfig] = useState<StripeConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -224,7 +225,6 @@ export const useStripeConfig = () => {
   };
 };
 
-// Credit card configuration hook
 export const useCreditCardConfig = () => {
   const [config, setConfig] = useState<CreditCardConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -267,7 +267,6 @@ export const useCreditCardConfig = () => {
   };
 };
 
-// Bank transfer configuration hook
 export const useBankTransferConfig = () => {
   const [config, setConfig] = useState<BankTransferConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -310,7 +309,7 @@ export const useBankTransferConfig = () => {
   };
 };
 
-// Combined configuration hook for dashboard overview
+// Combined configuration hook
 export const usePaymentConfigurations = () => {
   const stripeConfig = useStripeConfig();
   const creditCardConfig = useCreditCardConfig();
@@ -364,8 +363,8 @@ export const usePaymentConfigurations = () => {
   };
 };
 
-// Utility hook for checking configuration status
-export const usePaymentConfigStatus = () => {
+// Configuration status hook
+export const usePaymentConfigStatus = (): ConfigurationStatus => {
   const { stripe, creditCard, bankTransfer } = usePaymentConfigurations();
 
   const getStripeStatus = () => {
@@ -375,6 +374,7 @@ export const usePaymentConfigStatus = () => {
     return {
       configured: !!hasKeys,
       active: stripe.config.active && !!hasKeys,
+      mode: stripe.config.mode,
     };
   };
 
@@ -388,12 +388,13 @@ export const usePaymentConfigStatus = () => {
   };
 
   const getBankTransferStatus = () => {
-    if (!bankTransfer.config) return { configured: false, active: false };
+    if (!bankTransfer.config) return { configured: false, active: false, accountsCount: 0 };
 
     const hasAccounts = bankTransfer.config.bankAccounts?.length > 0;
     return {
       configured: !!bankTransfer.config.title && hasAccounts,
       active: bankTransfer.config.active && hasAccounts,
+      accountsCount: bankTransfer.config.bankAccounts?.length || 0,
     };
   };
 
