@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Box,
@@ -16,6 +16,7 @@ import {
   Typography,
   CardContent,
   CardActions,
+  Skeleton,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -51,13 +52,13 @@ const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   const getVariantColor = () => {
     switch (variant) {
       case 'success':
-        return theme.palette.success.main;
+        return '#4CAF50';
       case 'warning':
-        return theme.palette.warning.main;
+        return '#FF9800';
       case 'info':
-        return theme.palette.info.main;
+        return '#FF5722'; // Orange for info
       default:
-        return theme.palette.primary.main;
+        return '#FF5722'; // Orange as primary theme color
     }
   };
 
@@ -96,6 +97,31 @@ const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
 
   const statusInfo = getStatusInfo();
 
+  if (loading) {
+    return (
+      <Card sx={{ height: '100%', borderRadius: 3 }}>
+        <CardContent sx={{ p: 3, pb: 1 }}>
+          <Stack spacing={2}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+            >
+              <Skeleton variant="rectangular" width={60} height={60} sx={{ borderRadius: 2 }} />
+              <Skeleton variant="rectangular" width={80} height={30} sx={{ borderRadius: 1 }} />
+            </Box>
+            <Box>
+              <Skeleton variant="text" width="70%" height={32} />
+              <Skeleton variant="text" width="100%" height={20} />
+              <Skeleton variant="text" width="80%" height={20} />
+            </Box>
+          </Stack>
+        </CardContent>
+        <CardActions sx={{ p: 3, pt: 1 }}>
+          <Skeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: 2 }} />
+        </CardActions>
+      </Card>
+    );
+  }
+
   return (
     <Card
       sx={{
@@ -116,22 +142,6 @@ const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
       }}
       onClick={handleClick}
     >
-      {/* Background decoration */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -10,
-          right: -10,
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          background: `linear-gradient(45deg, 
-            ${alpha(variantColor, 0.1)}, 
-            ${alpha(variantColor, 0.05)})`,
-          zIndex: 0,
-        }}
-      />
-
       <CardContent sx={{ p: 3, pb: 1, position: 'relative', zIndex: 1 }}>
         <Stack spacing={2}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -211,7 +221,7 @@ const PAYMENT_METHODS = [
     description:
       'Configurez votre intégration Stripe pour traiter les paiements en ligne de manière sécurisée',
     icon: 'fab fa-stripe',
-    variant: 'info' as const,
+    variant: 'primary' as const, // Changed from 'info' to 'primary' for orange theme
   },
   {
     id: 'credit_card',
@@ -231,12 +241,22 @@ const PAYMENT_METHODS = [
 
 export default function PaymentConfigurationOverview() {
   const theme = useTheme();
+  const [loading, setLoading] = useState(true);
+
+  // Simulate loading data
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Mock status for demonstration - replace with actual hooks
   const getMethodStatus = (methodId: string) => ({
     isConfigured: true, // Replace with actual logic
     isActive: methodId === 'credit_card', // Replace with actual logic
-    loading: false,
+    loading,
   });
 
   return (
@@ -273,30 +293,14 @@ export default function PaymentConfigurationOverview() {
             mb: 4,
             borderRadius: 3,
             background: `linear-gradient(135deg, 
-              ${alpha(theme.palette.primary.main, 0.1)} 0%, 
+              ${alpha('#FF5722', 0.1)} 0%, 
               ${alpha(theme.palette.background.paper, 0.9)} 100%)`,
             border: '1px solid',
-            borderColor: alpha(theme.palette.primary.main, 0.2),
+            borderColor: alpha('#FF5722', 0.2),
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          {/* Background decoration */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -20,
-              right: -20,
-              width: 100,
-              height: 100,
-              borderRadius: '50%',
-              background: `linear-gradient(45deg, 
-                ${alpha(theme.palette.primary.main, 0.1)}, 
-                ${alpha(theme.palette.secondary.main, 0.1)})`,
-              zIndex: 0,
-            }}
-          />
-
           <Stack
             direction="row"
             alignItems="center"
@@ -307,8 +311,8 @@ export default function PaymentConfigurationOverview() {
               sx={{
                 p: 1.5,
                 borderRadius: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                color: 'primary.main',
+                backgroundColor: alpha('#FF5722', 0.1),
+                color: '#FF5722',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -358,7 +362,7 @@ export default function PaymentConfigurationOverview() {
               borderRadius: 3,
               border: '1px solid',
               borderColor: 'divider',
-              backgroundColor: alpha(theme.palette.info.main, 0.02),
+              backgroundColor: alpha('#2196F3', 0.02),
             }}
           >
             <CardContent sx={{ p: 4 }}>
@@ -367,8 +371,8 @@ export default function PaymentConfigurationOverview() {
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.info.main, 0.1),
-                    color: 'info.main',
+                    backgroundColor: alpha('#2196F3', 0.1),
+                    color: '#2196F3',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -388,7 +392,7 @@ export default function PaymentConfigurationOverview() {
                     <FontAwesome
                       icon="fab fa-stripe"
                       width={20}
-                      sx={{ color: 'info.main', mt: 0.2 }}
+                      sx={{ color: '#FF5722', mt: 0.2 }}
                     />
                     <Box>
                       <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -407,7 +411,7 @@ export default function PaymentConfigurationOverview() {
                     <FontAwesome
                       icon="fas fa-credit-card"
                       width={20}
-                      sx={{ color: 'primary.main', mt: 0.2 }}
+                      sx={{ color: '#FF5722', mt: 0.2 }}
                     />
                     <Box>
                       <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -425,7 +429,7 @@ export default function PaymentConfigurationOverview() {
                     <FontAwesome
                       icon="fas fa-university"
                       width={20}
-                      sx={{ color: 'success.main', mt: 0.2 }}
+                      sx={{ color: '#4CAF50', mt: 0.2 }}
                     />
                     <Box>
                       <Typography variant="subtitle2" fontWeight={600} gutterBottom>

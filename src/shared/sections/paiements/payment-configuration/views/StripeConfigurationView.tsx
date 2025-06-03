@@ -3,17 +3,15 @@
 'use client';
 
 import { z } from 'zod';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
 
 import LoadingButton from '@mui/lab/LoadingButton';
 import {
   Box,
-  Card,
   Grid,
   Stack,
-  Alert,
   Button,
   Switch,
   Select,
@@ -21,10 +19,14 @@ import {
   TextField,
   Typography,
   FormControl,
-  CardContent,
+  Skeleton,
+  IconButton,
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
+
+import { useRouter } from 'src/routes/hooks';
+import { paths } from 'src/routes/paths';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 import { toast } from 'src/shared/components/snackbar';
@@ -46,16 +48,15 @@ const stripeConfigSchema = z.object({
       (val) => !val || val.startsWith('sk_test_'),
       'La clé sandbox doit commencer par sk_test_'
     ),
-  webhookUrl: z.string().optional(),
-  webhookSecret: z.string().optional(),
 });
 
 type StripeConfigFormData = z.infer<typeof stripeConfigSchema>;
 
 export default function StripeConfigurationView() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [showLiveKey, setShowLiveKey] = useState(false);
   const [showSandboxKey, setShowSandboxKey] = useState(false);
-  const [showWebhookSecret, setShowWebhookSecret] = useState(false);
 
   const methods = useForm<StripeConfigFormData>({
     resolver: zodResolver(stripeConfigSchema),
@@ -64,8 +65,6 @@ export default function StripeConfigurationView() {
       mode: 'sandbox',
       liveSecretKey: '',
       sandboxSecretKey: '',
-      webhookUrl: '',
-      webhookSecret: '',
     },
   });
 
@@ -79,6 +78,15 @@ export default function StripeConfigurationView() {
 
   const watchedValues = watch();
 
+  // Simulate loading data
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const onSubmit = handleSubmit(async (data) => {
     try {
       // API call would go here
@@ -89,14 +97,65 @@ export default function StripeConfigurationView() {
     }
   });
 
+  const handleReturn = () => {
+    router.push(paths.dashboard.paiements.payment_configuration);
+  };
+
   const isLiveKeyValid =
     watchedValues.liveSecretKey.startsWith('sk_live_') && watchedValues.liveSecretKey.length > 20;
   const isSandboxKeyValid =
     watchedValues.sandboxSecretKey.startsWith('sk_test_') &&
     watchedValues.sandboxSecretKey.length > 20;
 
+  if (loading) {
+    return (
+      <PaymentConfigLayout>
+        <Box sx={{ p: 4 }}>
+          {/* Header Skeleton */}
+          <Box sx={{ mb: 4 }}>
+            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 3 }} />
+          </Box>
+
+          {/* Content Skeleton */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+            </Grid>
+          </Grid>
+        </Box>
+      </PaymentConfigLayout>
+    );
+  }
+
   return (
     <PaymentConfigLayout>
+      {/* Return Button */}
+      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Button
+          onClick={handleReturn}
+          startIcon={<FontAwesome icon="fas fa-arrow-left" width={16} />}
+          variant="outlined"
+          color="inherit"
+          sx={{
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            '&:hover': {
+              bgcolor: 'action.hover',
+              borderColor: 'primary.main',
+              color: 'primary.main',
+            },
+            transition: 'all 0.2s ease-in-out',
+          }}
+        >
+          Retourner
+        </Button>
+      </Box>
+
       <PaymentConfigHeader
         title="Configuration Stripe"
         description="Configurez votre intégration Stripe pour accepter les paiements en ligne de manière sécurisée"
@@ -104,7 +163,7 @@ export default function StripeConfigurationView() {
         isConfigured={isLiveKeyValid || isSandboxKeyValid}
         isActive={watchedValues.active}
         mode={watchedValues.mode}
-        variant="info"
+        variant="primary"
       />
 
       <Box sx={{ p: 4 }}>
@@ -273,146 +332,6 @@ export default function StripeConfigurationView() {
                   </Stack>
                 </ConfigurationCard>
               </Grid>
-
-              {/* Webhooks Configuration */}
-              <Grid item xs={12}>
-                <ConfigurationCard
-                  title="Configuration des Webhooks"
-                  icon="fas fa-webhook"
-                  variant="info"
-                >
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        URL du Webhook
-                      </Typography>
-                      <TextField
-                        {...register('webhookUrl')}
-                        fullWidth
-                        placeholder="https://votre-domaine.com/webhook/stripe"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <FontAwesome icon="fas fa-link" width={16} />
-                            </InputAdornment>
-                          ),
-                          sx: { borderRadius: 2 },
-                        }}
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 1, display: 'block' }}
-                      >
-                        URL où Stripe enverra les notifications d&apos;événements
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                        Secret du Webhook
-                      </Typography>
-                      <TextField
-                        {...register('webhookSecret')}
-                        fullWidth
-                        type={showWebhookSecret ? 'text' : 'password'}
-                        placeholder="whsec_..."
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <FontAwesome icon="fas fa-shield-alt" width={16} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <Button
-                                size="small"
-                                onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                                sx={{ minWidth: 'auto', p: 0.5 }}
-                              >
-                                <FontAwesome
-                                  icon={showWebhookSecret ? 'fas fa-eye-slash' : 'fas fa-eye'}
-                                  width={16}
-                                />
-                              </Button>
-                            </InputAdornment>
-                          ),
-                          sx: { borderRadius: 2 },
-                        }}
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 1, display: 'block' }}
-                      >
-                        Secret pour vérifier l&apos;authenticité des webhooks
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </ConfigurationCard>
-              </Grid>
-
-              {/* Information Alert */}
-              <Grid item xs={12}>
-                <Alert
-                  severity="info"
-                  icon={<FontAwesome icon="fas fa-info-circle" width={20} />}
-                  sx={{
-                    borderRadius: 2,
-                    '& .MuiAlert-message': { width: '100%' },
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                    Informations importantes sur Stripe
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-                        <FontAwesome
-                          icon="fas fa-flask"
-                          width={16}
-                          sx={{ mt: 0.2, color: 'warning.main' }}
-                        />
-                        <Typography variant="body2">
-                          Utilisez le mode <strong>Test</strong> pour les développements et tests
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-                        <FontAwesome
-                          icon="fas fa-globe"
-                          width={16}
-                          sx={{ mt: 0.2, color: 'success.main' }}
-                        />
-                        <Typography variant="body2">
-                          Le mode <strong>Production</strong> traite les vrais paiements
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-                        <FontAwesome
-                          icon="fas fa-shield-alt"
-                          width={16}
-                          sx={{ mt: 0.2, color: 'info.main' }}
-                        />
-                        <Typography variant="body2">
-                          Vos clés sont stockées de manière sécurisée et chiffrée
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <FontAwesome
-                          icon="fas fa-external-link-alt"
-                          width={16}
-                          sx={{ mt: 0.2, color: 'primary.main' }}
-                        />
-                        <Typography variant="body2">
-                          Retrouvez vos clés dans votre tableau de bord Stripe
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Alert>
-              </Grid>
             </Grid>
 
             {/* Action Buttons */}
@@ -432,7 +351,7 @@ export default function StripeConfigurationView() {
                 loading={isSubmitting}
                 startIcon={<FontAwesome icon="fas fa-save" width={16} />}
                 disabled={!isDirty}
-                color="info"
+                color="primary"
               >
                 Enregistrer la configuration
               </LoadingButton>
