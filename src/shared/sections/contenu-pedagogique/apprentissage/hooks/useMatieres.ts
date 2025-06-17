@@ -1,173 +1,36 @@
 'use client';
 
+import type { Subject, SubjectList, SubjectPageFilterParams } from 'src/types/subject';
+
 import { useState, useEffect, useCallback } from 'react';
-import { format, addDays, subDays, subMonths } from 'date-fns';
+
+import { useSubjectStore } from 'src/shared/api/stores/subjectStore';
 
 import { DEFAULT_PAGINATION } from '../types';
 
-import type { Matiere, Pagination, ApiResponse, FilterParams } from '../types';
+import type { Pagination, ApiResponse } from '../types';
 
 const fetchMatieresAPI = async (
   niveauId: string,
-  params: FilterParams
-): Promise<ApiResponse<Matiere[]>> => {
-  const mockData: Matiere[] = [
-    {
-      id: '1',
-      nom: 'Mathématiques',
-      description: 'Apprentissage des fondements mathématiques',
-      couleur: '#FF5722',
-      icon: 'M',
-      chapitresCount: 4,
-      niveauId,
-      dateCreated: subMonths(new Date(), 9).toISOString(),
-      lastUpdated: subDays(new Date(), 15).toISOString(),
-      active: true,
-    },
-    {
-      id: '2',
-      nom: 'Français',
-      description: 'Apprentissage de la langue française',
-      couleur: '#2196F3',
-      icon: 'F',
-      chapitresCount: 5,
-      niveauId,
-      dateCreated: subMonths(new Date(), 8).toISOString(),
-      lastUpdated: subDays(new Date(), 10).toISOString(),
-      active: true,
-    },
-    {
-      id: '3',
-      nom: 'Sciences',
-      description: 'Découverte du monde scientifique',
-      couleur: '#4CAF50',
-      icon: 'S',
-      chapitresCount: 3,
-      niveauId,
-      dateCreated: subMonths(new Date(), 7).toISOString(),
-      lastUpdated: subDays(new Date(), 20).toISOString(),
-      active: true,
-    },
-    {
-      id: '4',
-      nom: 'Histoire-Géographie',
-      description: 'Découverte du monde et de son histoire',
-      couleur: '#9C27B0',
-      icon: 'H',
-      chapitresCount: 2,
-      niveauId,
-      dateCreated: subMonths(new Date(), 6).toISOString(),
-      lastUpdated: subDays(new Date(), 5).toISOString(),
-      active: false,
-    },
-    {
-      id: '5',
-      nom: 'Arts plastiques',
-      description: 'Expression artistique et créativité',
-      couleur: '#FF9800',
-      icon: 'A',
-      chapitresCount: 2,
-      niveauId,
-      dateCreated: subMonths(new Date(), 5).toISOString(),
-      lastUpdated: subDays(new Date(), 30).toISOString(),
-      active: true,
-    },
-    {
-      id: '6',
-      nom: 'Musique',
-      description: 'Développement des compétences musicales',
-      couleur: '#795548',
-      icon: 'Mu',
-      chapitresCount: 3,
-      niveauId,
-      dateCreated: subMonths(new Date(), 4).toISOString(),
-      lastUpdated: subDays(new Date(), 12).toISOString(),
-      active: true,
-    },
-    {
-      id: '7',
-      nom: 'Éducation physique',
-      description: 'Activités sportives et jeux collectifs',
-      couleur: '#F44336',
-      icon: 'EP',
-      chapitresCount: 4,
-      niveauId,
-      dateCreated: addDays(new Date(), -15).toISOString(),
-      active: false,
-    },
-  ];
+  params: SubjectPageFilterParams
+): Promise<ApiResponse<SubjectList[]>> => {
+  await useSubjectStore.getState().fetchSubjects(niveauId, {
+    page: params.page,
+    size: params.size,
+    nameSearch: params.nameSearch,
+    descriptionSearch: params.descriptionSearch,
+    chaptersSearch: params.chaptersSearch,
+    dateSearch: params.dateSearch,
+  });
 
-  // Apply filters
-  let filteredData = [...mockData];
-
-  // Filter by search term if present
-  if (params.searchTerm) {
-    const searchLower = params.searchTerm.toLowerCase();
-    filteredData = filteredData.filter(
-      (matiere) =>
-        matiere.nom.toLowerCase().includes(searchLower) ||
-        matiere.description.toLowerCase().includes(searchLower)
-    );
-  }
-
-  // Apply column-specific filters
-  if (params.nomFilter) {
-    const filter = params.nomFilter.toLowerCase();
-    filteredData = filteredData.filter((matiere) => matiere.nom.toLowerCase().includes(filter));
-  }
-
-  if (params.descriptionFilter) {
-    const filter = params.descriptionFilter.toLowerCase();
-    filteredData = filteredData.filter((matiere) =>
-      matiere.description.toLowerCase().includes(filter)
-    );
-  }
-
-  if (params.dateCreatedFilter) {
-    const filter = params.dateCreatedFilter.toLowerCase();
-    filteredData = filteredData.filter((matiere) => {
-      if (!matiere.dateCreated) return false;
-      const date = format(new Date(matiere.dateCreated), 'dd MMM yyyy');
-      return date.toLowerCase().includes(filter);
-    });
-  }
-
-  // Filter by active status
-  if (params.activeOnly) {
-    filteredData = filteredData.filter((matiere) => matiere.active !== false);
-  }
-
-  // Sort the data if needed
-  if (params.sortBy) {
-    const direction = params.sortDirection === 'desc' ? -1 : 1;
-    filteredData.sort((a: any, b: any) => {
-      const fieldA = a[params.sortBy as keyof Matiere];
-      const fieldB = b[params.sortBy as keyof Matiere];
-
-      if (fieldA < fieldB) return -1 * direction;
-      if (fieldA > fieldB) return 1 * direction;
-      return 0;
-    });
-  } else {
-    // Default sort by nom
-    filteredData.sort((a, b) => a.nom.localeCompare(b.nom));
-  }
-
-  // Simulate pagination
-  const page = params.page || 1;
-  const limit = params.limit || 10;
-  const total = filteredData.length;
-  const paginatedData = filteredData.slice((page - 1) * limit, page * limit);
-
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const { subjects, totalElements } = useSubjectStore.getState();
 
   return {
-    data: paginatedData,
+    data: subjects,
     pagination: {
-      page,
-      limit,
-      total,
+      page: params.page ?? 0,
+      size: params.size ?? 10,
+      total: totalElements,
     },
     success: true,
   };
@@ -175,18 +38,20 @@ const fetchMatieresAPI = async (
 
 // Define the hook
 function useMatieresHook(niveauId: string) {
-  const [matieres, setMatieres] = useState<Matiere[]>([]);
+  const [matieres, setMatieres] = useState<SubjectList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMatiere, setSelectedMatiere] = useState<Matiere | null>(null);
+  const [selectedMatiere, setSelectedMatiere] = useState<SubjectList | null>(null);
   const [pagination, setPagination] = useState<Pagination>(DEFAULT_PAGINATION);
-  const [filters, setFilters] = useState<FilterParams>({
-    searchTerm: '',
-    page: 1,
-    limit: 10,
-    sortBy: 'nom',
+  const [filters, setFilters] = useState<SubjectPageFilterParams>({
+    page: 0,
+    size: 10,
+    sortBy: 'createdAt',
     sortDirection: 'asc',
-    activeOnly: false,
+    nameSearch: '',
+    descriptionSearch: '',
+    chaptersSearch: '',
+    dateSearch: '',
   });
 
   const fetchMatieres = useCallback(async () => {
@@ -221,19 +86,43 @@ function useMatieresHook(niveauId: string) {
     setFilters((prev) => ({ ...prev, page }));
   };
 
-  const handleLimitChange = (limit: number) => {
-    setFilters((prev) => ({ ...prev, limit, page: 1 }));
+  const handleLimitChange = (size: number) => {
+    setFilters((prev) => ({ ...prev, size, page: 0 }));
   };
 
-  const handleSearch = (searchTerm: string) => {
-    setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
+  const handleSearch = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      nameSearch: value,
+      descriptionSearch: value,
+      chaptersSearch: value,
+      dateSearch: value,
+      page: 0,
+    }));
   };
 
   const handleColumnFilterChange = (columnId: string, value: string) => {
+    let filterKey = '';
+    switch (columnId) {
+      case 'nom':
+        filterKey = 'nameSearch';
+        break;
+      case 'description':
+        filterKey = 'descriptionSearch';
+        break;
+      case 'chapitresCount':
+        filterKey = 'chaptersSearch';
+        break;
+      case 'dateCreated':
+        filterKey = 'dateSearch';
+        break;
+      default:
+        filterKey = columnId;
+    }
     setFilters((prev) => ({
       ...prev,
-      [`${columnId}Filter`]: value,
-      page: 1,
+      [filterKey]: value,
+      page: 0,
     }));
   };
 
@@ -245,17 +134,15 @@ function useMatieresHook(niveauId: string) {
     }));
   };
 
-  const handleToggleActive = (matiere: Matiere, active: boolean) => {
-    //  API to update the status
-    setMatieres((prev) =>
-      prev.map((item) => (item.id === matiere.id ? { ...item, active } : item))
-    );
-
-    if (selectedMatiere && selectedMatiere.id === matiere.id) {
-      setSelectedMatiere({
-        ...selectedMatiere,
-        active,
-      });
+  const handleToggleActive = async (matiere: Subject, active: boolean) => {
+    try {
+      await useSubjectStore.getState().toggleActivation(matiere.id, active);
+      setMatieres((prev) =>
+        prev.map((item) => (item.id === matiere.id ? { ...item, active } : item))
+      );
+    } catch (err) {
+      setError('Erreur lors du changement de statut actif');
+      console.error(err);
     }
   };
 
@@ -263,25 +150,27 @@ function useMatieresHook(niveauId: string) {
     setFilters((prev) => ({
       ...prev,
       activeOnly,
-      page: 1,
+      page: 0,
     }));
   };
 
   const handleDeleteMatiere = async (id: string) => {
-    // API to delete the matiere
-    setMatieres((prev) => prev.filter((item) => item.id !== id));
-
-    if (selectedMatiere && selectedMatiere.id === id) {
-      setSelectedMatiere(null);
+    try {
+      await useSubjectStore.getState().deleteSubject(id);
+      setMatieres((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      setError('Erreur lors de la suppression du matière');
+      console.error(err);
     }
   };
 
   const handleDeleteMultipleMatieres = async (ids: string[]) => {
-    //  API to delete multiple matieres
-    setMatieres((prev) => prev.filter((item) => !ids.includes(item.id)));
-
-    if (selectedMatiere && ids.includes(selectedMatiere.id)) {
-      setSelectedMatiere(null);
+    try {
+      await useSubjectStore.getState().deleteMultipleSubjects(ids);
+      setMatieres((prev) => prev.filter((item) => !ids.includes(item.id)));
+    } catch (err) {
+      setError('Erreur lors de la suppression des matières');
+      console.error(err);
     }
   };
 

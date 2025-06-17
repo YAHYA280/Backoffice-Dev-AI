@@ -1,3 +1,5 @@
+import type { Level, LevelList, LevelPageFilterParams } from 'src/types/level';
+
 import { m } from 'framer-motion';
 import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -57,8 +59,8 @@ import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
+import type { Pagination } from '../../types';
 import type { ColumnOption } from '../filters/ColumnSelector';
-import type { Niveau, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
 interface TableColumn {
@@ -402,7 +404,7 @@ const COLUMN_OPTIONS: ColumnOption[] = [
   { id: 'dateCreated', label: 'Date de création' },
 ];
 
-function applySingleFilter(niveau: Niveau, filter: ActiveFilter, filterOption: FilterOption) {
+function applySingleFilter(niveau: LevelList, filter: ActiveFilter, filterOption: FilterOption) {
   const { field, operator, value } = filter;
   if (!value) return true;
   const fieldVal = (niveau as any)[field];
@@ -441,22 +443,22 @@ function applySingleFilter(niveau: Niveau, filter: ActiveFilter, filterOption: F
 }
 
 interface NiveauListProps {
-  niveaux: Niveau[];
+  niveaux: LevelList[];
   loading: boolean;
   pagination: Pagination;
-  filters: FilterParams;
+  filters: LevelPageFilterParams;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
   onFilterChange?: (filters: ActiveFilter[]) => void;
-  onEditClick: (niveau: Niveau) => void;
-  onDeleteClick: (niveau: Niveau) => void;
-  onViewClick: (niveau: Niveau) => void;
+  onEditClick: (niveau: Level) => void;
+  onDeleteClick: (niveau: Level) => void;
+  onViewClick: (niveau: Level) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
-  onViewMatieres: (niveau: Niveau) => void;
+  onViewMatieres: (niveau: Level) => void;
   onAddClick?: () => void;
-  onToggleActive?: (niveau: Niveau, active: boolean) => void;
+  onToggleActive?: (niveau: Level, active: boolean) => void;
 }
 
 export const NiveauList: React.FC<NiveauListProps> = ({
@@ -500,7 +502,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
         data = data.filter((niveau) => applySingleFilter(niveau, filter, filterOption));
       }
     });
-    Object.entries(columnFilters).forEach(([colId, val]) => {
+    /* Object.entries(columnFilters).forEach(([colId, val]) => {
       if (val) {
         data = data.filter((niveau) => {
           const fieldVal = (niveau as any)[colId];
@@ -508,9 +510,10 @@ export const NiveauList: React.FC<NiveauListProps> = ({
           return String(fieldVal).toLowerCase().includes(String(val).toLowerCase());
         });
       }
-    });
+    }); */
     return data;
-  }, [niveaux, activeFilters, columnFilters]);
+  }, [niveaux, activeFilters]);
+
 
   const handleFilterChange = (newFilters: ActiveFilter[]) => {
     setActiveFilters(newFilters);
@@ -529,7 +532,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
     Object.keys(columnFilters).forEach((colId) => {
       onColumnFilterChange?.(colId, '');
     });
-    onPageChange(1);
+    onPageChange(0);
     onLimitChange(10);
   };
 
@@ -550,9 +553,9 @@ export const NiveauList: React.FC<NiveauListProps> = ({
   };
 
   const table = useTable({
-    defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1,
-    defaultOrderBy: 'nom',
+    defaultRowsPerPage: pagination.size,
+    defaultCurrentPage: pagination.page,
+    defaultOrderBy: 'createdAt',
   });
 
   const handleOpenConfirm = () => {
@@ -576,7 +579,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
     (col) => col.id === '' || col.id === 'actions' || visibleColumns.includes(col.id)
   );
 
-  const notFound = !filteredNiveaux.length && !loading;
+  const notFound = !niveaux.length && !loading;
 
   const renderTableHeader = () => (
     <TableHead
@@ -606,13 +609,13 @@ export const NiveauList: React.FC<NiveauListProps> = ({
         >
           <Checkbox
             indeterminate={
-              table.selected.length > 0 && table.selected.length < filteredNiveaux.length
+              table.selected.length > 0 && table.selected.length < niveaux.length
             }
-            checked={filteredNiveaux.length > 0 && table.selected.length === filteredNiveaux.length}
+            checked={niveaux.length > 0 && table.selected.length === niveaux.length}
             onChange={(e) =>
               table.onSelectAllRows(
                 e.target.checked,
-                filteredNiveaux.map((row) => row.id)
+                niveaux.map((row) => String(row.id))
               )
             }
             size={table.dense ? 'small' : 'medium'}
@@ -805,7 +808,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  filteredNiveaux.map((row) => row.id)
+                  niveaux.map((row) => String(row.id))
                 )
               }
               action={
@@ -849,7 +852,7 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length} />
                     ) : (
-                      filteredNiveaux.map((niveau) => (
+                      niveaux.map((niveau) => (
                         <NiveauItem
                           key={niveau.id}
                           niveau={niveau}
@@ -864,11 +867,11 @@ export const NiveauList: React.FC<NiveauListProps> = ({
                         />
                       ))
                     )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
                       emptyRows={emptyRows(table.page, table.rowsPerPage, niveaux.length)}
                     />
-                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -877,12 +880,9 @@ export const NiveauList: React.FC<NiveauListProps> = ({
 
           <TablePaginationCustom
             count={pagination.total}
-            page={table.page}
-            rowsPerPage={table.rowsPerPage}
-            onPageChange={(e, newPage) => {
-              table.onChangePage(e, newPage);
-              onPageChange(newPage + 1);
-            }}
+            page={pagination.page}
+            rowsPerPage={pagination.size}
+            onPageChange={(_, newPage) => onPageChange(newPage)}
             onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}

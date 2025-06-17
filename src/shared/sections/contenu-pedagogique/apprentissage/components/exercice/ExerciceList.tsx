@@ -543,7 +543,7 @@ export const ExerciceList: React.FC<ExerciceListProps> = ({
   }, [activeFilters, onFilterChange]);
 
   const table = useTable({
-    defaultRowsPerPage: pagination.limit,
+    defaultRowsPerPage: pagination.size,
     defaultCurrentPage: pagination.page - 1,
     defaultOrderBy: 'titre',
   });

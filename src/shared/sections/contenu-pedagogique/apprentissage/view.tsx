@@ -91,6 +91,9 @@ export const ApprentissageView: React.FC = () => {
     handlePageChange: handleNiveauPageChange,
     handleLimitChange: handleNiveauLimitChange,
     handleSearch: handleNiveauSearch,
+    handleColumnFilterChange: handleNiveauColumnFilterChange,
+    handleToggleActive: handleToggleActiveNiveau,
+    handleDeleteMultipleNiveaux,
     refetch: refetchNiveaux,
   } = useNiveaux();
 
@@ -106,6 +109,9 @@ export const ApprentissageView: React.FC = () => {
     handlePageChange: handleMatierePageChange,
     handleLimitChange: handleMatiereLimitChange,
     handleSearch: handleMatiereSearch,
+    handleColumnFilterChange: handleMatiereColumnFilterChange,
+    handleToggleActive: handleToggleActiveMatiere,
+    handleDeleteMultipleMatieres,
     refetch: refetchMatieres,
   } = useMatieres(currentNiveauId || '');
 
@@ -121,6 +127,9 @@ export const ApprentissageView: React.FC = () => {
     handlePageChange: handleChapitrePageChange,
     handleLimitChange: handleChapitreLimitChange,
     handleSearch: handleChapitreSearch,
+    handleColumnFilterChange: handleChapitreColumnFilterChange,
+    handleToggleActive: handleToggleActiveChapitre,
+    handleDeleteMultipleChapitres,
     refetch: refetchChapitres,
   } = useChapitres(currentMatiereId || '');
 
@@ -261,7 +270,7 @@ export const ApprentissageView: React.FC = () => {
 
   const handleToggleActive = async (niveau: any, active: boolean) => {
     try {
-      //  API function to toggle the active status, call it here
+      await handleToggleActiveNiveau(niveau, active);
 
       console.log(`Toggling active status for niveau ${niveau.nom} to ${active}`);
 
@@ -283,10 +292,7 @@ export const ApprentissageView: React.FC = () => {
   };
   const handleDeleteNiveauRows = async (selectedRows: string[]) => {
     //  implement the logic to delete multiple rows
-    console.log('Deleting niveaux rows:', selectedRows);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await handleDeleteMultipleNiveaux(selectedRows);
 
     // Refresh data
     refetchNiveaux();
@@ -333,19 +339,19 @@ export const ApprentissageView: React.FC = () => {
 
   const handleDeleteMatiereRows = async (selectedRows: string[]) => {
     //  implement the logic to delete multiple matieres
-    console.log('Deleting matieres rows:', selectedRows);
+    await handleDeleteMultipleMatieres(selectedRows);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
 
     // Refresh data
     refetchMatieres();
   };
 
   // handle Active and desactive for matier
-  const handleToggleActiveMatiere = async (matiere: any, active: boolean) => {
+  const handleToggleMatiereActive = async (matiere: any, active: boolean) => {
     try {
       //  API function to toggle the active status, here
+      await handleToggleActiveMatiere(matiere, active);
+
 
       console.log(`Toggling active status for matiere ${matiere.nom} to ${active}`);
 
@@ -407,10 +413,7 @@ export const ApprentissageView: React.FC = () => {
 
   const handleDeleteChapitreRows = async (selectedRows: string[]) => {
     // implement the logic to delete multiple chapitres
-    console.log('Deleting chapitres rows:', selectedRows);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await handleDeleteMultipleChapitres(selectedRows);
 
     // Refresh data
     refetchChapitres();
@@ -418,9 +421,10 @@ export const ApprentissageView: React.FC = () => {
 
   // Handle active desactive here
 
-  const handleToggleActiveChapitre = async (chapitre: any, active: boolean) => {
+  const handleToggleChapitreActive = async (chapitre: any, active: boolean) => {
     try {
       //  API function to toggle the active status,  here
+      await handleToggleActiveChapitre(chapitre, active);
 
       console.log(`Toggling active status for chapitre ${chapitre.nom} to ${active}`);
 
@@ -558,6 +562,7 @@ export const ApprentissageView: React.FC = () => {
               onPageChange={handleNiveauPageChange}
               onLimitChange={handleNiveauLimitChange}
               onSearchChange={handleNiveauSearch}
+              onColumnFilterChange={handleNiveauColumnFilterChange}
               onEditClick={handleNiveauEditClick}
               onDeleteClick={handleNiveauDeleteClick}
               onViewClick={handleNiveauViewClick}
@@ -630,13 +635,14 @@ export const ApprentissageView: React.FC = () => {
               onPageChange={handleMatierePageChange}
               onLimitChange={handleMatiereLimitChange}
               onSearchChange={handleMatiereSearch}
+              onColumnFilterChange={handleMatiereColumnFilterChange}
               onEditClick={handleMatiereEditClick}
               onDeleteClick={handleMatiereDeleteClick}
               onViewClick={handleMatiereViewClick}
               onDeleteRows={handleDeleteMatiereRows}
               onViewChapitres={navigateToChapitres}
               onAddClick={handleMatiereAddClick}
-              onToggleActive={handleToggleActiveMatiere}
+              onToggleActive={handleToggleMatiereActive}
               // Pass breadcrumb props
               breadcrumbs={{
                 currentNiveauId,
@@ -710,13 +716,14 @@ export const ApprentissageView: React.FC = () => {
               onPageChange={handleChapitrePageChange}
               onLimitChange={handleChapitreLimitChange}
               onSearchChange={handleChapitreSearch}
+              onColumnFilterChange={handleChapitreColumnFilterChange}
               onEditClick={handleChapitreEditClick}
               onDeleteClick={handleChapitreDeleteClick}
               onViewClick={handleChapitreViewClick}
               onDeleteRows={handleDeleteChapitreRows}
               onViewExercices={navigateToExercices}
               onAddClick={handleChapitreAddClick}
-              onToggleActive={handleToggleActiveChapitre}
+              onToggleActive={handleToggleChapitreActive}
               // Pass breadcrumb props
               breadcrumbs={{
                 currentNiveauId,
@@ -862,13 +869,13 @@ export const ApprentissageView: React.FC = () => {
   };
 
   return (
-    <Container 
-      maxWidth={false} 
-      sx={{ 
-        mx: '10%', 
-        width: '96%', 
-        marginLeft: 'auto', 
-        marginRight: 'auto' 
+    <Container
+      maxWidth={false}
+      sx={{
+        mx: '10%',
+        width: '96%',
+        marginLeft: 'auto',
+        marginRight: 'auto'
       }}
     >
       {renderContent()}

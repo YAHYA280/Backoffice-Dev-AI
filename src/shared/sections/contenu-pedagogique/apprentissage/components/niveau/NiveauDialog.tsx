@@ -1,37 +1,46 @@
 'use client';
 
+import type { Level, LevelRequest } from 'src/types/level';
+
 import React, { useState } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Dialog, Typography, IconButton, DialogTitle, DialogContent } from '@mui/material';
 
-import { NiveauForm } from './NiveauForm';
+import { useLevelStore } from 'src/shared/api/stores/levelStore';
 
-import type { Niveau } from '../../types';
+import { NiveauForm } from './NiveauForm';
 
 interface NiveauDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  niveau?: Niveau;
+  onSubmit: (data: LevelRequest) => void;
+  niveau?: Level;
 }
 
 export const NiveauDialog = ({ open, onClose, onSubmit, niveau }: NiveauDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const addLevel = useLevelStore(state => state.addLevel);
+  const updateLevel = useLevelStore(state => state.updateLevel);
+
+
   const isEditMode = !!niveau;
   const title = isEditMode ? 'Modifier un niveau' : 'Ajouter un niveau';
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: LevelRequest) => {
     setIsSubmitting(true);
     try {
       // Here would be API call to save/update data
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
+      if (isEditMode && niveau) {
+        await updateLevel(niveau.id.toString(), data);
+      } else {
+        await addLevel(data);
+      }
       onSubmit(data);
+      onClose();
+
     } catch (error) {
       console.error('Error saving niveau:', error);
     } finally {
@@ -58,7 +67,19 @@ export const NiveauDialog = ({ open, onClose, onSubmit, niveau }: NiveauDialogPr
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <NiveauForm
-          initialValues={niveau}
+          initialValues={niveau
+            ? {
+                name: niveau.name,
+                description: niveau.description,
+                code: niveau.code,
+              }
+            : {
+                name: '',
+                description: '',
+                code: '',
+              }
+          }
+          isEditMode={!!niveau}
           onSubmit={handleSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}

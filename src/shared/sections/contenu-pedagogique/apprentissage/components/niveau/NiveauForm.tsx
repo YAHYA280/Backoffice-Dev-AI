@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Grid, Stack, Button, TextField, CircularProgress } from '@mui/material';
 
 const schema = z.object({
-  nom: z.string().min(1, 'Le nom est requis'),
+  name: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
   code: z.string().min(1, 'Le code est requis'),
 });
@@ -19,17 +19,15 @@ interface NiveauFormProps {
   onSubmit: (data: NiveauFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  isEditMode?: boolean;
 }
 
 export const NiveauForm = ({
-  initialValues = {
-    nom: '',
-    description: '',
-    code: '',
-  },
+  initialValues,
   onSubmit,
   onCancel,
   isSubmitting = false,
+  isEditMode = false,
 }: NiveauFormProps) => {
   const {
     control,
@@ -45,15 +43,15 @@ export const NiveauForm = ({
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Controller
-            name="nom"
+            name="name"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
                 label="Nom du niveau"
                 fullWidth
-                error={!!errors.nom}
-                helperText={errors.nom?.message}
+                error={!!errors.name}
+                helperText={errors.name?.message}
                 placeholder="Ex: CP1 - Cours Préparatoire 1"
               />
             )}
@@ -108,7 +106,7 @@ export const NiveauForm = ({
               disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
             >
-              {initialValues.nom ? 'Modifier' : 'Ajouter'}
+              {isEditMode ? 'Modifier' : 'Ajouter'}
             </Button>
           </Stack>
         </Grid>

@@ -1,5 +1,9 @@
+import type { Level, LevelList } from 'src/types/level';
+
 import React from 'react';
 import { m } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
@@ -24,23 +28,23 @@ import {
   IconButton,
 } from '@mui/material';
 
-import { fDate } from 'src/utils/format-time';
-
 import { varFade } from 'src/shared/components/animate/variants/fade';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
-import type { Niveau } from '../../types';
-
 interface NiveauItemProps {
-  niveau: Niveau;
+  niveau: LevelList;
   selected: boolean;
   onSelectRow: () => void;
   onEditClick: () => void;
-  onDeleteClick: (niveau?: Niveau) => void;
+  onDeleteClick: (niveau?: Level) => void;
   onViewClick: () => void;
   onViewMatieres: () => void;
-  onToggleActive?: (niveau: Niveau, active: boolean) => void;
+  onToggleActive?: (niveau: Level, active: boolean) => void;
   visibleColumns?: string[]; // Add this prop for column visibility
+}
+
+export function fDate(date: Date | string | number, newFormat = 'dd MMMM yyyy') {
+  return format(new Date(date), newFormat, { locale: fr });
 }
 
 export const NiveauItem: React.FC<NiveauItemProps> = ({
@@ -63,7 +67,7 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
     }
   };
 
-  const formattedDate = niveau.dateCreated ? fDate(niveau.dateCreated) : 'Non définie';
+  const formattedDate = niveau.createdAt ? fDate(niveau.createdAt) : 'Non définie';
 
   return (
     <>
@@ -127,7 +131,7 @@ export const NiveauItem: React.FC<NiveauItemProps> = ({
                   }}
                   noWrap
                 >
-                  {niveau.nom}
+                  {niveau.name}
                 </Link>
               </div>
             </Stack>

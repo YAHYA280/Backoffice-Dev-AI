@@ -1,5 +1,9 @@
+import type { Level, LevelList } from 'src/types/level';
+
 import React from 'react';
 import { m } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook,
@@ -30,18 +34,17 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import { fDate } from 'src/utils/format-time';
-
 import { varFade } from 'src/shared/components/animate/variants/fade';
-
-import type { Niveau } from '../../types';
 
 interface NiveauDetailDrawerProps {
   open: boolean;
   onClose: () => void;
-  niveau: Niveau;
+  niveau: LevelList;
   onViewMatieres?: () => void;
-  onToggleActive?: (niveau: Niveau, active: boolean) => void;
+  onToggleActive?: (niveau: Level, active: boolean) => void;
+}
+export function fDate(date: Date | string | number, newFormat = 'dd MMMM yyyy') {
+  return format(new Date(date), newFormat, { locale: fr });
 }
 
 const NiveauDetailDrawer = ({
@@ -53,7 +56,7 @@ const NiveauDetailDrawer = ({
 }: NiveauDetailDrawerProps) => {
   const theme = useTheme();
 
-  const formattedDate = niveau.dateCreated ? fDate(niveau.dateCreated) : 'Non définie';
+  const formattedDate = niveau.createdAt ? fDate(niveau.createdAt) : 'Non définie';
 
   const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (onToggleActive) {
@@ -120,7 +123,7 @@ const NiveauDetailDrawer = ({
 
           <Box>
             <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
-              {niveau.nom}
+              {niveau.name}
             </Typography>
 
             <Stack direction="row" spacing={1} alignItems="center">
@@ -214,7 +217,7 @@ const NiveauDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {niveau.matieresCount || 0}
+              {niveau.subjectsCount || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Matières
@@ -241,7 +244,8 @@ const NiveauDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {niveau.exercicesCount || 22}
+              {/* {niveau.exercicesCount || 22} */}
+              {0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Exercices
@@ -421,7 +425,7 @@ const NiveauDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    {niveau.lastUpdated ? fDate(niveau.lastUpdated) : 'Non modifié'}
+                    {niveau.updatedAt ? fDate(niveau.updatedAt) : 'Non modifié'}
                   </Typography>
                 }
               />

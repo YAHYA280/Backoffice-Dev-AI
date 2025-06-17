@@ -1,5 +1,9 @@
+import type { Subject, SubjectList } from 'src/types/subject';
+
 import React from 'react';
+import { format } from 'date-fns';
 import { m } from 'framer-motion';
+import { fr } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faTrash, faToggleOn, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,23 +23,24 @@ import {
   IconButton,
 } from '@mui/material';
 
-import { fDate } from 'src/utils/format-time';
-
 import { varFade } from 'src/shared/components/animate';
 import { usePopover, CustomPopover } from 'src/shared/components/custom-popover';
 
-import type { Matiere } from '../../types';
 
 interface MatiereItemProps {
-  matiere: Matiere;
+  matiere: SubjectList;
   selected: boolean;
   onSelectRow: () => void;
-  onEditClick: (matiere: Matiere) => void;
-  onDeleteClick: (matiere?: Matiere) => void;
-  onViewClick: (matiere: Matiere) => void;
-  onViewChapitres: (matiere: Matiere) => void;
-  onToggleActive?: (matiere: Matiere, active: boolean) => void;
+  onEditClick: (matiere: Subject) => void;
+  onDeleteClick: (matiere?: Subject) => void;
+  onViewClick: (matiere: Subject) => void;
+  onViewChapitres: (matiere: Subject) => void;
+  onToggleActive?: (matiere: Subject, active: boolean) => void;
   visibleColumns?: string[];
+}
+
+export function fDate(date: Date | string | number, newFormat = 'dd MMMM yyyy') {
+  return format(new Date(date), newFormat, { locale: fr });
 }
 
 export const MatiereItem: React.FC<MatiereItemProps> = ({
@@ -59,7 +64,7 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
   };
 
   // Format dates if available
-  const formattedDate = matiere.dateCreated ? fDate(matiere.dateCreated) : 'Non définie';
+  const formattedDate = matiere.createdAt ? fDate(matiere.createdAt) : 'Non définie';
 
   return (
     <>
@@ -90,13 +95,13 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
             <Stack direction="row" alignItems="center" spacing={2}>
               <Avatar
                 sx={{
-                  bgcolor: matiere.couleur,
+                  bgcolor: matiere.color || 'primary.main',
                   width: 36,
                   height: 36,
                   fontSize: '0.875rem',
                 }}
               >
-                {matiere.icon}
+                {matiere.name?.charAt(0).toUpperCase()}
               </Avatar>
               <Box sx={{ ml: 2, flexGrow: 1 }}>
                 <Link
@@ -118,7 +123,7 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
                   }}
                   noWrap
                 >
-                  {matiere.nom}
+                  {matiere.name}
                 </Link>
               </Box>
             </Stack>
@@ -155,7 +160,7 @@ export const MatiereItem: React.FC<MatiereItemProps> = ({
                 fontWeight: 'fontWeightMedium',
               }}
             >
-              {matiere.chapitresCount || 0}
+              {matiere.chaptersCount || 0}
             </Typography>
           </TableCell>
         )}

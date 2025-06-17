@@ -1,5 +1,7 @@
 'use client';
 
+import type { Chapter, ChapterList, ChapterPageFilterParams } from 'src/types/chapter';
+
 import { m } from 'framer-motion';
 import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -60,8 +62,8 @@ import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
+import type { Pagination } from '../../types';
 import type { ColumnOption } from '../filters/ColumnSelector';
-import type { Chapitre, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
 interface TableColumn {
@@ -162,7 +164,7 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
-function applySingleFilter(chapitre: Chapitre, filter: ActiveFilter, filterOption: FilterOption) {
+function applySingleFilter(chapitre: Chapter, filter: ActiveFilter, filterOption: FilterOption) {
   const { field, operator, value } = filter;
   if (!value) return true;
   const fieldVal = (chapitre as any)[field];
@@ -476,23 +478,23 @@ interface BreadcrumbProps {
 }
 
 interface ChapitreListProps {
-  chapitres: Chapitre[];
+  chapitres: ChapterList[];
   loading: boolean;
   pagination: Pagination;
-  filters: FilterParams;
+  filters: ChapterPageFilterParams;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
   onFilterChange?: (filters: ActiveFilter[]) => void;
   onColumnChange?: (columns: string[]) => void;
-  onEditClick: (chapitre: Chapitre) => void;
-  onDeleteClick: (chapitre: Chapitre) => void;
-  onViewClick: (chapitre: Chapitre) => void;
+  onEditClick: (chapitre: Chapter) => void;
+  onDeleteClick: (chapitre: Chapter) => void;
+  onViewClick: (chapitre: Chapter) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
-  onViewExercices: (chapitre: Chapitre) => void;
+  onViewExercices: (chapitre: Chapter) => void;
   onAddClick?: () => void;
-  onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
+  onToggleActive?: (chapitre: Chapter, active: boolean) => void;
   breadcrumbs?: BreadcrumbProps;
 }
 
@@ -540,7 +542,7 @@ export const ChapitreList = ({
         data = data.filter((chap) => applySingleFilter(chap, filter, filterOption));
       }
     });
-    Object.entries(columnFilters).forEach(([colId, val]) => {
+    /* Object.entries(columnFilters).forEach(([colId, val]) => {
       if (val) {
         data = data.filter((chapitre) => {
           const fieldVal = (chapitre as any)[colId];
@@ -548,9 +550,9 @@ export const ChapitreList = ({
           return String(fieldVal).toLowerCase().includes(String(val).toLowerCase());
         });
       }
-    });
+    }); */
     return data;
-  }, [chapitres, activeFilters, columnFilters]);
+  }, [chapitres, activeFilters]);
 
   const visibleTableHead = useMemo(
     () => TABLE_HEAD.filter((col) => col.id === 'actions' || visibleColumns.includes(col.id)),
@@ -558,8 +560,8 @@ export const ChapitreList = ({
   );
 
   const table = useTable({
-    defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1,
+    defaultRowsPerPage: pagination.size,
+    defaultCurrentPage: pagination.page,
     defaultOrderBy: 'ordre',
   });
 
@@ -625,7 +627,7 @@ export const ChapitreList = ({
     onLimitChange(10);
   };
 
-  const notFound = !filteredChapitres.length && !loading;
+  const notFound = !chapitres.length && !loading;
 
   const renderTableHeader = () => (
     <TableHead
@@ -655,15 +657,15 @@ export const ChapitreList = ({
         >
           <Checkbox
             indeterminate={
-              table.selected.length > 0 && table.selected.length < filteredChapitres.length
+              table.selected.length > 0 && table.selected.length < chapitres.length
             }
             checked={
-              filteredChapitres.length > 0 && table.selected.length === filteredChapitres.length
+              chapitres.length > 0 && table.selected.length === chapitres.length
             }
             onChange={(e) =>
               table.onSelectAllRows(
                 e.target.checked,
-                filteredChapitres.map((row) => row.id)
+                chapitres.map((row) => row.id)
               )
             }
             size={table.dense ? 'small' : 'medium'}
@@ -871,11 +873,11 @@ export const ChapitreList = ({
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
-              rowCount={filteredChapitres.length}
+              rowCount={chapitres.length}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  filteredChapitres.map((row) => row.id)
+                  chapitres.map((row) => row.id)
                 )
               }
               action={
@@ -919,7 +921,7 @@ export const ChapitreList = ({
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length + 1} />
                     ) : (
-                      filteredChapitres.map((chapitre) => (
+                      chapitres.map((chapitre) => (
                         <ChapitreItem
                           key={chapitre.id}
                           chapitre={chapitre}
@@ -934,11 +936,12 @@ export const ChapitreList = ({
                         />
                       ))
                     )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
+
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
-                      emptyRows={emptyRows(table.page, table.rowsPerPage, filteredChapitres.length)}
+                      emptyRows={emptyRows(table.page, table.rowsPerPage, chapitres.length)}
                     />
-                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -947,16 +950,12 @@ export const ChapitreList = ({
 
           <TablePaginationCustom
             count={pagination.total}
-            page={table.page}
-            rowsPerPage={table.rowsPerPage}
-            onPageChange={(e, page) => {
-              table.onChangePage(e, page);
-              onPageChange(page + 1);
-            }}
+            page={pagination.page}
+            rowsPerPage={pagination.size}
+            onPageChange={(_, newPage) => onPageChange(newPage)}
             onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
-            rowsPerPageOptions={[5, 10, 25, 50]}
           />
         </Card>
       </m.div>

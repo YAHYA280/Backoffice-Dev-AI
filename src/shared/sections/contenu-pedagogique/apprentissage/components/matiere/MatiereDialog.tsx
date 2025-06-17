@@ -1,21 +1,23 @@
 'use client';
 
 // src/shared/sections/contenu-pedagogique/apprentissage/components/matiere/MatiereDialog.tsx
+import type { Subject, SubjectRequest } from 'src/types/subject';
+
 import React, { useState } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Dialog, Typography, IconButton, DialogTitle, DialogContent } from '@mui/material';
 
-import { MatiereForm } from './MatiereForm';
+import { useSubjectStore } from 'src/shared/api/stores/subjectStore';
 
-import type { Matiere } from '../../types';
+import { MatiereForm } from './MatiereForm';
 
 interface MatiereDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  matiere?: Matiere;
+  onSubmit: (data: SubjectRequest) => void;
+  matiere?: Subject;
   niveauId: string;
 }
 
@@ -28,18 +30,37 @@ export const MatiereDialog = ({
 }: MatiereDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const addSubject = useSubjectStore((state) => state.addSubject);
+  const updateSubject = useSubjectStore((state) => state.updateSubject);
+
   const isEditMode = !!matiere;
   const title = isEditMode ? 'Modifier une matière' : 'Ajouter une matière';
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: {
+    name: string;
+    description: string;
+    active: boolean;
+    color?: string;
+    icon?: string;
+  }) => {
     setIsSubmitting(true);
     try {
+      const subjectRequest: SubjectRequest = {
+        name: data.name,
+        description: data.description,
+        active: data.active,
+        color: data.color ?? '',
+        levelId: niveauId,
+      };
       //  API call to save/update data
+      if (isEditMode && matiere) {
+        await updateSubject(matiere.id, subjectRequest);
+      } else {
+        await addSubject(subjectRequest);
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      onSubmit(data);
+      onSubmit(subjectRequest);
+      onClose();
     } catch (error) {
       console.error('Error saving matiere:', error);
     } finally {
@@ -66,10 +87,20 @@ export const MatiereDialog = ({
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <MatiereForm
-          initialValues={matiere}
+          initialValues={
+            matiere
+              ? {
+                  name: matiere.name,
+                  description: matiere.description,
+                  color: matiere.color,
+                  active: matiere.active,
+                }
+              : { name: '', description: '', color:'', active: true }
+          }
           onSubmit={handleSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}
+          isEditMode={!!matiere}
           niveauId={niveauId}
         />
       </DialogContent>

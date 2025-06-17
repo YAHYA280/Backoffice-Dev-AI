@@ -26,7 +26,7 @@ import {
 import { MATIERE_COLORS } from '../../types';
 
 const schema = z.object({
-  nom: z
+  name: z
     .string()
     .min(3, 'Le nom doit contenir au moins 3 caractères')
     .max(50, 'Le nom ne peut pas dépasser 50 caractères'),
@@ -34,14 +34,9 @@ const schema = z.object({
     .string()
     .min(10, 'La description doit contenir au moins 10 caractères')
     .max(300, 'La description ne peut pas dépasser 300 caractères'),
-  couleur: z.string().min(1, 'Veuillez sélectionner une couleur'),
-  icon: z.string().min(1, 'Veuillez sélectionner une icône'),
+  color: z.string().optional(),
+  icon: z.string().optional(),
   active: z.boolean().optional().default(true),
-  exercicesEstimes: z
-    .number()
-    .min(0, "Le nombre d'exercices ne peut pas être négatif")
-    .max(100, "Le nombre d'exercices ne peut pas dépasser 100")
-    .optional(),
 });
 
 // Infer the type from the schema
@@ -52,21 +47,16 @@ interface MatiereFormProps {
   onSubmit: (data: MatiereFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  isEditMode?: boolean;
   niveauId: string;
 }
 
 export const MatiereForm: React.FC<MatiereFormProps> = ({
-  initialValues = {
-    nom: '',
-    description: '',
-    couleur: '',
-    icon: '',
-    active: true,
-    exercicesEstimes: 0,
-  },
+  initialValues,
   onSubmit,
   onCancel,
   isSubmitting = false,
+  isEditMode = false,
   niveauId,
 }) => {
   const {
@@ -80,17 +70,17 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
     defaultValues: initialValues,
   });
 
-  const selectedColor = watch('couleur');
+  const selectedColor = watch('color');
   const active = watch('active');
   const description = watch('description', '');
 
   const handleColorSelect = (color: string) => {
-    setValue('couleur', color, { shouldValidate: true });
+    setValue('color', color, { shouldValidate: true });
   };
 
   const handleFormSubmit = (data: MatiereFormData) => {
     onSubmit({
-      ...data,
+    ...data,
     });
   };
 
@@ -131,15 +121,15 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
         {/* Nom de la matière */}
         <Grid item xs={12}>
           <Controller
-            name="nom"
+            name="name"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
                 label="Nom de la matière"
                 fullWidth
-                error={!!errors.nom}
-                helperText={errors.nom?.message}
+                error={!!errors.name}
+                helperText={errors.name?.message}
                 placeholder="Ex: Mathématiques"
                 InputProps={{
                   startAdornment: (
@@ -190,7 +180,7 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
 
         {/* Couleur et Icône */}
         <Grid item xs={12}>
-          <FormControl error={!!errors.couleur || !!errors.icon} fullWidth>
+          <FormControl error={!!errors.color} fullWidth>
             <Box
               sx={{
                 display: 'flex',
@@ -247,7 +237,7 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
                 </Box>
               ))}
             </Stack>
-            {(errors.couleur || errors.icon) && (
+            {(errors.color) && (
               <FormHelperText>Veuillez sélectionner une couleur et une icône</FormHelperText>
             )}
           </FormControl>
@@ -305,7 +295,7 @@ export const MatiereForm: React.FC<MatiereFormProps> = ({
                 },
               }}
             >
-              {initialValues.nom ? 'Modifier' : 'Ajouter'}
+              {isEditMode ? 'Modifier' : 'Ajouter'}
             </Button>
           </Stack>
         </Grid>
