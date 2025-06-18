@@ -1,10 +1,23 @@
-import { NewExerciceView } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/view/exercice-new-view';
-// ----------------------------------------------------------------------
+// app/dashboard/contenu-pedagogique/apprentissage/exercices/new/page.tsx
 
-export const metadata = {
-  title: 'Contenu pedagogique: Nouvel exercice',
-};
+'use client';
 
-export default function NewExercicePage() {
-  return <NewExerciceView />;
+import { useSearchParams } from 'next/navigation';
+
+import ExerciseCreationView from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/ExerciseCreationView';
+
+export default function NewExercisePage() {
+  const searchParams = useSearchParams();
+
+  return (
+    <ExerciseCreationView
+      chapitreId={searchParams.get('chapitreId') || undefined}
+      chapitreNom={searchParams.get('chapitreNom') || undefined}
+      matiereId={searchParams.get('matiereId') || undefined}
+      matiereNom={searchParams.get('matiereNom') || undefined}
+      niveauId={searchParams.get('niveauId') || undefined}
+      niveauNom={searchParams.get('niveauNom') || undefined}
+      initialMode={undefined} // Let user choose mode
+    />
+  );
 }

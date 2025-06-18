@@ -3,7 +3,9 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from '@mui/material';
@@ -46,42 +48,58 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
   // États principaux
   const [selectedMode, setSelectedMode] = useState<CreationMode | null>(initialMode || null);
   const [createdExercise, setCreatedExercise] = useState<Exercise | null>(null);
-  const [isEditing, setIsEditing] = useState(!!exerciseId);
+
+  const [isEditing] = useState(!!exerciseId);
+
 
   // États des dialogs
   const modeSelector = useBoolean(!initialMode && !exerciseId);
   const preview = useBoolean();
 
-  // Paramètres depuis l'URL
-  const [chapitreId] = useState(initialChapitreId || searchParams.get('chapitreId') || '');
-  const [chapitreNom] = useState(initialChapitreNom || searchParams.get('chapitreNom') || '');
-  const [matiereId] = useState(initialMatiereId || searchParams.get('matiereId') || '');
-  const [matiereNom] = useState(initialMatiereNom || searchParams.get('matiereNom') || '');
-  const [niveauId] = useState(initialNiveauId || searchParams.get('niveauId') || '');
-  const [niveauNom] = useState(initialNiveauNom || searchParams.get('niveauNom') || '');
 
-  // Handler functions defined before useEffect
+  // Paramètres depuis l'URL - memoized to prevent re-renders
+  const urlParams = useMemo(
+    () => ({
+      chapitreId: initialChapitreId || searchParams.get('chapitreId') || '',
+      chapitreNom: initialChapitreNom || searchParams.get('chapitreNom') || '',
+      matiereId: initialMatiereId || searchParams.get('matiereId') || '',
+      matiereNom: initialMatiereNom || searchParams.get('matiereNom') || '',
+      niveauId: initialNiveauId || searchParams.get('niveauId') || '',
+      niveauNom: initialNiveauNom || searchParams.get('niveauNom') || '',
+    }),
+    [
+      initialChapitreId,
+      initialChapitreNom,
+      initialMatiereId,
+      initialMatiereNom,
+      initialNiveauId,
+      initialNiveauNom,
+      searchParams,
+    ]
+  );
+
+  // Handler functions with stable dependencies
   const handleCancel = useCallback(() => {
     // Construire l'URL de retour
     const params = new URLSearchParams();
-    if (chapitreId) params.set('chapitreId', chapitreId);
-    if (chapitreNom) params.set('chapitreNom', chapitreNom);
-    if (matiereId) params.set('matiereId', matiereId);
-    if (matiereNom) params.set('matiereNom', matiereNom);
-    if (niveauId) params.set('niveauId', niveauId);
-    if (niveauNom) params.set('niveauNom', niveauNom);
+    if (urlParams.chapitreId) params.set('chapitreId', urlParams.chapitreId);
+    if (urlParams.chapitreNom) params.set('chapitreNom', urlParams.chapitreNom);
+    if (urlParams.matiereId) params.set('matiereId', urlParams.matiereId);
+    if (urlParams.matiereNom) params.set('matiereNom', urlParams.matiereNom);
+    if (urlParams.niveauId) params.set('niveauId', urlParams.niveauId);
+    if (urlParams.niveauNom) params.set('niveauNom', urlParams.niveauNom);
     params.set('view', 'exercices');
 
     router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-  }, [router, chapitreId, chapitreNom, matiereId, matiereNom, niveauId, niveauNom]);
+  }, [router, urlParams]);
 
   // Validation des paramètres requis
   useEffect(() => {
-    if (!chapitreId && !isEditing) {
+    if (!urlParams.chapitreId && !isEditing) {
       console.error("ChapitreId manquant pour la création d'exercice");
       handleCancel();
     }
-  }, [chapitreId, handleCancel, isEditing]);
+  }, [urlParams.chapitreId, handleCancel, isEditing]);
 
   const handleModeSelect = useCallback(
     (mode: CreationMode) => {
@@ -143,39 +161,45 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       },
     ];
 
-    if (niveauId && niveauNom) {
+
+    if (urlParams.niveauId && urlParams.niveauNom) {
       breadcrumbs.push({
-        label: niveauNom,
+        label: urlParams.niveauNom,
         onClick: () => {
           const params = new URLSearchParams({
             view: 'matieres',
-            niveauId,
-            niveauNom,
+            niveauId: urlParams.niveauId,
+            niveauNom: urlParams.niveauNom,
+
           });
           router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
         },
       });
     }
 
-    if (matiereId && matiereNom) {
+
+    if (urlParams.matiereId && urlParams.matiereNom) {
       breadcrumbs.push({
-        label: matiereNom,
+        label: urlParams.matiereNom,
         onClick: () => {
           const params = new URLSearchParams({
             view: 'chapitres',
-            matiereId,
-            matiereNom,
-            niveauId: niveauId || '',
-            niveauNom: niveauNom || '',
+            matiereId: urlParams.matiereId,
+            matiereNom: urlParams.matiereNom,
+            niveauId: urlParams.niveauId || '',
+            niveauNom: urlParams.niveauNom || '',
+
           });
           router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
         },
       });
     }
 
-    if (chapitreId && chapitreNom) {
+
+    if (urlParams.chapitreId && urlParams.chapitreNom) {
       breadcrumbs.push({
-        label: chapitreNom,
+        label: urlParams.chapitreNom,
+
         onClick: handleCancel,
       });
     }
@@ -186,17 +210,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     });
 
     return breadcrumbs;
-  }, [
-    router,
-    niveauId,
-    niveauNom,
-    matiereId,
-    matiereNom,
-    chapitreId,
-    chapitreNom,
-    isEditing,
-    handleCancel,
-  ]);
+
+  }, [router, urlParams, isEditing, handleCancel]);
+
 
   const getTitle = useCallback(() => {
     if (isEditing) {
@@ -228,7 +244,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     if (selectedMode === 'ai') {
       return (
         <AiForm
-          chapitreId={chapitreId}
+
+          chapitreId={urlParams.chapitreId}
+
           onSuccess={handleSuccess}
           onCancel={handleBack}
           onError={handleError}
@@ -238,13 +256,17 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
 
     return (
       <ManualForm
-        chapitreId={chapitreId}
+
+        chapitreId={urlParams.chapitreId}
+
         onSuccess={handleSuccess}
         onCancel={handleBack}
         onError={handleError}
       />
     );
-  }, [selectedMode, chapitreId, handleSuccess, handleBack, handleError]);
+
+  }, [selectedMode, urlParams.chapitreId, handleSuccess, handleBack, handleError]);
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -339,13 +361,15 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
                     📍 Contexte de création
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
+
+                    <strong>Chapitre :</strong> {urlParams.chapitreNom || 'Non défini'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Matière :</strong> {matiereNom || 'Non définie'}
+                    <strong>Matière :</strong> {urlParams.matiereNom || 'Non définie'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Niveau :</strong> {niveauNom || 'Non défini'}
+                    <strong>Niveau :</strong> {urlParams.niveauNom || 'Non défini'}
+
                   </Typography>
                 </Box>
               </Box>
