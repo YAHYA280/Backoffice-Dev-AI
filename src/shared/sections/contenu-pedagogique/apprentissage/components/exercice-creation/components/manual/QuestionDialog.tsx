@@ -1,27 +1,17 @@
+// src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/components/manual/QuestionDialog.tsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faPlus,
-  faSave,
-  faTimes,
-  faTrash,
-  faGripVertical,
-} from '@fortawesome/free-solid-svg-icons';
-
 import {
   Box,
   Grid,
   Card,
   Chip,
-  Stack,
   Button,
   Dialog,
   Select,
   Switch,
-  useTheme,
-  MenuItem,
   TextField,
   FormGroup,
   Typography,
@@ -33,11 +23,12 @@ import {
   DialogContent,
   DialogActions,
   FormControlLabel,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
 } from '@mui/material';
-
-import { Editor } from 'src/shared/components/editor';
-
-import { DIFFICULTY_OPTIONS, QUESTION_TYPE_CONFIGS } from '../../constants/creation-constants';
+import { Add, Delete, Close, Save } from '@mui/icons-material';
 
 import type {
   Question,
@@ -54,6 +45,19 @@ interface QuestionDialogProps {
   initialType?: QuestionType;
 }
 
+const QUESTION_TYPES = [
+  { value: 'multiple_choice', label: 'Choix multiples', description: 'Questions avec options' },
+  { value: 'true_false', label: 'Vrai/Faux', description: 'Questions binaires' },
+  { value: 'short_answer', label: 'Réponse courte', description: 'Réponses textuelles brèves' },
+  { value: 'long_answer', label: 'Réponse longue', description: 'Réponses développées' },
+] as const;
+
+const DIFFICULTY_OPTIONS = [
+  { value: 'easy', label: 'Facile', color: '#4CAF50' },
+  { value: 'medium', label: 'Moyen', color: '#FF9800' },
+  { value: 'hard', label: 'Difficile', color: '#F44336' },
+] as const;
+
 const QuestionDialog: React.FC<QuestionDialogProps> = ({
   open,
   onClose,
@@ -61,7 +65,6 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   question,
   initialType = 'multiple_choice',
 }) => {
-  const theme = useTheme();
   const [formData, setFormData] = useState<QuestionFormData>({
     type: initialType,
     title: '',
@@ -73,11 +76,11 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Réinitialiser le formulaire quand le dialog s'ouvre
+  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       if (question) {
-        // Mode édition
+        // Edit mode
         setFormData({
           type: question.type,
           title: question.title,
@@ -101,7 +104,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
           }),
         });
       } else {
-        // Mode création
+        // Create mode
         setFormData({
           type: initialType,
           title: '',
@@ -126,7 +129,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
 
-    // Validation générale
+    // General validation
     if (!formData.title.trim()) {
       newErrors.title = 'Le titre est obligatoire';
     }
@@ -137,7 +140,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
       newErrors.points = 'Les points doivent être supérieurs à 0';
     }
 
-    // Validation spécifique par type
+    // Type-specific validation
     if (formData.type === 'multiple_choice') {
       if (!formData.options || formData.options.length < 2) {
         newErrors.options = 'Au moins 2 options sont requises';
@@ -170,7 +173,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
     setFormData((prev) => ({
       ...prev,
       type: newType,
-      // Réinitialiser les données spécifiques au type
+      // Reset type-specific data
       ...(newType === 'multiple_choice' && {
         options: [
           { id: '1', text: '', isCorrect: false, order: 0 },
@@ -269,55 +272,56 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               sx={{ mb: 2 }}
             />
 
-            <Stack spacing={2}>
+            <List disablePadding>
               {(formData.options || []).map((option, index) => (
-                <Card key={option.id} sx={{ p: 2 }}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <IconButton size="small">
-                      <FontAwesomeIcon icon={faGripVertical} />
-                    </IconButton>
+                <ListItem key={option.id} sx={{ pl: 0 }}>
+                  <Card sx={{ p: 2, width: '100%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <TextField
+                        fullWidth
+                        label={`Option ${index + 1}`}
+                        value={option.text}
+                        onChange={(e) => updateOption(option.id, { text: e.target.value })}
+                        placeholder="Texte de l'option..."
+                      />
 
-                    <TextField
-                      fullWidth
-                      label={`Option ${index + 1}`}
-                      value={option.text}
-                      onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                      placeholder="Texte de l'option..."
-                    />
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={option.isCorrect}
+                            onChange={(e) =>
+                              updateOption(option.id, { isCorrect: e.target.checked })
+                            }
+                            color="success"
+                          />
+                        }
+                        label="Correcte"
+                      />
 
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={option.isCorrect}
-                          onChange={(e) => updateOption(option.id, { isCorrect: e.target.checked })}
-                          color="success"
-                        />
-                      }
-                      label="Correcte"
-                    />
-
-                    {(formData.options || []).length > 2 && (
-                      <IconButton
-                        onClick={() => removeOption(option.id)}
-                        color="error"
-                        size="small"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </IconButton>
-                    )}
-                  </Stack>
-                </Card>
+                      {(formData.options || []).length > 2 && (
+                        <IconButton
+                          onClick={() => removeOption(option.id)}
+                          color="error"
+                          size="small"
+                        >
+                          <Delete />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Card>
+                </ListItem>
               ))}
+            </List>
 
-              <Button
-                startIcon={<FontAwesomeIcon icon={faPlus} />}
-                onClick={addOption}
-                variant="outlined"
-                disabled={(formData.options || []).length >= 6}
-              >
-                Ajouter une option
-              </Button>
-            </Stack>
+            <Button
+              startIcon={<Add />}
+              onClick={addOption}
+              variant="outlined"
+              disabled={(formData.options || []).length >= 6}
+              sx={{ mt: 2 }}
+            >
+              Ajouter une option
+            </Button>
 
             {errors.options && (
               <Typography variant="body2" color="error" sx={{ mt: 1 }}>
@@ -333,30 +337,28 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               Réponse correcte
             </Typography>
-            <FormControl component="fieldset">
-              <FormGroup row>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.correctAnswer === true}
-                      onChange={() => setFormData((prev) => ({ ...prev, correctAnswer: true }))}
-                      color="success"
-                    />
-                  }
-                  label="Vrai"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.correctAnswer === false}
-                      onChange={() => setFormData((prev) => ({ ...prev, correctAnswer: false }))}
-                      color="error"
-                    />
-                  }
-                  label="Faux"
-                />
-              </FormGroup>
-            </FormControl>
+            <FormGroup row>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.correctAnswer === true}
+                    onChange={() => setFormData((prev) => ({ ...prev, correctAnswer: true }))}
+                    color="success"
+                  />
+                }
+                label="Vrai"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.correctAnswer === false}
+                    onChange={() => setFormData((prev) => ({ ...prev, correctAnswer: false }))}
+                    color="error"
+                  />
+                }
+                label="Faux"
+              />
+            </FormGroup>
             {errors.correctAnswer && (
               <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                 {errors.correctAnswer}
@@ -372,39 +374,42 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               Réponses acceptées
             </Typography>
 
-            <Stack spacing={2}>
+            <List disablePadding>
               {(formData.correctAnswers || []).map((answer, index) => (
-                <Stack key={index} direction="row" spacing={2} alignItems="center">
-                  <TextField
-                    fullWidth
-                    label={`Réponse ${index + 1}`}
-                    value={answer}
-                    onChange={(e) => updateCorrectAnswer(index, e.target.value)}
-                    placeholder="Réponse acceptée..."
-                  />
+                <ListItem key={index} sx={{ pl: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                    <TextField
+                      fullWidth
+                      label={`Réponse ${index + 1}`}
+                      value={answer}
+                      onChange={(e) => updateCorrectAnswer(index, e.target.value)}
+                      placeholder="Réponse acceptée..."
+                    />
 
-                  {(formData.correctAnswers || []).length > 1 && (
-                    <IconButton
-                      onClick={() => removeCorrectAnswer(index)}
-                      color="error"
-                      size="small"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </IconButton>
-                  )}
-                </Stack>
+                    {(formData.correctAnswers || []).length > 1 && (
+                      <IconButton
+                        onClick={() => removeCorrectAnswer(index)}
+                        color="error"
+                        size="small"
+                      >
+                        <Delete />
+                      </IconButton>
+                    )}
+                  </Box>
+                </ListItem>
               ))}
+            </List>
 
-              <Button
-                startIcon={<FontAwesomeIcon icon={faPlus} />}
-                onClick={addCorrectAnswer}
-                variant="outlined"
-              >
-                Ajouter une réponse alternative
-              </Button>
-            </Stack>
+            <Button
+              startIcon={<Add />}
+              onClick={addCorrectAnswer}
+              variant="outlined"
+              sx={{ mt: 2 }}
+            >
+              Ajouter une réponse alternative
+            </Button>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -434,7 +439,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                 }
                 label="Correspondance exacte"
               />
-            </Stack>
+            </Box>
 
             {errors.correctAnswers && (
               <Typography variant="body2" color="error" sx={{ mt: 1 }}>
@@ -469,7 +474,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
       <DialogTitle
         sx={{
           pb: 2,
-          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
           color: 'white',
           position: 'relative',
         }}
@@ -478,7 +483,8 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
           {question ? 'Modifier la question' : 'Nouvelle question'}
         </Typography>
         <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-          {QUESTION_TYPE_CONFIGS[formData.type]?.label || 'Question personnalisée'}
+          {QUESTION_TYPES.find((qt) => qt.value === formData.type)?.label ||
+            'Question personnalisée'}
         </Typography>
 
         <IconButton
@@ -490,13 +496,13 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
             color: 'white',
           }}
         >
-          <FontAwesomeIcon icon={faTimes} />
+          <Close />
         </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
         <Grid container spacing={3}>
-          {/* Type de question */}
+          {/* Question Type */}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel>Type de question</InputLabel>
@@ -505,26 +511,23 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                 label="Type de question"
                 onChange={(e) => handleTypeChange(e.target.value as QuestionType)}
               >
-                {Object.values(QUESTION_TYPE_CONFIGS).map((config) => (
-                  <MenuItem key={config.type} value={config.type}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Chip label={config.category} size="small" variant="outlined" />
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {config.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {config.description}
-                        </Typography>
-                      </Box>
-                    </Stack>
+                {QUESTION_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {type.label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {type.description}
+                      </Typography>
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
 
-          {/* Titre */}
+          {/* Title */}
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -537,23 +540,22 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
             />
           </Grid>
 
-          {/* Contenu */}
+          {/* Content */}
           <Grid item xs={12}>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Énoncé de la question
-              </Typography>
-              <Editor
-                value={formData.content}
-                onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
-                error={!!errors.content}
-                helperText={errors.content}
-                placeholder="Rédigez l'énoncé complet de votre question..."
-              />
-            </Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Énoncé de la question"
+              value={formData.content}
+              onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
+              error={!!errors.content}
+              helperText={errors.content}
+              placeholder="Rédigez l'énoncé complet de votre question..."
+            />
           </Grid>
 
-          {/* Points et difficulté */}
+          {/* Points and Difficulty */}
           <Grid item xs={6}>
             <TextField
               fullWidth
@@ -587,7 +589,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               >
                 {DIFFICULTY_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
-                    <Stack direction="row" spacing={1} alignItems="center">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box
                         sx={{
                           width: 12,
@@ -597,14 +599,14 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                         }}
                       />
                       <Typography>{option.label}</Typography>
-                    </Stack>
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
 
-          {/* Configuration spécifique au type */}
+          {/* Type-specific configuration */}
           <Grid item xs={12}>
             {renderTypeSpecificFields()}
           </Grid>
@@ -628,7 +630,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
             />
           </Grid>
 
-          {/* Options avancées */}
+          {/* Advanced Options */}
           <Grid item xs={12}>
             <FormControlLabel
               control={
@@ -650,7 +652,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          startIcon={<FontAwesomeIcon icon={faSave} />}
+          startIcon={<Save />}
           sx={{ minWidth: 120 }}
         >
           {question ? 'Mettre à jour' : 'Créer'}

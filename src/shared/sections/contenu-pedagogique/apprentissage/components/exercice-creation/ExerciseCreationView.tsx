@@ -2,19 +2,18 @@
 
 'use client';
 
-import { m } from 'framer-motion';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Box, Alert } from '@mui/material';
 
-import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import AiForm from './components/ai/AiForm';
-import ManualForm from './components/manual/ManualForm';
+import { useExerciseCreation } from './hooks/useExerciseCreation';
 import CreationLayout from './components/shared/CreationLayout';
 import ModeSelector from './components/mode-selector/ModeSelector';
 import ExercisePreview from './components/preview/ExercisePreview';
+
+// Import form components
+import AiForm from './components/ai/AiForm';
+import ManualForm from './components/manual/ManualForm';
 
 import type { Exercise, CreationMode } from './types/exercise-types';
 
@@ -25,7 +24,7 @@ interface ExerciseCreationViewProps {
   matiereNom?: string;
   niveauId?: string;
   niveauNom?: string;
-  exerciseId?: string; // Pour l'édition
+  exerciseId?: string;
   initialMode?: CreationMode;
 }
 
@@ -40,25 +39,48 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
   initialMode,
 }) => {
   const router = useRouter();
-  const theme = useTheme();
-  const hasNavigatedRef = useRef(false);
-  const isMountedRef = useRef(true);
 
-  // Simple state without complex dependencies
+  // Simple state management
   const [selectedMode, setSelectedMode] = useState<CreationMode | null>(initialMode || null);
   const [createdExercise, setCreatedExercise] = useState<Exercise | null>(null);
-  const isEditing = Boolean(exerciseId);
-
-  // Dialog states - initialize with simple boolean values
   const [showModeSelector, setShowModeSelector] = useState(!initialMode && !exerciseId);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Simple navigation function without complex dependencies
-  const navigateToExerciseList = useCallback(() => {
-    if (hasNavigatedRef.current || !isMountedRef.current) return;
+  const isEditing = Boolean(exerciseId);
 
-    hasNavigatedRef.current = true;
+  // Exercise creation hook - MUST be called before any conditional returns
+  const {
+    currentStep,
+    formData,
+    aiState,
+    isLoading,
+    isSaving,
+    errors,
+    nextStep,
+    prevStep,
+    goToStep,
+    updateFormData,
+    generateWithAI,
+    saveExercise,
+    validateCurrentStep,
+    canGoNext,
+    canGoPrev,
+    isLastStep,
+    totalSteps,
+  } = useExerciseCreation({
+    initialMode: selectedMode || 'manual',
+    chapitreId,
+    onSuccess: (exercise) => {
+      setCreatedExercise(exercise);
+      setShowPreview(true);
+    },
+    onError: (error) => {
+      console.error('Exercise creation error:', error);
+    },
+  });
 
+  // Navigation function
+  const navigateToExerciseList = () => {
     const params = new URLSearchParams();
     if (chapitreId) params.set('chapitreId', chapitreId);
     if (chapitreNom) params.set('chapitreNom', chapitreNom);
@@ -69,73 +91,50 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     params.set('view', 'exercices');
 
     router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-  }, [router, chapitreId, chapitreNom, matiereId, matiereNom, niveauId, niveauNom]);
+  };
 
-  // Check for missing chapitreId only once on mount
-  useEffect(() => {
-    if (!chapitreId && !isEditing && !hasNavigatedRef.current) {
-      console.error("ChapitreId manquant pour la création d'exercice");
-      navigateToExerciseList();
-    }
+  // Early return if no chapitreId for new exercises
+  if (!chapitreId && !isEditing) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="error">
+          Chapitre ID manquant. Redirection vers la liste des exercices...
+        </Alert>
+      </Box>
+    );
+  }
 
-    // Cleanup function
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []); // Empty dependency array - only run on mount
-
-  // Simple event handlers
-  const handleModeSelect = useCallback((mode: CreationMode) => {
+  // Event handlers
+  const handleModeSelect = (mode: CreationMode) => {
     setSelectedMode(mode);
     setShowModeSelector(false);
-  }, []);
+  };
 
-  const handleSuccess = useCallback((exercise: Exercise) => {
-    setCreatedExercise(exercise);
-    setShowPreview(true);
-  }, []);
-
-  const handleError = useCallback((error: string) => {
-    console.error('Erreur lors de la création:', error);
-  }, []);
-
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     if (selectedMode && !createdExercise) {
       setSelectedMode(null);
       setShowModeSelector(true);
     } else {
       navigateToExerciseList();
     }
-  }, [selectedMode, createdExercise, navigateToExerciseList]);
+  };
 
-  const handlePreview = useCallback(() => {
+  const handlePreview = () => {
     if (createdExercise) {
       setShowPreview(true);
     }
-  }, [createdExercise]);
+  };
 
-  const handleEditFromPreview = useCallback(() => {
+  const handleEditFromPreview = () => {
     setShowPreview(false);
-  }, []);
+  };
 
-  const handleSaveFromPreview = useCallback(() => {
+  const handleSaveFromPreview = () => {
     setShowPreview(false);
     navigateToExerciseList();
-  }, [navigateToExerciseList]);
+  };
 
-  const handleOpenModeSelector = useCallback(() => {
-    setShowModeSelector(true);
-  }, []);
-
-  const handleCloseModeSelector = useCallback(() => {
-    setShowModeSelector(false);
-  }, []);
-
-  const handleClosePreview = useCallback(() => {
-    setShowPreview(false);
-  }, []);
-
-  // Static breadcrumbs - no complex calculations
+  // Breadcrumbs
   const breadcrumbs = [
     {
       label: 'Niveaux',
@@ -187,7 +186,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     },
   ];
 
-  // Simple title logic
+  // Title and subtitle
   const getTitle = () => {
     if (isEditing) return "Modifier l'exercice";
     if (!selectedMode) return 'Créer un exercice';
@@ -202,17 +201,84 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       : 'Créez votre exercice étape par étape';
   };
 
-  // Simple content rendering
+  // Render mode selector or form
   const renderContent = () => {
-    if (!selectedMode) return null;
+    // Show mode selector if no mode is selected
+    if (!selectedMode) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '60vh',
+            textAlign: 'center',
+            p: 4,
+          }}
+        >
+          <Box>
+            <Box sx={{ mb: 4 }}>
+              <Box sx={{ fontSize: '4rem', mb: 2 }}>🚀</Box>
+              <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 2 }}>
+                Créons votre exercice !
+              </Box>
+              <Box sx={{ color: 'text.secondary', mb: 4, maxWidth: 600 }}>
+                Choisissez la méthode qui vous convient le mieux pour créer un exercice adapté à vos
+                besoins pédagogiques.
+              </Box>
+            </Box>
 
+            {/* Context info */}
+            <Box
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                bgcolor: 'grey.50',
+                border: 1,
+                borderColor: 'divider',
+                maxWidth: 500,
+                mx: 'auto',
+                mb: 4,
+              }}
+            >
+              <Box sx={{ fontWeight: 'medium', mb: 2 }}>📍 Contexte de création</Box>
+              <Box sx={{ textAlign: 'left', fontSize: '0.875rem', color: 'text.secondary' }}>
+                <Box>
+                  <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
+                </Box>
+                <Box>
+                  <strong>Matière :</strong> {matiereNom || 'Non définie'}
+                </Box>
+                <Box>
+                  <strong>Niveau :</strong> {niveauNom || 'Non défini'}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    // Show form based on selected mode
     if (selectedMode === 'ai') {
       return (
         <AiForm
           chapitreId={chapitreId}
-          onSuccess={handleSuccess}
+          formData={formData}
+          aiState={aiState}
+          errors={errors}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          canGoNext={canGoNext}
+          canGoPrev={canGoPrev}
+          isLastStep={isLastStep}
+          onUpdateFormData={updateFormData}
+          onNextStep={nextStep}
+          onPrevStep={prevStep}
+          onGoToStep={goToStep}
+          onGenerateWithAI={generateWithAI}
+          onSave={saveExercise}
           onCancel={handleBack}
-          onError={handleError}
         />
       );
     }
@@ -220,42 +286,32 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     return (
       <ManualForm
         chapitreId={chapitreId}
-        onSuccess={handleSuccess}
+        formData={formData}
+        errors={errors}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        canGoNext={canGoNext}
+        canGoPrev={canGoPrev}
+        isLastStep={isLastStep}
+        isSaving={isSaving}
+        onUpdateFormData={updateFormData}
+        onNextStep={nextStep}
+        onPrevStep={prevStep}
+        onGoToStep={goToStep}
+        onSave={saveExercise}
         onCancel={handleBack}
-        onError={handleError}
       />
     );
   };
 
-  // Don't render if chapitreId is missing for new exercises
-  if (!chapitreId && !isEditing) {
-    return null;
-  }
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <m.div variants={containerVariants} initial="hidden" animate="visible">
+    <Box>
       <CreationLayout
         mode={selectedMode || 'manual'}
         title={getTitle()}
         subtitle={getSubtitle()}
         breadcrumbs={breadcrumbs}
-        progress={selectedMode ? undefined : 0}
+        progress={selectedMode ? ((currentStep + 1) / totalSteps) * 100 : undefined}
         showProgress={!!selectedMode}
         actions={{
           onBack: handleBack,
@@ -264,100 +320,27 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
           canSave: !!createdExercise,
         }}
       >
-        {selectedMode ? (
-          <Box sx={{ minHeight: '70vh' }}>{renderContent()}</Box>
-        ) : (
-          <m.div variants={itemVariants}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '60vh',
-                textAlign: 'center',
-                p: 4,
-              }}
-            >
-              <Box>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                  🚀 Créons votre exercice !
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600 }}>
-                  Choisissez la méthode qui vous convient le mieux pour créer un exercice adapté à
-                  vos besoins pédagogiques.
-                </Typography>
-
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleOpenModeSelector}
-                  sx={{
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    borderRadius: 3,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                    boxShadow: theme.customShadows?.z16,
-                    '&:hover': {
-                      boxShadow: theme.customShadows?.z20,
-                      transform: 'translateY(-2px)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  Choisir le mode de création
-                </Button>
-
-                {/* Informations contextuelles */}
-                <Box
-                  sx={{
-                    mt: 4,
-                    p: 3,
-                    borderRadius: 2,
-                    bgcolor: theme.palette.grey[50],
-                    border: `1px solid ${theme.palette.divider}`,
-                    maxWidth: 500,
-                    mx: 'auto',
-                  }}
-                >
-                  <Typography variant="subtitle2" gutterBottom>
-                    📍 Contexte de création
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Matière :</strong> {matiereNom || 'Non définie'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Niveau :</strong> {niveauNom || 'Non défini'}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </m.div>
-        )}
+        {renderContent()}
       </CreationLayout>
 
-      {/* Dialog de sélection de mode */}
+      {/* Mode Selector Dialog */}
       <ModeSelector
         open={showModeSelector}
-        onClose={handleCloseModeSelector}
+        onClose={() => setShowModeSelector(false)}
         onModeSelect={handleModeSelect}
         selectedMode={selectedMode || undefined}
       />
 
-      {/* Drawer de prévisualisation */}
+      {/* Exercise Preview */}
       <ExercisePreview
         open={showPreview}
-        onClose={handleClosePreview}
+        onClose={() => setShowPreview(false)}
         exercise={createdExercise}
         mode={selectedMode || 'manual'}
         onEdit={handleEditFromPreview}
         onSave={handleSaveFromPreview}
       />
-    </m.div>
+    </Box>
   );
 };
 

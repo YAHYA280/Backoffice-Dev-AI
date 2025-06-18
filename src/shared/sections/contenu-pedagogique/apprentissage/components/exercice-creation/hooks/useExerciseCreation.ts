@@ -1,15 +1,8 @@
 // src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/hooks/useExerciseCreation.ts
 
-import { useState, useCallback, useRef } from 'react';
-
+import { useState } from 'react';
 import type { CreationMode, CreationFormData, Exercise } from '../types/exercise-types';
-import type {
-  AiGenerationState,
-  AiGenerationRequest,
-  AiGenerationResponse,
-  AiGeneratedQuestion,
-} from '../types/ai-types';
-import type { Question } from '../types/question-types';
+import type { AiGenerationState, AiGenerationRequest } from '../types/ai-types';
 
 interface UseExerciseCreationProps {
   initialMode?: CreationMode;
@@ -24,19 +17,14 @@ export const useExerciseCreation = ({
   onSuccess,
   onError,
 }: UseExerciseCreationProps) => {
-  // Simple state management without complex dependencies
-  const [mode] = useState<CreationMode>(initialMode);
+  // Ultra simple state - no useEffect, no complex objects
   const [currentStep, setCurrentStep] = useState(0);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Refs to prevent issues
-  const isMountedRef = useRef(true);
-
-  // Initial form data
-  const [formData, setFormData] = useState<CreationFormData>({
+  // Simple form data - static initial state
+  const [formData, setFormData] = useState<CreationFormData>(() => ({
     title: '',
     description: '',
     subject: '',
@@ -55,318 +43,186 @@ export const useExerciseCreation = ({
       enableHints: true,
       enableExplanations: true,
     },
-  });
+  }));
 
-  // AI state
-  const [aiState, setAiState] = useState<AiGenerationState>({
+  // AI state - simple
+  const [aiState, setAiState] = useState<AiGenerationState>(() => ({
     status: 'idle',
     progress: 0,
     canCancel: false,
-  });
+  }));
 
-  // Simple validation function
-  const validateStep = useCallback(
-    (step: number): boolean => {
-      const newErrors: Record<string, string> = {};
+  // Simple validation - no useCallback, just inline
+  const validateCurrentStep = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
-      switch (step) {
-        case 0:
-          if (!formData.title.trim()) {
-            newErrors.title = 'Le titre est obligatoire';
-          }
-          if (!formData.description.trim()) {
-            newErrors.description = 'La description est obligatoire';
-          }
-          break;
-        case 1:
-          if (mode === 'manual' && !formData.content?.trim()) {
-            newErrors.content = 'Le contenu est obligatoire';
-          }
-          break;
-        case 2:
-          if (mode === 'manual' && formData.questions.length === 0) {
-            newErrors.questions = 'Au moins une question est requise';
-          }
-          break;
-        default:
-          break;
+    // eslint-disable-next-line default-case
+    switch (currentStep) {
+      case 0:
+        if (!formData.title.trim()) newErrors.title = 'Le titre est obligatoire';
+        if (!formData.description.trim()) newErrors.description = 'La description est obligatoire';
+        break;
+      case 1:
+        if (initialMode === 'manual' && !formData.content?.trim()) {
+          newErrors.content = 'Le contenu est obligatoire';
+        }
+        break;
+      case 2:
+        if (initialMode === 'manual' && formData.questions.length === 0) {
+          newErrors.questions = 'Au moins une question est requise';
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Simple navigation functions - no useCallback
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const goToStep = (step: number) => {
+    if (step >= 0 && step <= 3) {
+      setCurrentStep(step);
+    }
+  };
+
+  // Simple update function - no useCallback
+  const updateFormData = (updates: Partial<CreationFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+
+    // Clear related errors
+    const updatedFields = Object.keys(updates);
+    if (updatedFields.length > 0) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        updatedFields.forEach((field) => {
+          delete newErrors[field];
+        });
+        return newErrors;
+      });
+    }
+  };
+
+  // AI Generation - simple async function
+  const generateWithAI = async (request: AiGenerationRequest) => {
+    try {
+      setAiState({
+        status: 'generating',
+        progress: 0,
+        canCancel: true,
+        currentStep: 'Initialisation...',
+      });
+
+      // Simple simulation
+      const steps = ['Analyse...', 'Génération...', 'Finalisation...'];
+
+      for (let i = 0; i < steps.length; i++) {
+        setAiState((prev) => ({
+          ...prev,
+          progress: ((i + 1) / steps.length) * 100,
+          currentStep: steps[i],
+        }));
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    },
-    [formData.title, formData.description, formData.content, formData.questions.length, mode]
-  );
-
-  // Helper function to convert AI questions
-  const convertAiQuestionToQuestion = useCallback(
-    (aiQuestion: AiGeneratedQuestion, index: number): Question => {
-      const baseProps = {
-        id: `generated_${index}`,
-        type: aiQuestion.type,
-        title: aiQuestion.title,
-        content: aiQuestion.content,
-        points: aiQuestion.points,
-        difficulty: aiQuestion.difficulty,
-        explanation: aiQuestion.explanation,
-        hint: aiQuestion.hint,
-        order: index,
-        required: true,
-        tags: aiQuestion.tags,
+      // Simple mock content
+      const generatedContent = {
+        title: request.config.topic || 'Exercice généré',
+        description: 'Description générée automatiquement',
+        content: 'Contenu pédagogique généré par IA',
+        tags: ['IA', 'généré'],
+        questions: [
+          {
+            id: 'generated_1',
+            type: 'multiple_choice' as const,
+            title: 'Question générée 1',
+            content: 'Contenu de la question générée',
+            points: 10,
+            difficulty: 'medium' as const,
+            explanation: 'Explication générée',
+            hint: 'Indice généré',
+            order: 0,
+            required: true,
+            tags: [],
+            options: [
+              { id: '1', text: 'Option A', isCorrect: true, order: 0 },
+              { id: '2', text: 'Option B', isCorrect: false, order: 1 },
+            ],
+            allowMultiple: false,
+            randomizeOptions: false,
+          },
+        ],
       };
 
-      switch (aiQuestion.type) {
-        case 'multiple_choice':
-          return {
-            ...baseProps,
-            type: 'multiple_choice',
-            options: aiQuestion.options || [],
-            allowMultiple: false,
-            randomizeOptions: false,
-          };
-        case 'true_false':
-          return {
-            ...baseProps,
-            type: 'true_false',
-            correctAnswer: aiQuestion.correctAnswer ?? false,
-          };
-        case 'short_answer':
-          return {
-            ...baseProps,
-            type: 'short_answer',
-            correctAnswers: aiQuestion.correctAnswers || [],
-            caseSensitive: false,
-            exactMatch: false,
-            maxLength: 100,
-          };
-        case 'long_answer':
-          return {
-            ...baseProps,
-            type: 'long_answer',
-            minLength: 50,
-            maxLength: 1000,
-            evaluationCriteria: [],
-          };
-        case 'fill_blanks':
-          return {
-            ...baseProps,
-            type: 'fill_blanks',
-            textWithBlanks: aiQuestion.textWithBlanks || '',
-            blanks: aiQuestion.blanks || [],
-            caseSensitive: false,
-          };
-        case 'matching':
-          return {
-            ...baseProps,
-            type: 'matching',
-            leftItems: aiQuestion.leftItems || [],
-            rightItems: aiQuestion.rightItems || [],
-            allowPartialCredit: true,
-          };
-        default:
-          return {
-            ...baseProps,
-            type: 'multiple_choice',
-            options: [],
-            allowMultiple: false,
-            randomizeOptions: false,
-          };
-      }
-    },
-    []
-  );
+      // Update data
+      setFormData((prev) => ({
+        ...prev,
+        ...generatedContent,
+      }));
 
-  // Navigation functions
-  const nextStep = useCallback(() => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  }, [currentStep, validateStep]);
-
-  const prevStep = useCallback(() => {
-    setCurrentStep((prev) => Math.max(0, prev - 1));
-  }, []);
-
-  const goToStep = useCallback((step: number) => {
-    setCurrentStep(step);
-  }, []);
-
-  // Form data update function
-  const updateFormData = useCallback((updates: Partial<CreationFormData>) => {
-    if (!isMountedRef.current) return;
-
-    setFormData((prev) => {
-      const newData = { ...prev, ...updates };
-      return newData;
-    });
-
-    setHasUnsavedChanges(true);
-
-    // Clear errors for updated fields
-    const updatedFields = Object.keys(updates);
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      updatedFields.forEach((field) => {
-        delete newErrors[field];
+      setAiState({
+        status: 'completed',
+        progress: 100,
+        canCancel: false,
       });
-      return newErrors;
-    });
-  }, []);
+    } catch (error) {
+      setAiState({
+        status: 'error',
+        progress: 0,
+        error: {
+          code: 'GENERATION_FAILED',
+          message: 'Erreur lors de la génération',
+          suggestions: ['Vérifiez votre connexion', 'Réessayez'],
+        },
+        canCancel: false,
+      });
+      if (onError) onError('Erreur lors de la génération IA');
+    }
+  };
 
-  // AI Generation function
-  const generateWithAI = useCallback(
-    async (request: AiGenerationRequest) => {
-      try {
-        setAiState({
-          status: 'generating',
-          progress: 0,
-          canCancel: true,
-          currentStep: 'Initialisation...',
-        });
-
-        // Mock AI generation
-        const steps = [
-          'Analyse du contexte...',
-          'Génération du contenu...',
-          'Création des questions...',
-          'Optimisation pédagogique...',
-          'Finalisation...',
-        ];
-
-        for (let i = 0; i < steps.length; i += 1) {
-          if (!isMountedRef.current) break;
-
-          setAiState((prev) => ({
-            ...prev,
-            progress: ((i + 1) / steps.length) * 100,
-            currentStep: steps[i],
-          }));
-
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-
-        // Mock response
-        const mockResponse: AiGenerationResponse = {
-          success: true,
-          data: {
-            exercise: {
-              title: request.config.topic || 'Exercice généré',
-              description: 'Description générée automatiquement...',
-              content: 'Contenu pédagogique généré...',
-              tags: ['IA', 'généré'],
-              estimatedDuration: 20,
-            },
-            questions: [
-              {
-                type: 'multiple_choice',
-                title: 'Question générée 1',
-                content: 'Quelle est la bonne réponse ?',
-                points: 10,
-                difficulty: 'medium',
-                explanation: 'Explication générée...',
-                tags: [],
-                options: [
-                  { id: '1', text: 'Réponse A', isCorrect: true, order: 0 },
-                  { id: '2', text: 'Réponse B', isCorrect: false, order: 1 },
-                ],
-                confidence: 0.9,
-                bloomLevel: 'understand',
-              },
-            ],
-          },
-          metadata: {
-            model: 'gpt-4',
-            tokens: { input: 500, output: 1000, total: 1500 },
-            processingTime: 5000,
-            timestamp: new Date().toISOString(),
-          },
-        };
-
-        if (mockResponse.success && mockResponse.data && isMountedRef.current) {
-          const convertedQuestions = mockResponse.data.questions.map((q, index) =>
-            convertAiQuestionToQuestion(q, index)
-          );
-
-          updateFormData({
-            title: mockResponse.data.exercise.title,
-            description: mockResponse.data.exercise.description,
-            content: mockResponse.data.exercise.content,
-            tags: mockResponse.data.exercise.tags,
-            estimatedDuration: mockResponse.data.exercise.estimatedDuration,
-            questions: convertedQuestions,
-          });
-
-          setAiState({
-            status: 'completed',
-            progress: 100,
-            generatedContent: mockResponse.data,
-            canCancel: false,
-          });
-        }
-      } catch (error) {
-        if (isMountedRef.current) {
-          setAiState({
-            status: 'error',
-            progress: 0,
-            error: {
-              code: 'GENERATION_FAILED',
-              message: 'Erreur lors de la génération',
-              suggestions: ['Vérifiez votre connexion', 'Réessayez avec des paramètres différents'],
-            },
-            canCancel: false,
-          });
-          onError?.('Erreur lors de la génération IA');
-        }
-      }
-    },
-    [updateFormData, onError, convertAiQuestionToQuestion]
-  );
-
-  // Cancel AI generation
-  const cancelAiGeneration = useCallback(() => {
-    setAiState((prev) => ({ ...prev, status: 'cancelled', canCancel: false }));
-  }, []);
-
-  // Save exercise
-  const saveExercise = useCallback(async (): Promise<boolean> => {
+  // Save function - simple
+  const saveExercise = async (): Promise<boolean> => {
     try {
       setIsSaving(true);
 
-      if (!validateStep(currentStep)) {
+      if (!validateCurrentStep()) {
         return false;
       }
 
-      // Mock save
+      // Simulate save
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      if (!isMountedRef.current) return false;
 
       const savedExercise: Exercise = {
         id: `exercise_${Date.now()}`,
         ...formData,
-        mode,
+        mode: initialMode,
         status: 'draft',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as Exercise;
 
-      setHasUnsavedChanges(false);
-      onSuccess?.(savedExercise);
-
+      if (onSuccess) onSuccess(savedExercise);
       return true;
     } catch (error) {
-      onError?.('Erreur lors de la sauvegarde');
+      if (onError) onError('Erreur lors de la sauvegarde');
       return false;
     } finally {
-      if (isMountedRef.current) {
-        setIsSaving(false);
-      }
+      setIsSaving(false);
     }
-  }, [formData, mode, currentStep, validateStep, onSuccess, onError]);
+  };
 
-  // Reset function
-  const reset = useCallback(() => {
+  // Reset function - simple
+  const reset = () => {
     setCurrentStep(0);
     setFormData({
       title: '',
@@ -394,19 +250,18 @@ export const useExerciseCreation = ({
       canCancel: false,
     });
     setErrors({});
-    setHasUnsavedChanges(false);
-  }, [chapitreId]);
+  };
 
+  // Return all values and functions - no computed values to avoid re-renders
   return {
-    // État
-    mode,
+    // State
+    mode: initialMode,
     currentStep,
     formData,
     aiState,
     isLoading,
     isSaving,
     errors,
-    hasUnsavedChanges,
 
     // Actions
     nextStep,
@@ -414,16 +269,14 @@ export const useExerciseCreation = ({
     goToStep,
     updateFormData,
     generateWithAI,
-    cancelAiGeneration,
     saveExercise,
     reset,
-    validateStep,
+    validateCurrentStep,
 
-    // Utilitaires
-    canGoNext: validateStep(currentStep),
+    // Simple computed values
+    canGoNext: Object.keys(errors).length === 0,
     canGoPrev: currentStep > 0,
     isLastStep: currentStep === 3,
-    completedSteps: currentStep,
     totalSteps: 4,
   };
 };

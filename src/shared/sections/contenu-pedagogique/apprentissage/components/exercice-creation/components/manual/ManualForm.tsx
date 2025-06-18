@@ -3,59 +3,62 @@
 'use client';
 
 import React from 'react';
-import { m } from 'framer-motion';
+import { Box, Stepper, Step, StepLabel, Button, Paper, Alert } from '@mui/material';
 
-import { Box, Alert } from '@mui/material';
-
-import { MANUAL_CREATION_STEPS } from '../../constants/creation-constants';
-import CreationStepper from '../shared/CreationStepper';
+// Import step components
 import BasicInfoStep from './steps/BasicInfoStep';
 import ContentStep from './steps/ContentStep';
 import QuestionsStep from './steps/QuestionsStep';
 import ConfigStep from './steps/ConfigStep';
-import { useExerciseCreation } from '../../hooks/useExerciseCreation';
-import type { Exercise } from '../../types/exercise-types';
+
+import type { CreationFormData } from '../../types/exercise-types';
 
 interface ManualFormProps {
   chapitreId: string;
-  onSuccess?: (exercise: Exercise) => void;
-  onCancel?: () => void;
-  onError?: (error: string) => void;
+  formData: CreationFormData;
+  errors: Record<string, string>;
+  currentStep: number;
+  totalSteps: number;
+  canGoNext: boolean;
+  canGoPrev: boolean;
+  isLastStep: boolean;
+  isSaving: boolean;
+  onUpdateFormData: (updates: Partial<CreationFormData>) => void;
+  onNextStep: () => void;
+  onPrevStep: () => void;
+  onGoToStep: (step: number) => void;
+  onSave: () => Promise<boolean>;
+  onCancel: () => void;
 }
 
-const ManualForm: React.FC<ManualFormProps> = ({ chapitreId, onSuccess, onCancel, onError }) => {
-  const {
-    currentStep,
-    formData,
-    errors,
-    isLoading,
-    isSaving,
-    hasUnsavedChanges,
-    nextStep,
-    prevStep,
-    goToStep,
-    updateFormData,
-    saveExercise,
-    validateStep,
-    canGoNext,
-    canGoPrev,
-    isLastStep,
-    completedSteps,
-  } = useExerciseCreation({
-    initialMode: 'manual',
-    chapitreId,
-    onSuccess,
-    onError,
-  });
+const MANUAL_STEPS = [
+  { label: 'Informations de base', description: 'Titre, description et paramètres' },
+  { label: 'Contenu pédagogique', description: 'Contenu et ressources' },
+  { label: 'Questions', description: 'Création des questions' },
+  { label: 'Configuration', description: 'Paramètres avancés' },
+];
 
-  const handleNext = async () => {
-    if (isLastStep) {
-      const success = await saveExercise();
-      if (!success) {
-        onError?.("Erreur lors de la sauvegarde de l'exercice");
-      }
-    } else {
-      nextStep();
+const ManualForm: React.FC<ManualFormProps> = ({
+  chapitreId,
+  formData,
+  errors,
+  currentStep,
+  totalSteps,
+  canGoNext,
+  canGoPrev,
+  isLastStep,
+  isSaving,
+  onUpdateFormData,
+  onNextStep,
+  onPrevStep,
+  onGoToStep,
+  onSave,
+  onCancel,
+}) => {
+  const handleSave = async () => {
+    const success = await onSave();
+    if (!success) {
+      console.error('Failed to save exercise');
     }
   };
 
@@ -63,7 +66,7 @@ const ManualForm: React.FC<ManualFormProps> = ({ chapitreId, onSuccess, onCancel
     const stepProps = {
       data: formData,
       errors,
-      onChange: updateFormData,
+      onChange: onUpdateFormData,
     };
 
     switch (currentStep) {
@@ -80,118 +83,82 @@ const ManualForm: React.FC<ManualFormProps> = ({ chapitreId, onSuccess, onCancel
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <m.div variants={containerVariants} initial="hidden" animate="visible">
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        {/* Avertissement de changements non sauvegardés */}
-        {hasUnsavedChanges && (
-          <m.div variants={itemVariants}>
-            <Alert
-              severity="warning"
-              sx={{
-                mb: 2,
-                borderRadius: 2,
-              }}
+    <Box sx={{ p: 3 }}>
+      {/* Stepper */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Stepper activeStep={currentStep} sx={{ mb: 3 }}>
+          {MANUAL_STEPS.map((step, index) => (
+            <Step key={index}>
+              <StepLabel onClick={() => onGoToStep(index)} sx={{ cursor: 'pointer' }}>
+                {step.label}
+              </StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+
+        {/* Navigation Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={onCancel} color="inherit" disabled={isSaving}>
+            Annuler
+          </Button>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {canGoPrev && (
+              <Button onClick={onPrevStep} disabled={isSaving}>
+                Précédent
+              </Button>
+            )}
+
+            {isLastStep ? (
+              <Button variant="contained" onClick={handleSave} disabled={!canGoNext || isSaving}>
+                {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+              </Button>
+            ) : (
+              <Button variant="contained" onClick={onNextStep} disabled={!canGoNext}>
+                Suivant
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Step Content */}
+      <Paper sx={{ p: 3, minHeight: 400 }}>{renderStepContent()}</Paper>
+
+      {/* Final Step Save Button */}
+      {isLastStep && (
+        <Paper sx={{ p: 3, mt: 2 }}>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Votre exercice est prêt ! Vous pouvez maintenant le sauvegarder.
+          </Alert>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleSave}
+              disabled={!canGoNext || isSaving}
+              sx={{ minWidth: 200 }}
             >
-              Vous avez des modifications non sauvegardées. N&apos;oubliez pas de sauvegarder votre
-              travail !
-            </Alert>
-          </m.div>
-        )}
-
-        {/* Stepper de navigation */}
-        <m.div variants={itemVariants}>
-          <CreationStepper
-            steps={MANUAL_CREATION_STEPS}
-            activeStep={currentStep}
-            completedSteps={completedSteps}
-            onStepClick={goToStep}
-            onNext={handleNext}
-            onPrev={prevStep}
-            onCancel={onCancel}
-            nextLabel={isLastStep ? "Finaliser l'exercice" : 'Étape suivante'}
-            prevLabel="Étape précédente"
-            cancelLabel="Annuler"
-            canGoNext={canGoNext}
-            canGoPrev={canGoPrev}
-            isLoading={isSaving}
-            showNavigation
-          />
-        </m.div>
-
-        {/* Contenu de l'étape actuelle */}
-        <m.div
-          variants={itemVariants}
-          key={currentStep} // Force re-animation sur changement d'étape
-        >
-          <Box
-            sx={{
-              mt: 3,
-              minHeight: 600,
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              border: '1px solid',
-              borderColor: 'divider',
-              overflow: 'hidden',
-            }}
-          >
-            {renderStepContent()}
+              {isSaving ? 'Sauvegarde en cours...' : "Sauvegarder l'exercice"}
+            </Button>
           </Box>
-        </m.div>
+        </Paper>
+      )}
 
-        {/* Informations de progression */}
-        <m.div variants={itemVariants}>
-          <Box
-            sx={{
-              mt: 3,
-              p: 2,
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: hasUnsavedChanges ? 'warning.main' : 'success.main',
-                  }}
-                />
-                <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-                  {hasUnsavedChanges ? 'Modifications en cours' : 'Tout est sauvegardé'}
-                </Box>
-              </Box>
-            </Box>
-
-            <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-              Étape {currentStep + 1} sur {MANUAL_CREATION_STEPS.length} • Mode création manuelle
-            </Box>
+      {/* Progress Info */}
+      <Paper sx={{ p: 2, mt: 2, bgcolor: 'grey.50' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+            Étape {currentStep + 1} sur {totalSteps} • Mode création manuelle ✋
           </Box>
-        </m.div>
-      </Box>
-    </m.div>
+          <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+            {formData.questions.length} question(s) • {formData.tags.length} tag(s)
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 
