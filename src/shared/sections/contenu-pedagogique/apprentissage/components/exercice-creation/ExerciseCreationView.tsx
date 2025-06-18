@@ -2,9 +2,10 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Alert } from '@mui/material';
+import { m, AnimatePresence } from 'framer-motion';
+import { Box, Alert, Snackbar, Fade } from '@mui/material';
 
 import { useExerciseCreation } from './hooks/useExerciseCreation';
 import CreationLayout from './components/shared/CreationLayout';
@@ -40,15 +41,26 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
 }) => {
   const router = useRouter();
 
-  // Simple state management
+  // UI State
   const [selectedMode, setSelectedMode] = useState<CreationMode | null>(initialMode || null);
   const [createdExercise, setCreatedExercise] = useState<Exercise | null>(null);
   const [showModeSelector, setShowModeSelector] = useState(!initialMode && !exerciseId);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Notification state
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+
   const isEditing = Boolean(exerciseId);
 
-  // Exercise creation hook - MUST be called before any conditional returns
+  // Enhanced exercise creation hook
   const {
     currentStep,
     formData,
@@ -56,6 +68,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     isLoading,
     isSaving,
     errors,
+    warnings,
+    hasUnsavedChanges,
+    completedSteps,
     nextStep,
     prevStep,
     goToStep,
@@ -67,20 +82,40 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     canGoPrev,
     isLastStep,
     totalSteps,
+    progressPercentage,
   } = useExerciseCreation({
     initialMode: selectedMode || 'manual',
     chapitreId,
-    onSuccess: (exercise) => {
-      setCreatedExercise(exercise);
-      setShowPreview(true);
-    },
-    onError: (error) => {
-      console.error('Exercise creation error:', error);
-    },
+    onSuccess: handleExerciseSuccess,
+    onError: handleExerciseError,
   });
 
-  // Navigation function
-  const navigateToExerciseList = () => {
+  // Success handler
+  function handleExerciseSuccess(exercise: Exercise) {
+    setCreatedExercise(exercise);
+    setNotification({
+      open: true,
+      message: 'Exercice créé avec succès ! 🎉',
+      severity: 'success',
+    });
+
+    // Auto-show preview after successful creation
+    setTimeout(() => {
+      setShowPreview(true);
+    }, 1000);
+  }
+
+  // Error handler
+  function handleExerciseError(error: string) {
+    setNotification({
+      open: true,
+      message: error,
+      severity: 'error',
+    });
+  }
+
+  // Navigation function with enhanced URL management
+  const navigateToExerciseList = useCallback(() => {
     const params = new URLSearchParams();
     if (chapitreId) params.set('chapitreId', chapitreId);
     if (chapitreNom) params.set('chapitreNom', chapitreNom);
@@ -91,50 +126,114 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     params.set('view', 'exercices');
 
     router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-  };
+  }, [router, chapitreId, chapitreNom, matiereId, matiereNom, niveauId, niveauNom]);
 
-  // Early return if no chapitreId for new exercises
-  if (!chapitreId && !isEditing) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Alert severity="error">
-          Chapitre ID manquant. Redirection vers la liste des exercices...
-        </Alert>
-      </Box>
-    );
-  }
+  // Enhanced validation for exercise creation
+  useEffect(() => {
+    if (!chapitreId && !isEditing) {
+      setNotification({
+        open: true,
+        message: 'Chapitre manquant. Redirection vers la liste des exercices...',
+        severity: 'error',
+      });
+
+      setTimeout(() => {
+        navigateToExerciseList();
+      }, 2000);
+    }
+  }, [chapitreId, isEditing, navigateToExerciseList]);
+
+  // Prevent navigation with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue =
+          'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter ?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Event handlers
-  const handleModeSelect = (mode: CreationMode) => {
+  const handleModeSelect = useCallback((mode: CreationMode) => {
     setSelectedMode(mode);
     setShowModeSelector(false);
-  };
 
-  const handleBack = () => {
+    setNotification({
+      open: true,
+      message: `Mode ${mode === 'ai' ? 'IA' : 'manuel'} sélectionné !`,
+      severity: 'info',
+    });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmLeave = window.confirm(
+        'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir revenir en arrière ?'
+      );
+      if (!confirmLeave) return;
+    }
+
     if (selectedMode && !createdExercise) {
       setSelectedMode(null);
       setShowModeSelector(true);
     } else {
       navigateToExerciseList();
     }
-  };
+  }, [selectedMode, createdExercise, hasUnsavedChanges, navigateToExerciseList]);
 
-  const handlePreview = () => {
+  const handlePreview = useCallback(() => {
     if (createdExercise) {
       setShowPreview(true);
+    } else {
+      // Create a preview exercise from current form data
+      const previewExercise: Exercise = {
+        id: 'preview',
+        ...formData,
+        mode: selectedMode || 'manual',
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Exercise;
+
+      setCreatedExercise(previewExercise);
+      setShowPreview(true);
     }
-  };
+  }, [createdExercise, formData, selectedMode]);
 
-  const handleEditFromPreview = () => {
+  const handleEditFromPreview = useCallback(() => {
     setShowPreview(false);
-  };
+  }, []);
 
-  const handleSaveFromPreview = () => {
-    setShowPreview(false);
-    navigateToExerciseList();
-  };
+  const handleSaveFromPreview = useCallback(async () => {
+    const success = await saveExercise();
+    if (success) {
+      setShowPreview(false);
+      setTimeout(() => {
+        navigateToExerciseList();
+      }, 1500);
+    }
+  }, [saveExercise, navigateToExerciseList]);
 
-  // Breadcrumbs
+  const handleCloseNotification = useCallback(() => {
+    setNotification((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  // Early return for missing chapitreId
+  if (!chapitreId && !isEditing) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
+          Chapitre ID manquant. Redirection vers la liste des exercices...
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Breadcrumbs configuration
   const breadcrumbs = [
     {
       label: 'Niveaux',
@@ -186,7 +285,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     },
   ];
 
-  // Title and subtitle
+  // Dynamic title and subtitle
   const getTitle = () => {
     if (isEditing) return "Modifier l'exercice";
     if (!selectedMode) return 'Créer un exercice';
@@ -201,7 +300,45 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       : 'Créez votre exercice étape par étape';
   };
 
-  // Render mode selector or form
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+    exit: {
+      opacity: 0,
+      transition: {
+        staggerChildren: 0.05,
+        staggerDirection: -1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: 'easeOut',
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
+  // Render main content
   const renderContent = () => {
     // Show mode selector if no mode is selected
     if (!selectedMode) {
@@ -216,111 +353,125 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
             p: 4,
           }}
         >
-          <Box>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ fontSize: '4rem', mb: 2 }}>🚀</Box>
-              <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 2 }}>
-                Créons votre exercice !
+          <m.div variants={itemVariants} initial="hidden" animate="visible">
+            <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+              <Box sx={{ fontSize: '4rem', mb: 3 }}>🎓</Box>
+              <Box sx={{ fontSize: '1.75rem', fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
+                Prêt à créer un exercice exceptionnel ?
               </Box>
-              <Box sx={{ color: 'text.secondary', mb: 4, maxWidth: 600 }}>
-                Choisissez la méthode qui vous convient le mieux pour créer un exercice adapté à vos
-                besoins pédagogiques.
+              <Box sx={{ color: 'text.secondary', mb: 4, fontSize: '1.1rem', lineHeight: 1.6 }}>
+                Choisissez entre la <strong>création manuelle</strong> pour un contrôle total ou la{' '}
+                <strong>génération IA</strong> pour gagner du temps tout en gardant la qualité.
               </Box>
-            </Box>
 
-            {/* Context info */}
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                bgcolor: 'grey.50',
-                border: 1,
-                borderColor: 'divider',
-                maxWidth: 500,
-                mx: 'auto',
-                mb: 4,
-              }}
-            >
-              <Box sx={{ fontWeight: 'medium', mb: 2 }}>📍 Contexte de création</Box>
-              <Box sx={{ textAlign: 'left', fontSize: '0.875rem', color: 'text.secondary' }}>
-                <Box>
-                  <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
+              {/* Context info */}
+              <Box
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  bgcolor: 'primary.lighter',
+                  border: 1,
+                  borderColor: 'primary.light',
+                  maxWidth: 500,
+                  mx: 'auto',
+                }}
+              >
+                <Box sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
+                  📍 Contexte de création
                 </Box>
-                <Box>
-                  <strong>Matière :</strong> {matiereNom || 'Non définie'}
-                </Box>
-                <Box>
-                  <strong>Niveau :</strong> {niveauNom || 'Non défini'}
+                <Box sx={{ textAlign: 'left', fontSize: '0.875rem', color: 'text.secondary' }}>
+                  <Box>
+                    <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
+                  </Box>
+                  <Box>
+                    <strong>Matière :</strong> {matiereNom || 'Non définie'}
+                  </Box>
+                  <Box>
+                    <strong>Niveau :</strong> {niveauNom || 'Non défini'}
+                  </Box>
                 </Box>
               </Box>
             </Box>
-          </Box>
+          </m.div>
         </Box>
       );
     }
 
     // Show form based on selected mode
-    if (selectedMode === 'ai') {
-      return (
-        <AiForm
-          chapitreId={chapitreId}
-          formData={formData}
-          aiState={aiState}
-          errors={errors}
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          canGoNext={canGoNext}
-          canGoPrev={canGoPrev}
-          isLastStep={isLastStep}
-          onUpdateFormData={updateFormData}
-          onNextStep={nextStep}
-          onPrevStep={prevStep}
-          onGoToStep={goToStep}
-          onGenerateWithAI={generateWithAI}
-          onSave={saveExercise}
-          onCancel={handleBack}
-        />
-      );
-    }
-
     return (
-      <ManualForm
-        chapitreId={chapitreId}
-        formData={formData}
-        errors={errors}
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        canGoNext={canGoNext}
-        canGoPrev={canGoPrev}
-        isLastStep={isLastStep}
-        isSaving={isSaving}
-        onUpdateFormData={updateFormData}
-        onNextStep={nextStep}
-        onPrevStep={prevStep}
-        onGoToStep={goToStep}
-        onSave={saveExercise}
-        onCancel={handleBack}
-      />
+      <AnimatePresence mode="wait">
+        <m.div
+          key={selectedMode}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          {selectedMode === 'ai' ? (
+            <AiForm
+              chapitreId={chapitreId}
+              formData={formData}
+              aiState={aiState}
+              errors={errors}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              canGoNext={canGoNext}
+              canGoPrev={canGoPrev}
+              isLastStep={isLastStep}
+              onUpdateFormData={updateFormData}
+              onNextStep={nextStep}
+              onPrevStep={prevStep}
+              onGoToStep={goToStep}
+              onGenerateWithAI={generateWithAI}
+              onSave={saveExercise}
+              onCancel={handleBack}
+            />
+          ) : (
+            <ManualForm
+              chapitreId={chapitreId}
+              formData={formData}
+              errors={errors}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              canGoNext={canGoNext}
+              canGoPrev={canGoPrev}
+              isLastStep={isLastStep}
+              isSaving={isSaving}
+              onUpdateFormData={updateFormData}
+              onNextStep={nextStep}
+              onPrevStep={prevStep}
+              onGoToStep={goToStep}
+              onSave={saveExercise}
+              onCancel={handleBack}
+            />
+          )}
+        </m.div>
+      </AnimatePresence>
     );
   };
 
   return (
-    <Box>
+    <Box sx={{ minHeight: '100vh' }}>
       <CreationLayout
         mode={selectedMode || 'manual'}
         title={getTitle()}
         subtitle={getSubtitle()}
         breadcrumbs={breadcrumbs}
-        progress={selectedMode ? ((currentStep + 1) / totalSteps) * 100 : undefined}
+        progress={selectedMode ? progressPercentage : undefined}
         showProgress={!!selectedMode}
+        hasUnsavedChanges={hasUnsavedChanges}
+        errors={errors}
+        warnings={warnings}
         actions={{
           onBack: handleBack,
-          onPreview: createdExercise ? handlePreview : undefined,
+          onPreview: formData.questions.length > 0 || createdExercise ? handlePreview : undefined,
+          onSave: selectedMode && isLastStep ? saveExercise : undefined,
           onCancel: navigateToExerciseList,
-          canSave: !!createdExercise,
+          isSaving,
+          canSave: canGoNext && !Object.keys(errors).length,
         }}
       >
-        {renderContent()}
+        <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
       </CreationLayout>
 
       {/* Mode Selector Dialog */}
@@ -340,6 +491,28 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
         onEdit={handleEditFromPreview}
         onSave={handleSaveFromPreview}
       />
+
+      {/* Enhanced Notification System */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        TransitionComponent={Fade}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          variant="filled"
+          sx={{
+            minWidth: 300,
+            borderRadius: 2,
+            boxShadow: (theme) => theme.customShadows?.z16,
+          }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

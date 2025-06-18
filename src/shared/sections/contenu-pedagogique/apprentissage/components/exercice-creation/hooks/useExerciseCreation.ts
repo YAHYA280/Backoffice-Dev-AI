@@ -56,7 +56,6 @@ export const useExerciseCreation = ({
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // eslint-disable-next-line default-case
     switch (currentStep) {
       case 0:
         if (!formData.title.trim()) newErrors.title = 'Le titre est obligatoire';
