@@ -151,9 +151,9 @@ const fetchExercicesAPI = async (
 
   // Simulate pagination
   const page = params.page || 1;
-  const limit = params.limit || 10;
+  const size = params.limit || 10;
   const total = filteredData.length;
-  const paginatedData = filteredData.slice((page - 1) * limit, page * limit);
+  const paginatedData = filteredData.slice((page - 1) * size, page * size);
 
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 800));
@@ -162,7 +162,7 @@ const fetchExercicesAPI = async (
     data: paginatedData,
     pagination: {
       page,
-      limit,
+      size,
       total,
     },
     success: true,

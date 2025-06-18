@@ -23,7 +23,7 @@ import {
 import { DIFFICULTE_OPTIONS } from '../../types';
 
 const schema = z.object({
-  nom: z.string().min(1, 'Le nom est requis'),
+  name: z.string().min(1, 'Le nom est requis'),
   description: z.string().min(1, 'La description est requise'),
   ordre: z
     .number()
@@ -35,7 +35,7 @@ const schema = z.object({
         .regex(/^\d+$/, "L'ordre doit être un nombre")
         .transform((val) => parseInt(val, 10))
     ),
-  difficulte: z.string().min(1, 'La difficulté est requise'),
+  difficulty: z.string().min(1, 'La difficulté est requise'),
 });
 
 type ChapitreFormData = z.infer<typeof schema>;
@@ -45,19 +45,16 @@ interface ChapitreFormProps {
   onSubmit: (data: ChapitreFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  isEditMode?: boolean;
   matiereId: string;
 }
 
 export const ChapitreForm = ({
-  initialValues = {
-    nom: '',
-    description: '',
-    ordre: 1,
-    difficulte: 'Moyen',
-  },
+  initialValues,
   onSubmit,
   onCancel,
   isSubmitting = false,
+  isEditMode = false,
   matiereId,
 }: ChapitreFormProps) => {
   const {
@@ -92,15 +89,15 @@ export const ChapitreForm = ({
 
         <Grid item xs={12} sm={9}>
           <Controller
-            name="nom"
+            name="name"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
                 label="Nom du chapitre"
                 fullWidth
-                error={!!errors.nom}
-                helperText={errors.nom?.message}
+                error={!!errors.name}
+                helperText={errors.name?.message}
                 placeholder="Ex: Grammaire"
               />
             )}
@@ -128,10 +125,10 @@ export const ChapitreForm = ({
 
         <Grid item xs={12}>
           <Controller
-            name="difficulte"
+            name="difficulty"
             control={control}
             render={({ field }) => (
-              <FormControl fullWidth error={!!errors.difficulte}>
+              <FormControl fullWidth error={!!errors.difficulty}>
                 <InputLabel>Difficulté</InputLabel>
                 <Select
                   {...field}
@@ -163,8 +160,8 @@ export const ChapitreForm = ({
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.difficulte ? (
-                  <FormHelperText>{errors.difficulte.message}</FormHelperText>
+                {errors.difficulty ? (
+                  <FormHelperText>{errors.difficulty.message}</FormHelperText>
                 ) : (
                   <></>
                 )}
@@ -185,7 +182,7 @@ export const ChapitreForm = ({
               disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
             >
-              {initialValues.nom ? 'Modifier' : 'Ajouter'}
+              {isEditMode ? 'Modifier' : 'Ajouter'}
             </Button>
           </Stack>
         </Grid>

@@ -55,7 +55,7 @@ export interface Exercice {
 
 export interface Pagination {
   page: number;
-  limit: number;
+  size: number;
   total: number;
 }
 
@@ -99,9 +99,9 @@ export interface ApiResponse<T> {
 
 // Adding the missing constants
 export const DIFFICULTE_OPTIONS = [
-  { value: 'Facile', label: 'Facile', color: '#2e7d32', bgColor: '#C8E6C9' },
-  { value: 'Moyen', label: 'Moyen', color: '#e65100', bgColor: '#FFECB3' },
-  { value: 'Difficile', label: 'Difficile', color: '#c62828', bgColor: '#EF9A9A' },
+  { value: 'EASY', label: 'Facile', color: '#2e7d32', bgColor: '#C8E6C9' },
+  { value: 'MEDIUM', label: 'Moyen', color: '#e65100', bgColor: '#FFECB3' },
+  { value: 'HARD', label: 'Difficile', color: '#c62828', bgColor: '#EF9A9A' },
 ];
 
 export const STATUT_OPTIONS = [
@@ -112,7 +112,7 @@ export const STATUT_OPTIONS = [
 
 export const DEFAULT_PAGINATION = {
   page: 1,
-  limit: 10,
+  size: 10,
   total: 0,
 };
 

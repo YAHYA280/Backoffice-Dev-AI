@@ -1,5 +1,7 @@
 'use client';
 
+import type { Chapter } from 'src/types/chapter';
+
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -31,12 +33,11 @@ import { varFade } from 'src/shared/components/animate/variants/fade';
 
 import { DIFFICULTE_OPTIONS } from '../../types';
 
-import type { Chapitre } from '../../types';
 
 interface ChapitreDetailDrawerProps {
   open: boolean;
   onClose: () => void;
-  chapitre: Chapitre;
+  chapitre: Chapter;
   onViewExercices?: () => void;
 }
 
@@ -49,7 +50,7 @@ const ChapitreDetailDrawer = ({
   const theme = useTheme();
 
   const difficulteOption =
-    DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulte) ||
+    DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulty) ||
     DIFFICULTE_OPTIONS[0];
 
   return (
@@ -108,12 +109,12 @@ const ChapitreDetailDrawer = ({
               fontSize: '1.5rem',
             }}
           >
-            {chapitre.ordre}
+            {chapitre.order}
           </Avatar>
 
           <Box>
             <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
-              {chapitre.nom}
+              {chapitre.name}
             </Typography>
 
             <Stack direction="row" spacing={1} alignItems="center">
@@ -185,7 +186,8 @@ const ChapitreDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {chapitre.exercicesCount || 0}
+              {/* {chapitre.exercicesCount || 0} */}
+              {0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Exercices
@@ -212,7 +214,8 @@ const ChapitreDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {chapitre.competencesCount || 4}
+              {/* {chapitre.competencesCount || 4} */}
+              {0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Compétences
@@ -256,7 +259,7 @@ const ChapitreDetailDrawer = ({
                       }}
                     >
                       <Typography variant="body2" fontWeight="bold">
-                        {chapitre.ordre}
+                        {chapitre.order}
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
@@ -266,7 +269,7 @@ const ChapitreDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    Chapitre {chapitre.ordre}
+                    Chapitre {chapitre.order}
                   </Typography>
                 }
               />
@@ -302,7 +305,8 @@ const ChapitreDetailDrawer = ({
                 }
                 secondary={
                   <Typography variant="body1" sx={{ mt: 0.5, ml: 6 }}>
-                    {chapitre.dureeEstimee || '3h30'}
+                    {/* {chapitre.dureeEstimee || '3h30'} */}
+                    {0}
                   </Typography>
                 }
               />

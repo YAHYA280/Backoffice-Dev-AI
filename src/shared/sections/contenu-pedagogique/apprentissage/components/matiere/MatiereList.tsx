@@ -1,3 +1,5 @@
+import type { Subject, SubjectList, SubjectPageFilterParams } from 'src/types/subject';
+
 import { m } from 'framer-motion';
 import React, { useRef, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -57,8 +59,8 @@ import { ColumnSelector } from '../filters/ColumnSelector';
 import { TableSkeletonLoader } from '../common/TableSkeletonLoader';
 import { AdvancedExportDropdown } from '../export/AdvancedExportDropdown ';
 
+import type { Pagination } from '../../types';
 import type { ColumnOption } from '../filters/ColumnSelector';
-import type { Matiere, Pagination, FilterParams } from '../../types';
 import type { ActiveFilter, FilterOption } from '../filters/FilterDropdown';
 
 interface TableColumn {
@@ -140,7 +142,7 @@ const FILTER_OPTIONS: FilterOption[] = [
   },
 ];
 
-function applySingleFilter(matiere: Matiere, filter: ActiveFilter, filterOption: FilterOption) {
+function applySingleFilter(matiere: Subject, filter: ActiveFilter, filterOption: FilterOption) {
   const { field, operator, value } = filter;
   if (!value) return true;
   const fieldVal = (matiere as any)[field];
@@ -447,23 +449,23 @@ interface BreadcrumbProps {
 }
 
 interface MatiereListProps {
-  matieres: Matiere[];
+  matieres: SubjectList[];
   loading: boolean;
   pagination: Pagination;
-  filters: FilterParams;
+  filters: SubjectPageFilterParams;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
   onSearchChange: (searchTerm: string) => void;
   onColumnFilterChange?: (columnId: string, value: string) => void;
   onFilterChange?: (filters: ActiveFilter[]) => void;
   onColumnChange?: (columns: string[]) => void;
-  onEditClick: (matiere: Matiere) => void;
-  onDeleteClick: (matiere: Matiere) => void;
-  onViewClick: (matiere: Matiere) => void;
+  onEditClick: (matiere: Subject) => void;
+  onDeleteClick: (matiere: Subject) => void;
+  onViewClick: (matiere: Subject) => void;
   onDeleteRows?: (selectedRows: string[]) => void;
-  onViewChapitres: (matiere: Matiere) => void;
+  onViewChapitres: (matiere: Subject) => void;
   onAddClick?: () => void;
-  onToggleActive?: (matiere: Matiere, active: boolean) => void;
+  onToggleActive?: (matiere: Subject, active: boolean) => void;
   breadcrumbs?: BreadcrumbProps;
 }
 
@@ -510,7 +512,7 @@ export const MatiereList = ({
         data = data.filter((matiere) => applySingleFilter(matiere, filter, filterOption));
       }
     });
-    Object.entries(columnFilters).forEach(([colId, val]) => {
+    /* Object.entries(columnFilters).forEach(([colId, val]) => {
       if (val) {
         data = data.filter((matiere) => {
           const fieldVal = (matiere as any)[colId];
@@ -518,14 +520,14 @@ export const MatiereList = ({
           return String(fieldVal).toLowerCase().includes(String(val).toLowerCase());
         });
       }
-    });
+    }); */
     return data;
-  }, [matieres, activeFilters, columnFilters]);
+  }, [matieres, activeFilters]);
 
   const table = useTable({
-    defaultRowsPerPage: pagination.limit,
-    defaultCurrentPage: pagination.page - 1,
-    defaultOrderBy: 'nom',
+    defaultRowsPerPage: pagination.size,
+    defaultCurrentPage: pagination.page,
+    defaultOrderBy: 'createdAt',
   });
 
   const handleExport = (format: string, options?: any) => {
@@ -578,7 +580,7 @@ export const MatiereList = ({
     onFilterChange?.([]);
     setColumnFilters({ nom: '', description: '', chapitresCount: '', dateCreated: '' });
     Object.keys(columnFilters).forEach((colId) => onColumnFilterChange?.(colId, ''));
-    onPageChange(1);
+    onPageChange(0);
     onLimitChange(10);
   };
 
@@ -587,7 +589,7 @@ export const MatiereList = ({
     [visibleColumns]
   );
 
-  const notFound = !filteredMatieres.length && !loading;
+  const notFound = !matieres.length && !loading;
 
   const renderTableHeader = () => (
     <TableHead
@@ -616,16 +618,12 @@ export const MatiereList = ({
           }}
         >
           <Checkbox
-            indeterminate={
-              table.selected.length > 0 && table.selected.length < filteredMatieres.length
-            }
-            checked={
-              filteredMatieres.length > 0 && table.selected.length === filteredMatieres.length
-            }
+            indeterminate={table.selected.length > 0 && table.selected.length < matieres.length}
+            checked={matieres.length > 0 && table.selected.length === matieres.length}
             onChange={(e) =>
               table.onSelectAllRows(
                 e.target.checked,
-                filteredMatieres.map((row) => row.id)
+                matieres.map((row) => row.id)
               )
             }
             size={table.dense ? 'small' : 'medium'}
@@ -788,7 +786,7 @@ export const MatiereList = ({
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChangeLocal}
                 buttonText="Filtres"
-                icon={<FontAwesomeIcon icon={faFilter} size='sm'/>}
+                icon={<FontAwesomeIcon icon={faFilter} size="sm" />}
               />
               <Tooltip title="Réinitialiser" arrow>
                 <IconButton
@@ -800,7 +798,7 @@ export const MatiereList = ({
                     '&:hover': { transform: 'translateY(-2px)' },
                   }}
                 >
-                  <FontAwesomeIcon icon={faSyncAlt} size='sm'/>
+                  <FontAwesomeIcon icon={faSyncAlt} size="sm" />
                 </IconButton>
               </Tooltip>
               <AdvancedExportDropdown
@@ -817,11 +815,11 @@ export const MatiereList = ({
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
-              rowCount={filteredMatieres.length}
+              rowCount={matieres.length}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  filteredMatieres.map((row) => row.id)
+                  matieres.map((row) => row.id)
                 )
               }
               action={
@@ -865,7 +863,7 @@ export const MatiereList = ({
                     {loading ? (
                       <TableSkeletonLoader rows={5} columns={visibleTableHead.length + 1} />
                     ) : (
-                      filteredMatieres.map((matiere) => (
+                      matieres.map((matiere) => (
                         <MatiereItem
                           key={matiere.id}
                           matiere={matiere}
@@ -880,11 +878,12 @@ export const MatiereList = ({
                         />
                       ))
                     )}
+                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
+
                     <TableEmptyRows
                       height={table.dense ? 52 : 72}
-                      emptyRows={emptyRows(table.page, table.rowsPerPage, filteredMatieres.length)}
+                      emptyRows={emptyRows(table.page, table.rowsPerPage, matieres.length)}
                     />
-                    {notFound && <TableNoData notFound sx={{ py: 10 }} />}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -893,16 +892,12 @@ export const MatiereList = ({
 
           <TablePaginationCustom
             count={pagination.total}
-            page={table.page}
-            rowsPerPage={table.rowsPerPage}
-            onPageChange={(e, newPage) => {
-              table.onChangePage(e, newPage);
-              onPageChange(newPage + 1);
-            }}
+            page={pagination.page}
+            rowsPerPage={pagination.size}
+            onPageChange={(_, newPage) => onPageChange(newPage)}
             onRowsPerPageChange={(e) => onLimitChange(parseInt(e.target.value, 10))}
             dense={table.dense}
             onChangeDense={table.onChangeDense}
-            rowsPerPageOptions={[5, 10, 25, 50]}
           />
         </Card>
       </m.div>

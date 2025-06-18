@@ -1,5 +1,7 @@
 'use client';
 
+import type { Subject } from 'src/types/subject';
+
 import React, { useState } from 'react';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,26 +16,29 @@ import {
   DialogContentText,
 } from '@mui/material';
 
-import type { Matiere } from '../../types';
+import { useSubjectStore } from 'src/shared/api/stores/subjectStore';
 
 interface MatiereDeleteDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  matiere: Matiere;
+  matiere: Subject;
 }
 
 const MatiereDeleteDialog = ({ open, onClose, onSubmit, matiere }: MatiereDeleteDialogProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const deleteSubject = useSubjectStore(state => state.deleteSubject);
+
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       //  API call to delete
-
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await deleteSubject(matiere.id);
 
       onSubmit();
+      onClose();
     } catch (error) {
       console.error('Error deleting matiere:', error);
     } finally {
@@ -56,7 +61,7 @@ const MatiereDeleteDialog = ({ open, onClose, onSubmit, matiere }: MatiereDelete
       <DialogTitle sx={{ pb: 2 }}>Confirmer la suppression</DialogTitle>
       <DialogContent sx={{ pb: 3 }}>
         <DialogContentText>
-          Êtes-vous sûr de vouloir supprimer la matière <strong>&quot; {matiere.nom} &quot;</strong>{' '}
+          Êtes-vous sûr de vouloir supprimer la matière <strong>&quot; {matiere.name} &quot;</strong>{' '}
           ? Cette action supprimera également tous les chapitres et exercices associés à cette
           matière.
         </DialogContentText>

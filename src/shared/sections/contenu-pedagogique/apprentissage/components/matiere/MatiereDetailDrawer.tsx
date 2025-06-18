@@ -1,7 +1,11 @@
 'use client';
 
+import type { Subject, SubjectList } from 'src/types/subject';
+
 import React from 'react';
 import { m } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook,
@@ -30,18 +34,18 @@ import {
   ListItemText,
 } from '@mui/material';
 
-import { fDate } from 'src/utils/format-time';
-
 import { varFade } from 'src/shared/components/animate/variants/fade';
-
-import type { Matiere } from '../../types';
 
 interface MatiereDetailDrawerProps {
   open: boolean;
   onClose: () => void;
-  matiere: Matiere;
+  matiere: SubjectList;
   onViewChapitres?: () => void;
-  onToggleActive?: (matiere: Matiere, active: boolean) => void;
+  onToggleActive?: (matiere: Subject, active: boolean) => void;
+}
+
+export function fDate(date: Date | string | number, newFormat = 'dd MMMM yyyy') {
+  return format(new Date(date), newFormat, { locale: fr });
 }
 
 const MatiereDetailDrawer = ({
@@ -53,8 +57,8 @@ const MatiereDetailDrawer = ({
 }: MatiereDetailDrawerProps) => {
   const theme = useTheme();
 
-  const formattedDate = matiere.dateCreated ? fDate(matiere.dateCreated) : 'Non définie';
-  const formattedUpdateDate = matiere.lastUpdated ? fDate(matiere.lastUpdated) : 'Non modifiée';
+  const formattedDate = matiere.createdAt ? fDate(matiere.createdAt) : 'Non définie';
+  const formattedUpdateDate = matiere.updatedAt ? fDate(matiere.updatedAt) : 'Non modifiée';
 
   const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (onToggleActive) {
@@ -111,22 +115,22 @@ const MatiereDetailDrawer = ({
             sx={{
               width: 64,
               height: 64,
-              bgcolor: matiere.couleur,
+              bgcolor: matiere.color || 'primary.main',
               color: 'white',
               boxShadow: theme.customShadows?.z8,
             }}
           >
-            {matiere.icon}
+            {matiere.name?.charAt(0).toUpperCase()}
           </Avatar>
 
           <Box>
             <Typography variant="h5" fontWeight="fontWeightBold" gutterBottom>
-              {matiere.nom}
+              {matiere.name}
             </Typography>
 
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip
-                label={`Niveau: ${matiere.niveauId}`}
+                label={`Niveau: ${matiere.levelId}`}
                 size="small"
                 sx={{
                   bgcolor: alpha('#fff', 0.2),
@@ -215,7 +219,7 @@ const MatiereDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {matiere.chapitresCount || 0}
+              {matiere.chaptersCount || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Chapitres
@@ -242,7 +246,8 @@ const MatiereDetailDrawer = ({
               }}
             />
             <Typography variant="h5" color="text.primary">
-              {matiere.exercicesCount || 22}
+              {/* {matiere.exercicesCount || 22} */}
+              {0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Exercices

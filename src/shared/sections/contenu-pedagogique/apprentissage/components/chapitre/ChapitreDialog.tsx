@@ -1,38 +1,54 @@
 'use client';
 
+import type { Chapter, ChapterRequest } from 'src/types/chapter';
+
 import React, { useState } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Dialog, Typography, IconButton, DialogTitle, DialogContent } from '@mui/material';
 
-import { ChapitreForm } from './ChapitreForm';
+import { useChapterStore } from 'src/shared/api/stores/chapterStore';
 
-import type { Chapitre } from '../../types';
+import { ChapitreForm } from './ChapitreForm';
 
 interface ChapitreDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  chapitre?: Chapitre;
+  onSubmit: (data: ChapterRequest) => void;
+  chapitre?: Chapter;
   matiereId: string;
 }
 
 const ChapitreDialog = ({ open, onClose, onSubmit, chapitre, matiereId }: ChapitreDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const addChapter = useChapterStore((state) => state.addChapter);
+  const updateChapter = useChapterStore((state) => state.updateChapter);
+
   const isEditMode = !!chapitre;
   const title = isEditMode ? 'Modifier un chapitre' : 'Ajouter un chapitre';
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { name: string; description: string; ordre: number; difficulty: string; }) => {
     setIsSubmitting(true);
     try {
-      //  API call to save/update data
+      // Map form data to ChapterRequest
+      const chapterRequest: ChapterRequest = {
+        name: data.name,
+        description: data.description,
+        order: data.ordre,
+        difficulty: data.difficulty as ChapterRequest['difficulty'],
+        subjectId: matiereId,
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      if (isEditMode && chapitre) {
+        await updateChapter(chapitre.id, chapterRequest);
+      } else {
+        await addChapter(chapterRequest);
+      }
 
-      onSubmit(data);
+      onSubmit(chapterRequest);
+      onClose();
     } catch (error) {
       console.error('Error saving chapitre:', error);
     } finally {
@@ -59,10 +75,25 @@ const ChapitreDialog = ({ open, onClose, onSubmit, chapitre, matiereId }: Chapit
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <ChapitreForm
-          initialValues={chapitre}
+          initialValues={
+            chapitre
+              ? {
+                  name: chapitre.name,
+                  description: chapitre.description,
+                  ordre: chapitre.order,
+                  difficulty: chapitre.difficulty,
+                }
+              : {
+                  name: '',
+                  description: '',
+                  ordre: 1,
+                  difficulty: 'MEDIUM',
+                }
+          }
           onSubmit={handleSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}
+          isEditMode={!!chapitre}
           matiereId={matiereId}
         />
       </DialogContent>

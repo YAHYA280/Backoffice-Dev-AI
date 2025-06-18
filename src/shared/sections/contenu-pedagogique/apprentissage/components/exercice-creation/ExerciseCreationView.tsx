@@ -3,7 +3,9 @@
 'use client';
 
 import { m } from 'framer-motion';
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from '@mui/material';
@@ -46,11 +48,14 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
   // États principaux
   const [selectedMode, setSelectedMode] = useState<CreationMode | null>(initialMode || null);
   const [createdExercise, setCreatedExercise] = useState<Exercise | null>(null);
+
   const [isEditing] = useState(!!exerciseId);
+
 
   // États des dialogs
   const modeSelector = useBoolean(!initialMode && !exerciseId);
   const preview = useBoolean();
+
 
   // Paramètres depuis l'URL - memoized to prevent re-renders
   const urlParams = useMemo(
@@ -156,6 +161,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       },
     ];
 
+
     if (urlParams.niveauId && urlParams.niveauNom) {
       breadcrumbs.push({
         label: urlParams.niveauNom,
@@ -164,11 +170,13 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
             view: 'matieres',
             niveauId: urlParams.niveauId,
             niveauNom: urlParams.niveauNom,
+
           });
           router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
         },
       });
     }
+
 
     if (urlParams.matiereId && urlParams.matiereNom) {
       breadcrumbs.push({
@@ -180,15 +188,18 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
             matiereNom: urlParams.matiereNom,
             niveauId: urlParams.niveauId || '',
             niveauNom: urlParams.niveauNom || '',
+
           });
           router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
         },
       });
     }
 
+
     if (urlParams.chapitreId && urlParams.chapitreNom) {
       breadcrumbs.push({
         label: urlParams.chapitreNom,
+
         onClick: handleCancel,
       });
     }
@@ -199,7 +210,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     });
 
     return breadcrumbs;
+
   }, [router, urlParams, isEditing, handleCancel]);
+
 
   const getTitle = useCallback(() => {
     if (isEditing) {
@@ -231,7 +244,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     if (selectedMode === 'ai') {
       return (
         <AiForm
+
           chapitreId={urlParams.chapitreId}
+
           onSuccess={handleSuccess}
           onCancel={handleBack}
           onError={handleError}
@@ -241,13 +256,17 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
 
     return (
       <ManualForm
+
         chapitreId={urlParams.chapitreId}
+
         onSuccess={handleSuccess}
         onCancel={handleBack}
         onError={handleError}
       />
     );
+
   }, [selectedMode, urlParams.chapitreId, handleSuccess, handleBack, handleError]);
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -342,6 +361,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
                     📍 Contexte de création
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
+
                     <strong>Chapitre :</strong> {urlParams.chapitreNom || 'Non défini'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -349,6 +369,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     <strong>Niveau :</strong> {urlParams.niveauNom || 'Non défini'}
+
                   </Typography>
                 </Box>
               </Box>

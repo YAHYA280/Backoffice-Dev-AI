@@ -1,5 +1,7 @@
 'use client';
 
+import type{ Chapter, ChapterList } from 'src/types/chapter';
+
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -27,18 +29,18 @@ import { usePopover, CustomPopover } from 'src/shared/components/custom-popover'
 
 import { DIFFICULTE_OPTIONS } from '../../types';
 
-import type { Chapitre } from '../../types';
 
 interface ChapitreItemProps {
-  chapitre: Chapitre;
+  chapitre: ChapterList;
   selected: boolean;
   onSelectRow: () => void;
-  onEditClick: () => void;
-  onDeleteClick: () => void;
-  onViewClick: () => void;
-  onViewExercices: () => void;
-  onToggleActive?: (chapitre: Chapitre, active: boolean) => void;
+  onEditClick: (chapitre: Chapter) => void;
+  onDeleteClick: (chapitre?: Chapter) => void;
+  onViewClick: (chapitre: Chapter) => void;
+  onViewExercices: (chapitre: Chapter) => void;
+  onToggleActive?: (chapitre: Chapter, active: boolean) => void;
   visibleColumns?: string[];
+
 }
 
 const ChapitreItem = ({
@@ -55,7 +57,7 @@ const ChapitreItem = ({
   const popover = usePopover();
 
   const difficulteOption =
-    DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulte) ||
+    DIFFICULTE_OPTIONS.find((option) => option.value === chapitre.difficulty) ||
     DIFFICULTE_OPTIONS[0];
 
   const handleToggleActive = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +74,7 @@ const ChapitreItem = ({
         variants={varFade().inUp}
         hover
         selected={selected}
-        onClick={onViewExercices}
+        onClick={() => onViewExercices(chapitre)}
         sx={{
           cursor: 'pointer',
           transition: (theme) => theme.transitions.create(['background-color']),
@@ -100,7 +102,7 @@ const ChapitreItem = ({
                 margin: '0 auto',
               }}
             >
-              {chapitre.ordre}
+              {chapitre.order}
             </Avatar>
           </TableCell>
         )}
@@ -112,7 +114,7 @@ const ChapitreItem = ({
               color="text.primary"
               onClick={(e) => {
                 e.stopPropagation();
-                onViewClick();
+                onViewClick(chapitre);
               }}
               sx={{
                 textDecoration: 'none',
@@ -125,7 +127,7 @@ const ChapitreItem = ({
               }}
               noWrap
             >
-              {chapitre.nom}
+              {chapitre.name}
             </Link>
           </TableCell>
         )}
@@ -173,7 +175,8 @@ const ChapitreItem = ({
                 fontWeight: 'fontWeightMedium',
               }}
             >
-              {chapitre.exercicesCount || 0}
+              {/* {chapitre.exercicesCount || 0} */}
+              {0}
             </Typography>
           </TableCell>
         ) : (
@@ -187,7 +190,7 @@ const ChapitreItem = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onViewClick();
+                  onViewClick(chapitre);
                 }}
                 sx={{
                   transition: (theme) => theme.transitions.create(['background-color']),
@@ -206,7 +209,7 @@ const ChapitreItem = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEditClick();
+                  onEditClick(chapitre);
                 }}
                 sx={{
                   transition: (theme) => theme.transitions.create(['background-color']),
@@ -225,7 +228,7 @@ const ChapitreItem = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDeleteClick();
+                  onDeleteClick(chapitre);
                 }}
                 sx={{
                   transition: (theme) => theme.transitions.create(['background-color']),
@@ -268,7 +271,7 @@ const ChapitreItem = ({
         <MenuItem
           onClick={() => {
             popover.onClose();
-            onViewClick();
+            onViewClick(chapitre);
           }}
           sx={{
             typography: 'body2',
@@ -298,7 +301,7 @@ const ChapitreItem = ({
         <MenuItem
           onClick={() => {
             popover.onClose();
-            onViewExercices();
+            onViewExercices(chapitre);
           }}
           sx={{
             typography: 'body2',
@@ -328,7 +331,7 @@ const ChapitreItem = ({
         <MenuItem
           onClick={() => {
             popover.onClose();
-            onEditClick();
+            onEditClick(chapitre);
           }}
           sx={{
             typography: 'body2',
@@ -358,7 +361,7 @@ const ChapitreItem = ({
         <MenuItem
           onClick={() => {
             popover.onClose();
-            onDeleteClick();
+            onDeleteClick(chapitre);
           }}
           sx={{
             color: 'error.main',

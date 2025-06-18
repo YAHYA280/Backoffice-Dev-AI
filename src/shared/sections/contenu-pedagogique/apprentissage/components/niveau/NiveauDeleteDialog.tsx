@@ -1,5 +1,7 @@
 'use client';
 
+import type { Level } from 'src/types/level';
+
 import { m } from 'framer-motion';
 import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -20,15 +22,15 @@ import {
   DialogContentText,
 } from '@mui/material';
 
-import { varFade } from 'src/shared/components/animate/variants/fade';
+import { useLevelStore } from 'src/shared/api/stores/levelStore';
 
-import type { Niveau } from '../../types';
+import { varFade } from 'src/shared/components/animate/variants/fade';
 
 interface NiveauDeleteDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  niveau: Niveau;
+  niveau: Level;
   directDelete?: boolean;
 }
 
@@ -42,22 +44,24 @@ const NiveauDeleteDialog = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const theme = useTheme();
 
+  const deleteLevel = useLevelStore(state => state.deleteLevel);
+
+
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
+
     try {
       // API call to delete
-      // await deleteNiveau(niveau.id);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await deleteLevel(niveau.id);
 
       onSubmit();
+      onClose();
     } catch (error) {
       console.error('Error deleting niveau:', error);
     } finally {
       setIsDeleting(false);
     }
-  }, [onSubmit]);
+  }, [deleteLevel, niveau.id, onSubmit, onClose]);
 
   useEffect(() => {
     if (open && directDelete) {
@@ -104,7 +108,7 @@ const NiveauDeleteDialog = ({
 
       <DialogContent sx={{ pb: 3 }}>
         <DialogContentText sx={{ color: 'text.primary' }}>
-          Êtes-vous sûr de vouloir supprimer le niveau <strong>&quot;{niveau.nom}&quot;</strong> ?
+          Êtes-vous sûr de vouloir supprimer le niveau <strong>&quot;{niveau.name}&quot;</strong> ?
         </DialogContentText>
 
         <Box
@@ -122,19 +126,19 @@ const NiveauDeleteDialog = ({
             associés.
           </Typography>
 
-          {niveau.matieresCount && niveau.matieresCount > 0 && (
+          {niveau.subjectsCount && niveau.subjectsCount > 0 && (
             <Typography variant="body2" sx={{ mt: 1, fontWeight: 'fontWeightMedium' }}>
-              Ce niveau contient {niveau.matieresCount} matière{niveau.matieresCount > 1 ? 's' : ''}
+              Ce niveau contient {niveau.subjectsCount} matière{niveau.subjectsCount > 1 ? 's' : ''}
               .
             </Typography>
           )}
 
-          {niveau.exercicesCount && niveau.exercicesCount > 0 && (
+          {/* {niveau.exercicesCount && niveau.exercicesCount > 0 && (
             <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 'fontWeightMedium' }}>
               Ce niveau contient {niveau.exercicesCount} exercice
               {niveau.exercicesCount > 1 ? 's' : ''}.
             </Typography>
-          )}
+          )} */}
         </Box>
       </DialogContent>
 
