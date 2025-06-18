@@ -2,10 +2,9 @@
 
 'use client';
 
-import { m } from 'framer-motion';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faCheck, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faCheck, faRobot, faHandPaper } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -21,8 +20,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
-import { CREATION_MODES } from '../../constants/creation-constants';
 
 import type { CreationMode } from '../../types/exercise-types';
 
@@ -42,34 +39,41 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({
   const theme = useTheme();
   const [hoveredMode, setHoveredMode] = useState<CreationMode | null>(null);
 
+  const modes = [
+    {
+      id: 'manual' as CreationMode,
+      title: 'Création manuelle',
+      description: 'Contrôle total sur chaque aspect de votre exercice',
+      icon: faHandPaper,
+      color: '#1976D2',
+      gradient: 'linear-gradient(135deg, #1976D2 0%, #42A5F5 100%)',
+      features: [
+        'Contrôle complet du contenu',
+        'Éditeur riche intégré',
+        'Gestion avancée des questions',
+        'Ressources personnalisées',
+      ],
+      estimatedTime: '15-30 min',
+    },
+    {
+      id: 'ai' as CreationMode,
+      title: 'Génération IA',
+      description: "Laissez l'IA créer un exercice adapté à vos besoins",
+      icon: faRobot,
+      color: '#7B1FA2',
+      gradient: 'linear-gradient(135deg, #7B1FA2 0%, #AB47BC 100%)',
+      features: [
+        'Génération automatique',
+        'Questions adaptées au niveau',
+        'Contenu pédagogique optimisé',
+        'Gain de temps considérable',
+      ],
+      estimatedTime: '3-5 min',
+    },
+  ];
+
   const handleModeSelect = (mode: CreationMode) => {
     onModeSelect(mode);
-    onClose();
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.3,
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 },
-    hover: {
-      scale: 1.02,
-      y: -5,
-      transition: {
-        duration: 0.2,
-        ease: 'easeOut',
-      },
-    },
   };
 
   return (
@@ -119,207 +123,184 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ p: 4 }}>
-        <m.div variants={containerVariants} initial="hidden" animate="visible">
-          <Grid container spacing={3}>
-            {CREATION_MODES.map((mode) => (
-              <Grid item xs={12} md={6} key={mode.id}>
-                <m.div
-                  variants={cardVariants}
-                  whileHover="hover"
-                  onHoverStart={() => setHoveredMode(mode.id as CreationMode)}
-                  onHoverEnd={() => setHoveredMode(null)}
+        <Grid container spacing={3}>
+          {modes.map((mode) => (
+            <Grid item xs={12} md={6} key={mode.id}>
+              <Card
+                onClick={() => handleModeSelect(mode.id)}
+                onMouseEnter={() => setHoveredMode(mode.id)}
+                onMouseLeave={() => setHoveredMode(null)}
+                sx={{
+                  height: '100%',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  border:
+                    selectedMode === mode.id
+                      ? `2px solid ${theme.palette.primary.main}`
+                      : `2px solid transparent`,
+                  transition: 'all 0.3s ease',
+                  transform: hoveredMode === mode.id ? 'translateY(-4px)' : 'translateY(0)',
+                  boxShadow:
+                    hoveredMode === mode.id ? theme.customShadows?.z16 : theme.customShadows?.z8,
+                }}
+              >
+                {/* Gradient Background */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 120,
+                    background: mode.gradient,
+                    opacity: hoveredMode === mode.id ? 0.9 : 0.7,
+                    transition: 'opacity 0.3s ease',
+                  }}
+                />
+
+                {/* Main Icon */}
+                <Box
+                  sx={{
+                    position: 'relative',
+                    p: 3,
+                    textAlign: 'center',
+                    zIndex: 1,
+                  }}
                 >
-                  <Card
-                    onClick={() => handleModeSelect(mode.id as CreationMode)}
+                  <Box
                     sx={{
-                      height: '100%',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      border:
-                        selectedMode === mode.id
-                          ? `2px solid ${theme.palette.primary.main}`
-                          : `2px solid transparent`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        boxShadow: theme.customShadows?.z16,
-                      },
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 16px',
+                      color: 'white',
+                      fontSize: '2rem',
+                      transform: hoveredMode === mode.id ? 'scale(1.1)' : 'scale(1)',
+                      transition: 'transform 0.3s ease',
                     }}
                   >
-                    {/* Gradient d'arrière-plan animé */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 120,
-                        background: mode.gradient,
-                        opacity: hoveredMode === mode.id ? 0.9 : 0.7,
-                        transition: 'opacity 0.3s ease',
-                      }}
-                    />
+                    <FontAwesomeIcon icon={mode.icon} />
+                  </Box>
 
-                    {/* Icône principale */}
-                    <Box
-                      sx={{
-                        position: 'relative',
-                        p: 3,
-                        textAlign: 'center',
-                        zIndex: 1,
-                      }}
-                    >
+                  <Typography variant="h5" fontWeight="bold" color="white" gutterBottom>
+                    {mode.title}
+                  </Typography>
+
+                  <Typography variant="body2" color="rgba(255, 255, 255, 0.9)" sx={{ mb: 2 }}>
+                    {mode.description}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      borderRadius: 2,
+                      px: 2,
+                      py: 0.5,
+                      color: 'white',
+                    }}
+                  >
+                    <Typography variant="caption" fontWeight="medium">
+                      {mode.estimatedTime}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Features List */}
+                <Box sx={{ p: 3, pt: 0 }}>
+                  <Stack spacing={1.5}>
+                    {mode.features.map((feature, index) => (
                       <Box
+                        key={index}
                         sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 16px',
-                          color: 'white',
-                          fontSize: '2rem',
-                          transform: hoveredMode === mode.id ? 'scale(1.1)' : 'scale(1)',
-                          transition: 'transform 0.3s ease',
+                          gap: 1.5,
                         }}
-                      >
-                        <FontAwesomeIcon icon={mode.icon} />
-                      </Box>
-
-                      <Typography variant="h5" fontWeight="bold" color="white" gutterBottom>
-                        {mode.title}
-                      </Typography>
-
-                      <Typography variant="body2" color="rgba(255, 255, 255, 0.9)" sx={{ mb: 2 }}>
-                        {mode.description}
-                      </Typography>
-
-                      {/* Badge temps estimé */}
-                      <Box
-                        sx={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          borderRadius: 2,
-                          px: 2,
-                          py: 0.5,
-                          color: 'white',
-                        }}
-                      >
-                        <FontAwesomeIcon
-                          icon={faClock}
-                          style={{ marginRight: 8, fontSize: '0.9rem' }}
-                        />
-                        <Typography variant="caption" fontWeight="medium">
-                          {mode.estimatedTime}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Liste des fonctionnalités */}
-                    <Box sx={{ p: 3, pt: 0 }}>
-                      <Stack spacing={1.5}>
-                        {mode.features.map((feature, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1.5,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: '50%',
-                                backgroundColor: theme.palette.success.main,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                fontSize: '0.7rem',
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faCheck} />
-                            </Box>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ fontWeight: 500 }}
-                            >
-                              {feature}
-                            </Typography>
-                          </Box>
-                        ))}
-                      </Stack>
-
-                      {/* Bouton de sélection */}
-                      <Button
-                        fullWidth
-                        variant={selectedMode === mode.id ? 'contained' : 'outlined'}
-                        sx={{
-                          mt: 3,
-                          py: 1.5,
-                          fontWeight: 'bold',
-                          textTransform: 'none',
-                          borderRadius: 2,
-                          ...(selectedMode !== mode.id && {
-                            borderColor: mode.color,
-                            color: mode.color,
-                            '&:hover': {
-                              backgroundColor: mode.color,
-                              color: 'white',
-                              borderColor: mode.color,
-                            },
-                          }),
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleModeSelect(mode.id as CreationMode);
-                        }}
-                      >
-                        {selectedMode === mode.id ? 'Mode sélectionné' : 'Choisir ce mode'}
-                      </Button>
-                    </Box>
-
-                    {/* Indicateur de sélection */}
-                    {selectedMode === mode.id && (
-                      <m.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.1 }}
                       >
                         <Box
                           sx={{
-                            position: 'absolute',
-                            top: 16,
-                            right: 16,
-                            width: 32,
-                            height: 32,
+                            width: 20,
+                            height: 20,
                             borderRadius: '50%',
                             backgroundColor: theme.palette.success.main,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
-                            boxShadow: theme.customShadows?.z8,
-                            zIndex: 2,
+                            fontSize: '0.7rem',
                           }}
                         >
-                          <FontAwesomeIcon icon={faCheck} style={{ fontSize: '0.9rem' }} />
+                          <FontAwesomeIcon icon={faCheck} />
                         </Box>
-                      </m.div>
-                    )}
-                  </Card>
-                </m.div>
-              </Grid>
-            ))}
-          </Grid>
-        </m.div>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                          {feature}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+
+                  <Button
+                    fullWidth
+                    variant={selectedMode === mode.id ? 'contained' : 'outlined'}
+                    sx={{
+                      mt: 3,
+                      py: 1.5,
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      ...(selectedMode !== mode.id && {
+                        borderColor: mode.color,
+                        color: mode.color,
+                        '&:hover': {
+                          backgroundColor: mode.color,
+                          color: 'white',
+                          borderColor: mode.color,
+                        },
+                      }),
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleModeSelect(mode.id);
+                    }}
+                  >
+                    {selectedMode === mode.id ? 'Mode sélectionné' : 'Choisir ce mode'}
+                  </Button>
+                </Box>
+
+                {/* Selection Indicator */}
+                {selectedMode === mode.id && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      backgroundColor: theme.palette.success.main,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      boxShadow: theme.customShadows?.z8,
+                      zIndex: 2,
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCheck} style={{ fontSize: '0.9rem' }} />
+                  </Box>
+                )}
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 0 }}>

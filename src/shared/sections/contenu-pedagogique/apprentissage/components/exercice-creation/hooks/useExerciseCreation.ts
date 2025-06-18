@@ -1,6 +1,6 @@
 // src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/hooks/useExerciseCreation.ts
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import type { CreationMode, CreationFormData, Exercise } from '../types/exercise-types';
 import type {
@@ -9,7 +9,7 @@ import type {
   AiGenerationResponse,
   AiGeneratedQuestion,
 } from '../types/ai-types';
-import type { Question, QuestionType } from '../types/question-types';
+import type { Question } from '../types/question-types';
 
 interface UseExerciseCreationProps {
   initialMode?: CreationMode;
@@ -24,9 +24,18 @@ export const useExerciseCreation = ({
   onSuccess,
   onError,
 }: UseExerciseCreationProps) => {
-  // États principaux
-  const [mode, setMode] = useState<CreationMode>(initialMode);
+  // Simple state management without complex dependencies
+  const [mode] = useState<CreationMode>(initialMode);
   const [currentStep, setCurrentStep] = useState(0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Refs to prevent issues
+  const isMountedRef = useRef(true);
+
+  // Initial form data
   const [formData, setFormData] = useState<CreationFormData>({
     title: '',
     description: '',
@@ -48,88 +57,48 @@ export const useExerciseCreation = ({
     },
   });
 
-  // États pour la génération IA
+  // AI state
   const [aiState, setAiState] = useState<AiGenerationState>({
     status: 'idle',
     progress: 0,
     canCancel: false,
   });
 
-  // États UI
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Validation des étapes
+  // Simple validation function
   const validateStep = useCallback(
     (step: number): boolean => {
       const newErrors: Record<string, string> = {};
 
       switch (step) {
-        case 0: // Informations générales
+        case 0:
           if (!formData.title.trim()) {
             newErrors.title = 'Le titre est obligatoire';
-          } else if (formData.title.length < 5) {
-            newErrors.title = 'Le titre doit contenir au moins 5 caractères';
           }
-
           if (!formData.description.trim()) {
             newErrors.description = 'La description est obligatoire';
-          } else if (formData.description.length < 10) {
-            newErrors.description = 'La description doit contenir au moins 10 caractères';
-          }
-
-          if (!formData.subject.trim()) {
-            newErrors.subject = 'Le sujet est obligatoire';
           }
           break;
-
-        case 1: // Contenu/Configuration questions
-          if (mode === 'manual') {
-            if (!formData.content?.trim()) {
-              newErrors.content = 'Le contenu pédagogique est obligatoire';
-            } else if (formData.content.length < 50) {
-              newErrors.content = 'Le contenu doit contenir au moins 50 caractères';
-            }
-          } else {
-            if (!formData.aiConfig?.topic?.trim()) {
-              newErrors.topic = 'Le sujet est obligatoire';
-            }
-            if (!formData.aiConfig?.questionCount || formData.aiConfig.questionCount < 1) {
-              newErrors.questionCount = 'Veuillez spécifier le nombre de questions';
-            }
+        case 1:
+          if (mode === 'manual' && !formData.content?.trim()) {
+            newErrors.content = 'Le contenu est obligatoire';
           }
           break;
-
-        case 2: // Questions/Objectifs pédagogiques
-          if (mode === 'manual') {
-            if (formData.questions.length === 0) {
-              newErrors.questions = 'Au moins une question est requise';
-            }
-          } else if (!formData.aiConfig?.learningObjectives?.length) {
-            newErrors.learningObjectives = 'Au moins un objectif pédagogique est requis';
+        case 2:
+          if (mode === 'manual' && formData.questions.length === 0) {
+            newErrors.questions = 'Au moins une question est requise';
           }
           break;
-
-        case 3: // Configuration finale
-          if (formData.config.passingScore < 0 || formData.config.passingScore > 100) {
-            newErrors.passingScore = 'Le score de réussite doit être entre 0 et 100';
-          }
-          break;
-
         default:
-          // No validation needed for unknown steps
           break;
       }
 
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [formData, mode]
+    [formData.title, formData.description, formData.content, formData.questions.length, mode]
   );
 
-  // Helper function to convert AiGeneratedQuestion to proper Question type
+  // Helper function to convert AI questions
   const convertAiQuestionToQuestion = useCallback(
     (aiQuestion: AiGeneratedQuestion, index: number): Question => {
       const baseProps = {
@@ -155,14 +124,12 @@ export const useExerciseCreation = ({
             allowMultiple: false,
             randomizeOptions: false,
           };
-
         case 'true_false':
           return {
             ...baseProps,
             type: 'true_false',
             correctAnswer: aiQuestion.correctAnswer ?? false,
           };
-
         case 'short_answer':
           return {
             ...baseProps,
@@ -172,7 +139,6 @@ export const useExerciseCreation = ({
             exactMatch: false,
             maxLength: 100,
           };
-
         case 'long_answer':
           return {
             ...baseProps,
@@ -181,7 +147,6 @@ export const useExerciseCreation = ({
             maxLength: 1000,
             evaluationCriteria: [],
           };
-
         case 'fill_blanks':
           return {
             ...baseProps,
@@ -190,7 +155,6 @@ export const useExerciseCreation = ({
             blanks: aiQuestion.blanks || [],
             caseSensitive: false,
           };
-
         case 'matching':
           return {
             ...baseProps,
@@ -199,9 +163,7 @@ export const useExerciseCreation = ({
             rightItems: aiQuestion.rightItems || [],
             allowPartialCredit: true,
           };
-
         default:
-          // Default fallback to multiple choice
           return {
             ...baseProps,
             type: 'multiple_choice',
@@ -214,7 +176,7 @@ export const useExerciseCreation = ({
     []
   );
 
-  // Navigation entre les étapes
+  // Navigation functions
   const nextStep = useCallback(() => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => prev + 1);
@@ -229,12 +191,18 @@ export const useExerciseCreation = ({
     setCurrentStep(step);
   }, []);
 
-  // Mise à jour des données du formulaire
+  // Form data update function
   const updateFormData = useCallback((updates: Partial<CreationFormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+    if (!isMountedRef.current) return;
+
+    setFormData((prev) => {
+      const newData = { ...prev, ...updates };
+      return newData;
+    });
+
     setHasUnsavedChanges(true);
 
-    // Effacer les erreurs des champs mis à jour
+    // Clear errors for updated fields
     const updatedFields = Object.keys(updates);
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -245,7 +213,7 @@ export const useExerciseCreation = ({
     });
   }, []);
 
-  // Génération IA
+  // AI Generation function
   const generateWithAI = useCallback(
     async (request: AiGenerationRequest) => {
       try {
@@ -256,7 +224,7 @@ export const useExerciseCreation = ({
           currentStep: 'Initialisation...',
         });
 
-        // Simulation de l'API de génération IA
+        // Mock AI generation
         const steps = [
           'Analyse du contexte...',
           'Génération du contenu...',
@@ -266,11 +234,11 @@ export const useExerciseCreation = ({
         ];
 
         for (let i = 0; i < steps.length; i += 1) {
-          if (aiState.status === 'cancelled') break;
+          if (!isMountedRef.current) break;
 
           setAiState((prev) => ({
             ...prev,
-            progress: (i / steps.length) * 100,
+            progress: ((i + 1) / steps.length) * 100,
             currentStep: steps[i],
           }));
 
@@ -278,12 +246,12 @@ export const useExerciseCreation = ({
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
-        // Simulation d'une réponse IA
+        // Mock response
         const mockResponse: AiGenerationResponse = {
           success: true,
           data: {
             exercise: {
-              title: formData.aiConfig?.topic || 'Exercice généré',
+              title: request.config.topic || 'Exercice généré',
               description: 'Description générée automatiquement...',
               content: 'Contenu pédagogique généré...',
               tags: ['IA', 'généré'],
@@ -315,8 +283,7 @@ export const useExerciseCreation = ({
           },
         };
 
-        if (mockResponse.success && mockResponse.data) {
-          // Convert AI questions to proper Question types
+        if (mockResponse.success && mockResponse.data && isMountedRef.current) {
           const convertedQuestions = mockResponse.data.questions.map((q, index) =>
             convertAiQuestionToQuestion(q, index)
           );
@@ -338,40 +305,42 @@ export const useExerciseCreation = ({
           });
         }
       } catch (error) {
-        setAiState({
-          status: 'error',
-          progress: 0,
-          error: {
-            code: 'GENERATION_FAILED',
-            message: 'Erreur lors de la génération',
-            suggestions: ['Vérifiez votre connexion', 'Réessayez avec des paramètres différents'],
-          },
-          canCancel: false,
-        });
-        onError?.('Erreur lors de la génération IA');
+        if (isMountedRef.current) {
+          setAiState({
+            status: 'error',
+            progress: 0,
+            error: {
+              code: 'GENERATION_FAILED',
+              message: 'Erreur lors de la génération',
+              suggestions: ['Vérifiez votre connexion', 'Réessayez avec des paramètres différents'],
+            },
+            canCancel: false,
+          });
+          onError?.('Erreur lors de la génération IA');
+        }
       }
     },
-    [formData.aiConfig, updateFormData, onError, aiState.status, convertAiQuestionToQuestion]
+    [updateFormData, onError, convertAiQuestionToQuestion]
   );
 
-  // Annulation de la génération IA
+  // Cancel AI generation
   const cancelAiGeneration = useCallback(() => {
     setAiState((prev) => ({ ...prev, status: 'cancelled', canCancel: false }));
   }, []);
 
-  // Sauvegarde de l'exercice
+  // Save exercise
   const saveExercise = useCallback(async (): Promise<boolean> => {
     try {
       setIsSaving(true);
 
-      // Validation finale
-      const isValid = validateStep(currentStep);
-      if (!isValid) {
+      if (!validateStep(currentStep)) {
         return false;
       }
 
-      // Simulation de l'API de sauvegarde
+      // Mock save
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      if (!isMountedRef.current) return false;
 
       const savedExercise: Exercise = {
         id: `exercise_${Date.now()}`,
@@ -390,11 +359,13 @@ export const useExerciseCreation = ({
       onError?.('Erreur lors de la sauvegarde');
       return false;
     } finally {
-      setIsSaving(false);
+      if (isMountedRef.current) {
+        setIsSaving(false);
+      }
     }
   }, [formData, mode, currentStep, validateStep, onSuccess, onError]);
 
-  // Réinitialisation
+  // Reset function
   const reset = useCallback(() => {
     setCurrentStep(0);
     setFormData({
@@ -426,23 +397,8 @@ export const useExerciseCreation = ({
     setHasUnsavedChanges(false);
   }, [chapitreId]);
 
-  // Changement de mode
-  const changeMode = useCallback((newMode: CreationMode) => {
-    setMode(newMode);
-    setCurrentStep(0);
-    setErrors({});
-  }, []);
-
-  // Effet pour surveiller les changements
-  useEffect(() => {
-    const hasContent = Boolean(
-      formData.title || formData.description || formData.questions.length > 0
-    );
-    setHasUnsavedChanges(hasContent);
-  }, [formData]);
-
   return {
-    // États
+    // État
     mode,
     currentStep,
     formData,
@@ -453,7 +409,6 @@ export const useExerciseCreation = ({
     hasUnsavedChanges,
 
     // Actions
-    changeMode,
     nextStep,
     prevStep,
     goToStep,
@@ -467,7 +422,7 @@ export const useExerciseCreation = ({
     // Utilitaires
     canGoNext: validateStep(currentStep),
     canGoPrev: currentStep > 0,
-    isLastStep: currentStep === (mode === 'manual' ? 3 : 3),
+    isLastStep: currentStep === 3,
     completedSteps: currentStep,
     totalSteps: 4,
   };

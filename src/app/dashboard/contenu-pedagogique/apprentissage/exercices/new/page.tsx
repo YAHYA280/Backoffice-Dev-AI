@@ -3,21 +3,40 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 import ExerciseCreationView from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/ExerciseCreationView';
 
-export default function NewExercisePage() {
+function NewExerciseContent() {
   const searchParams = useSearchParams();
+
+  // Extract params once and memoize them
+  const params = {
+    chapitreId: searchParams.get('chapitreId') || '',
+    chapitreNom: searchParams.get('chapitreNom') || '',
+    matiereId: searchParams.get('matiereId') || '',
+    matiereNom: searchParams.get('matiereNom') || '',
+    niveauId: searchParams.get('niveauId') || '',
+    niveauNom: searchParams.get('niveauNom') || '',
+  };
 
   return (
     <ExerciseCreationView
-      chapitreId={searchParams.get('chapitreId') || undefined}
-      chapitreNom={searchParams.get('chapitreNom') || undefined}
-      matiereId={searchParams.get('matiereId') || undefined}
-      matiereNom={searchParams.get('matiereNom') || undefined}
-      niveauId={searchParams.get('niveauId') || undefined}
-      niveauNom={searchParams.get('niveauNom') || undefined}
+      chapitreId={params.chapitreId}
+      chapitreNom={params.chapitreNom}
+      matiereId={params.matiereId}
+      matiereNom={params.matiereNom}
+      niveauId={params.niveauId}
+      niveauNom={params.niveauNom}
       initialMode={undefined} // Let user choose mode
     />
+  );
+}
+
+export default function NewExercisePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewExerciseContent />
+    </Suspense>
   );
 }

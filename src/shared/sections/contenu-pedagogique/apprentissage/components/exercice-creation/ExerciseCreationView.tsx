@@ -3,8 +3,8 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from '@mui/material';
 
@@ -30,208 +30,186 @@ interface ExerciseCreationViewProps {
 }
 
 const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
-  chapitreId: initialChapitreId,
-  chapitreNom: initialChapitreNom,
-  matiereId: initialMatiereId,
-  matiereNom: initialMatiereNom,
-  niveauId: initialNiveauId,
-  niveauNom: initialNiveauNom,
+  chapitreId = '',
+  chapitreNom = '',
+  matiereId = '',
+  matiereNom = '',
+  niveauId = '',
+  niveauNom = '',
   exerciseId,
   initialMode,
 }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const theme = useTheme();
+  const hasNavigatedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
-  // États principaux
+  // Simple state without complex dependencies
   const [selectedMode, setSelectedMode] = useState<CreationMode | null>(initialMode || null);
   const [createdExercise, setCreatedExercise] = useState<Exercise | null>(null);
-  const [isEditing] = useState(!!exerciseId);
+  const isEditing = Boolean(exerciseId);
 
-  // États des dialogs
-  const modeSelector = useBoolean(!initialMode && !exerciseId);
-  const preview = useBoolean();
+  // Dialog states - initialize with simple boolean values
+  const [showModeSelector, setShowModeSelector] = useState(!initialMode && !exerciseId);
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Paramètres depuis l'URL - memoized to prevent re-renders
-  const urlParams = useMemo(
-    () => ({
-      chapitreId: initialChapitreId || searchParams.get('chapitreId') || '',
-      chapitreNom: initialChapitreNom || searchParams.get('chapitreNom') || '',
-      matiereId: initialMatiereId || searchParams.get('matiereId') || '',
-      matiereNom: initialMatiereNom || searchParams.get('matiereNom') || '',
-      niveauId: initialNiveauId || searchParams.get('niveauId') || '',
-      niveauNom: initialNiveauNom || searchParams.get('niveauNom') || '',
-    }),
-    [
-      initialChapitreId,
-      initialChapitreNom,
-      initialMatiereId,
-      initialMatiereNom,
-      initialNiveauId,
-      initialNiveauNom,
-      searchParams,
-    ]
-  );
+  // Simple navigation function without complex dependencies
+  const navigateToExerciseList = useCallback(() => {
+    if (hasNavigatedRef.current || !isMountedRef.current) return;
 
-  // Handler functions with stable dependencies
-  const handleCancel = useCallback(() => {
-    // Construire l'URL de retour
+    hasNavigatedRef.current = true;
+
     const params = new URLSearchParams();
-    if (urlParams.chapitreId) params.set('chapitreId', urlParams.chapitreId);
-    if (urlParams.chapitreNom) params.set('chapitreNom', urlParams.chapitreNom);
-    if (urlParams.matiereId) params.set('matiereId', urlParams.matiereId);
-    if (urlParams.matiereNom) params.set('matiereNom', urlParams.matiereNom);
-    if (urlParams.niveauId) params.set('niveauId', urlParams.niveauId);
-    if (urlParams.niveauNom) params.set('niveauNom', urlParams.niveauNom);
+    if (chapitreId) params.set('chapitreId', chapitreId);
+    if (chapitreNom) params.set('chapitreNom', chapitreNom);
+    if (matiereId) params.set('matiereId', matiereId);
+    if (matiereNom) params.set('matiereNom', matiereNom);
+    if (niveauId) params.set('niveauId', niveauId);
+    if (niveauNom) params.set('niveauNom', niveauNom);
     params.set('view', 'exercices');
 
     router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-  }, [router, urlParams]);
+  }, [router, chapitreId, chapitreNom, matiereId, matiereNom, niveauId, niveauNom]);
 
-  // Validation des paramètres requis
+  // Check for missing chapitreId only once on mount
   useEffect(() => {
-    if (!urlParams.chapitreId && !isEditing) {
+    if (!chapitreId && !isEditing && !hasNavigatedRef.current) {
       console.error("ChapitreId manquant pour la création d'exercice");
-      handleCancel();
+      navigateToExerciseList();
     }
-  }, [urlParams.chapitreId, handleCancel, isEditing]);
 
-  const handleModeSelect = useCallback(
-    (mode: CreationMode) => {
-      setSelectedMode(mode);
-      modeSelector.onFalse();
-    },
-    [modeSelector]
-  );
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []); // Empty dependency array - only run on mount
 
-  const handleSuccess = useCallback(
-    (exercise: Exercise) => {
-      setCreatedExercise(exercise);
-      preview.onTrue();
-    },
-    [preview]
-  );
+  // Simple event handlers
+  const handleModeSelect = useCallback((mode: CreationMode) => {
+    setSelectedMode(mode);
+    setShowModeSelector(false);
+  }, []);
+
+  const handleSuccess = useCallback((exercise: Exercise) => {
+    setCreatedExercise(exercise);
+    setShowPreview(true);
+  }, []);
 
   const handleError = useCallback((error: string) => {
     console.error('Erreur lors de la création:', error);
-    // Ici vous pourriez afficher une notification d'erreur
   }, []);
 
   const handleBack = useCallback(() => {
     if (selectedMode && !createdExercise) {
-      // Retour à la sélection de mode
       setSelectedMode(null);
-      modeSelector.onTrue();
+      setShowModeSelector(true);
     } else {
-      // Retour à la liste
-      handleCancel();
+      navigateToExerciseList();
     }
-  }, [selectedMode, createdExercise, modeSelector, handleCancel]);
+  }, [selectedMode, createdExercise, navigateToExerciseList]);
 
   const handlePreview = useCallback(() => {
     if (createdExercise) {
-      preview.onTrue();
+      setShowPreview(true);
     }
-  }, [createdExercise, preview]);
+  }, [createdExercise]);
 
   const handleEditFromPreview = useCallback(() => {
-    preview.onFalse();
-    // Rester sur le formulaire pour permettre les modifications
-  }, [preview]);
+    setShowPreview(false);
+  }, []);
 
   const handleSaveFromPreview = useCallback(() => {
-    // Sauvegarder et retourner à la liste
-    preview.onFalse();
-    handleCancel();
-  }, [preview, handleCancel]);
+    setShowPreview(false);
+    navigateToExerciseList();
+  }, [navigateToExerciseList]);
 
-  const getBreadcrumbs = useCallback(() => {
-    const breadcrumbs: Array<{
-      label: string;
-      onClick?: () => void;
-    }> = [
-      {
-        label: 'Niveaux',
-        onClick: () => router.push('/dashboard/contenu-pedagogique/apprentissage'),
-      },
-    ];
+  const handleOpenModeSelector = useCallback(() => {
+    setShowModeSelector(true);
+  }, []);
 
-    if (urlParams.niveauId && urlParams.niveauNom) {
-      breadcrumbs.push({
-        label: urlParams.niveauNom,
-        onClick: () => {
-          const params = new URLSearchParams({
-            view: 'matieres',
-            niveauId: urlParams.niveauId,
-            niveauNom: urlParams.niveauNom,
-          });
-          router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-        },
-      });
-    }
+  const handleCloseModeSelector = useCallback(() => {
+    setShowModeSelector(false);
+  }, []);
 
-    if (urlParams.matiereId && urlParams.matiereNom) {
-      breadcrumbs.push({
-        label: urlParams.matiereNom,
-        onClick: () => {
-          const params = new URLSearchParams({
-            view: 'chapitres',
-            matiereId: urlParams.matiereId,
-            matiereNom: urlParams.matiereNom,
-            niveauId: urlParams.niveauId || '',
-            niveauNom: urlParams.niveauNom || '',
-          });
-          router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-        },
-      });
-    }
+  const handleClosePreview = useCallback(() => {
+    setShowPreview(false);
+  }, []);
 
-    if (urlParams.chapitreId && urlParams.chapitreNom) {
-      breadcrumbs.push({
-        label: urlParams.chapitreNom,
-        onClick: handleCancel,
-      });
-    }
-
-    breadcrumbs.push({
+  // Static breadcrumbs - no complex calculations
+  const breadcrumbs = [
+    {
+      label: 'Niveaux',
+      onClick: () => router.push('/dashboard/contenu-pedagogique/apprentissage'),
+    },
+    ...(niveauId && niveauNom
+      ? [
+          {
+            label: niveauNom,
+            onClick: () => {
+              const params = new URLSearchParams({
+                view: 'matieres',
+                niveauId,
+                niveauNom,
+              });
+              router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
+            },
+          },
+        ]
+      : []),
+    ...(matiereId && matiereNom
+      ? [
+          {
+            label: matiereNom,
+            onClick: () => {
+              const params = new URLSearchParams({
+                view: 'chapitres',
+                matiereId,
+                matiereNom,
+                niveauId: niveauId || '',
+                niveauNom: niveauNom || '',
+              });
+              router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
+            },
+          },
+        ]
+      : []),
+    ...(chapitreId && chapitreNom
+      ? [
+          {
+            label: chapitreNom,
+            onClick: navigateToExerciseList,
+          },
+        ]
+      : []),
+    {
       label: isEditing ? "Modifier l'exercice" : 'Nouvel exercice',
       onClick: undefined,
-    });
+    },
+  ];
 
-    return breadcrumbs;
-  }, [router, urlParams, isEditing, handleCancel]);
-
-  const getTitle = useCallback(() => {
-    if (isEditing) {
-      return "Modifier l'exercice";
-    }
-    if (!selectedMode) {
-      return 'Créer un exercice';
-    }
+  // Simple title logic
+  const getTitle = () => {
+    if (isEditing) return "Modifier l'exercice";
+    if (!selectedMode) return 'Créer un exercice';
     return selectedMode === 'ai' ? "Création avec l'IA" : 'Création manuelle';
-  }, [isEditing, selectedMode]);
+  };
 
-  const getSubtitle = useCallback(() => {
-    if (isEditing) {
-      return 'Modifiez les paramètres et le contenu de votre exercice';
-    }
-    if (!selectedMode) {
-      return 'Choisissez votre méthode de création préférée';
-    }
+  const getSubtitle = () => {
+    if (isEditing) return 'Modifiez les paramètres et le contenu de votre exercice';
+    if (!selectedMode) return 'Choisissez votre méthode de création préférée';
     return selectedMode === 'ai'
       ? "Laissez l'IA générer un exercice personnalisé"
       : 'Créez votre exercice étape par étape';
-  }, [isEditing, selectedMode]);
+  };
 
-  const renderContent = useCallback(() => {
-    if (!selectedMode) {
-      return null; // Le ModeSelector sera affiché
-    }
+  // Simple content rendering
+  const renderContent = () => {
+    if (!selectedMode) return null;
 
     if (selectedMode === 'ai') {
       return (
         <AiForm
-          chapitreId={urlParams.chapitreId}
+          chapitreId={chapitreId}
           onSuccess={handleSuccess}
           onCancel={handleBack}
           onError={handleError}
@@ -241,13 +219,18 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
 
     return (
       <ManualForm
-        chapitreId={urlParams.chapitreId}
+        chapitreId={chapitreId}
         onSuccess={handleSuccess}
         onCancel={handleBack}
         onError={handleError}
       />
     );
-  }, [selectedMode, urlParams.chapitreId, handleSuccess, handleBack, handleError]);
+  };
+
+  // Don't render if chapitreId is missing for new exercises
+  if (!chapitreId && !isEditing) {
+    return null;
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -271,13 +254,13 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
         mode={selectedMode || 'manual'}
         title={getTitle()}
         subtitle={getSubtitle()}
-        breadcrumbs={getBreadcrumbs()}
+        breadcrumbs={breadcrumbs}
         progress={selectedMode ? undefined : 0}
         showProgress={!!selectedMode}
         actions={{
           onBack: handleBack,
           onPreview: createdExercise ? handlePreview : undefined,
-          onCancel: handleCancel,
+          onCancel: navigateToExerciseList,
           canSave: !!createdExercise,
         }}
       >
@@ -307,7 +290,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={modeSelector.onTrue}
+                  onClick={handleOpenModeSelector}
                   sx={{
                     py: 2,
                     px: 4,
@@ -342,13 +325,13 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
                     📍 Contexte de création
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Chapitre :</strong> {urlParams.chapitreNom || 'Non défini'}
+                    <strong>Chapitre :</strong> {chapitreNom || 'Non défini'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Matière :</strong> {urlParams.matiereNom || 'Non définie'}
+                    <strong>Matière :</strong> {matiereNom || 'Non définie'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Niveau :</strong> {urlParams.niveauNom || 'Non défini'}
+                    <strong>Niveau :</strong> {niveauNom || 'Non défini'}
                   </Typography>
                 </Box>
               </Box>
@@ -359,16 +342,16 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
 
       {/* Dialog de sélection de mode */}
       <ModeSelector
-        open={modeSelector.value}
-        onClose={modeSelector.onFalse}
+        open={showModeSelector}
+        onClose={handleCloseModeSelector}
         onModeSelect={handleModeSelect}
         selectedMode={selectedMode || undefined}
       />
 
       {/* Drawer de prévisualisation */}
       <ExercisePreview
-        open={preview.value}
-        onClose={preview.onFalse}
+        open={showPreview}
+        onClose={handleClosePreview}
         exercise={createdExercise}
         mode={selectedMode || 'manual'}
         onEdit={handleEditFromPreview}
