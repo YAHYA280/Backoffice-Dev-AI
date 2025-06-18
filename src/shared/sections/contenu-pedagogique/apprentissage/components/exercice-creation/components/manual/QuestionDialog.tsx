@@ -1,17 +1,12 @@
-// src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/components/manual/QuestionDialog.tsx
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faTimes,
   faPlus,
-  faTrash,
   faSave,
-  faCheckCircle,
-  faTimesCircle,
+  faTimes,
+  faTrash,
   faGripVertical,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -28,22 +23,28 @@ import {
   useTheme,
   MenuItem,
   TextField,
+  FormGroup,
   Typography,
   InputLabel,
   IconButton,
-  FormGroup,
   FormControl,
   DialogTitle,
+  Autocomplete,
   DialogContent,
   DialogActions,
-  FormHelperText,
   FormControlLabel,
-  Autocomplete,
 } from '@mui/material';
 
 import { Editor } from 'src/shared/components/editor';
-import { QUESTION_TYPE_CONFIGS, DIFFICULTY_OPTIONS } from '../../constants/creation-constants';
-import type { Question, QuestionType, QuestionFormData, MultipleChoiceOption } from '../../types';
+
+import { DIFFICULTY_OPTIONS, QUESTION_TYPE_CONFIGS } from '../../constants/creation-constants';
+
+import type {
+  Question,
+  QuestionType,
+  QuestionFormData,
+  MultipleChoiceOption,
+} from '../../types/question-types';
 
 interface QuestionDialogProps {
   open: boolean;
@@ -562,7 +563,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  points: Math.max(1, parseInt(e.target.value) || 1),
+                  points: Math.max(1, parseInt(e.target.value, 10) || 1),
                 }))
               }
               inputProps={{ min: 1, max: 100 }}

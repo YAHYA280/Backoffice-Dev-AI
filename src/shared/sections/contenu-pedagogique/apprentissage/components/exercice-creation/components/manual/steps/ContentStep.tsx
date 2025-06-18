@@ -42,7 +42,7 @@ import {
 } from '@mui/material';
 
 import { Editor } from 'src/shared/components/editor';
-import type { CreationFormData, ExerciseResource } from '../../../types';
+import type { CreationFormData, ExerciseResource } from '../../../types/exercise-types';
 
 interface ContentStepProps {
   data: CreationFormData;
@@ -166,7 +166,7 @@ const ContentStep: React.FC<ContentStepProps> = ({ data, errors, onChange }) => 
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight="bold">
-                    📝 Contenu de l'exercice
+                    📝 Contenu de l&apos;exercice
                   </Typography>
 
                   <Button

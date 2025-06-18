@@ -3,7 +3,7 @@
 'use client';
 
 import { z } from 'zod';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
 
@@ -21,15 +21,9 @@ import {
   TextField,
   Typography,
   FormControl,
-  Skeleton,
-  IconButton,
   Autocomplete,
   FormControlLabel,
-  alpha,
 } from '@mui/material';
-
-import { useRouter } from 'src/routes/hooks';
-import { paths } from 'src/routes/paths';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 import { toast } from 'src/shared/components/snackbar';
@@ -70,9 +64,6 @@ const creditCardConfigSchema = z.object({
 type CreditCardConfigFormData = z.infer<typeof creditCardConfigSchema>;
 
 export default function CreditCardConfigurationView() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-
   const methods = useForm<CreditCardConfigFormData>({
     resolver: zodResolver(creditCardConfigSchema),
     defaultValues: {
@@ -96,15 +87,6 @@ export default function CreditCardConfigurationView() {
 
   const watchedValues = watch();
 
-  // Simulate loading data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const onSubmit = handleSubmit(async (data) => {
     try {
       // API call would go here
@@ -115,65 +97,8 @@ export default function CreditCardConfigurationView() {
     }
   });
 
-  const handleReturn = () => {
-    router.push(paths.dashboard.paiements.payment_configuration);
-  };
-
-  if (loading) {
-    return (
-      <PaymentConfigLayout>
-        <Box sx={{ p: 4 }}>
-          {/* Header Skeleton */}
-          <Box sx={{ mb: 4 }}>
-            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 3 }} />
-          </Box>
-
-          {/* Content Skeleton */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={350} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={350} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
-            </Grid>
-          </Grid>
-        </Box>
-      </PaymentConfigLayout>
-    );
-  }
-
   return (
     <PaymentConfigLayout>
-      {/* Return Button */}
-      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Button
-          onClick={handleReturn}
-          startIcon={<FontAwesome icon="fas fa-arrow-left" width={16} />}
-          variant="outlined"
-          color="inherit"
-          sx={{
-            borderRadius: 2,
-            px: 3,
-            py: 1,
-            fontWeight: 600,
-            '&:hover': {
-              bgcolor: 'action.hover',
-              borderColor: 'primary.main',
-              color: 'primary.main',
-            },
-            transition: 'all 0.2s ease-in-out',
-          }}
-        >
-          Retourner
-        </Button>
-      </Box>
-
       <PaymentConfigHeader
         title="Configuration Cartes Bancaires"
         description="Configurez les options de paiement par carte bancaire avec sécurité avancée et personnalisation complète"
@@ -275,9 +200,9 @@ export default function CreditCardConfigurationView() {
                     sx={{
                       p: 3,
                       border: '2px dashed',
-                      borderColor: watchedValues.active ? '#4CAF50' : 'divider',
+                      borderColor: watchedValues.active ? 'primary.light' : 'divider',
                       borderRadius: 2,
-                      bgcolor: watchedValues.active ? alpha('#4CAF50', 0.05) : 'background.neutral',
+                      bgcolor: watchedValues.active ? 'primary.lighter' : 'background.neutral',
                       transition: 'all 0.2s ease-in-out',
                       mb: 2,
                     }}
@@ -355,13 +280,9 @@ export default function CreditCardConfigurationView() {
                       </Typography>
                       <Autocomplete
                         multiple
-                        value={watchedValues.allowedBrands || []}
-                        onChange={(_, newValue) =>
-                          setValue('allowedBrands', newValue, { shouldDirty: true })
-                        }
+                        value={watchedValues.allowedBrands}
+                        onChange={(_, newValue) => setValue('allowedBrands', newValue)}
                         options={CARD_BRANDS}
-                        getOptionLabel={(option) => option}
-                        isOptionEqualToValue={(option, value) => option === value}
                         renderTags={(tagValue, getTagProps) =>
                           tagValue.map((option, index) => (
                             <Chip
@@ -371,7 +292,6 @@ export default function CreditCardConfigurationView() {
                               size="small"
                               color="success"
                               variant="filled"
-                              sx={{ m: 0.5 }}
                             />
                           ))
                         }
@@ -382,18 +302,14 @@ export default function CreditCardConfigurationView() {
                             InputProps={{
                               ...params.InputProps,
                               startAdornment: (
-                                <>
-                                  <Box sx={{ mr: 1 }}>
-                                    <FontAwesome icon="fas fa-check-circle" width={16} />
-                                  </Box>
-                                  {params.InputProps.startAdornment}
-                                </>
+                                <Box sx={{ mr: 1 }}>
+                                  <FontAwesome icon="fas fa-check-circle" width={16} />
+                                </Box>
                               ),
                             }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                           />
                         )}
-                        sx={{ width: '100%' }}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                       />
                     </Box>
 
@@ -403,13 +319,9 @@ export default function CreditCardConfigurationView() {
                       </Typography>
                       <Autocomplete
                         multiple
-                        value={watchedValues.disabledBrands || []}
-                        onChange={(_, newValue) =>
-                          setValue('disabledBrands', newValue, { shouldDirty: true })
-                        }
+                        value={watchedValues.disabledBrands}
+                        onChange={(_, newValue) => setValue('disabledBrands', newValue)}
                         options={CARD_BRANDS}
-                        getOptionLabel={(option) => option}
-                        isOptionEqualToValue={(option, value) => option === value}
                         renderTags={(tagValue, getTagProps) =>
                           tagValue.map((option, index) => (
                             <Chip
@@ -419,7 +331,6 @@ export default function CreditCardConfigurationView() {
                               size="small"
                               color="error"
                               variant="filled"
-                              sx={{ m: 0.5 }}
                             />
                           ))
                         }
@@ -430,18 +341,14 @@ export default function CreditCardConfigurationView() {
                             InputProps={{
                               ...params.InputProps,
                               startAdornment: (
-                                <>
-                                  <Box sx={{ mr: 1 }}>
-                                    <FontAwesome icon="fas fa-ban" width={16} />
-                                  </Box>
-                                  {params.InputProps.startAdornment}
-                                </>
+                                <Box sx={{ mr: 1 }}>
+                                  <FontAwesome icon="fas fa-ban" width={16} />
+                                </Box>
                               ),
                             }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                           />
                         )}
-                        sx={{ width: '100%' }}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                       />
                     </Box>
                   </Stack>

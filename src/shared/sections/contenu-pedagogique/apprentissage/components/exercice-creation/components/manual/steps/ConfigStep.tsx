@@ -34,7 +34,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import type { CreationFormData, ExerciseConfig } from '../../../types';
+import type { CreationFormData, ExerciseConfig } from '../../../types/exercise-types';
 
 interface ConfigStepProps {
   data: CreationFormData;
@@ -169,7 +169,7 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                           label="Autoriser les tentatives multiples"
                         />
                         <FormHelperText>
-                          Permet aux étudiants de refaire l'exercice plusieurs fois
+                          Permet aux étudiants de refaire l&apos;exercice plusieurs fois
                         </FormHelperText>
                       </FormControl>
                     </Grid>
@@ -183,7 +183,7 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                           value={data.config.maxRetries || 3}
                           onChange={(e) =>
                             handleConfigChange({
-                              maxRetries: Math.max(1, parseInt(e.target.value) || 1),
+                              maxRetries: Math.max(1, parseInt(e.target.value, 10) || 1),
                             })
                           }
                           inputProps={{ min: 1, max: 10 }}
@@ -209,7 +209,7 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                           value={data.config.timeLimit || ''}
                           onChange={(e) =>
                             handleConfigChange({
-                              timeLimit: e.target.value ? parseInt(e.target.value) : undefined,
+                              timeLimit: e.target.value ? parseInt(e.target.value, 10) : undefined,
                             })
                           }
                           placeholder="Aucune limite"
@@ -291,7 +291,9 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                             },
                           }}
                         />
-                        <FormHelperText>Pourcentage minimum pour valider l'exercice</FormHelperText>
+                        <FormHelperText>
+                          Pourcentage minimum pour valider l&apos;exercice
+                        </FormHelperText>
                       </FormControl>
                     </Grid>
 
@@ -350,7 +352,7 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                       Comportement des questions
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Personnalisez l'ordre et la présentation des questions
+                      Personnalisez l&apos;ordre et la présentation des questions
                     </Typography>
                   </Box>
                 </Box>
@@ -454,7 +456,7 @@ const ConfigStep: React.FC<ConfigStepProps> = ({ data, errors, onChange }) => {
                           label="Activer les indices"
                         />
                         <FormHelperText>
-                          Affiche un bouton d'aide sur les questions qui en ont
+                          Affiche un bouton d&apos;aide sur les questions qui en ont
                         </FormHelperText>
                       </FormGroup>
                     </Grid>

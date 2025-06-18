@@ -6,13 +6,13 @@ import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faGraduationCap,
-  faTarget,
   faPlus,
   faTimes,
+  faTarget,
+  faBullseye,
   faLightbulb,
   faCheckCircle,
-  faBullseye,
+  faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -21,19 +21,15 @@ import {
   Card,
   Chip,
   Stack,
-  Button,
   useTheme,
   TextField,
   Typography,
   Autocomplete,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-  Divider,
 } from '@mui/material';
 
 import { BLOOM_LEVELS } from '../../../constants/creation-constants';
-import type { AiFormData, BloomLevel } from '../../../types';
+
+import type { AiFormData, BloomLevel } from '../../../types/ai-types';
 
 interface PedagogicalStepProps {
   data: AiFormData;
@@ -144,7 +140,7 @@ const PedagogicalStep: React.FC<PedagogicalStepProps> = ({ data, errors, onChang
               Objectifs pédagogiques
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Définissez les compétences et objectifs d'apprentissage visés
+              Définissez les compétences et objectifs d&apos;apprentissage visés
             </Typography>
           </Box>
         </m.div>
@@ -156,7 +152,7 @@ const PedagogicalStep: React.FC<PedagogicalStepProps> = ({ data, errors, onChang
               <Card sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>
                   <FontAwesomeIcon icon={faTarget} style={{ marginRight: 8 }} />
-                  Objectifs d'apprentissage
+                  Objectifs d&apos;apprentissage
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -421,7 +417,7 @@ const PedagogicalStep: React.FC<PedagogicalStepProps> = ({ data, errors, onChang
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={4}>
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Objectifs d'apprentissage
+                      Objectifs d&apos;apprentissage
                     </Typography>
                     {data.learningObjectives.length > 0 ? (
                       <Stack spacing={0.5}>

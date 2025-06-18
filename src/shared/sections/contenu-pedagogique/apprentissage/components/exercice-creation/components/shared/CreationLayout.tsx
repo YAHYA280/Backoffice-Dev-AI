@@ -2,8 +2,9 @@
 
 'use client';
 
-import React, { ReactNode } from 'react';
 import { m } from 'framer-motion';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSave, faEye } from '@fortawesome/free-solid-svg-icons';
 
@@ -21,7 +22,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import type { CreationMode } from '../../types';
+import type { CreationMode } from '../../types/exercise-types';
 
 interface CreationLayoutProps {
   mode: CreationMode;
