@@ -3,28 +3,28 @@
 'use client';
 
 import { z } from 'zod';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
 
 import LoadingButton from '@mui/lab/LoadingButton';
 import {
   Box,
+  Card,
   Grid,
   Stack,
   Alert,
   Button,
   Switch,
+  Select,
+  MenuItem,
   TextField,
   Typography,
-  Skeleton,
   IconButton,
+  FormControl,
+  CardContent,
   FormControlLabel,
-  alpha,
 } from '@mui/material';
-
-import { useRouter } from 'src/routes/hooks';
-import { paths } from 'src/routes/paths';
 
 import { FontAwesome } from 'src/shared/components/fontawesome';
 import { toast } from 'src/shared/components/snackbar';
@@ -32,9 +32,21 @@ import { toast } from 'src/shared/components/snackbar';
 import { PaymentConfigLayout } from '../components/common/PaymentConfigLayout';
 import { PaymentConfigHeader } from '../components/common/PaymentConfigHeader';
 import { ConfigurationCard } from '../components/common/ConfigurationCard';
-import { BankAccountsManager } from '../components/bank-transfer/BankAccountsManager';
 
-import type { BankAccount } from '../types/payment.types';
+// Currencies
+const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD'];
+
+// Bank Account interface
+interface BankAccount {
+  id: string;
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
+  iban: string;
+  swift: string;
+  currency: string;
+  isDefault: boolean;
+}
 
 // Form validation schema
 const bankTransferConfigSchema = z.object({
@@ -48,8 +60,6 @@ const bankTransferConfigSchema = z.object({
 type BankTransferConfigFormData = z.infer<typeof bankTransferConfigSchema>;
 
 export default function BankTransferConfigurationView() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
       id: '1',
@@ -62,6 +72,10 @@ export default function BankTransferConfigurationView() {
       isDefault: true,
     },
   ]);
+
+  const [editingAccount, setEditingAccount] = useState<string | null>(null);
+  const [newAccount, setNewAccount] = useState<Partial<BankAccount>>({});
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const methods = useForm<BankTransferConfigFormData>({
     resolver: zodResolver(bankTransferConfigSchema),
@@ -86,15 +100,6 @@ export default function BankTransferConfigurationView() {
 
   const watchedValues = watch();
 
-  // Simulate loading data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const onSubmit = handleSubmit(async (data) => {
     try {
       // API call would go here
@@ -105,65 +110,39 @@ export default function BankTransferConfigurationView() {
     }
   });
 
-  const handleReturn = () => {
-    router.push(paths.dashboard.paiements.payment_configuration);
+  const handleAddAccount = () => {
+    if (newAccount.accountName && newAccount.bankName && newAccount.iban) {
+      const account: BankAccount = {
+        id: Date.now().toString(),
+        accountName: newAccount.accountName,
+        bankName: newAccount.bankName,
+        accountNumber: newAccount.accountNumber || '',
+        iban: newAccount.iban,
+        swift: newAccount.swift || '',
+        currency: newAccount.currency || 'EUR',
+        isDefault: bankAccounts.length === 0,
+      };
+      setBankAccounts([...bankAccounts, account]);
+      setNewAccount({});
+      setShowAddForm(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <PaymentConfigLayout>
-        <Box sx={{ p: 4 }}>
-          {/* Header Skeleton */}
-          <Box sx={{ mb: 4 }}>
-            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 3 }} />
-          </Box>
+  const handleDeleteAccount = (id: string) => {
+    setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
+  };
 
-          {/* Content Skeleton */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12}>
-              <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
-            </Grid>
-            <Grid item xs={12}>
-              <Skeleton variant="rectangular" height={350} sx={{ borderRadius: 2 }} />
-            </Grid>
-          </Grid>
-        </Box>
-      </PaymentConfigLayout>
+  const handleSetDefault = (id: string) => {
+    setBankAccounts(
+      bankAccounts.map((acc) => ({
+        ...acc,
+        isDefault: acc.id === id,
+      }))
     );
-  }
+  };
 
   return (
     <PaymentConfigLayout>
-      {/* Return Button */}
-      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Button
-          onClick={handleReturn}
-          startIcon={<FontAwesome icon="fas fa-arrow-left" width={16} />}
-          variant="outlined"
-          color="inherit"
-          sx={{
-            borderRadius: 2,
-            px: 3,
-            py: 1,
-            fontWeight: 600,
-            '&:hover': {
-              bgcolor: 'action.hover',
-              borderColor: 'primary.main',
-              color: 'primary.main',
-            },
-            transition: 'all 0.2s ease-in-out',
-          }}
-        >
-          Retourner
-        </Button>
-      </Box>
-
       <PaymentConfigHeader
         title="Configuration Virements Bancaires"
         description="Configurez vos comptes bancaires pour recevoir les paiements par virement directement"
@@ -284,9 +263,9 @@ export default function BankTransferConfigurationView() {
                     sx={{
                       p: 3,
                       border: '2px dashed',
-                      borderColor: watchedValues.active ? '#4CAF50' : 'divider',
+                      borderColor: watchedValues.active ? 'success.light' : 'divider',
                       borderRadius: 2,
-                      bgcolor: watchedValues.active ? alpha('#4CAF50', 0.05) : 'background.neutral',
+                      bgcolor: watchedValues.active ? 'success.lighter' : 'background.neutral',
                       transition: 'all 0.2s ease-in-out',
                       mb: 2,
                     }}
@@ -364,7 +343,243 @@ export default function BankTransferConfigurationView() {
 
               {/* Bank Accounts Management */}
               <Grid item xs={12}>
-                <BankAccountsManager accounts={bankAccounts} onAccountsChange={setBankAccounts} />
+                <ConfigurationCard
+                  title="Gestion des comptes bancaires"
+                  icon="fas fa-university"
+                  variant="success"
+                >
+                  <Stack spacing={3}>
+                    {/* Add Account Button */}
+                    {!showAddForm && (
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<FontAwesome icon="fas fa-plus" width={16} />}
+                          onClick={() => setShowAddForm(true)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Ajouter un compte
+                        </Button>
+                      </Box>
+                    )}
+
+                    {/* Add Account Form */}
+                    {showAddForm && (
+                      <Card sx={{ p: 3, bgcolor: 'success.lighter', borderRadius: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                          Ajouter un nouveau compte bancaire
+                        </Typography>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              label="Nom du compte"
+                              value={newAccount.accountName || ''}
+                              onChange={(e) =>
+                                setNewAccount({ ...newAccount, accountName: e.target.value })
+                              }
+                              size="small"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              label="Nom de la banque"
+                              value={newAccount.bankName || ''}
+                              onChange={(e) =>
+                                setNewAccount({ ...newAccount, bankName: e.target.value })
+                              }
+                              size="small"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              label="IBAN"
+                              value={newAccount.iban || ''}
+                              onChange={(e) =>
+                                setNewAccount({ ...newAccount, iban: e.target.value })
+                              }
+                              size="small"
+                              required
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              fullWidth
+                              label="SWIFT/BIC"
+                              value={newAccount.swift || ''}
+                              onChange={(e) =>
+                                setNewAccount({ ...newAccount, swift: e.target.value })
+                              }
+                              size="small"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <FormControl fullWidth size="small">
+                              <Select
+                                value={newAccount.currency || 'EUR'}
+                                onChange={(e) =>
+                                  setNewAccount({ ...newAccount, currency: e.target.value })
+                                }
+                              >
+                                {CURRENCIES.map((currency) => (
+                                  <MenuItem key={currency} value={currency}>
+                                    {currency}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                              <Button
+                                variant="outlined"
+                                onClick={() => {
+                                  setShowAddForm(false);
+                                  setNewAccount({});
+                                }}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="success"
+                                onClick={handleAddAccount}
+                                startIcon={<FontAwesome icon="fas fa-check" width={16} />}
+                              >
+                                Ajouter
+                              </Button>
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    )}
+
+                    {/* Bank Accounts List */}
+                    {bankAccounts.map((account) => (
+                      <Card
+                        key={account.id}
+                        sx={{
+                          borderRadius: 2,
+                          border: account.isDefault ? '2px solid' : '1px solid',
+                          borderColor: account.isDefault ? 'success.main' : 'divider',
+                        }}
+                      >
+                        <CardContent>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              mb: 2,
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <FontAwesome icon="fas fa-university" width={20} />
+                              <Box>
+                                <Typography variant="subtitle1" fontWeight={600}>
+                                  {account.accountName}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {account.bankName} • {account.currency}
+                                </Typography>
+                              </Box>
+                              {account.isDefault && (
+                                <Box
+                                  sx={{
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: 1,
+                                    bgcolor: 'success.main',
+                                    color: 'white',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  PRINCIPAL
+                                </Box>
+                              )}
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              {!account.isDefault && (
+                                <IconButton
+                                  size="small"
+                                  color="success"
+                                  onClick={() => handleSetDefault(account.id)}
+                                  title="Définir comme principal"
+                                >
+                                  <FontAwesome icon="fas fa-star" width={16} />
+                                </IconButton>
+                              )}
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteAccount(account.id)}
+                                title="Supprimer"
+                              >
+                                <FontAwesome icon="fas fa-trash" width={16} />
+                              </IconButton>
+                            </Box>
+                          </Box>
+
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                              <Typography variant="caption" color="text.secondary">
+                                IBAN
+                              </Typography>
+                              <Typography variant="body2" fontWeight={500}>
+                                {account.iban}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Typography variant="caption" color="text.secondary">
+                                SWIFT/BIC
+                              </Typography>
+                              <Typography variant="body2" fontWeight={500}>
+                                {account.swift || '—'}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {bankAccounts.length === 0 && !showAddForm && (
+                      <Box
+                        sx={{
+                          p: 4,
+                          textAlign: 'center',
+                          border: '1px dashed',
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          bgcolor: 'background.neutral',
+                        }}
+                      >
+                        <FontAwesome
+                          icon="fas fa-university"
+                          width={48}
+                          sx={{ color: 'text.secondary', mb: 2 }}
+                        />
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                          Aucun compte bancaire configuré
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>
+                          Ajoutez au moins un compte bancaire pour recevoir des paiements
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<FontAwesome icon="fas fa-plus" width={16} />}
+                          onClick={() => setShowAddForm(true)}
+                        >
+                          Ajouter un compte bancaire
+                        </Button>
+                      </Box>
+                    )}
+                  </Stack>
+                </ConfigurationCard>
               </Grid>
 
               {/* Information Alert */}
