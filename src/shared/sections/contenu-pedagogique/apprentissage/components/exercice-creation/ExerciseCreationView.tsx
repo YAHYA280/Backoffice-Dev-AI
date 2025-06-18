@@ -3,7 +3,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from '@mui/material';
@@ -11,7 +11,7 @@ import { Box, Button, useTheme, Typography, Breadcrumbs, Link as MuiLink } from 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import AiForm from './components/ai/AiForm';
-import ManualForm from './components/manual/';
+import ManualForm from './components/manual/ManualForm';
 import CreationLayout from './components/shared/CreationLayout';
 import ModeSelector from './components/mode-selector/ModeSelector';
 import ExercisePreview from './components/preview/ExercisePreview';
@@ -60,30 +60,8 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
   const [niveauId] = useState(initialNiveauId || searchParams.get('niveauId') || '');
   const [niveauNom] = useState(initialNiveauNom || searchParams.get('niveauNom') || '');
 
-  // Validation des paramètres requis
-  useEffect(() => {
-    if (!chapitreId && !isEditing) {
-      console.error("ChapitreId manquant pour la création d'exercice");
-      handleCancel();
-    }
-  }, [chapitreId, handleCancel, isEditing]);
-
-  const handleModeSelect = (mode: CreationMode) => {
-    setSelectedMode(mode);
-    modeSelector.onFalse();
-  };
-
-  const handleSuccess = (exercise: Exercise) => {
-    setCreatedExercise(exercise);
-    preview.onTrue();
-  };
-
-  const handleError = (error: string) => {
-    console.error('Erreur lors de la création:', error);
-    // Ici vous pourriez afficher une notification d'erreur
-  };
-
-  const handleCancel = () => {
+  // Handler functions defined before useEffect
+  const handleCancel = useCallback(() => {
     // Construire l'URL de retour
     const params = new URLSearchParams();
     if (chapitreId) params.set('chapitreId', chapitreId);
@@ -95,9 +73,38 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     params.set('view', 'exercices');
 
     router.push(`/dashboard/contenu-pedagogique/apprentissage?${params.toString()}`);
-  };
+  }, [router, chapitreId, chapitreNom, matiereId, matiereNom, niveauId, niveauNom]);
 
-  const handleBack = () => {
+  // Validation des paramètres requis
+  useEffect(() => {
+    if (!chapitreId && !isEditing) {
+      console.error("ChapitreId manquant pour la création d'exercice");
+      handleCancel();
+    }
+  }, [chapitreId, handleCancel, isEditing]);
+
+  const handleModeSelect = useCallback(
+    (mode: CreationMode) => {
+      setSelectedMode(mode);
+      modeSelector.onFalse();
+    },
+    [modeSelector]
+  );
+
+  const handleSuccess = useCallback(
+    (exercise: Exercise) => {
+      setCreatedExercise(exercise);
+      preview.onTrue();
+    },
+    [preview]
+  );
+
+  const handleError = useCallback((error: string) => {
+    console.error('Erreur lors de la création:', error);
+    // Ici vous pourriez afficher une notification d'erreur
+  }, []);
+
+  const handleBack = useCallback(() => {
     if (selectedMode && !createdExercise) {
       // Retour à la sélection de mode
       setSelectedMode(null);
@@ -106,27 +113,30 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       // Retour à la liste
       handleCancel();
     }
-  };
+  }, [selectedMode, createdExercise, modeSelector, handleCancel]);
 
-  const handlePreview = () => {
+  const handlePreview = useCallback(() => {
     if (createdExercise) {
       preview.onTrue();
     }
-  };
+  }, [createdExercise, preview]);
 
-  const handleEditFromPreview = () => {
+  const handleEditFromPreview = useCallback(() => {
     preview.onFalse();
     // Rester sur le formulaire pour permettre les modifications
-  };
+  }, [preview]);
 
-  const handleSaveFromPreview = () => {
+  const handleSaveFromPreview = useCallback(() => {
     // Sauvegarder et retourner à la liste
     preview.onFalse();
     handleCancel();
-  };
+  }, [preview, handleCancel]);
 
-  const getBreadcrumbs = () => {
-    const breadcrumbs = [
+  const getBreadcrumbs = useCallback(() => {
+    const breadcrumbs: Array<{
+      label: string;
+      onClick?: () => void;
+    }> = [
       {
         label: 'Niveaux',
         onClick: () => router.push('/dashboard/contenu-pedagogique/apprentissage'),
@@ -176,9 +186,19 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     });
 
     return breadcrumbs;
-  };
+  }, [
+    router,
+    niveauId,
+    niveauNom,
+    matiereId,
+    matiereNom,
+    chapitreId,
+    chapitreNom,
+    isEditing,
+    handleCancel,
+  ]);
 
-  const getTitle = () => {
+  const getTitle = useCallback(() => {
     if (isEditing) {
       return "Modifier l'exercice";
     }
@@ -186,9 +206,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
       return 'Créer un exercice';
     }
     return selectedMode === 'ai' ? "Création avec l'IA" : 'Création manuelle';
-  };
+  }, [isEditing, selectedMode]);
 
-  const getSubtitle = () => {
+  const getSubtitle = useCallback(() => {
     if (isEditing) {
       return 'Modifiez les paramètres et le contenu de votre exercice';
     }
@@ -198,9 +218,9 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
     return selectedMode === 'ai'
       ? "Laissez l'IA générer un exercice personnalisé"
       : 'Créez votre exercice étape par étape';
-  };
+  }, [isEditing, selectedMode]);
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (!selectedMode) {
       return null; // Le ModeSelector sera affiché
     }
@@ -224,7 +244,7 @@ const ExerciseCreationView: React.FC<ExerciseCreationViewProps> = ({
         onError={handleError}
       />
     );
-  };
+  }, [selectedMode, chapitreId, handleSuccess, handleBack, handleError]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

@@ -2,8 +2,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { m } from 'framer-motion';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
@@ -42,7 +42,9 @@ import {
 } from '@mui/material';
 
 import { DIFFICULTY_OPTIONS, QUESTION_TYPE_CONFIGS } from '../../constants/creation-constants';
-import type { Exercise, Question, CreationMode } from '../../types';
+
+import type { Question } from '../../types/question-types';
+import type { Exercise, CreationMode } from '../../types/exercise-types';
 
 interface ExercisePreviewProps {
   open: boolean;
@@ -94,9 +96,8 @@ const ExercisePreview: React.FC<ExercisePreviewProps> = ({
     return option ? option.color : theme.palette.grey[500];
   };
 
-  const getQuestionTypeIcon = (type: string) => {
-    return QUESTION_TYPE_CONFIGS[type as keyof typeof QUESTION_TYPE_CONFIGS]?.type || 'question';
-  };
+  const getQuestionTypeIcon = (type: string) =>
+    QUESTION_TYPE_CONFIGS[type as keyof typeof QUESTION_TYPE_CONFIGS]?.type || 'question';
 
   const renderQuestionPreview = (question: Question, index: number) => {
     const isExpanded = expandedQuestion === question.id;
@@ -333,7 +334,7 @@ const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" fontWeight="bold">
-                  Aperçu de l'exercice
+                  Aperçu de l&apos;exercice
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FontAwesomeIcon
@@ -541,7 +542,7 @@ const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
                     <Grid item xs={12} sm={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Style d'écriture
+                        Style d&apos;écriture
                       </Typography>
                       <Typography variant="body2" fontWeight="medium">
                         {(exercise as any).aiConfig.writingStyle || 'Engageant'}
@@ -550,7 +551,7 @@ const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
                     <Grid item xs={12}>
                       <Typography variant="body2" color="text.secondary">
-                        Objectifs d'apprentissage
+                        Objectifs d&apos;apprentissage
                       </Typography>
                       <Stack
                         direction="row"
@@ -611,7 +612,7 @@ const ExercisePreview: React.FC<ExercisePreviewProps> = ({
             <Accordion sx={{ mt: 3 }}>
               <AccordionSummary expandIcon={<FontAwesomeIcon icon={faChevronDown} />}>
                 <Typography variant="subtitle1" fontWeight="medium">
-                  Configuration de l'exercice
+                  Configuration de l&apos;exercice
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>

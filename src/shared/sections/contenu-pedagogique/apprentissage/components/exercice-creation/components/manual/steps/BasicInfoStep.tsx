@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 
 import { DIFFICULTY_OPTIONS, CREATION_LIMITS } from '../../../constants/creation-constants';
-import type { CreationFormData, DifficultyLevel } from '../../../types';
+import type { CreationFormData, DifficultyLevel } from '../../../types/exercise-types';
 
 interface BasicInfoStepProps {
   data: CreationFormData;
@@ -206,7 +206,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, errors, onChange })
                 value={data.estimatedDuration}
                 onChange={(e) =>
                   onChange({
-                    estimatedDuration: Math.max(1, parseInt(e.target.value) || 1),
+                    estimatedDuration: Math.max(1, parseInt(e.target.value, 10) || 1),
                   })
                 }
                 inputProps={{

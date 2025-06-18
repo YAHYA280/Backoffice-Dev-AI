@@ -23,21 +23,19 @@ import {
   Chip,
   Stack,
   Slider,
-  Button,
+  Divider,
   useTheme,
   TextField,
-  Typography,
-  FormGroup,
   FormLabel,
-  FormControl,
-  FormControlLabel,
-  Checkbox,
+  Typography,
   IconButton,
-  Divider,
+  FormControl,
 } from '@mui/material';
 
 import { QUESTION_TYPE_CONFIGS } from '../../../constants/creation-constants';
-import type { AiFormData, QuestionType, DifficultyDistribution } from '../../../types';
+
+import type { QuestionType } from '../../../types/question-types';
+import type { AiFormData, DifficultyDistribution } from '../../../types/ai-types';
 
 interface QuestionConfigStepProps {
   data: AiFormData;
@@ -163,7 +161,7 @@ const QuestionConfigStep: React.FC<QuestionConfigStepProps> = ({ data, errors, o
                     value={data.questionCount}
                     onChange={(e) =>
                       onChange({
-                        questionCount: Math.max(1, Math.min(50, parseInt(e.target.value) || 1)),
+                        questionCount: Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)),
                       })
                     }
                     inputProps={{ min: 1, max: 50 }}
@@ -192,7 +190,7 @@ const QuestionConfigStep: React.FC<QuestionConfigStepProps> = ({ data, errors, o
                 </Stack>
 
                 <Typography variant="body2" color="text.secondary">
-                  L'IA générera exactement ce nombre de questions adaptées à votre sujet
+                  L&apos;IA générera exactement ce nombre de questions adaptées à votre sujet
                 </Typography>
               </Card>
             </m.div>
@@ -207,7 +205,7 @@ const QuestionConfigStep: React.FC<QuestionConfigStepProps> = ({ data, errors, o
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Sélectionnez les types de questions que l'IA peut utiliser
+                  Sélectionnez les types de questions que l&apos;IA peut utiliser
                 </Typography>
 
                 <Grid container spacing={2}>

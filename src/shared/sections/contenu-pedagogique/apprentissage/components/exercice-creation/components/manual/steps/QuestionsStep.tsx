@@ -2,8 +2,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { m } from 'framer-motion';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -35,10 +35,12 @@ import {
   Alert,
 } from '@mui/material';
 
+import QuestionDialog from '../QuestionDialog';
 import { useQuestionManager } from '../../../hooks/useQuestionManager';
 import { QUESTION_TYPE_CONFIGS, DIFFICULTY_OPTIONS } from '../../../constants/creation-constants';
-import QuestionDialog from '../QuestionDialog';
-import type { CreationFormData, Question, QuestionType } from '../../../types';
+
+import type { CreationFormData } from '../../../types/exercise-types';
+import type { Question, QuestionType } from '../../../types/question-types';
 
 interface QuestionsStepProps {
   data: CreationFormData;
@@ -62,15 +64,17 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({ data, errors, onChange })
     reorderQuestions,
     setSelectedQuestion,
     setEditingQuestion,
-    getQuestionStats,
-    getTotalPoints,
+    getQuestionStats, // This is a computed value, not a function
+    getTotalPoints, // This is also a computed value, not a function
   } = useQuestionManager({
     initialQuestions: data.questions,
     onQuestionsChange: (newQuestions) => onChange({ questions: newQuestions }),
     maxQuestions: 20,
   });
 
-  const stats = getQuestionStats();
+  // Get the stats (it's a computed value, not a function call)
+  const stats = getQuestionStats;
+  const totalPoints = getTotalPoints;
 
   const handleAddQuestion = () => {
     setEditingQuestion(null);
@@ -136,7 +140,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({ data, errors, onChange })
         <m.div variants={itemVariants}>
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Questions de l'exercice
+              Questions de l&apos;exercice
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Créez et organisez les questions de votre exercice
@@ -166,7 +170,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({ data, errors, onChange })
                       <Grid item xs={6} sm={3}>
                         <Box textAlign="center">
                           <Typography variant="h4" color="success.main" fontWeight="bold">
-                            {getTotalPoints}
+                            {totalPoints}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             Points total
@@ -186,7 +190,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({ data, errors, onChange })
                       <Grid item xs={6} sm={3}>
                         <Box textAlign="center">
                           <Typography variant="h4" color="warning.main" fontWeight="bold">
-                            {Math.round(getTotalPoints / stats.total || 0)}
+                            {Math.round(totalPoints / stats.total || 0)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             Pts / question
@@ -285,7 +289,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({ data, errors, onChange })
                       Aucune question créée
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 3 }}>
-                      Commencez par ajouter votre première question à l'exercice
+                      Commencez par ajouter votre première question à l&apos;exercice
                     </Typography>
                     <Button
                       variant="contained"

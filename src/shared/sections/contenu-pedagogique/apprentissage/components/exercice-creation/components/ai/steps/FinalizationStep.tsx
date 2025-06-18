@@ -1,5 +1,3 @@
-// src/shared/sections/contenu-pedagogique/apprentissage/components/exercice-creation/components/ai/steps/FinalizationStep.tsx
-
 'use client';
 
 import React from 'react';
@@ -33,12 +31,9 @@ import {
   Alert,
 } from '@mui/material';
 
-import {
-  AI_MODELS,
-  WRITING_STYLES,
-  COMPLEXITY_LEVELS,
-} from '../../../constants/creation-constants';
-import type { AiFormData, AiModel, WritingStyle, AiGenerationState } from '../../../types';
+import { WRITING_STYLES } from '../../../constants/creation-constants';
+
+import type { AiFormData, WritingStyle, AiGenerationState } from '../../../types/ai-types';
 
 interface FinalizationStepProps {
   data: AiFormData;

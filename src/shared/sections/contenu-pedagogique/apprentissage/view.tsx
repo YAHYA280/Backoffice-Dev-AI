@@ -10,26 +10,36 @@ import useNiveauxHooks from './hooks/useNiveaux';
 import { useMatieres } from './hooks/useMatieres';
 import { useChapitres } from './hooks/useChapitres';
 import { useExercices } from './hooks/useExercices';
+
 // Import Niveau components
 import { NiveauList } from './components/niveau/NiveauList';
+import { NiveauDialog } from './components/niveau/NiveauDialog';
+import NiveauDeleteDialog from './components/niveau/NiveauDeleteDialog';
+import NiveauDetailDrawer from './components/niveau/NiveauDetailDrawer';
+
 // Import Matiere components
 import { MatiereList } from './components/matiere/MatiereList';
-import { NiveauDialog } from './components/niveau/NiveauDialog';
+import { MatiereDialog } from './components/matiere/MatiereDialog';
+import MatiereDeleteDialog from './components/matiere/MatiereDeleteDialog';
+import MatiereDetailDrawer from './components/matiere/MatiereDetailDrawer';
+
 // Import Chapitre components
 import { ChapitreList } from './components/chapitre/ChapitreList';
 import ChapitreDialog from './components/chapitre/ChapitreDialog';
+import ChapitreDeleteDialog from './components/chapitre/ChapitreDeleteDialog';
+import ChapitreDetailDrawer from './components/chapitre/ChapitreDetailDrawer';
+
 // Import Exercice components
 import { ExerciceList } from './components/exercice/ExerciceList';
 import ExerciceDialog from './components/exercice/ExerciceDialog';
-import { MatiereDialog } from './components/matiere/MatiereDialog';
-import NiveauDeleteDialog from './components/niveau/NiveauDeleteDialog';
-import NiveauDetailDrawer from './components/niveau/NiveauDetailDrawer';
-import MatiereDeleteDialog from './components/matiere/MatiereDeleteDialog';
-import MatiereDetailDrawer from './components/matiere/MatiereDetailDrawer';
-import ChapitreDeleteDialog from './components/chapitre/ChapitreDeleteDialog';
-import ChapitreDetailDrawer from './components/chapitre/ChapitreDetailDrawer';
 import ExerciceDeleteDialog from './components/exercice/ExerciceDeleteDialog';
 import ExerciceDetailDrawer from './components/exercice/ExerciceDetailDrawer';
+
+// Import Enhanced Exercise Detail Drawer for new exercise creation system
+import EnhancedExerciseDetailDrawer from './components/exercice-creation/details/EnhancedExerciseDetailDrawer';
+
+// Import types for exercise creation
+import type { Exercise as NewExercise } from './components/exercice-creation/types/exercise-types';
 
 export const ApprentissageView: React.FC = () => {
   const router = useRouter();
@@ -63,6 +73,7 @@ export const ApprentissageView: React.FC = () => {
       setCurrentChapitreName(chapitreNomParam || null);
     }
   }, [searchParams]);
+
   // ---- State for view navigation ----
   const [currentView, setCurrentView] = useState<
     'niveaux' | 'matieres' | 'chapitres' | 'exercices'
@@ -77,6 +88,12 @@ export const ApprentissageView: React.FC = () => {
 
   const [currentChapitreId, setCurrentChapitreId] = useState<string | null>(null);
   const [currentChapitreName, setCurrentChapitreName] = useState<string | null>(null);
+
+  // ---- Enhanced exercise detail drawer state ----
+  const [openEnhancedExerciseDetail, setOpenEnhancedExerciseDetail] = useState(false);
+  const [selectedEnhancedExercise, setSelectedEnhancedExercise] = useState<NewExercise | null>(
+    null
+  );
 
   // ---- Niveaux state and functions ----
   const { useNiveaux } = useNiveauxHooks;
@@ -263,6 +280,7 @@ export const ApprentissageView: React.FC = () => {
     setOpenNiveauDetailDrawer(false);
     setSelectedNiveau(null);
   };
+
   const handleAddClick = () => {
     // This is essentially an alias for handleNiveauAddClick
     handleNiveauAddClick();
@@ -290,6 +308,7 @@ export const ApprentissageView: React.FC = () => {
       refetchNiveaux();
     }
   };
+
   const handleDeleteNiveauRows = async (selectedRows: string[]) => {
     //  implement the logic to delete multiple rows
     await handleDeleteMultipleNiveaux(selectedRows);
@@ -341,7 +360,6 @@ export const ApprentissageView: React.FC = () => {
     //  implement the logic to delete multiple matieres
     await handleDeleteMultipleMatieres(selectedRows);
 
-
     // Refresh data
     refetchMatieres();
   };
@@ -351,7 +369,6 @@ export const ApprentissageView: React.FC = () => {
     try {
       //  API function to toggle the active status, here
       await handleToggleActiveMatiere(matiere, active);
-
 
       console.log(`Toggling active status for matiere ${matiere.nom} to ${active}`);
 
@@ -420,7 +437,6 @@ export const ApprentissageView: React.FC = () => {
   };
 
   // Handle active desactive here
-
   const handleToggleChapitreActive = async (chapitre: any, active: boolean) => {
     try {
       //  API function to toggle the active status,  here
@@ -445,9 +461,9 @@ export const ApprentissageView: React.FC = () => {
     }
   };
 
-  // ---- Exercice handler functions ----
+  // ---- Enhanced Exercise handler functions ----
   const handleExerciceAddClick = () => {
-    // Navigate to the new page with all necessary parameters
+    // Navigate to the new exercise creation page with enhanced features
     const params = new URLSearchParams({
       chapitreId: currentChapitreId || '',
       chapitreNom: currentChapitreName || '',
@@ -461,6 +477,7 @@ export const ApprentissageView: React.FC = () => {
   };
 
   const handleExerciceEditClick = (exercice: any) => {
+    // Navigate to the enhanced exercise edit page
     const params = new URLSearchParams({
       chapitreId: currentChapitreId || '',
       chapitreNom: currentChapitreName || '',
@@ -481,8 +498,37 @@ export const ApprentissageView: React.FC = () => {
   };
 
   const handleExerciceViewClick = (exercice: any) => {
-    setSelectedExercice(exercice);
-    setOpenExerciceDetailDrawer(true);
+    // Check if this is a new enhanced exercise and use the appropriate viewer
+    if (exercice.mode && (exercice.mode === 'ai' || exercice.mode === 'manual')) {
+      // This is an enhanced exercise from the new system
+      setSelectedEnhancedExercise(exercice);
+      setOpenEnhancedExerciseDetail(true);
+    } else {
+      // This is a legacy exercise, use the old detail drawer
+      setSelectedExercice(exercice);
+      setOpenExerciceDetailDrawer(true);
+    }
+  };
+
+  const handlePreviewExercise = () => {
+    if (selectedEnhancedExercise) {
+      // Handle preview logic for enhanced exercises
+      console.log('Previewing enhanced exercise:', selectedEnhancedExercise);
+    }
+  };
+
+  const handleExportExercise = () => {
+    if (selectedEnhancedExercise) {
+      // Handle export logic for enhanced exercises
+      console.log('Exporting enhanced exercise:', selectedEnhancedExercise);
+    }
+  };
+
+  const handleEditEnhancedExercise = () => {
+    if (selectedEnhancedExercise) {
+      handleExerciceEditClick(selectedEnhancedExercise);
+      setOpenEnhancedExerciseDetail(false);
+    }
   };
 
   const handleCloseExerciceAddDialog = () => {
@@ -504,6 +550,11 @@ export const ApprentissageView: React.FC = () => {
     setSelectedExercice(null);
   };
 
+  const handleCloseEnhancedExerciseDetail = () => {
+    setOpenEnhancedExerciseDetail(false);
+    setSelectedEnhancedExercise(null);
+  };
+
   const handleDeleteExerciceRows = async (selectedRows: string[]) => {
     // implement the logic to delete multiple exercices
     console.log('Deleting exercices rows:', selectedRows);
@@ -515,12 +566,10 @@ export const ApprentissageView: React.FC = () => {
     refetchExercices();
   };
 
-  // Hnadle active change
-
+  // Handle active change
   const handleToggleActiveExercice = async (exercice: any, active: boolean) => {
     try {
       // API function to toggle the active status, here
-
       console.log(`Toggling active status for exercice ${exercice.titre} to ${active}`);
 
       if (selectedExercice && selectedExercice.id === exercice.id) {
@@ -542,7 +591,6 @@ export const ApprentissageView: React.FC = () => {
   };
 
   // ---- Render content function ----
-
   const renderContent = () => {
     switch (currentView) {
       case 'niveaux':
@@ -819,7 +867,7 @@ export const ApprentissageView: React.FC = () => {
               }}
             />
 
-            {/* Exercice dialogs and drawers */}
+            {/* Legacy Exercise dialogs and drawers */}
             <ExerciceDialog
               open={openExerciceAddDialog}
               onClose={handleCloseExerciceAddDialog}
@@ -860,6 +908,18 @@ export const ApprentissageView: React.FC = () => {
                 />
               </>
             )}
+
+            {/* Enhanced Exercise Detail Drawer */}
+            {selectedEnhancedExercise && (
+              <EnhancedExerciseDetailDrawer
+                open={openEnhancedExerciseDetail}
+                onClose={handleCloseEnhancedExerciseDetail}
+                exercise={selectedEnhancedExercise}
+                onEdit={handleEditEnhancedExercise}
+                onPreview={handlePreviewExercise}
+                onExport={handleExportExercise}
+              />
+            )}
           </>
         );
 
@@ -875,7 +935,7 @@ export const ApprentissageView: React.FC = () => {
         mx: '10%',
         width: '96%',
         marginLeft: 'auto',
-        marginRight: 'auto'
+        marginRight: 'auto',
       }}
     >
       {renderContent()}

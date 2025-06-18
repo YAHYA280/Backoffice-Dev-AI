@@ -2,19 +2,21 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { m } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Alert } from '@mui/material';
 
-import { AI_CREATION_STEPS } from '../../constants/creation-constants';
-import CreationStepper from '../shared/CreationStepper';
 import GeneralInfoStep from './steps/GeneralInfoStep';
-import QuestionConfigStep from './steps/QuestionConfigStep';
 import PedagogicalStep from './steps/PedagogicalStep';
+import CreationStepper from '../shared/CreationStepper';
 import FinalizationStep from './steps/FinalizationStep';
+import QuestionConfigStep from './steps/QuestionConfigStep';
 import { useExerciseCreation } from '../../hooks/useExerciseCreation';
-import type { Exercise, AiFormData, AiGenerationRequest } from '../../types';
+import { AI_CREATION_STEPS } from '../../constants/creation-constants';
+
+import type { Exercise } from '../../types/exercise-types';
+import type { AiFormData, AiGenerationRequest } from '../../types/ai-types';
 
 interface AiFormProps {
   chapitreId: string;
@@ -261,7 +263,7 @@ const AiForm: React.FC<AiFormProps> = ({ chapitreId, onSuccess, onCancel, onErro
                 borderRadius: 2,
               }}
             >
-              🤖 L'IA génère votre exercice... Ne fermez pas cette page pendant le processus.
+              🤖 L&apos;IA génère votre exercice... Ne fermez pas cette page pendant le processus.
             </Alert>
           </m.div>
         )}
@@ -275,8 +277,8 @@ const AiForm: React.FC<AiFormProps> = ({ chapitreId, onSuccess, onCancel, onErro
                 borderRadius: 2,
               }}
             >
-              ✨ Exercice généré avec succès ! Vous pouvez maintenant le réviser et l'ajuster si
-              nécessaire.
+              ✨ Exercice généré avec succès ! Vous pouvez maintenant le réviser et l&apos;ajuster
+              si nécessaire.
             </Alert>
           </m.div>
         )}

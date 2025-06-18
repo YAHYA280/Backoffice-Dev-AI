@@ -48,7 +48,7 @@ import {
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate/variants/fade';
-import type { Exercise } from '../../types';
+import type { Exercise } from '../types/exercise-types';
 
 interface EnhancedExerciseDetailDrawerProps {
   open: boolean;
@@ -65,11 +65,9 @@ interface TabPanelProps {
   value: number;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
-  return (
-    <div hidden={value !== index}>{value === index && <Box sx={{ p: 3 }}>{children}</Box>}</div>
-  );
-};
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+  <div hidden={value !== index}>{value === index && <Box sx={{ p: 3 }}>{children}</Box>}</div>
+);
 
 const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> = ({
   open,
@@ -223,13 +221,13 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
       return (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="body2" color="text.secondary">
-            Cet exercice n'a pas été généré par IA
+            Cet exercice n&apos;a pas été généré par IA
           </Typography>
         </Box>
       );
     }
 
-    const aiConfig = (exercise as any).aiConfig;
+    const { aiConfig } = exercise as any;
 
     return (
       <Box>
@@ -250,7 +248,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
 
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">
-                Style d'écriture
+                Style d&apos;écriture
               </Typography>
               <Typography variant="body2" fontWeight="medium">
                 {aiConfig.writingStyle || 'Standard'}
@@ -281,7 +279,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
         {aiConfig.learningObjectives && aiConfig.learningObjectives.length > 0 && (
           <Card sx={{ p: 3, mb: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Objectifs d'apprentissage
+              Objectifs d&apos;apprentissage
             </Typography>
             <Stack spacing={1}>
               {aiConfig.learningObjectives.map((objective: string, index: number) => (
@@ -330,7 +328,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
       {/* Statistiques des questions */}
       <Card sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Vue d'ensemble des questions
+          Vue d&apos;ensemble des questions
         </Typography>
 
         <Grid container spacing={3}>
@@ -400,7 +398,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
                       : 'Difficile'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {count} ({Math.round(percentage)}%)
+                  {count as number} ({Math.round(percentage)}%)
                 </Typography>
               </Box>
               <LinearProgress
@@ -462,7 +460,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
                 </Typography>
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                {count}
+                {count as number}
               </Typography>
             </Box>
           ))}
@@ -529,7 +527,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
       {/* Paramètres généraux */}
       <Card sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Paramètres de l'exercice
+          Paramètres de l&apos;exercice
         </Typography>
 
         <Grid container spacing={3}>
@@ -617,7 +615,7 @@ const EnhancedExerciseDetailDrawer: React.FC<EnhancedExerciseDetailDrawerProps> 
                   : theme.palette.warning.main
               }
             />
-            <Typography variant="body2">Indices d'aide</Typography>
+            <Typography variant="body2">Indices d&apos;aide</Typography>
             <Chip
               label={exercise.config.enableHints ? 'Activé' : 'Désactivé'}
               size="small"

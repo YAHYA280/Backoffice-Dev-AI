@@ -7,7 +7,9 @@ import type {
   AiGenerationState,
   AiGenerationRequest,
   AiGenerationResponse,
+  AiGeneratedQuestion,
 } from '../types/ai-types';
+import type { Question, QuestionType } from '../types/question-types';
 
 interface UseExerciseCreationProps {
   initialMode?: CreationMode;
@@ -115,12 +117,101 @@ export const useExerciseCreation = ({
             newErrors.passingScore = 'Le score de réussite doit être entre 0 et 100';
           }
           break;
+
+        default:
+          // No validation needed for unknown steps
+          break;
       }
 
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
     [formData, mode]
+  );
+
+  // Helper function to convert AiGeneratedQuestion to proper Question type
+  const convertAiQuestionToQuestion = useCallback(
+    (aiQuestion: AiGeneratedQuestion, index: number): Question => {
+      const baseProps = {
+        id: `generated_${index}`,
+        type: aiQuestion.type,
+        title: aiQuestion.title,
+        content: aiQuestion.content,
+        points: aiQuestion.points,
+        difficulty: aiQuestion.difficulty,
+        explanation: aiQuestion.explanation,
+        hint: aiQuestion.hint,
+        order: index,
+        required: true,
+        tags: aiQuestion.tags,
+      };
+
+      switch (aiQuestion.type) {
+        case 'multiple_choice':
+          return {
+            ...baseProps,
+            type: 'multiple_choice',
+            options: aiQuestion.options || [],
+            allowMultiple: false,
+            randomizeOptions: false,
+          };
+
+        case 'true_false':
+          return {
+            ...baseProps,
+            type: 'true_false',
+            correctAnswer: aiQuestion.correctAnswer ?? false,
+          };
+
+        case 'short_answer':
+          return {
+            ...baseProps,
+            type: 'short_answer',
+            correctAnswers: aiQuestion.correctAnswers || [],
+            caseSensitive: false,
+            exactMatch: false,
+            maxLength: 100,
+          };
+
+        case 'long_answer':
+          return {
+            ...baseProps,
+            type: 'long_answer',
+            minLength: 50,
+            maxLength: 1000,
+            evaluationCriteria: [],
+          };
+
+        case 'fill_blanks':
+          return {
+            ...baseProps,
+            type: 'fill_blanks',
+            textWithBlanks: aiQuestion.textWithBlanks || '',
+            blanks: aiQuestion.blanks || [],
+            caseSensitive: false,
+          };
+
+        case 'matching':
+          return {
+            ...baseProps,
+            type: 'matching',
+            leftItems: aiQuestion.leftItems || [],
+            rightItems: aiQuestion.rightItems || [],
+            allowPartialCredit: true,
+          };
+
+        default:
+          // Default fallback to multiple choice
+          return {
+            ...baseProps,
+            type: 'multiple_choice',
+            options: [],
+            allowMultiple: false,
+            randomizeOptions: false,
+          };
+      }
+    },
+    []
   );
 
   // Navigation entre les étapes
@@ -174,7 +265,7 @@ export const useExerciseCreation = ({
           'Finalisation...',
         ];
 
-        for (let i = 0; i < steps.length; i++) {
+        for (let i = 0; i < steps.length; i += 1) {
           if (aiState.status === 'cancelled') break;
 
           setAiState((prev) => ({
@@ -183,6 +274,7 @@ export const useExerciseCreation = ({
             currentStep: steps[i],
           }));
 
+          // eslint-disable-next-line no-await-in-loop
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
@@ -224,18 +316,18 @@ export const useExerciseCreation = ({
         };
 
         if (mockResponse.success && mockResponse.data) {
+          // Convert AI questions to proper Question types
+          const convertedQuestions = mockResponse.data.questions.map((q, index) =>
+            convertAiQuestionToQuestion(q, index)
+          );
+
           updateFormData({
             title: mockResponse.data.exercise.title,
             description: mockResponse.data.exercise.description,
             content: mockResponse.data.exercise.content,
             tags: mockResponse.data.exercise.tags,
             estimatedDuration: mockResponse.data.exercise.estimatedDuration,
-            questions: mockResponse.data.questions.map((q, index) => ({
-              ...q,
-              id: `generated_${index}`,
-              order: index,
-              required: true,
-            })),
+            questions: convertedQuestions,
           });
 
           setAiState({
@@ -259,7 +351,7 @@ export const useExerciseCreation = ({
         onError?.('Erreur lors de la génération IA');
       }
     },
-    [formData.aiConfig, updateFormData, onError, aiState.status]
+    [formData.aiConfig, updateFormData, onError, aiState.status, convertAiQuestionToQuestion]
   );
 
   // Annulation de la génération IA
@@ -343,7 +435,9 @@ export const useExerciseCreation = ({
 
   // Effet pour surveiller les changements
   useEffect(() => {
-    const hasContent = formData.title || formData.description || formData.questions.length > 0;
+    const hasContent = Boolean(
+      formData.title || formData.description || formData.questions.length > 0
+    );
     setHasUnsavedChanges(hasContent);
   }, [formData]);
 

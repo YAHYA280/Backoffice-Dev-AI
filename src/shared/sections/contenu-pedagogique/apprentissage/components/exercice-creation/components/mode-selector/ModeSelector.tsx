@@ -2,8 +2,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { m } from 'framer-motion';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faCheck, faClock } from '@fortawesome/free-solid-svg-icons';
 
@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 
 import { CREATION_MODES } from '../../constants/creation-constants';
-import type { CreationMode } from '../../types';
+
+import type { CreationMode } from '../../types/exercise-types';
 
 interface ModeSelectorProps {
   open: boolean;

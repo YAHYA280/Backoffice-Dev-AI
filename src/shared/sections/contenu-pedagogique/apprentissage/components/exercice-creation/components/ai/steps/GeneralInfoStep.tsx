@@ -5,7 +5,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTag, faPlus, faTimes, faBrain, faMagic } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faBrain, faMagic } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -15,8 +15,8 @@ import {
   Stack,
   Select,
   MenuItem,
-  TextField,
   useTheme,
+  TextField,
   Typography,
   InputLabel,
   FormControl,
@@ -24,8 +24,10 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import { DIFFICULTY_OPTIONS, COMPLEXITY_LEVELS } from '../../../constants/creation-constants';
-import type { AiFormData, DifficultyLevel, ComplexityLevel } from '../../../types';
+import { DIFFICULTY_OPTIONS } from '../../../constants/creation-constants';
+
+import type { AiFormData } from '../../../types/ai-types';
+import type { DifficultyLevel } from '../../../types/exercise-types';
 
 interface GeneralInfoStepProps {
   data: AiFormData;
@@ -83,12 +85,8 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
     default: ['Concepts de base', 'Applications pratiques', 'Exercices avancés'],
   };
 
-  const getSubtopicSuggestions = () => {
-    return (
-      suggestedSubtopics[data.topic as keyof typeof suggestedSubtopics] ||
-      suggestedSubtopics.default
-    );
-  };
+  const getSubtopicSuggestions = () =>
+    suggestedSubtopics[data.topic as keyof typeof suggestedSubtopics] || suggestedSubtopics.default;
 
   return (
     <Box sx={{ p: 4 }}>
@@ -117,7 +115,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
               Informations générales
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Décrivez votre sujet pour que l'IA génère un exercice adapté
+              Décrivez votre sujet pour que l&apos;IA génère un exercice adapté
             </Typography>
           </Box>
         </m.div>
@@ -136,7 +134,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
                 <Stack spacing={2}>
                   <Typography variant="h6" color="secondary.main" fontWeight="bold">
                     <FontAwesomeIcon icon={faMagic} style={{ marginRight: 8 }} />
-                    Sujet de l'exercice
+                    Sujet de l&apos;exercice
                   </Typography>
 
                   <Autocomplete
@@ -266,7 +264,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
                 }}
               >
                 <Typography variant="subtitle2" color="secondary.main" gutterBottom>
-                  🎯 Aperçu de ce que l'IA va générer
+                  🎯 Aperçu de ce que l&apos;IA va générer
                 </Typography>
 
                 {data.topic ? (
@@ -292,13 +290,13 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
                       color="text.secondary"
                       sx={{ mt: 1, fontStyle: 'italic' }}
                     >
-                      L'IA créera un exercice adapté avec des questions personnalisées et du contenu
-                      pédagogique optimisé.
+                      L&apos;IA créera un exercice adapté avec des questions personnalisées et du
+                      contenu pédagogique optimisé.
                     </Typography>
                   </Stack>
                 ) : (
                   <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    Commencez par définir un sujet pour voir l'aperçu...
+                    Commencez par définir un sujet pour voir l&apos;aperçu...
                   </Typography>
                 )}
               </Card>
@@ -325,7 +323,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
                       <strong>Soyez spécifique :</strong>
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      "Conjugaison du présent" plutôt que "français"
+                      &quot;Conjugaison du présent&quot; plutôt que &quot;français&quot;
                     </Typography>
                   </Grid>
 
@@ -334,7 +332,7 @@ const GeneralInfoStep: React.FC<GeneralInfoStepProps> = ({ data, errors, onChang
                       <strong>Précisez le niveau :</strong>
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Le niveau aide l'IA à adapter la complexité
+                      Le niveau aide l&apos;IA à adapter la complexité
                     </Typography>
                   </Grid>
 
