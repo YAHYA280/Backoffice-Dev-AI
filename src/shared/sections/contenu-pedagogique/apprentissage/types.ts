@@ -126,3 +126,80 @@ export const MATIERE_COLORS = [
   { couleur: '#607D8B' }, // Langues étrangères
   { couleur: '#F44336' }, // Informatique
 ];
+
+// Add these types to your existing types.ts file
+
+export type ExerciceMode = 'ai' | 'manual';
+
+export interface Question {
+  id: string;
+  type: 'multiple_choice' | 'true_false' | 'short_answer' | 'essay' | 'fill_blank';
+  question: string;
+  points: number;
+  explanation?: string;
+  order: number;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video' | 'audio';
+}
+
+export interface MultipleChoiceQuestion extends Question {
+  type: 'multiple_choice';
+  options: {
+    id: string;
+    text: string;
+    isCorrect: boolean;
+  }[];
+  allowMultiple?: boolean;
+}
+
+export interface TrueFalseQuestion extends Question {
+  type: 'true_false';
+  correctAnswer: boolean;
+}
+
+export interface ShortAnswerQuestion extends Question {
+  type: 'short_answer';
+  acceptedAnswers: string[];
+  caseSensitive?: boolean;
+}
+
+export interface EssayQuestion extends Question {
+  type: 'essay';
+  minWords?: number;
+  maxWords?: number;
+  rubric?: string;
+}
+
+export interface FillBlankQuestion extends Question {
+  type: 'fill_blank';
+  blanks: {
+    id: string;
+    position: number;
+    acceptedAnswers: string[];
+  }[];
+}
+
+export type QuestionType =
+  | MultipleChoiceQuestion
+  | TrueFalseQuestion
+  | ShortAnswerQuestion
+  | EssayQuestion
+  | FillBlankQuestion;
+
+export interface ManualExerciceData {
+  titre: string;
+  description: string;
+  instructions: string;
+  questions: QuestionType[];
+  timeLimit?: number; // in minutes
+  passingScore: number; // percentage
+  shuffleQuestions?: boolean;
+  showCorrectAnswers?: boolean;
+  maxAttempts?: number;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+  }[];
+}

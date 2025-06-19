@@ -1,13 +1,15 @@
 'use client';
 
+import { m } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faRobot, faHandPaper } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Card,
+  Chip,
   Button,
   Container,
   Typography,
@@ -15,7 +17,13 @@ import {
   Link as MuiLink,
 } from '@mui/material';
 
+import { varFade } from 'src/shared/components/animate';
+
 import { ExerciceForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceForm';
+import { ExerciceModeSelector } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceModeSelector';
+import { ExerciceManualForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceManualForm';
+
+import type { ExerciceMode } from 'src/shared/sections/contenu-pedagogique/apprentissage/types';
 
 export const NewExerciceView: React.FC = () => {
   const router = useRouter();
@@ -26,22 +34,33 @@ export const NewExerciceView: React.FC = () => {
   const matiereNom = searchParams.get('matiereNom');
   const niveauId = searchParams.get('niveauId');
   const niveauNom = searchParams.get('niveauNom');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showModeSelector, setShowModeSelector] = useState(true);
+  const [selectedMode, setSelectedMode] = useState<ExerciceMode | null>(null);
 
   useEffect(() => {
     if (!chapitreId) {
-      // Redirect to the main page if no chapitreId is provided
       router.push('/dashboard/contenu-pedagogique/apprentissage');
     }
   }, [chapitreId, router]);
 
+  const handleModeSelect = (mode: ExerciceMode) => {
+    setSelectedMode(mode);
+    setShowModeSelector(false);
+  };
+
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // API call to save the exercice
-      // You would implement your actual API call here
+      // API call to save the exercice with mode information
+      const exerciceData = {
+        ...data,
+        mode: selectedMode,
+      };
 
-      // Simulate API delay
+      console.log('Saving exercice:', exerciceData);
+
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       router.push(
@@ -60,9 +79,14 @@ export const NewExerciceView: React.FC = () => {
     );
   };
 
+  const handleResetMode = () => {
+    setSelectedMode(null);
+    setShowModeSelector(true);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ pt: 3 }}>
-      <Box sx={{ mb: 4 }}>
+      <Box component={m.div} variants={varFade().inUp} sx={{ mb: 4 }}>
         <Button
           variant="text"
           color="primary"
@@ -82,7 +106,7 @@ export const NewExerciceView: React.FC = () => {
           >
             Niveaux
           </MuiLink>
-          {niveauId ? (
+          {niveauId && (
             <MuiLink
               component="button"
               underline="hover"
@@ -98,10 +122,8 @@ export const NewExerciceView: React.FC = () => {
             >
               {niveauNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
-          {matiereId ? (
+          {matiereId && (
             <MuiLink
               component="button"
               underline="hover"
@@ -119,10 +141,8 @@ export const NewExerciceView: React.FC = () => {
             >
               {matiereNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
-          {chapitreId ? (
+          {chapitreId && (
             <MuiLink
               component="button"
               underline="hover"
@@ -142,46 +162,89 @@ export const NewExerciceView: React.FC = () => {
             >
               {chapitreNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
           <Typography color="text.primary">Nouvel exercice</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold', mb: 3 }}>
-          Ajouter un exercice
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
+            Ajouter un exercice
+          </Typography>
+
+          {selectedMode && (
+            <Box component={m.div} variants={varFade().inRight} sx={{ display: 'flex', gap: 1 }}>
+              <Chip
+                icon={<FontAwesomeIcon icon={selectedMode === 'ai' ? faRobot : faHandPaper} />}
+                label={selectedMode === 'ai' ? 'Mode IA' : 'Mode Manuel'}
+                color={selectedMode === 'ai' ? 'primary' : 'info'}
+                sx={{ fontWeight: 'fontWeightMedium' }}
+              />
+              <Button size="small" variant="text" onClick={handleResetMode} sx={{ ml: 1 }}>
+                Changer de mode
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Box>
 
-      <Card sx={{ p: 3, boxShadow: (theme) => theme.customShadows?.z8 }}>
-        {chapitreId ? (
-          <ExerciceForm
-            initialValues={{
-              titre: '',
-              description: '',
-              contenu: '',
-              statut: 'Brouillon',
-              niveau_difficulte: 'moyen',
-              ressources: [],
-              exiger_visionnage: false,
-              pourcentage_visionnage: 80,
-              recompense_active: false,
-              type_recompense: 'points',
-              valeur_recompense: 10,
-              pourcentage_reussite: 70,
-              tags: [],
-            }}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            chapitreId={chapitreId}
-          />
-        ) : (
-          <Typography color="error">
-            ID du chapitre manquant. Impossible de créer un exercice.
-          </Typography>
-        )}
-      </Card>
+      <ExerciceModeSelector
+        open={showModeSelector}
+        onClose={() => {
+          if (!selectedMode) {
+            handleCancel();
+          }
+        }}
+        onSelectMode={handleModeSelect}
+      />
+
+      {selectedMode && chapitreId && (
+        <Card
+          component={m.div}
+          variants={varFade().inUp}
+          sx={{
+            p: 3,
+            boxShadow: (theme) => theme.customShadows?.z8,
+            borderRadius: 2,
+          }}
+        >
+          {selectedMode === 'ai' ? (
+            <ExerciceForm
+              initialValues={{
+                titre: '',
+                description: '',
+                contenu: '',
+                statut: 'Brouillon',
+                niveau_difficulte: 'moyen',
+                ressources: [],
+                exiger_visionnage: false,
+                pourcentage_visionnage: 80,
+                recompense_active: false,
+                type_recompense: 'points',
+                valeur_recompense: 10,
+                pourcentage_reussite: 70,
+                tags: [],
+              }}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              isSubmitting={isSubmitting}
+              chapitreId={chapitreId}
+            />
+          ) : (
+            <ExerciceManualForm
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              isSubmitting={isSubmitting}
+              chapitreId={chapitreId}
+            />
+          )}
+        </Card>
+      )}
+
+      {selectedMode && !chapitreId && (
+        <Typography color="error">
+          ID du chapitre manquant. Impossible de créer un exercice.
+        </Typography>
+      )}
     </Container>
   );
 };
