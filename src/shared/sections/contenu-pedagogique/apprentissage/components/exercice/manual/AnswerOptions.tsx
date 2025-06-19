@@ -22,6 +22,7 @@ import {
   Chip,
   Stack,
   Radio,
+  alpha,
   Switch,
   Button,
   Tooltip,
@@ -30,10 +31,7 @@ import {
   Typography,
   IconButton,
   FormControlLabel,
-  alpha,
 } from '@mui/material';
-
-import { varFade } from 'src/shared/components/animate';
 
 export interface AnswerOption {
   id: string;

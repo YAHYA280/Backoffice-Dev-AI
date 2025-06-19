@@ -3,20 +3,20 @@
 import { z } from 'zod';
 import { useState } from 'react';
 import { m } from 'framer-motion';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import {
   faPlus,
   faTimes,
   faCheck,
   faTrash,
   faListOl,
-  faCheckCircle,
-  faTimesCircle,
   faPenAlt,
   faAlignLeft,
   faGripLines,
+  faCheckCircle,
+  faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -25,6 +25,7 @@ import {
   Chip,
   Stack,
   Radio,
+  alpha,
   Button,
   Dialog,
   Switch,
@@ -37,7 +38,6 @@ import {
   DialogContent,
   DialogActions,
   FormControlLabel,
-  alpha,
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate';
@@ -57,37 +57,13 @@ type QuestionTypeValue = (typeof questionTypes)[number]['value'];
 // Generate a simple ID without uuid
 const generateId = () => `question-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-// Generic form data interface
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface BaseFormData {
   question: string;
   points: number;
   explanation?: string;
 }
 
-interface MultipleChoiceFormData extends BaseFormData {
-  options: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-  }[];
-  allowMultiple?: boolean;
-}
-
-interface TrueFalseFormData extends BaseFormData {
-  correctAnswer: boolean;
-}
-
-interface ShortAnswerFormData extends BaseFormData {
-  caseSensitive?: boolean;
-}
-
-interface EssayFormData extends BaseFormData {
-  minWords?: number;
-  maxWords?: number;
-  rubric?: string;
-}
-
-// Use a generic schema that accepts all fields
 const formSchema = z.object({
   question: z.string().min(10, 'La question doit contenir au moins 10 caractères'),
   points: z.number().min(1, 'Les points doivent être supérieurs à 0'),

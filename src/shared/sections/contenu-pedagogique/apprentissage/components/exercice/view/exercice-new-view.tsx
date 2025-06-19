@@ -1,10 +1,12 @@
 'use client';
 
+import type { ExerciceMode } from 'src/shared/sections/contenu-pedagogique/apprentissage/types';
+
 import { m } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faRobot, faHandPaper } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faHandPaper, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
@@ -20,10 +22,8 @@ import {
 import { varFade } from 'src/shared/components/animate';
 
 import { ExerciceForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceForm';
-import { ExerciceModeSelector } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceModeSelector';
 import { ExerciceManualForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceManualForm';
-
-import type { ExerciceMode } from 'src/shared/sections/contenu-pedagogique/apprentissage/types';
+import { ExerciceModeSelector } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceModeSelector';
 
 export const NewExerciceView: React.FC = () => {
   const router = useRouter();
@@ -83,6 +83,15 @@ export const NewExerciceView: React.FC = () => {
     setSelectedMode(null);
     setShowModeSelector(true);
   };
+
+  // Fix: Only handle modal close when user explicitly cancels, not on backdrop click or escape
+  const handleModalClose = () => {
+    // Don't automatically redirect - just close the modal and stay on the page
+    setShowModeSelector(false);
+  };
+
+  // If user hasn't selected a mode and modal is closed, show a prompt to select mode
+  const shouldShowModePrompt = !selectedMode && !showModeSelector;
 
   return (
     <Container maxWidth="lg" sx={{ pt: 3 }}>
@@ -187,16 +196,42 @@ export const NewExerciceView: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Mode Selector Modal */}
       <ExerciceModeSelector
         open={showModeSelector}
-        onClose={() => {
-          if (!selectedMode) {
-            handleCancel();
-          }
-        }}
+        onClose={handleModalClose} // Fix: Don't redirect automatically
         onSelectMode={handleModeSelect}
       />
 
+      {/* Show mode selection prompt if user closed modal without selecting */}
+      {shouldShowModePrompt && (
+        <Card
+          component={m.div}
+          variants={varFade().inUp}
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            boxShadow: (theme) => theme.customShadows?.z8,
+            borderRadius: 2,
+            mb: 3,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Mode de création requis
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Vous devez choisir un mode de création pour continuer
+          </Typography>
+          <Button variant="contained" onClick={() => setShowModeSelector(true)} sx={{ mr: 2 }}>
+            Choisir un mode
+          </Button>
+          <Button variant="outlined" onClick={handleCancel}>
+            Annuler
+          </Button>
+        </Card>
+      )}
+
+      {/* Exercise Form */}
       {selectedMode && chapitreId && (
         <Card
           component={m.div}
@@ -240,6 +275,7 @@ export const NewExerciceView: React.FC = () => {
         </Card>
       )}
 
+      {/* Error state when chapitreId is missing */}
       {selectedMode && !chapitreId && (
         <Typography color="error">
           ID du chapitre manquant. Impossible de créer un exercice.

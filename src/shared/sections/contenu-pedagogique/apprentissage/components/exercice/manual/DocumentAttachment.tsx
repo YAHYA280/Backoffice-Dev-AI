@@ -1,21 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useState, type ReactNode, type ComponentProps } from 'react';
 import {
-  faCloudUploadAlt,
+  faEye,
   faFile,
   faTimes,
+  faTrash,
   faFilePdf,
   faFileWord,
+  faDownload,
   faFileExcel,
   faFileImage,
   faFileVideo,
   faFileAudio,
-  faTrash,
-  faDownload,
-  faEye,
+  faCloudUploadAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -23,20 +23,29 @@ import {
   Card,
   Chip,
   Stack,
-  Button,
+  alpha,
   Dialog,
   Tooltip,
   useTheme,
   IconButton,
   Typography,
-  LinearProgress,
   DialogTitle,
   DialogContent,
-  alpha,
+  LinearProgress,
 } from '@mui/material';
 
 import { Upload } from 'src/shared/components/upload';
-import { varFade } from 'src/shared/components/animate';
+
+/* -------------------------------------------------------------------------- */
+/* Upload fix: widen props so Upload accepts children                          */
+/* -------------------------------------------------------------------------- */
+type UploadPropsWithChildren = ComponentProps<typeof Upload> & {
+  children?: ReactNode;
+};
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+const UploadWithChildren = Upload as unknown as (props: UploadPropsWithChildren) => JSX.Element;
+/* -------------------------------------------------------------------------- */
 
 export interface AttachmentFile {
   id: string;
@@ -49,13 +58,12 @@ export interface AttachmentFile {
   status: 'uploading' | 'success' | 'error';
 }
 
-interface DocumentAttachmentProps {
+export interface DocumentAttachmentProps {
   attachments: AttachmentFile[];
   onAdd: (files: File[]) => void;
   onRemove: (attachmentId: string) => void;
   maxFiles?: number;
-  maxSize?: number; // in MB
-  acceptedTypes?: string[];
+  maxSize?: number; // MB
   title?: string;
   description?: string;
 }
@@ -65,23 +73,26 @@ export const DocumentAttachment = ({
   onAdd,
   onRemove,
   maxFiles = 10,
-  maxSize = 10, // 10MB default
-  acceptedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'image/*',
-    'video/*',
-    'audio/*',
-  ],
+  maxSize = 10,
   title = 'Documents de support',
   description = 'Ajoutez des documents pour enrichir votre exercice',
 }: DocumentAttachmentProps) => {
   const theme = useTheme();
   const [previewFile, setPreviewFile] = useState<AttachmentFile | null>(null);
 
+  /* ----------------------------- Accept formats ---------------------------- */
+  const acceptedFileTypes = {
+    'application/pdf': ['.pdf'],
+    'application/msword': ['.doc'],
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    'application/vnd.ms-excel': ['.xls'],
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp'],
+    'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'],
+    'audio/*': ['.mp3', '.wav', '.flac', '.aac', '.ogg'],
+  };
+
+  /* -------------------------------- Helpers ------------------------------- */
   const getFileIcon = (type: string) => {
     if (type.includes('pdf')) return faFilePdf;
     if (type.includes('word') || type.includes('document')) return faFileWord;
@@ -110,8 +121,10 @@ export const DocumentAttachment = ({
     return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
+  /* ------------------------------- Handlers ------------------------------- */
   const handleDrop = (acceptedFiles: File[]) => {
     const validFiles = acceptedFiles.filter((file) => file.size <= maxSize * 1024 * 1024);
+
     if (validFiles.length < acceptedFiles.length) {
       console.error('Some files exceed the maximum size limit');
     }
@@ -125,6 +138,9 @@ export const DocumentAttachment = ({
 
   const canPreview = (type: string) => type.includes('image') || type.includes('pdf');
 
+  /* ------------------------------------------------------------------------ */
+  /*                                  Render                                  */
+  /* ------------------------------------------------------------------------ */
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -134,10 +150,11 @@ export const DocumentAttachment = ({
         {description}
       </Typography>
 
+      {/* -------------------------- Drop-zone section -------------------------- */}
       {attachments.length < maxFiles && (
-        <Upload
+        <UploadWithChildren
           multiple
-          accept={acceptedTypes.join(',')}
+          accept={acceptedFileTypes}
           onDrop={handleDrop}
           sx={{
             mb: 3,
@@ -169,14 +186,15 @@ export const DocumentAttachment = ({
               Glissez-déposez vos fichiers ici ou cliquez pour parcourir
             </Typography>
             <Typography variant="caption" color="text.secondary" textAlign="center">
-              Formats acceptés: PDF, Word, Excel, Images, Vidéos, Audio
+              Formats acceptés : PDF, Word, Excel, Images, Vidéos, Audio
               <br />
-              Taille max: {maxSize}MB par fichier • Max {maxFiles} fichiers
+              Taille max : {maxSize} MB par fichier • Max {maxFiles} fichiers
             </Typography>
           </Stack>
-        </Upload>
+        </UploadWithChildren>
       )}
 
+      {/* ----------------------------- File list ------------------------------ */}
       {attachments.length > 0 && (
         <Stack spacing={2}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -200,16 +218,13 @@ export const DocumentAttachment = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
-                sx={{
-                  p: 2,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+                sx={{ p: 2, position: 'relative', overflow: 'hidden' }}
               >
+                {/* Upload progress bar */}
                 {attachment.status === 'uploading' && (
                   <LinearProgress
                     variant="determinate"
-                    value={attachment.uploadProgress || 0}
+                    value={attachment.uploadProgress ?? 0}
                     sx={{
                       position: 'absolute',
                       top: 0,
@@ -221,6 +236,7 @@ export const DocumentAttachment = ({
                 )}
 
                 <Stack direction="row" spacing={2} alignItems="center">
+                  {/* File icon */}
                   <Box
                     sx={{
                       width: 48,
@@ -236,6 +252,7 @@ export const DocumentAttachment = ({
                     <FontAwesomeIcon icon={getFileIcon(attachment.type)} size="lg" />
                   </Box>
 
+                  {/* File info */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="subtitle2" noWrap>
                       {attachment.name}
@@ -263,6 +280,7 @@ export const DocumentAttachment = ({
                     </Stack>
                   </Box>
 
+                  {/* Action buttons */}
                   <Stack direction="row" spacing={0.5}>
                     {canPreview(attachment.type) && attachment.url && (
                       <Tooltip title="Aperçu">
@@ -323,7 +341,7 @@ export const DocumentAttachment = ({
         </Stack>
       )}
 
-      {/* Preview Dialog */}
+      {/* --------------------------- Preview dialog --------------------------- */}
       <Dialog open={!!previewFile} onClose={() => setPreviewFile(null)} maxWidth="md" fullWidth>
         <DialogTitle>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -351,11 +369,7 @@ export const DocumentAttachment = ({
             <Box
               component="iframe"
               src={previewFile.url}
-              sx={{
-                width: '100%',
-                height: '70vh',
-                border: 'none',
-              }}
+              sx={{ width: '100%', height: '70vh', border: 'none' }}
             />
           )}
         </DialogContent>

@@ -1,13 +1,16 @@
 'use client';
 
+import type { ExerciceMode } from 'src/shared/sections/contenu-pedagogique/apprentissage/types';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faHandPaper, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Box,
   Card,
+  Chip,
   Button,
   Container,
   Typography,
@@ -17,35 +20,76 @@ import {
 } from '@mui/material';
 
 import { ExerciceForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceForm';
+import { ExerciceManualForm } from 'src/shared/sections/contenu-pedagogique/apprentissage/components/exercice/ExerciceManualForm';
 
 const fetchExercice = async (id: string) => {
   await new Promise((resolve) => setTimeout(resolve, 800));
 
-  return {
+  // Mock data - in real app, this would come from your API
+  const mockExercice = {
     id,
-    titre: 'Sample Exercise',
-    description: 'This is a sample exercise description',
-    contenu: 'Exercise content goes here',
+    titre: 'Quiz sur les verbes du premier groupe',
+    description: 'Exercice de conjugaison pour apprendre les verbes du premier groupe au présent',
     statut: 'Brouillon',
+    chapitreId: 'chapitre-1',
+    mode: 'manual' as ExerciceMode, // This would be determined by your API
+
+    // For manual mode exercises
+    instructions:
+      "Conjuguez les verbes suivants au présent de l'indicatif. Attention aux terminaisons !",
+    questions: [
+      {
+        id: 'q1',
+        type: 'multiple_choice' as const,
+        question: 'Conjuguez le verbe "parler" à la première personne du singulier',
+        points: 5,
+        order: 0,
+        options: [
+          { id: 'opt1', text: 'je parle', isCorrect: true },
+          { id: 'opt2', text: 'je parles', isCorrect: false },
+          { id: 'opt3', text: 'je parlent', isCorrect: false },
+          { id: 'opt4', text: 'je parlons', isCorrect: false },
+        ],
+        allowMultiple: false,
+      },
+      {
+        id: 'q2',
+        type: 'true_false' as const,
+        question:
+          'La terminaison de la 3ème personne du pluriel des verbes du 1er groupe est "-ent"',
+        points: 3,
+        order: 1,
+        correctAnswer: true,
+        explanation:
+          'Les verbes du premier groupe se terminent par -ent à la 3ème personne du pluriel',
+      },
+    ],
+    timeLimit: 30,
+    passingScore: 70,
+    shuffleQuestions: false,
+    showCorrectAnswers: true,
+    maxAttempts: 3,
+
+    // For AI mode exercises (fallback values)
+    contenu: "<p>Contenu de l'exercice généré par IA</p>",
     niveau_difficulte: 'moyen',
     ressources: ['PDF', 'Audio'],
-    chapitreId: 'chapitre-1',
     exiger_visionnage: false,
     pourcentage_visionnage: 80,
     recompense_active: false,
     type_recompense: 'points',
     valeur_recompense: 10,
     pourcentage_reussite: 70,
-    tags: ['grammar', 'verbs'],
+    tags: ['conjugaison', 'verbes'],
   };
+
+  return mockExercice;
 };
 
-// Explicitly define the props interface
 interface EditExerciceViewProps {
   id: string;
 }
 
-// Use the props interface in the component declaration
 export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,7 +127,7 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
     setIsSubmitting(true);
     try {
       // API call to update the exercice
-      // You would implement your actual API call here
+      console.log('Updating exercice:', { ...data, mode: exercice.mode });
 
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -128,6 +172,8 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
     );
   }
 
+  const isManualMode = exercice.mode === 'manual' || exercice.questions;
+
   return (
     <Container maxWidth="lg" sx={{ pt: 3 }}>
       <Box sx={{ mb: 4 }}>
@@ -150,7 +196,7 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
           >
             Niveaux
           </MuiLink>
-          {niveauId ? (
+          {niveauId && (
             <MuiLink
               component="button"
               underline="hover"
@@ -166,10 +212,8 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {niveauNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
-          {matiereId ? (
+          {matiereId && (
             <MuiLink
               component="button"
               underline="hover"
@@ -187,10 +231,8 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {matiereNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
-          {chapitreId || exercice.chapitreId ? (
+          {(chapitreId || exercice.chapitreId) && (
             <MuiLink
               component="button"
               underline="hover"
@@ -210,25 +252,67 @@ export const EditExerciceView = ({ id }: EditExerciceViewProps) => {
             >
               {chapitreNom}
             </MuiLink>
-          ) : (
-            <></>
           )}
           <Typography color="text.primary">Modifier l&apos;exercice</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold', mb: 3 }}>
-          Modifier l&apos;exercice: {exercice.titre}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'fontWeightBold' }}>
+            Modifier l&apos;exercice: {exercice.titre}
+          </Typography>
+
+          <Chip
+            icon={<FontAwesomeIcon icon={isManualMode ? faHandPaper : faRobot} />}
+            label={isManualMode ? 'Mode Manuel' : 'Mode IA'}
+            color={isManualMode ? 'info' : 'primary'}
+            sx={{ fontWeight: 'fontWeightMedium' }}
+          />
+        </Box>
       </Box>
 
       <Card sx={{ p: 3, boxShadow: (theme) => theme.customShadows?.z8 }}>
-        <ExerciceForm
-          initialValues={exercice}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isSubmitting={isSubmitting}
-          chapitreId={chapitreId || exercice.chapitreId}
-        />
+        {isManualMode ? (
+          <ExerciceManualForm
+            initialValues={{
+              titre: exercice.titre,
+              description: exercice.description,
+              instructions: exercice.instructions || '',
+              questions: exercice.questions || [],
+              timeLimit: exercice.timeLimit,
+              passingScore: exercice.passingScore || 70,
+              shuffleQuestions: exercice.shuffleQuestions || false,
+              showCorrectAnswers: exercice.showCorrectAnswers !== false, // default to true
+              maxAttempts: exercice.maxAttempts || 3,
+              attachments: exercice.attachments || [],
+            }}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+            chapitreId={chapitreId || exercice.chapitreId}
+          />
+        ) : (
+          <ExerciceForm
+            initialValues={{
+              titre: exercice.titre,
+              description: exercice.description,
+              contenu: exercice.contenu || '',
+              statut: exercice.statut,
+              niveau_difficulte: exercice.niveau_difficulte || 'moyen',
+              ressources: exercice.ressources || [],
+              exiger_visionnage: exercice.exiger_visionnage || false,
+              pourcentage_visionnage: exercice.pourcentage_visionnage || 80,
+              recompense_active: exercice.recompense_active || false,
+              type_recompense: exercice.type_recompense || 'points',
+              valeur_recompense: exercice.valeur_recompense || 10,
+              pourcentage_reussite: exercice.pourcentage_reussite || 70,
+              tags: exercice.tags || [],
+            }}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+            chapitreId={chapitreId || exercice.chapitreId}
+          />
+        )}
       </Card>
     </Container>
   );

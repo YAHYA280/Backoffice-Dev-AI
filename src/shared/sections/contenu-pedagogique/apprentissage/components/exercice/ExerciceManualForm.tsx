@@ -7,24 +7,22 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faSave,
-  faTimes,
-  faPlus,
-  faClock,
-  faPercent,
-  faRedo,
   faEye,
-  faQuestionCircle,
-  faGripVertical,
+  faSave,
+  faPlus,
+  faRedo,
   faEdit,
+  faTimes,
+  faClock,
   faTrash,
   faListOl,
-  faCheckCircle,
   faPenAlt,
+  faPercent,
   faAlignLeft,
   faGripLines,
+  faCheckCircle,
   faChevronLeft,
-  faPaperclip,
+  faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -33,24 +31,22 @@ import {
   Card,
   Chip,
   Stack,
+  Paper,
+  alpha,
   Button,
   Switch,
   Slider,
-  Tooltip,
   Divider,
+  Collapse,
   TextField,
   Typography,
   IconButton,
-  FormControl,
-  FormHelperText,
   CircularProgress,
   FormControlLabel,
-  Collapse,
-  Paper,
-  alpha,
 } from '@mui/material';
 
 import { varFade } from 'src/shared/components/animate';
+
 import { QuestionBuilder } from './manual/QuestionBuilder';
 import { DocumentAttachment, type AttachmentFile } from './manual/DocumentAttachment';
 
@@ -247,7 +243,7 @@ export const ExerciceManualForm = ({
                   ...att,
                   uploadProgress: 100,
                   status: 'success' as const,
-                  url: URL.createObjectURL(files),
+                  url: URL.createObjectURL(attachment.file!), // Fix: use single file, not array
                 };
               }
               return { ...att, uploadProgress: newProgress };
@@ -345,7 +341,7 @@ export const ExerciceManualForm = ({
               sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
               <FontAwesomeIcon icon={faClock} />
-              Paramètres de l'exercice
+              Paramètres de l&apos;exercice
             </Typography>
             <Divider sx={{ mb: 3 }} />
           </Box>
@@ -556,7 +552,7 @@ export const ExerciceManualForm = ({
                 Aucune question ajoutée
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Cliquez sur "Ajouter une question" pour commencer à créer votre exercice
+                Cliquez sur &quot;Ajouter une question&quot; pour commencer à créer votre exercice
               </Typography>
               <Button
                 variant="outlined"

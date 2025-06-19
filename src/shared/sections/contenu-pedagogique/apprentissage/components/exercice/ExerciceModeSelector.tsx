@@ -39,13 +39,20 @@ export const ExerciceModeSelector = ({
 }: ExerciceModeSelectorProps) => {
   const handleModeSelect = (mode: 'ai' | 'manual') => {
     onSelectMode(mode);
-    onClose();
+    // Note: onClose is called in the parent component after mode selection
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={(event, reason) => {
+        // Fix: Prevent auto-close on backdrop click or escape key
+        // Only allow explicit close via the close button
+        if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+          return;
+        }
+        onClose();
+      }}
       maxWidth="md"
       fullWidth
       PaperProps={{
@@ -54,6 +61,8 @@ export const ExerciceModeSelector = ({
           overflow: 'visible',
         },
       }}
+      // Disable closing on backdrop click and escape key
+      disableEscapeKeyDown
     >
       <DialogTitle
         sx={{
